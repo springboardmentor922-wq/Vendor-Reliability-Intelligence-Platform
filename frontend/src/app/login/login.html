@@ -1,0 +1,28 @@
+<div class="login-container" style="display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f5f5f5;">
+  <mat-card class="login-card" style="width: 100%; max-width: 400px; padding: 20px;">
+    <mat-card-header>
+      <mat-card-title>VendorIQ Login</mat-card-title>
+    </mat-card-header>
+    <mat-card-content style="margin-top: 20px;">
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" style="display: flex; flex-direction: column; gap: 15px;">
+        
+        <mat-form-field appearance="fill" style="width: 100%;">
+          <mat-label>Email</mat-label>
+          <input matInput formControlName="email" type="email" placeholder="name@example.com" required>
+          <mat-error *ngIf="loginForm.get('email')?.hasError('required')">Email is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" style="width: 100%;">
+          <mat-label>Password</mat-label>
+          <input matInput formControlName="password" type="password" placeholder="Enter your password" required>
+          <mat-error *ngIf="loginForm.get('password')?.hasError('required')">Password is required</mat-error>
+        </mat-form-field>
+
+        <button mat-raised-button color="primary" type="submit" [disabled]="loginForm.invalid" style="width: 100%; padding: 10px;">
+          Sign In
+        </button>
+
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>
