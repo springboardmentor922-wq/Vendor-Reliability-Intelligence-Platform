@@ -1,0 +1,24 @@
+# Python / FastAPI
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env
+
+# Database
+*.db
+*.sqlite3
+vendor_iq.db
+
+# Frontend / Angular / Node
+node_modules/
+dist/
+.angular/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
