@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VendorIQ - Predictive Vendor Intelligence & Risk Management</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css?v=rbac2">
+</head>
+<body>
+
+    <div class="door-viewport" id="doorViewport">
+        <!-- Ambient Mesh Lighting -->
+        <div class="ambient-glow-mesh">
+            <div class="ambient-blob-1"></div>
+            <div class="ambient-blob-2"></div>
+            <div class="ambient-blob-3"></div>
+        </div>
+
+        <!-- ===================================================================
+             LAYER 1: IMMERSIVE LANDING SHOWCASE (The Sliding Door)
+             =================================================================== -->
+        <div class="door-panel landing-layer" id="landingPanel">
+            <div class="container py-4 d-flex flex-column justify-content-between min-vh-100 position-relative" style="z-index: 2;">
+                
+                <!-- Landing Top Navigation -->
+                <header class="d-flex justify-content-between align-items-center py-2 mb-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="brand-icon">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <div>
+                            <span class="fw-bold fs-4 tracking-tight text-dark m-0">VendorIQ</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-3">
+
+
+                        <button onclick="openDoor()" class="btn btn-primary btn-sm px-3 py-2 d-flex align-items-center gap-2">
+                            <span>Sign In</span> <i class="bi bi-arrow-right"></i>
+                        </button>
+                    </div>
+                </header>
+
+                <!-- Hero Centerpiece -->
+                <div class="row align-items-center justify-content-center my-auto py-4">
+                    <div class="col-lg-9 text-center">
+                        <div class="glass-pill mb-3">
+                            <span>Autonomous Vendor Scoring & Predictive Risk Intelligence</span>
+                        </div>
+
+                        <h1 class="display-4 fw-extrabold text-dark mb-3" style="letter-spacing: -0.03em; line-height: 1.15;">
+                            Predict Supplier Risks <br>
+                            <span class="text-gradient-accent">Before Operations Disrupt</span>
+                        </h1>
+
+                        <p class="text-muted fs-5 mx-auto mb-5" style="max-width: 680px; line-height: 1.6;">
+                            Enterprise-grade procurement orchestration with real-time multi-factor reliability telemetry, 
+                            automated purchase orders, contract SLA audits, and strict role-based data isolation.
+                        </p>
+
+                        <!-- Key Telemetry Highlights -->
+                        <div class="row g-3 justify-content-center mb-5">
+                            <div class="col-6 col-md-3">
+                                <div class="glass-showcase-card text-start h-100">
+                                    <div class="small text-muted mb-1 text-uppercase fw-semibold" style="font-size: 0.72rem;">Network SLA</div>
+                                    <div class="fs-3 fw-bold" style="color: #7c4a2d;">99.4%</div>
+                                    <small class="text-secondary" style="font-size: 0.78rem;">On-time fulfillment</small>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="glass-showcase-card text-start h-100">
+                                    <div class="small text-muted mb-1 text-uppercase fw-semibold" style="font-size: 0.72rem;">Risk Index</div>
+                                    <div class="fs-3 fw-bold text-gradient-primary">0 - 100</div>
+                                    <small class="text-secondary" style="font-size: 0.78rem;">Autonomous scoring</small>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="glass-showcase-card text-start h-100">
+                                    <div class="small text-muted mb-1 text-uppercase fw-semibold" style="font-size: 0.72rem;">Compliance</div>
+                                    <div class="fs-3 fw-bold text-info">100%</div>
+                                    <small class="text-secondary" style="font-size: 0.78rem;">Audited SLAs</small>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="glass-showcase-card text-start h-100">
+                                    <div class="small text-muted mb-1 text-uppercase fw-semibold" style="font-size: 0.72rem;">Governance</div>
+                                    <div class="fs-3 fw-bold" style="color: #ea580c;">6 Roles</div>
+                                    <small class="text-secondary" style="font-size: 0.78rem;">Zero data leakage</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ==========================================
+                             INTERACTIVE SLIDE-TO-UNLOCK DRAG TRACK
+                             ========================================== -->
+                        <div class="mt-4 text-center">
+                            <div class="slide-to-unlock" id="slideTrack">
+                                <div class="slide-track-fill" id="slideTrackFill"></div>
+                                <div class="slide-track-label">
+                                    <span>DRAG SLIDER TO ENTER WORKSPACE</span> <i class="bi bi-chevron-double-right ms-1"></i>
+                                </div>
+                                <div class="slide-thumb-handle" id="slideHandle">
+                                    <i class="bi bi-arrow-right"></i>
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <button onclick="openDoor()" class="btn btn-link text-muted text-decoration-none small" style="font-size: 0.8rem;">
+                                    <i class="bi bi-box-arrow-in-right me-1 text-primary"></i> Or click here for instant login
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ===================================================================
+             LAYER 2: SLEEK LOGIN CONSOLE (Revealed via Sliding Door)
+             =================================================================== -->
+        <div class="door-panel login-layer" id="loginPanel">
+            <div class="container py-4 my-auto d-flex flex-column align-items-center justify-content-center min-vh-100 position-relative" style="z-index: 3;">
+                
+                <!-- Return / Slide Back Action -->
+                <div class="mb-3 text-start w-100" style="max-width: 480px;">
+                    <button onclick="closeDoor()" class="btn btn-light btn-sm px-3 d-inline-flex align-items-center gap-2" style="border-radius: 9999px;">
+                        <i class="bi bi-arrow-left"></i> <span>Return to Platform Overview</span>
+                    </button>
+                </div>
+
+                <!-- Glassmorphic Login Card -->
+                <div class="card-widget p-4 p-md-5 w-100" style="max-width: 480px;">
+                    
+                    <div class="text-center mb-4">
+                        <div class="brand-icon mx-auto mb-3" style="width: 48px; height: 48px; font-size: 1.4rem;">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <h3 class="fw-bold text-dark tracking-tight mb-1">Sign in to Workspace</h3>
+                        <p class="text-muted small">Select your organizational credentials to enter your role cockpit.</p>
+                    </div>
+
+                    <div id="alertBox" class="alert alert-danger d-none py-2 small" role="alert"></div>
+
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label for="email" class="form-label small fw-semibold text-secondary">Work Email Address</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-transparent border-end-0 text-muted" style="border-color: var(--border-color);"><i class="bi bi-envelope"></i></span>
+                                <input type="email" class="form-control border-start-0 ps-0" id="email" required placeholder="name@vendoriq.com">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label for="password" class="form-label small fw-semibold text-secondary m-0">Password</label>
+                                <a href="#" class="small text-decoration-none text-primary" style="font-size: 0.78rem;">Forgot?</a>
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-text bg-transparent border-end-0 text-muted" style="border-color: var(--border-color);"><i class="bi bi-lock"></i></span>
+                                <input type="password" class="form-control border-start-0 ps-0" id="password" required placeholder="••••••••">
+                            </div>
+                        </div>
+
+                        <div class="mb-4 form-check">
+                            <input type="checkbox" class="form-check-input bg-transparent" id="rememberMe" checked style="border-color: var(--border-color);">
+                            <label class="form-check-label small text-muted" for="rememberMe">Remember my secure session</label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2.5 fw-semibold" id="loginBtn">
+                            <span id="btnText">Enter Console <i class="bi bi-arrow-right ms-1"></i></span>
+                            <span id="btnSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        </button>
+                    </form>
+
+                    <!-- Quick 1-Click Role Testing Cards -->
+                    <div class="mt-4 pt-3 border-top border-secondary border-opacity-20">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="small fw-semibold text-muted" style="font-size: 0.75rem;">
+                                <i class="bi bi-lightning-charge-fill me-1" style="color: #ea580c;"></i> Quick Test Personas:
+                            </span>
+                            <span class="badge bg-secondary bg-opacity-20 text-muted border border-secondary border-opacity-20" style="font-size: 0.65rem;">1-Click</span>
+                        </div>
+                        <div class="d-flex flex-wrap gap-1.5">
+                            <button class="btn btn-light btn-sm border py-1 px-2 text-secondary" style="font-size: 0.72rem;" onclick="autofill('admin@vendoriq.com', 'admin123')">
+                                <i class="bi bi-shield text-danger me-1"></i>Admin
+                            </button>
+                            <button class="btn btn-light btn-sm border py-1 px-2 text-secondary" style="font-size: 0.72rem;" onclick="autofill('procurement@vendoriq.com', 'procure123')">
+                                <i class="bi bi-cart text-primary me-1"></i>Procurement
+                            </button>
+                            <button class="btn btn-light btn-sm border py-1 px-2 text-secondary" style="font-size: 0.72rem;" onclick="autofill('supplychain@vendoriq.com', 'supply123')">
+                                <i class="bi bi-speedometer2 me-1" style="color: #c2410c;"></i>Supply Chain
+                            </button>
+                            <button class="btn btn-light btn-sm border py-1 px-2 text-secondary" style="font-size: 0.72rem;" onclick="autofill('vendor@vendoriq.com', 'vendor123')">
+                                <i class="bi bi-truck me-1" style="color: #7c4a2d;"></i>Vendor
+                            </button>
+                            <button class="btn btn-light btn-sm border py-1 px-2 text-secondary" style="font-size: 0.72rem;" onclick="autofill('finance@vendoriq.com', 'finance123')">
+                                <i class="bi bi-cash text-info me-1"></i>Finance
+                            </button>
+                            <button class="btn btn-light btn-sm border py-1 px-2 text-secondary" style="font-size: 0.72rem;" onclick="autofill('auditor@vendoriq.com', 'auditor123')">
+                                <i class="bi bi-clipboard-check text-muted me-1"></i>Auditor
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-4 pt-1">
+                        <span class="small text-muted">Register a new supplier? <a href="register.html" class="fw-semibold text-primary text-decoration-none">Sign up</a></span>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/auth.js?v=rbac2"></script>
+    <script>
+        function setPastelTheme(themeName) {
+            document.documentElement.className = 'theme-peach';
+            localStorage.setItem('pastel_theme', 'theme-peach');
+        }
+
+        document.documentElement.className = 'theme-peach';
+        localStorage.setItem('pastel_theme', 'theme-peach');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            redirectIfAuthenticated();
+            initDragSlider();
+        });
+
+        // ==========================================
+        // SLIDING DOOR STATE CONTROLS
+        // ==========================================
+        const viewport = document.getElementById('doorViewport');
+
+        function openDoor() {
+            viewport.classList.add('is-open');
+            setTimeout(() => {
+                const emailInput = document.getElementById('email');
+                if (emailInput && !emailInput.value) emailInput.focus();
+            }, 600);
+        }
+
+        function closeDoor() {
+            viewport.classList.remove('is-open');
+            resetSlider();
+        }
+
+        // ==========================================
+        // INTERACTIVE SLIDER DRAG PHYSICS
+        // ==========================================
+        const track = document.getElementById('slideTrack');
+        const handle = document.getElementById('slideHandle');
+        const trackFill = document.getElementById('slideTrackFill');
+        let isDragging = false;
+        let startX = 0;
+        let currentX = 0;
+        let maxDrag = 0;
+
+        function initDragSlider() {
+            if (!track || !handle) return;
+
+            handle.addEventListener('pointerdown', onDragStart);
+            window.addEventListener('pointermove', onDragMove);
+            window.addEventListener('pointerup', onDragEnd);
+            window.addEventListener('pointercancel', onDragEnd);
+        }
+
+        function onDragStart(e) {
+            isDragging = true;
+            startX = e.clientX;
+            maxDrag = track.clientWidth - handle.clientWidth - 12; // padding
+            handle.style.transition = 'none';
+            trackFill.style.transition = 'none';
+            handle.setPointerCapture(e.pointerId);
+        }
+
+        function onDragMove(e) {
+            if (!isDragging) return;
+            const deltaX = e.clientX - startX;
+            currentX = Math.max(0, Math.min(deltaX, maxDrag));
+            
+            handle.style.transform = `translateX(${currentX}px)`;
+            trackFill.style.width = `${currentX + handle.clientWidth / 2}px`;
+
+            // Dynamic opacity for track text as handle moves over it
+            const progress = currentX / maxDrag;
+            const label = track.querySelector('.slide-track-label');
+            if (label) label.style.opacity = `${1 - progress * 1.3}`;
+        }
+
+        function onDragEnd(e) {
+            if (!isDragging) return;
+            isDragging = false;
+
+            const threshold = maxDrag * 0.65; // 65% drag threshold to trigger door
+            if (currentX >= threshold) {
+                // Completed slide: snap to end and open door
+                handle.style.transition = 'transform 0.2s ease-out';
+                handle.style.transform = `translateX(${maxDrag}px)`;
+                trackFill.style.transition = 'width 0.2s ease-out';
+                trackFill.style.width = '100%';
+
+                setTimeout(() => {
+                    openDoor();
+                }, 150);
+            } else {
+                // Not enough drag: spring back
+                resetSlider();
+            }
+        }
+
+        function resetSlider() {
+            if (!handle || !trackFill) return;
+            handle.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            handle.style.transform = 'translateX(0px)';
+            trackFill.style.transition = 'width 0.3s ease-out';
+            trackFill.style.width = '0px';
+
+            const label = track.querySelector('.slide-track-label');
+            if (label) {
+                label.style.transition = 'opacity 0.3s ease';
+                label.style.opacity = '1';
+            }
+        }
+
+        // ==========================================
+        // AUTHENTICATION LOGIC
+        // ==========================================
+        const loginForm = document.getElementById('loginForm');
+        const alertBox = document.getElementById('alertBox');
+        const btnText = document.getElementById('btnText');
+        const btnSpinner = document.getElementById('btnSpinner');
+
+        function autofill(email, password) {
+            document.getElementById('email').value = email;
+            document.getElementById('password').value = password;
+            document.getElementById('email').focus();
+        }
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            btnText.textContent = 'Verifying...';
+            btnSpinner.classList.remove('d-none');
+            alertBox.classList.add('d-none');
+
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            try {
+                await login(email, password);
+                window.location.href = 'dashboard.html';
+            } catch (err) {
+                alertBox.textContent = err.message;
+                alertBox.classList.remove('d-none');
+                btnText.innerHTML = 'Enter Console <i class="bi bi-arrow-right ms-1"></i>';
+                btnSpinner.classList.add('d-none');
+            }
+        });
+    </script>
+</body>
+</html>
+

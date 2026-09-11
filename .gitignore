@@ -1,0 +1,24 @@
+﻿# Virtual Environment
+.venv/
+backend/.venv/
+venv/
+env/
+ENV/
+
+# Python cache & bytecode
+__pycache__/
+*.py[cod]
+*.class
+*.so
+.pytest_cache/
+
+# Temporary databases
+test.db
+test_features.db
+*.log
+
+# OS & Editor artifacts
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

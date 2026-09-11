@@ -1,0 +1,940 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root, .theme-peach, .theme-brown {
+  --font-main: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  
+  /* Primary Signature Palette: Terracotta, Apricot Peach & Earthy Mocha Brown */
+  --body-bg: #faf6f0;                /* Warm Oatmeal Linen Canvas */
+  --surface-bg: #f5ede4;             /* Soft Latte / Biscuit Cream */
+  --surface-card: #ffffff;           /* Crisp White Card */
+  --surface-card-glass: rgba(255, 255, 255, 0.94);
+  
+  --sidebar-bg: #ffffff;
+  --sidebar-text: #5c4033;           /* Warm Earthy Espresso Brown */
+  --sidebar-hover: rgba(194, 65, 12, 0.06);
+  --sidebar-active: #7c2d12;         /* Rich Terracotta Brown */
+  --sidebar-active-bg: #faeee4;      /* Soft Biscuit Tint */
+
+  --border-color: #ebdcd0;           /* Warm Sandstone Brown Border */
+  --border-subtle: #f5ebe1;
+  --border-glow: rgba(124, 45, 18, 0.22);
+
+  --text-main: #2b170e;              /* Deep Roasted Espresso */
+  --text-secondary: #4a3022;         /* Roasted Cocoa Brown */
+  --text-muted: #7c5c4a;             /* Warm Mocha Taupe */
+  --text-light: #a88a78;             /* Soft Sand Drift */
+
+  /* Pastel Accent Colors */
+  --primary: #c2410c;                /* Rich Terracotta */
+  --primary-hover: #7c2d12;          /* Deep Mocha Clay */
+  --primary-subtle: #ffedd5;         /* Soft Apricot Cream */
+  --primary-border: #fed7aa;         /* Warm Apricot Peach Border */
+  --primary-glow: rgba(124, 45, 18, 0.25);
+
+  --success: #7c4a2d;                /* Earthy Mocha Brown (Warm Harmony) */
+  --success-subtle: #faeee4;         /* Soft Biscuit Cream */
+  --success-text: #5c331d;           /* Deep Roasted Mocha */
+  --success-border: #ebdcd0;         /* Warm Sandstone Border */
+
+  --info: #0284c7;                   /* Cornflower Breeze */
+  --info-subtle: #e0f2fe;
+  --info-text: #0369a1;
+  --info-border: #bae6fd;
+
+  --warning: #d97706;                /* Golden Amber */
+  --warning-subtle: #fef3c7;
+  --warning-text: #b45309;
+  --warning-border: #fde68a;
+
+  --danger: #e11d48;                 /* Warm Coral Berry */
+  --danger-subtle: #ffe4e6;
+  --danger-text: #be123c;
+  --danger-border: #fecdd3;
+
+  --blob-1: rgba(254, 215, 170, 0.65); /* Radiant Apricot Peach */
+  --blob-2: rgba(235, 212, 192, 0.6);  /* Warm Biscuit / Mocha Tint */
+  --blob-3: rgba(254, 202, 202, 0.45); /* Soft Peach Blossom */
+
+  /* Bootstrap 5 Variable Overrides */
+  --bs-primary: #c2410c;
+  --bs-primary-rgb: 194, 65, 12;
+  --bs-primary-bg-subtle: #ffedd5;
+  --bs-primary-border-subtle: #fed7aa;
+  --bs-primary-text-emphasis: #7c2d12;
+  --bs-link-color: #c2410c;
+  --bs-link-hover-color: #7c2d12;
+  --bs-body-bg: #faf6f0;
+  --bs-body-color: #2b170e;
+}
+
+/* All Themes Permanently Locked to Warm Terracotta, Apricot & Mocha Brown */
+.theme-sage, .theme-lavender, .theme-seafoam {
+  --body-bg: #faf6f0;
+  --surface-bg: #f5ede4;
+  --surface-card: #ffffff;
+  --surface-card-glass: rgba(255, 255, 255, 0.94);
+
+  --sidebar-bg: #ffffff;
+  --sidebar-text: #5c4033;
+  --sidebar-hover: rgba(194, 65, 12, 0.06);
+  --sidebar-active: #7c2d12;
+  --sidebar-active-bg: #faeee4;
+
+  --border-color: #ebdcd0;
+  --border-subtle: #f5ebe1;
+  --border-glow: rgba(124, 45, 18, 0.22);
+
+  --text-main: #2b170e;
+  --text-secondary: #4a3022;
+  --text-muted: #7c5c4a;
+  --text-light: #a88a78;
+
+  --primary: #c2410c;
+  --primary-hover: #7c2d12;
+  --primary-subtle: #ffedd5;
+  --primary-border: #fed7aa;
+  --primary-glow: rgba(124, 45, 18, 0.25);
+
+  --success: #7c4a2d;
+  --success-subtle: #faeee4;
+  --success-text: #5c331d;
+  --success-border: #ebdcd0;
+
+  --bs-primary: #c2410c;
+  --bs-primary-rgb: 194, 65, 12;
+  --bs-primary-bg-subtle: #ffedd5;
+  --bs-primary-border-subtle: #fed7aa;
+  --bs-primary-text-emphasis: #7c2d12;
+  --bs-link-color: #c2410c;
+  --bs-link-hover-color: #7c2d12;
+  --bs-body-bg: #faf6f0;
+  --bs-body-color: #2b170e;
+
+  --bs-success: #7c4a2d;
+  --bs-success-rgb: 124, 74, 45;
+  --bs-success-text-emphasis: #5c331d;
+  --bs-success-bg-subtle: #faeee4;
+  --bs-success-border-subtle: #ebdcd0;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--body-bg);
+  color: var(--text-main);
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Ambient Pastel Background Lighting */
+.ambient-glow-mesh {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ambient-blob-1 {
+  position: absolute;
+  top: -10%;
+  left: 10%;
+  width: 650px;
+  height: 650px;
+  background: radial-gradient(circle, var(--blob-1, rgba(167, 243, 208, 0.55)) 0%, rgba(255, 255, 255, 0) 70%);
+  filter: blur(70px);
+  animation: floatMesh 20s ease-in-out infinite alternate;
+  transition: background 0.5s ease;
+}
+
+.ambient-blob-2 {
+  position: absolute;
+  bottom: -10%;
+  right: 5%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, var(--blob-2, rgba(254, 215, 170, 0.5)) 0%, rgba(255, 255, 255, 0) 70%);
+  filter: blur(75px);
+  animation: floatMesh 24s ease-in-out infinite alternate-reverse;
+  transition: background 0.5s ease;
+}
+
+.ambient-blob-3 {
+  position: absolute;
+  top: 35%;
+  right: 35%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, var(--blob-3, rgba(233, 213, 255, 0.45)) 0%, rgba(255, 255, 255, 0) 70%);
+  filter: blur(80px);
+  transition: background 0.5s ease;
+}
+
+@keyframes floatMesh {
+  0% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(35px) scale(1.06) rotate(6deg); }
+  100% { transform: translateY(-25px) scale(0.96); }
+}
+
+/* ==========================================================================
+   PASTEL THEME SWITCHER CONTROLS
+   ========================================================================== */
+.pastel-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.pastel-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+}
+
+.pastel-dot:hover {
+  transform: scale(1.2);
+}
+
+.pastel-dot.active {
+  box-shadow: 0 0 0 2px var(--primary);
+  transform: scale(1.15);
+}
+
+.dot-sage { background: linear-gradient(135deg, #ea580c, #7c4a2d); }
+.dot-lavender { background: linear-gradient(135deg, #c2410c, #9a3412); }
+.dot-seafoam { background: linear-gradient(135deg, #f4a261, #5c331d); }
+.dot-peach { background: linear-gradient(135deg, #fb923c, #ea580c); }
+
+/* ==========================================================================
+   SLIDING DOOR LANDING & LOGIN COMPONENT ARCHITECTURE
+   ========================================================================== */
+.door-viewport {
+  position: relative;
+  width: 100vw;
+  min-height: 100vh;
+  overflow: hidden;
+  background: var(--body-bg);
+}
+
+.door-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  display: flex;
+  transition: transform 0.85s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease, filter 0.6s ease;
+  will-change: transform, opacity;
+  overflow-y: auto;
+}
+
+/* Landing Panel (Top Layer) */
+.door-panel.landing-layer {
+  z-index: 10;
+  background: linear-gradient(135deg, rgba(255, 251, 247, 0.96) 0%, rgba(254, 243, 235, 0.94) 100%);
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* Login Panel (Underneath Layer) */
+.door-panel.login-layer {
+  z-index: 5;
+  background: radial-gradient(circle at center, #ffffff 0%, #fff7ed 100%);
+  transform: translateX(60px) scale(0.98);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Active Open State: Door slides away to reveal login */
+.door-viewport.is-open .door-panel.landing-layer {
+  transform: translateX(-100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.door-viewport.is-open .door-panel.login-layer {
+  transform: translateX(0) scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ==========================================================================
+   INTERACTIVE DRAG SLIDER TRACK ("Slide to Sign In")
+   ========================================================================== */
+.slide-to-unlock {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  height: 64px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(124, 45, 18, 0.28);
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  padding: 6px;
+  user-select: none;
+  -webkit-user-select: none;
+  overflow: hidden;
+  box-shadow: 0 10px 25px -5px rgba(92, 32, 12, 0.12), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+  margin: 0 auto;
+}
+
+.slide-track-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, rgba(254, 215, 170, 0.7) 0%, rgba(234, 88, 12, 0.75) 60%, rgba(92, 32, 12, 0.85) 100%);
+  border-radius: 9999px;
+  transition: width 0.05s ease-out;
+  pointer-events: none;
+}
+
+.slide-track-label {
+  position: absolute;
+  width: 100%;
+  left: 0;
+  text-align: center;
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  background: linear-gradient(90deg, #7c5c4a 0%, #ea580c 50%, #4a3022 100%);
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: shineText 3s linear infinite;
+  pointer-events: none;
+  padding-left: 50px;
+}
+
+@keyframes shineText {
+  to { background-position: 200% center; }
+}
+
+.slide-thumb-handle {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ea580c 0%, #9a3412 55%, #5c200c 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  cursor: grab;
+  box-shadow: 0 4px 14px rgba(92, 32, 12, 0.35);
+  transition: transform 0.05s ease-out, box-shadow 0.2s ease;
+  z-index: 2;
+}
+
+.slide-thumb-handle:active {
+  cursor: grabbing;
+  box-shadow: 0 6px 20px rgba(92, 32, 12, 0.5);
+}
+
+/* Glassmorphic Landing Cards */
+.glass-showcase-card {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px -2px rgba(234, 88, 12, 0.04);
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.glass-showcase-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(234, 88, 12, 0.35);
+  box-shadow: 0 8px 25px -4px rgba(234, 88, 12, 0.12);
+}
+
+.glass-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 1.1rem;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 1px solid rgba(234, 88, 12, 0.25);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-main);
+  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.04);
+}
+
+/* Typography Gradients */
+.text-gradient-primary {
+  background: linear-gradient(135deg, #4a2818 0%, #7c2d12 50%, #c2410c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-accent {
+  background: linear-gradient(135deg, #ea580c 0%, #c2410c 45%, #5c200c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ==========================================================================
+   APP SIDEBAR & NAVIGATION STYLING (Terracotta, Apricot & Mocha Brown)
+   ========================================================================== */
+.app-sidebar {
+  width: 265px;
+  min-height: 100vh;
+  background-color: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.25rem 0.9rem;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border-color);
+}
+
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.6rem;
+  text-decoration: none;
+  color: var(--text-main);
+}
+
+.brand-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #ea580c 0%, #9a3412 50%, #5c200c 100%) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff !important;
+  font-size: 1.2rem;
+  box-shadow: 0 4px 14px rgba(92, 32, 12, 0.28) !important;
+}
+
+.nav-section-title {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  font-weight: 700;
+  margin: 1.25rem 0 0.4rem 0.6rem;
+}
+
+.sidebar-nav .nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.65rem 0.85rem;
+  color: var(--sidebar-text);
+  border-radius: 9px;
+  font-weight: 500;
+  font-size: 0.88rem;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  margin-bottom: 2px;
+}
+
+.sidebar-nav .nav-link i {
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+}
+
+.sidebar-nav .nav-link:hover {
+  color: var(--text-main);
+  background-color: var(--sidebar-hover);
+}
+
+.sidebar-nav .nav-link:hover i {
+  color: var(--primary);
+}
+
+.sidebar-nav .nav-link.active {
+  color: var(--sidebar-active);
+  background-color: var(--sidebar-active-bg);
+  border: 1px solid var(--primary-border);
+  font-weight: 600;
+  box-shadow: 0 2px 8px var(--primary-glow);
+}
+
+.sidebar-nav .nav-link.active i {
+  color: var(--sidebar-active);
+}
+
+.sidebar-user {
+  background-color: var(--surface-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 0.85rem;
+}
+
+/* App Main & Header */
+.app-main {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--body-bg);
+}
+
+.app-header {
+  background-color: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.85rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.search-input {
+  background-color: var(--surface-bg);
+  border: 1px solid transparent;
+  border-radius: 9px;
+  padding: 0.48rem 1rem 0.48rem 2.2rem;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+  width: 300px;
+  color: var(--text-main);
+}
+
+.search-input:focus {
+  background-color: #ffffff;
+  border-color: var(--primary-border);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+  outline: none;
+}
+
+.page-container {
+  padding: 2rem;
+  flex-grow: 1;
+}
+
+/* ==========================================================================
+   CARDS, WIDGETS & KPI METRICS (Clean Warm Pastel)
+   ========================================================================== */
+.card-widget {
+  background: var(--surface-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  box-shadow: 0 2px 10px -1px rgba(234, 88, 12, 0.03);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  color: var(--text-main);
+}
+
+.card-widget:hover {
+  border-color: var(--primary-border);
+  box-shadow: 0 6px 20px -2px var(--primary-glow);
+}
+
+.kpi-card {
+  padding: 1.35rem 1.45rem;
+  background: var(--surface-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary-border);
+}
+
+.kpi-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+/* ==========================================================================
+   BUTTONS & FORM CONTROLS
+   ========================================================================== */
+.btn-primary {
+  background: linear-gradient(135deg, #ea580c 0%, #9a3412 50%, #5c200c 100%) !important;
+  border-color: #5c200c !important;
+  color: #ffffff !important;
+  border-radius: 9px;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(92, 32, 12, 0.28) !important;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+  background: linear-gradient(135deg, #c2410c 0%, #7c2d12 50%, #3d1408 100%) !important;
+  border-color: #3d1408 !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 18px rgba(61, 20, 8, 0.4) !important;
+  transform: translateY(-1px);
+}
+
+.btn-outline-primary {
+  color: var(--primary);
+  border-color: var(--primary-border);
+  background-color: transparent;
+  border-radius: 9px;
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--primary-subtle);
+  color: var(--primary-hover);
+  border-color: var(--primary);
+}
+
+.btn-light {
+  background-color: #ffffff;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  border-radius: 9px;
+}
+
+.btn-light:hover {
+  background-color: var(--surface-bg);
+  color: var(--text-main);
+  border-color: var(--border-color);
+}
+
+/* Form Inputs */
+.form-control, .form-select {
+  background-color: #ffffff;
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  border-radius: 9px;
+  padding: 0.6rem 0.9rem;
+}
+
+.form-control:focus, .form-select:focus {
+  background-color: #ffffff;
+  border-color: var(--primary);
+  color: var(--text-main);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.form-control::placeholder {
+  color: var(--text-light);
+}
+
+/* Bootstrap Utility Overrides for Pastel Harmonies */
+.text-primary {
+  color: var(--primary) !important;
+}
+
+.bg-primary {
+  background-color: var(--primary) !important;
+}
+
+.bg-primary-subtle {
+  background-color: var(--primary-subtle) !important;
+}
+
+.border-primary {
+  border-color: var(--primary) !important;
+}
+
+.border-primary-subtle {
+  border-color: var(--primary-border) !important;
+}
+
+.bg-info-subtle {
+  background-color: #fff7ed !important;
+}
+
+.text-info {
+  color: #ea580c !important;
+}
+
+.border-info-subtle {
+  border-color: #fed7aa !important;
+}
+
+.bg-warning-subtle {
+  background-color: #fffbeb !important;
+}
+
+.text-warning {
+  color: #b45309 !important;
+}
+
+.border-warning-subtle {
+  border-color: #fde68a !important;
+}
+
+.bg-success-subtle {
+  background-color: #faeee4 !important;
+}
+
+.text-success {
+  color: #7c4a2d !important;
+}
+
+.bg-success {
+  background-color: #7c4a2d !important;
+  color: #ffffff !important;
+}
+
+.border-success-subtle {
+  border-color: #ebdcd0 !important;
+}
+
+.alert-success {
+  background-color: #faeee4 !important;
+  color: #5c331d !important;
+  border-color: #ebdcd0 !important;
+}
+
+.alert-warning {
+  background-color: #ffedd5 !important;
+  color: #7c2d12 !important;
+  border-color: #fed7aa !important;
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #ea580c 0%, #9a3412 50%, #5c200c 100%) !important;
+  border-color: #5c200c !important;
+  color: #ffffff !important;
+  border-radius: 9px;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(92, 32, 12, 0.28) !important;
+}
+
+.btn-outline-success {
+  color: #7c4a2d !important;
+  border-color: #ebdcd0 !important;
+  background-color: transparent !important;
+  border-radius: 9px;
+}
+
+.btn-outline-success:hover {
+  background-color: #faeee4 !important;
+  color: #5c331d !important;
+}
+
+.bg-danger-subtle {
+  background-color: #fff1f2 !important;
+}
+
+.text-danger {
+  color: #be123c !important;
+}
+
+a {
+  color: var(--primary);
+}
+
+a:hover {
+  color: var(--primary-hover);
+}
+
+/* Button & Badge Harmonization with Terracotta & Brown Combo */
+.btn-warning {
+  background: linear-gradient(135deg, #ea580c 0%, #9a3412 50%, #5c200c 100%) !important;
+  border-color: #5c200c !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(92, 32, 12, 0.25) !important;
+}
+
+.btn-warning:hover, .btn-warning:focus, .btn-warning:active {
+  background: linear-gradient(135deg, #c2410c 0%, #7c2d12 50%, #3d1408 100%) !important;
+  border-color: #3d1408 !important;
+  color: #ffffff !important;
+}
+
+.badge.bg-warning, .badge.text-bg-warning {
+  background-color: #ffedd5 !important;
+  color: #7c2d12 !important;
+  border: 1px solid #fed7aa !important;
+}
+
+.badge.bg-success, .badge.text-bg-success {
+  background-color: #faeee4 !important;
+  color: #5c331d !important;
+  border: 1px solid #ebdcd0 !important;
+}
+
+/* ==========================================================================
+   STATUS CHIPS & ROLE BADGES (Calm Warm Pastel)
+   ========================================================================== */
+.status-chip {
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  letter-spacing: 0.02em;
+}
+
+.status-chip.delivered, .status-chip.approved, .status-chip.compliant {
+  background-color: #faeee4 !important;
+  color: #5c331d !important;
+  border: 1px solid #ebdcd0 !important;
+}
+
+.status-chip.ordered, .status-chip.in-transit {
+  background-color: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+}
+
+.status-chip.pending {
+  background-color: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.status-chip.high-risk, .status-chip.cancelled, .status-chip.non-compliant {
+  background-color: #fff1f2;
+  color: #be123c;
+  border: 1px solid #fecdd3;
+}
+
+/* Pastel Role Badges */
+.role-badge-admin {
+  background-color: #fff1f2 !important;
+  color: #be123c !important;
+  border: 1px solid #fecdd3 !important;
+}
+
+.role-badge-procurement {
+  background-color: #ffedd5 !important;
+  color: #c2410c !important;
+  border: 1px solid #fed7aa !important;
+}
+
+.role-badge-supply {
+  background-color: #fffbeb !important;
+  color: #b45309 !important;
+  border: 1px solid #fde68a !important;
+}
+
+.role-badge-finance {
+  background-color: #fff7ed !important;
+  color: #ea580c !important;
+  border: 1px solid #fed7aa !important;
+}
+
+.role-badge-vendor {
+  background-color: #fef3c7 !important;
+  color: #92400e !important;
+  border: 1px solid #fde68a !important;
+}
+
+.role-badge-auditor {
+  background-color: #fbf0e6 !important;
+  color: #856a5c !important;
+  border: 1px solid #f3e2d5 !important;
+}
+
+/* ==========================================================================
+   DATA TABLES (Crisp Warm Minimalist)
+   ========================================================================== */
+.table-custom {
+  margin-bottom: 0;
+  color: var(--text-main);
+}
+
+.table-custom th {
+  background-color: var(--surface-bg);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  padding: 0.9rem 1.2rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.table-custom td {
+  padding: 1rem 1.2rem;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  background-color: transparent;
+}
+
+.table-custom tbody tr:hover td {
+  background-color: var(--surface-bg);
+  color: var(--text-main);
+}
+
+/* Filter Buttons / Category Pills */
+.filter-pill {
+  padding: 0.45rem 1rem;
+  border-radius: 9px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background-color: #ffffff;
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-pill:hover {
+  color: var(--text-main);
+  background-color: var(--surface-bg);
+  border-color: var(--border-color);
+}
+
+.filter-pill.active {
+  background: linear-gradient(135deg, #ea580c 0%, #9a3412 50%, #5c200c 100%) !important;
+  color: #ffffff !important;
+  border-color: #5c200c !important;
+  box-shadow: 0 2px 10px rgba(92, 32, 12, 0.25) !important;
+}
+
+/* Modals */
+.modal-content {
+  background-color: #ffffff;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+  color: var(--text-main);
+}
+
+.modal-header {
+  border-bottom: 1px solid var(--border-color);
+  padding: 1.2rem 1.5rem;
+}
+
+.modal-footer {
+  border-top: 1px solid var(--border-color);
+  padding: 1rem 1.5rem;
+}
+
+
+
