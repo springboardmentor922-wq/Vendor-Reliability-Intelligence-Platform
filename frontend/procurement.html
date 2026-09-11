@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procurement & Purchase Orders - VendorIQ</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css?v=rbac2">
+</head>
+<body>
+
+    <div class="d-flex">
+        <!-- Shared Sidebar Mount -->
+        <div id="sidebarMount"></div>
+
+        <!-- Main Content Area -->
+        <div class="app-main">
+            <!-- Shared Header Mount -->
+            <div id="headerMount"></div>
+
+            <div class="page-container">
+                <!-- Header with Action -->
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+                    <div>
+                        <h3 class="fw-bold text-dark m-0 tracking-tight" id="poPageTitle">Procurement & Order Lifecycle Workflows</h3>
+                        <p class="text-muted small m-0" id="poPageSubtitle">Role-governed purchase orders, vendor dispatch tracking, QA inspections, and 3-way invoice matching.</p>
+                    </div>
+                    <div id="headerActionMount">
+                        <button class="btn btn-primary btn-sm" id="newPOBtn" data-bs-toggle="modal" data-bs-target="#newPOModal" style="border-radius: 8px;">
+                            <i class="bi bi-plus-lg me-1"></i> New Purchase Order
+                        </button>
+                    </div>
+                </div>
+
+
+
+                <!-- Status Filter Pills -->
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    <button class="filter-pill active" onclick="filterStatus('All', this)">All Orders</button>
+                    <button class="filter-pill" onclick="filterStatus('Pending', this)">Pending Approval</button>
+                    <button class="filter-pill" onclick="filterStatus('Approved', this)">Approved</button>
+                    <button class="filter-pill" onclick="filterStatus('Ordered', this)">In Transit / Ordered</button>
+                    <button class="filter-pill" onclick="filterStatus('Delivered', this)">Delivered</button>
+                    <button class="filter-pill" onclick="filterStatus('Completed', this)">Completed & Paid</button>
+                </div>
+
+                <!-- Orders Table Card -->
+                <div class="card-widget overflow-hidden">
+                    <div class="table-responsive">
+                        <table class="table table-custom">
+                            <thead>
+                                <tr>
+                                    <th>PO Code</th>
+                                    <th>Title / Scope</th>
+                                    <th>Assigned Vendor</th>
+                                    <th>Department & Logistics</th>
+                                    <th>Total Value</th>
+                                    <th>Status & Tracking</th>
+                                    <th class="text-end">Role Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersTableBody">
+                                <tr>
+                                    <td colspan="7" class="text-center py-5 text-muted">
+                                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div> Loading purchase orders...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 1: Create New Purchase Order (Procurement Manager / Admin) -->
+    <div class="modal fade" id="newPOModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle text-primary me-2"></i>Create Enterprise Purchase Requisition</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="createPOForm">
+                    <div class="modal-body p-4">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-7">
+                                <label class="form-label small fw-semibold">Order Title / Material Scope</label>
+                                <input type="text" class="form-control" id="poTitle" required placeholder="e.g. Microelectronic Components - Priority Batch">
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label small fw-semibold">Assign Certified Supplier</label>
+                                <select class="form-select" id="poVendorSelect" required>
+                                    <option value="" disabled selected>Choose verified supplier...</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Requisitioning Department</label>
+                                <select class="form-select" id="poDepartment" required>
+                                    <option value="Supply Chain & Logistics" selected>Supply Chain & Logistics</option>
+                                    <option value="Technology">Technology</option>
+                                    <option value="Raw Materials & Foundry">Raw Materials & Foundry</option>
+                                    <option value="Equipment & Machinery">Equipment & Machinery</option>
+                                    <option value="Fitness & Health">Fitness & Health</option>
+                                    <option value="Outdoors">Outdoors</option>
+                                    <option value="Apparel">Apparel</option>
+                                    <option value="Facility Operations">Facility Operations</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Fulfillment Shipping Mode</label>
+                                <select class="form-select" id="poShippingMode" required>
+                                    <option value="Standard Class" selected>Standard Class (3-5 Days)</option>
+                                    <option value="First Class">First Class (1-2 Days Express)</option>
+                                    <option value="Second Class">Second Class (Ground)</option>
+                                    <option value="Same Day">Same Day Dedicated Transit</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Order Priority</label>
+                                <select class="form-select" id="poPriority" required>
+                                    <option value="Standard" selected>Standard Priority</option>
+                                    <option value="High">High Priority</option>
+                                    <option value="Urgent">Urgent / Critical Expedited</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Destination Country</label>
+                                <input type="text" class="form-control" id="poCountry" value="United States" placeholder="e.g. United States, Germany, Japan">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Destination City / Facility Port</label>
+                                <input type="text" class="form-control" id="poCity" required placeholder="e.g. Chicago, San Jose, Pittsburgh, Dallas">
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Units / Quantity</label>
+                                <input type="number" min="1" class="form-control" id="poQuantity" value="50" required oninput="calculatePOTotal()">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Unit Price ($)</label>
+                                <input type="number" step="0.01" min="0.01" class="form-control" id="poUnitPrice" value="250.00" required oninput="calculatePOTotal()">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Total Requisition Value ($)</label>
+                                <input type="number" step="0.01" class="form-control fw-bold text-primary" id="poAmount" value="12500.00" required readonly style="background-color: #f5ede4;">
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Product Category</label>
+                                <input type="text" class="form-control" id="poCategory" placeholder="e.g. Industrial Electronics, Heavy Metallurgy">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Expected Delivery Date</label>
+                                <input type="date" class="form-control" id="poDeliveryDate" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold">Special Receiving Instructions / Handling Notes</label>
+                            <textarea class="form-control" id="poNotes" rows="2" placeholder="e.g. Palletized manifest match required. Direct dock gate 4 delivery."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="savePOBtn">Issue Purchase Order</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 2: Vendor Dispatch Modal (Vendor Role) -->
+    <div class="modal fade" id="dispatchModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-truck text-primary me-2"></i>Dispatch Order Shipment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="dispatchForm">
+                    <input type="hidden" id="dispatchOrderId">
+                    <div class="modal-body p-4">
+                        <div class="alert alert-light border small text-muted mb-3">
+                            <i class="bi bi-info-circle text-primary me-1"></i> As the registered vendor, please provide carrier dispatch details to mark this order as <strong>In Transit</strong>.
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Freight Carrier / Logistics Provider</label>
+                            <input type="text" class="form-control" id="dispatchCarrier" required placeholder="e.g. FedEx Freight, Apex Fleet Direct, DHL Express">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Shipment Tracking / Waybill Number</label>
+                            <input type="text" class="form-control" id="dispatchTracking" required placeholder="e.g. TRK-FDX-994821">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="dispatchSubmitBtn">Confirm & Dispatch</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 3: Supply Chain QA Inspection Modal (Supply Chain Manager Role) -->
+    <div class="modal fade" id="qaModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-box-seam text-primary me-2"></i>Dock Receipt & QA Scoring</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="qaForm">
+                    <input type="hidden" id="qaOrderId">
+                    <div class="modal-body p-4">
+                        <div class="alert alert-light border small text-muted mb-3">
+                            <i class="bi bi-shield-check text-primary me-1"></i> Conduct physical receiving inspection at the loading dock. Scoring dynamically updates vendor reliability metrics.
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Quality Rating (1.0 to 5.0 Stars)</label>
+                            <select class="form-select" id="qaRating" required>
+                                <option value="5.0">5.0 / 5.0 - Flawless (Zero Defects)</option>
+                                <option value="4.8" selected>4.8 / 5.0 - Excellent (Minor packaging mark)</option>
+                                <option value="4.2">4.2 / 5.0 - Acceptable (Standard condition)</option>
+                                <option value="3.5">3.5 / 5.0 - Substandard (Minor discrepancies)</option>
+                                <option value="2.0">2.0 / 5.0 - Critical Non-Conformity</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Receiving Inspection & Manifest Notes</label>
+                            <textarea class="form-control" id="qaNotes" rows="3" placeholder="Inspected at dock. Verified packing slip against physical pallet count."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="qaSubmitBtn">Confirm Receipt & Score</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 4: Vendor Submit Invoice Modal (Vendor Role) -->
+    <div class="modal fade" id="invoiceModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-receipt text-primary me-2"></i>Submit Billing Invoice</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="invoiceForm">
+                    <input type="hidden" id="invoiceOrderId">
+                    <div class="modal-body p-4">
+                        <div class="alert alert-light border small text-muted mb-3">
+                            <i class="bi bi-info-circle text-primary me-1"></i> Order delivered and QA verified. Submit your formal invoice for 3-way matching and finance payment clearance.
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Invoice Number</label>
+                            <input type="text" class="form-control" id="invoiceNumberInput" required placeholder="e.g. INV-2026-0921">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Invoice Amount ($)</label>
+                            <input type="number" step="0.01" class="form-control" id="invoiceAmountInput" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="invoiceSubmitBtn">Submit Invoice</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 5: Finance 3-Way Match & Pay Modal (Finance Officer Role) -->
+    <div class="modal fade" id="threeWayMatchModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-check2-circle text-primary me-2"></i>Finance 3-Way Reconciliation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="threeWayMatchForm">
+                    <input type="hidden" id="matchOrderId">
+                    <div class="modal-body p-4">
+                        <div class="p-3 rounded-3 mb-3" style="background-color: #faeee4; border: 1px solid #ebdcd0;">
+                            <div class="d-flex justify-content-between mb-2 small">
+                                <span class="text-muted">1. Requisition PO Value:</span>
+                                <strong class="text-dark" id="matchPOValue">$0.00</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2 small">
+                                <span class="text-muted">2. Goods Receipt QA Score:</span>
+                                <strong style="color: #ea580c;" id="matchQAScore">0.0 / 5.0</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2 small">
+                                <span class="text-muted">3. Vendor Invoice Amount:</span>
+                                <strong class="text-dark" id="matchInvoiceAmount">$0.00</strong>
+                            </div>
+                            <hr class="my-2" style="border-color: #ebdcd0;">
+                            <div class="d-flex justify-content-between small fw-bold">
+                                <span>Discrepancy / Variance:</span>
+                                <span style="color: #7c4a2d;">$0.00 (100% Match)</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Payment Audit Notes</label>
+                            <input type="text" class="form-control" id="matchPaymentNotes" value="3-way match verified against dock inspection and vendor bill. Cleared via corporate treasury wire.">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="matchSubmitBtn">Authorize Payment & Settle</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/auth.js?v=rbac2"></script>
+    <script src="js/api.js?v=rbac2"></script>
+    <script src="js/navigation.js?v=rbac2"></script>
+
+    <script>
+        let currentStatus = 'All';
+        let currentUserRole = 'Procurement Manager';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = await checkAuth();
+            if (!user) return;
+
+            currentUserRole = user.role;
+            renderSharedLayout('Procurement');
+
+            // Hide "New Purchase Order" button if user is NOT Procurement Manager or Administrator
+            const actionMount = document.getElementById('headerActionMount');
+            if (currentUserRole !== 'Procurement Manager' && currentUserRole !== 'Administrator') {
+                if (actionMount) actionMount.style.display = 'none';
+                const modal = document.getElementById('newPOModal');
+                if (modal) modal.remove();
+            }
+
+            if (currentUserRole === 'Vendor') {
+                document.getElementById('poPageTitle').textContent = 'My Assigned Purchase Orders';
+                document.getElementById('poPageSubtitle').textContent = 'Review buyer purchase orders, dispatch shipments with carrier tracking, and submit billing invoices.';
+            } else if (currentUserRole === 'Finance Officer') {
+                document.getElementById('poPageTitle').textContent = 'Orders & Invoices Clearance Workbench';
+                document.getElementById('poPageSubtitle').textContent = 'Verify 3-way matching between purchase orders, warehouse QA inspection, and vendor invoices.';
+            } else if (currentUserRole === 'Supply Chain Manager') {
+                document.getElementById('poPageTitle').textContent = 'Logistics & Receiving Workbench';
+                document.getElementById('poPageSubtitle').textContent = 'Track carrier shipments, record goods receipt, and execute quality inspections.';
+            } else if (currentUserRole === 'Auditor') {
+                document.getElementById('poPageTitle').textContent = 'Purchase Order Audit Trail';
+                document.getElementById('poPageSubtitle').textContent = 'Complete chronological audit log of requisitions, authorizations, deliveries, and disbursements.';
+            }
+
+            await loadOrders();
+            if (currentUserRole === 'Procurement Manager' || currentUserRole === 'Administrator') {
+                await populateVendorSelect();
+                const dateInput = document.getElementById('poDeliveryDate');
+                if (dateInput && !dateInput.value) {
+                    const target = new Date();
+                    target.setDate(target.getDate() + 14);
+                    dateInput.value = target.toISOString().split('T')[0];
+                }
+            }
+        });
+
+        async function loadOrders() {
+            try {
+                const orders = await API.getOrders(currentStatus);
+                renderOrdersTable(orders || []);
+            } catch (err) {
+                console.error("Error loading orders:", err);
+            }
+        }
+
+        function renderOrdersTable(orders) {
+            const tbody = document.getElementById('ordersTableBody');
+            if (orders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5 text-muted">No purchase orders found for current filter.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = orders.map(o => `
+                <tr>
+                    <td>
+                        <strong class="text-primary">${o.order_number}</strong>
+                        <div class="mt-1">${getWorkflowStageBadge(o.status)}</div>
+                    </td>
+                    <td class="fw-semibold text-dark">
+                        <div>${o.title}</div>
+                        ${o.priority && o.priority !== 'Standard' ? `<span class="badge ms-0 mt-1" style="background-color: #fee2e2; color: #991b1b; font-size: 0.65rem;">${o.priority} Priority</span>` : ''}
+                        <div class="small text-muted" style="font-size: 0.72rem;">${o.items_count || 1} units @ $${(o.unit_price || (o.total_amount / (o.items_count || 1))).toLocaleString()}</div>
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark border">${o.vendor_name || 'Assigned Supplier'}</span>
+                        ${o.product_category ? `<div class="small text-muted" style="font-size: 0.7rem;">${o.product_category}</div>` : ''}
+                    </td>
+                    <td>
+                        <div style="font-size: 0.78rem; font-weight: 600; color: #5c331d;">${o.department || 'Supply Chain & Logistics'}</div>
+                        <div style="font-size: 0.72rem; color: #7c4a2d;"><i class="bi bi-truck me-1"></i>${o.shipping_mode || 'Standard Class'}</div>
+                        ${o.destination_city ? `<div style="font-size: 0.7rem; color: #6c757d;"><i class="bi bi-geo-alt me-1"></i>${o.destination_city}${o.destination_country ? ', ' + o.destination_country : ''}</div>` : ''}
+                    </td>
+                    <td class="fw-bold">$${o.total_amount.toLocaleString()}</td>
+                    <td>
+                        <div class="mb-1"><span class="status-chip ${getStatusClass(o.status)}">${o.status}</span></div>
+                        ${renderOrderTelemetry(o)}
+                    </td>
+                    <td class="text-end">
+                        ${renderActionButtons(o)}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderOrderTelemetry(o) {
+            let html = '';
+            if (o.tracking_number) {
+                html += `<div style="font-size: 0.72rem; color: #7c4a2d;"><i class="bi bi-truck me-1"></i>${o.carrier_name || 'Carrier'}: <strong>${o.tracking_number}</strong></div>`;
+            }
+            if (o.quality_rating) {
+                html += `<div style="font-size: 0.72rem; color: #ea580c;"><i class="bi bi-star-fill me-1"></i>QA Rating: <strong>${o.quality_rating} / 5.0</strong></div>`;
+            }
+            if (o.invoice_number) {
+                html += `<div style="font-size: 0.72rem; color: #5c331d;"><i class="bi bi-receipt me-1"></i>Invoice: <strong>${o.invoice_number}</strong> (${o.invoice_status})</div>`;
+            }
+            if (!html) {
+                html = `<span class="text-muted" style="font-size: 0.72rem;">Exp: ${o.expected_delivery_date}</span>`;
+            }
+            return html;
+        }
+
+        function getWorkflowStageBadge(status) {
+            switch (status) {
+                case 'Pending': 
+                    return `<span class="badge" style="background-color: #ffedd5; color: #7c2d12; border: 1px solid #fed7aa; font-size: 0.68rem;"><i class="bi bi-1-circle me-1"></i>Stage 1: Requisition</span>`;
+                case 'Approved': 
+                    return `<span class="badge" style="background-color: #ffedd5; color: #7c2d12; border: 1px solid #fed7aa; font-size: 0.68rem;"><i class="bi bi-2-circle me-1"></i>Stage 2: Approved</span>`;
+                case 'Ordered': 
+                    return `<span class="badge" style="background-color: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; font-size: 0.68rem;"><i class="bi bi-3-circle me-1"></i>Stage 3: In Transit</span>`;
+                case 'Delivered': 
+                    return `<span class="badge" style="background-color: #faeee4; color: #5c331d; border: 1px solid #ebdcd0; font-size: 0.68rem;"><i class="bi bi-4-circle me-1"></i>Stage 4: Delivered</span>`;
+                case 'Completed': 
+                    return `<span class="badge" style="background-color: #faeee4; color: #5c331d; border: 1px solid #ebdcd0; font-size: 0.68rem;"><i class="bi bi-check2-all me-1"></i>Stage 5: Cleared</span>`;
+                default: 
+                    return `<span class="badge bg-light text-secondary border">Archived</span>`;
+            }
+        }
+
+        function renderActionButtons(order) {
+            // 1. Procurement Manager Controls
+            if (currentUserRole === 'Procurement Manager') {
+                if (order.status === 'Pending') {
+                    return `
+                        <button class="btn btn-sm btn-primary" onclick="approveOrderAction(${order.id})"><i class="bi bi-shield-check me-1"></i>Approve PO</button>
+                        <button class="btn btn-sm btn-outline-danger ms-1" onclick="cancelOrderAction(${order.id})" title="Cancel Requisition"><i class="bi bi-x"></i></button>
+                    `;
+                } else if (order.status === 'Approved') {
+                    return `<span class="badge" style="background-color: #fff7ed; color: #c2410c; border: 1px solid #fed7aa;"><i class="bi bi-clock me-1"></i>Awaiting Vendor Dispatch</span>`;
+                } else if (order.status === 'Ordered') {
+                    return `<span class="badge" style="background-color: #fff7ed; color: #c2410c; border: 1px solid #fed7aa;"><i class="bi bi-truck me-1"></i>In Transit</span>`;
+                } else if (order.status === 'Delivered') {
+                    return `<span class="badge" style="background-color: #faeee4; color: #5c331d; border: 1px solid #ebdcd0;"><i class="bi bi-box-seam me-1"></i>Received & Scored</span>`;
+                } else {
+                    return `<span class="badge" style="background-color: #faeee4; color: #5c331d; border: 1px solid #ebdcd0;"><i class="bi bi-check2-all me-1"></i>Settled & Paid</span>`;
+                }
+            }
+
+            // 2. Vendor Controls (Supplier Mode)
+            if (currentUserRole === 'Vendor') {
+                if (order.status === 'Pending') {
+                    return `<span class="badge bg-light text-muted border"><i class="bi bi-hourglass-split me-1"></i>Under Buyer Review</span>`;
+                } else if (order.status === 'Approved') {
+                    return `<button class="btn btn-sm btn-primary" onclick="openDispatchModal(${order.id})"><i class="bi bi-send me-1"></i>Dispatch Shipment</button>`;
+                } else if (order.status === 'Ordered') {
+                    return `<span class="badge" style="background-color: #fff7ed; color: #c2410c; border: 1px solid #fed7aa;"><i class="bi bi-truck me-1"></i>In Transit</span>`;
+                } else if (order.status === 'Delivered') {
+                    if (order.invoice_status === 'Submitted' || order.invoice_status === 'Paid') {
+                        return `<span class="badge" style="background-color: #faeee4; color: #5c331d; border: 1px solid #ebdcd0;"><i class="bi bi-receipt me-1"></i>Invoice Submitted</span>`;
+                    }
+                    return `<button class="btn btn-sm btn-primary" onclick="openInvoiceModal(${order.id}, ${order.total_amount})"><i class="bi bi-receipt me-1"></i>Submit Invoice</button>`;
+                } else {
+                    return `<span class="badge" style="background-color: #faeee4; color: #5c331d; border: 1px solid #ebdcd0;"><i class="bi bi-cash-coin me-1"></i>Payment Received</span>`;
+                }
+            }
+
+            // 3. Supply Chain Manager Controls
+            if (currentUserRole === 'Supply Chain Manager') {
+                if (order.status === 'Ordered') {
+                    return `<button class="btn btn-sm btn-primary" onclick="openQAModal(${order.id})"><i class="bi bi-box-seam me-1"></i>Receive & QA</button>`;
+                } else if (order.status === 'Delivered') {
+                    return `<span class="badge" style="background-color: #faeee4; color: #5c331d; border: 1px solid #ebdcd0;"><i class="bi bi-check-circle me-1"></i>QA Complete (${order.quality_rating}/5)</span>`;
+                } else {
+                    return `<span class="badge bg-light text-muted border">${order.status}</span>`;
+                }
+            }
+
+            // 4. Finance Officer Controls
+            if (currentUserRole === 'Finance Officer') {
+                if (order.status === 'Delivered') {
+                    return `<button class="btn btn-sm btn-primary" onclick="open3WayMatchModal(${order.id}, ${order.total_amount}, '${order.invoice_number || 'INV-PENDING'}', ${order.invoice_amount || order.total_amount}, ${order.quality_rating || 5.0})"><i class="bi bi-check2-circle me-1"></i>3-Way Match & Pay</button>`;
+                } else if (order.status === 'Completed') {
+                    return `<span class="badge" style="background-color: #faeee4; color: #5c331d; border: 1px solid #ebdcd0;"><i class="bi bi-cash-stack me-1"></i>Settled (${order.payment_date || 'Paid'})</span>`;
+                } else {
+                    return `<span class="badge bg-light text-muted border">${order.status}</span>`;
+                }
+            }
+
+            // 5. Auditor Controls
+            if (currentUserRole === 'Auditor') {
+                return `<button class="btn btn-sm btn-light border" onclick="alert('Audited PO ${order.order_number}: Compliance verified with ISO 9001 and SLA standards.')"><i class="bi bi-shield-check me-1"></i>Audit Log</button>`;
+            }
+
+            // 6. Administrator Controls (Full Permissions)
+            if (order.status === 'Pending') {
+                return `<button class="btn btn-sm btn-primary" onclick="approveOrderAction(${order.id})"><i class="bi bi-shield-check me-1"></i>Approve</button>`;
+            } else if (order.status === 'Approved') {
+                return `<button class="btn btn-sm btn-primary" onclick="openDispatchModal(${order.id})"><i class="bi bi-send me-1"></i>Dispatch</button>`;
+            } else if (order.status === 'Ordered') {
+                return `<button class="btn btn-sm btn-primary" onclick="openQAModal(${order.id})"><i class="bi bi-box-seam me-1"></i>Receive & QA</button>`;
+            } else if (order.status === 'Delivered') {
+                return `<button class="btn btn-sm btn-primary" onclick="open3WayMatchModal(${order.id}, ${order.total_amount}, '${order.invoice_number || 'INV-AUTO'}', ${order.invoice_amount || order.total_amount}, ${order.quality_rating || 5.0})"><i class="bi bi-check2-circle me-1"></i>Clear Payment</button>`;
+            } else {
+                return `<span class="badge" style="background-color: #faeee4; color: #5c331d; border: 1px solid #ebdcd0;"><i class="bi bi-check2-all me-1"></i>Archived</span>`;
+            }
+        }
+
+        // ==========================================
+        // Workflow Action Handlers
+        // ==========================================
+        async function approveOrderAction(orderId) {
+            try {
+                await API.approveOrder(orderId);
+                await loadOrders();
+            } catch (err) {
+                alert("Error approving order: " + err.message);
+            }
+        }
+
+        async function cancelOrderAction(orderId) {
+            if (!confirm("Are you sure you want to cancel this requisition?")) return;
+            try {
+                await API.cancelOrder(orderId);
+                await loadOrders();
+            } catch (err) {
+                alert("Error cancelling order: " + err.message);
+            }
+        }
+
+        function openDispatchModal(orderId) {
+            document.getElementById('dispatchOrderId').value = orderId;
+            new bootstrap.Modal(document.getElementById('dispatchModal')).show();
+        }
+
+        document.getElementById('dispatchForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const orderId = document.getElementById('dispatchOrderId').value;
+            const carrier = document.getElementById('dispatchCarrier').value;
+            const tracking = document.getElementById('dispatchTracking').value;
+            const btn = document.getElementById('dispatchSubmitBtn');
+            btn.disabled = true;
+            btn.textContent = 'Dispatching...';
+
+            try {
+                await API.dispatchOrder(orderId, carrier, tracking);
+                bootstrap.Modal.getInstance(document.getElementById('dispatchModal')).hide();
+                document.getElementById('dispatchForm').reset();
+                await loadOrders();
+            } catch (err) {
+                alert("Failed to dispatch: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Confirm & Dispatch';
+            }
+        });
+
+        function openQAModal(orderId) {
+            document.getElementById('qaOrderId').value = orderId;
+            new bootstrap.Modal(document.getElementById('qaModal')).show();
+        }
+
+        document.getElementById('qaForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const orderId = document.getElementById('qaOrderId').value;
+            const rating = document.getElementById('qaRating').value;
+            const notes = document.getElementById('qaNotes').value;
+            const btn = document.getElementById('qaSubmitBtn');
+            btn.disabled = true;
+            btn.textContent = 'Scoring...';
+
+            try {
+                await API.receiveOrderQA(orderId, rating, notes);
+                bootstrap.Modal.getInstance(document.getElementById('qaModal')).hide();
+                document.getElementById('qaForm').reset();
+                await loadOrders();
+            } catch (err) {
+                alert("Failed to record QA: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Confirm Receipt & Score';
+            }
+        });
+
+        function openInvoiceModal(orderId, totalAmount) {
+            document.getElementById('invoiceOrderId').value = orderId;
+            document.getElementById('invoiceAmountInput').value = totalAmount;
+            document.getElementById('invoiceNumberInput').value = 'INV-2026-' + Math.floor(1000 + Math.random() * 9000);
+            new bootstrap.Modal(document.getElementById('invoiceModal')).show();
+        }
+
+        document.getElementById('invoiceForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const orderId = document.getElementById('invoiceOrderId').value;
+            const invNum = document.getElementById('invoiceNumberInput').value;
+            const amount = document.getElementById('invoiceAmountInput').value;
+            const btn = document.getElementById('invoiceSubmitBtn');
+            btn.disabled = true;
+            btn.textContent = 'Submitting...';
+
+            try {
+                await API.submitInvoice(orderId, invNum, amount);
+                bootstrap.Modal.getInstance(document.getElementById('invoiceModal')).hide();
+                document.getElementById('invoiceForm').reset();
+                await loadOrders();
+            } catch (err) {
+                alert("Failed to submit invoice: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Submit Invoice';
+            }
+        });
+
+        function open3WayMatchModal(orderId, poValue, invoiceNum, invoiceAmount, qaScore) {
+            document.getElementById('matchOrderId').value = orderId;
+            document.getElementById('matchPOValue').textContent = '$' + Number(poValue).toLocaleString();
+            document.getElementById('matchQAScore').textContent = Number(qaScore).toFixed(1) + ' / 5.0 (Cleared)';
+            document.getElementById('matchInvoiceAmount').textContent = '$' + Number(invoiceAmount).toLocaleString();
+            new bootstrap.Modal(document.getElementById('threeWayMatchModal')).show();
+        }
+
+        document.getElementById('threeWayMatchForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const orderId = document.getElementById('matchOrderId').value;
+            const notes = document.getElementById('matchPaymentNotes').value;
+            const btn = document.getElementById('matchSubmitBtn');
+            btn.disabled = true;
+            btn.textContent = 'Authorizing...';
+
+            try {
+                await API.authorizePayment(orderId, notes);
+                bootstrap.Modal.getInstance(document.getElementById('threeWayMatchModal')).hide();
+                await loadOrders();
+            } catch (err) {
+                alert("Failed to authorize payment: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Authorize Payment & Settle';
+            }
+        });
+
+        function getStatusClass(status) {
+            switch (status) {
+                case 'Delivered': return 'delivered';
+                case 'Approved': return 'approved';
+                case 'Ordered': return 'ordered';
+                case 'Pending': return 'pending';
+                case 'Completed': return 'delivered';
+                case 'Cancelled': return 'high-risk';
+                default: return 'ordered';
+            }
+        }
+
+        function filterStatus(status, btn) {
+            document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentStatus = status;
+            loadOrders();
+        }
+
+        async function populateVendorSelect() {
+            try {
+                const vendors = await API.getVendors();
+                const select = document.getElementById('poVendorSelect');
+                if (vendors && select) {
+                    select.innerHTML = '<option value="" disabled selected>Choose supplier...</option>';
+                    vendors.forEach(v => {
+                        const opt = document.createElement('option');
+                        opt.value = v.id;
+                        opt.textContent = `${v.company_name} (${v.category})`;
+                        select.appendChild(opt);
+                    });
+                }
+            } catch (err) {
+                console.error("Error populating vendors:", err);
+            }
+        }
+
+        function calculatePOTotal() {
+            const qty = parseFloat(document.getElementById('poQuantity')?.value) || 0;
+            const unitPrice = parseFloat(document.getElementById('poUnitPrice')?.value) || 0;
+            const total = qty * unitPrice;
+            const amountInput = document.getElementById('poAmount');
+            if (amountInput) {
+                amountInput.value = total.toFixed(2);
+            }
+        }
+
+        document.getElementById('createPOForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('savePOBtn');
+            btn.disabled = true;
+            btn.textContent = 'Submitting...';
+
+            const payload = {
+                title: document.getElementById('poTitle').value,
+                vendor_id: parseInt(document.getElementById('poVendorSelect').value),
+                total_amount: parseFloat(document.getElementById('poAmount').value),
+                expected_delivery_date: document.getElementById('poDeliveryDate').value,
+                department: document.getElementById('poDepartment')?.value || 'Supply Chain & Logistics',
+                shipping_mode: document.getElementById('poShippingMode')?.value || 'Standard Class',
+                priority: document.getElementById('poPriority')?.value || 'Standard',
+                destination_country: document.getElementById('poCountry')?.value || 'United States',
+                destination_city: document.getElementById('poCity')?.value || '',
+                items_count: parseInt(document.getElementById('poQuantity')?.value) || 1,
+                unit_price: parseFloat(document.getElementById('poUnitPrice')?.value) || 0,
+                product_category: document.getElementById('poCategory')?.value || '',
+                notes: document.getElementById('poNotes')?.value || ''
+            };
+
+            try {
+                await API.createOrder(payload);
+                bootstrap.Modal.getInstance(document.getElementById('newPOModal')).hide();
+                document.getElementById('createPOForm').reset();
+                await loadOrders();
+            } catch (err) {
+                alert("Error creating order: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Issue Purchase Order';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Management - VendorIQ</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css?v=rbac2">
+</head>
+<body>
+
+    <div class="d-flex">
+        <!-- Shared Sidebar Mount -->
+        <div id="sidebarMount"></div>
+
+        <!-- Main Content Area -->
+        <div class="app-main">
+            <!-- Shared Header Mount -->
+            <div id="headerMount"></div>
+
+            <div class="page-container" id="vendorsPageContainer">
+                <!-- Header with Action -->
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+                    <div>
+                        <h3 class="fw-bold text-dark m-0 tracking-tight" id="vendorPageTitle">Vendor Directory & Management</h3>
+                        <p class="text-muted small m-0" id="vendorPageSubtitle">Review supplier credentials, reliability scores, compliance records, and approval workflows.</p>
+                    </div>
+                    <div id="onboardVendorBtnMount">
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newVendorModal" style="border-radius: 8px;">
+                            <i class="bi bi-building-add me-1"></i> Onboard New Vendor
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Category Filter Pills -->
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    <button class="filter-pill active" onclick="filterCategory('All', this)">All Categories</button>
+                    <button class="filter-pill" onclick="filterCategory('Logistics Partners', this)">Logistics Partners</button>
+                    <button class="filter-pill" onclick="filterCategory('IT Vendors', this)">IT Vendors</button>
+                    <button class="filter-pill" onclick="filterCategory('Raw Material Suppliers', this)">Raw Materials</button>
+                    <button class="filter-pill" onclick="filterCategory('Equipment Vendors', this)">Equipment</button>
+                    <button class="filter-pill" onclick="filterCategory('Service Providers', this)">Services</button>
+                </div>
+
+                <!-- Search and Search Bar -->
+                <div class="card-widget p-4 mb-4">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-5">
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control" id="vendorSearchInput" placeholder="Filter by supplier name or email..." oninput="handleSearch()">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="statusFilterSelect" onchange="handleStatusFilter()">
+                                <option value="All" selected>All Statuses</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Pending Approval">Pending Approval</option>
+                                <option value="Suspended">Suspended</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 text-md-end text-muted small" id="vendorCountLabel">
+                            Showing verified suppliers
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vendor Table -->
+                <div class="card-widget overflow-hidden">
+                    <div class="table-responsive">
+                        <table class="table table-custom">
+                            <thead>
+                                <tr>
+                                    <th>Company / Supplier</th>
+                                    <th>Category</th>
+                                    <th>Reliability Score</th>
+                                    <th>Delivery Accuracy</th>
+                                    <th>Avg Response</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vendorTableBody">
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">
+                                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div> Loading vendors...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Add New Vendor -->
+    <div class="modal fade" id="newVendorModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-building-add text-primary me-2"></i>Onboard New Supplier Partner</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="createVendorForm">
+                    <div class="modal-body p-4">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-7">
+                                <label class="form-label small fw-semibold">Company / Legal Entity Name</label>
+                                <input type="text" class="form-control" id="vCompanyName" required placeholder="e.g. Pacific Industrial Components Ltd.">
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label small fw-semibold">Vendor Category</label>
+                                <select class="form-select" id="vCategory" required>
+                                    <option value="Logistics Partners" selected>Logistics Partners</option>
+                                    <option value="IT Vendors">IT Vendors</option>
+                                    <option value="Raw Material Suppliers">Raw Material Suppliers</option>
+                                    <option value="Equipment Vendors">Equipment Vendors</option>
+                                    <option value="Service Providers">Service Providers</option>
+                                    <option value="Maintenance Vendors">Maintenance Vendors</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Contact Person / Account Manager</label>
+                                <input type="text" class="form-control" id="vContactName" required placeholder="Jane Doe">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Business Contact Email</label>
+                                <input type="email" class="form-control" id="vEmail" required placeholder="orders@supplier.com">
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Phone Number</label>
+                                <input type="text" class="form-control" id="vPhone" placeholder="+1 (555) 234-5678">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Tax ID / EIN / VAT / GST Number</label>
+                                <input type="text" class="form-control" id="vTaxId" placeholder="e.g. US-EIN-99210492">
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Jurisdiction / Country</label>
+                                <input type="text" class="form-control" id="vCountry" value="United States" placeholder="e.g. United States, Germany, Japan">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Operational City & State</label>
+                                <input type="text" class="form-control" id="vCity" placeholder="e.g. Chicago, IL">
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Commercial Payment Terms</label>
+                                <select class="form-select" id="vPaymentTerms">
+                                    <option value="Net 30" selected>Net 30 (Standard)</option>
+                                    <option value="Net 45">Net 45</option>
+                                    <option value="Net 60">Net 60</option>
+                                    <option value="Immediate / Due Upon Receipt">Due Upon Receipt</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Initial Risk Classification</label>
+                                <select class="form-select" id="vRiskTier">
+                                    <option value="Low Risk" selected>Low Risk (Tier 1 Verified)</option>
+                                    <option value="Medium Risk">Medium Risk (Standard Audit)</option>
+                                    <option value="High Risk">High Risk (Conditional Monitoring)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Bank Account / Routing / IBAN</label>
+                                <input type="text" class="form-control" id="vBankAccount" placeholder="e.g. CHASE-US-99104821">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Corporate Website URL</label>
+                                <input type="url" class="form-control" id="vWebsite" placeholder="https://www.supplier-domain.com">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Compliance Certifications</label>
+                            <input type="text" class="form-control" id="vCertifications" placeholder="e.g. ISO 9001:2015, ISO 14001, SOC 2 Type II, C-TPAT">
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold">Corporate Headquarters Address</label>
+                            <textarea class="form-control" id="vAddress" rows="2" placeholder="Suite, Street, City, ZIP Code"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="saveVendorBtn">Register & Certify Supplier</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: View Vendor Scorecard -->
+    <div class="modal fade" id="vendorDetailsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="detailModalTitle">Supplier Intelligence Scorecard</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4" id="detailModalBody">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/auth.js?v=rbac2"></script>
+    <script src="js/api.js?v=rbac2"></script>
+    <script src="js/navigation.js?v=rbac2"></script>
+
+    <script>
+        let currentCategory = 'All';
+        let currentStatus = 'All';
+        let allVendorsCache = [];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = await checkAuth();
+            if (!user) return;
+
+            renderSharedLayout('Vendors');
+
+            const role = user.role;
+            if (role === 'Vendor') {
+                renderVendorRestrictedView(user);
+                return;
+            }
+            if (role === 'Finance Officer') {
+                renderFinanceRestrictedView(user);
+                return;
+            }
+
+            // Role is Procurement Manager, Administrator, Supply Chain Manager, or Auditor
+            const onboardMount = document.getElementById('onboardVendorBtnMount');
+            if (role !== 'Procurement Manager' && role !== 'Administrator') {
+                // Supply Chain Manager and Auditor cannot onboard vendors
+                if (onboardMount) onboardMount.style.display = 'none';
+                const modal = document.getElementById('newVendorModal');
+                if (modal) modal.remove();
+                
+                if (role === 'Auditor') {
+                    document.getElementById('vendorPageTitle').textContent = 'Vendor Compliance Directory';
+                    document.getElementById('vendorPageSubtitle').textContent = 'Audit certified supplier compliance ratings, performance indices, and ISO records.';
+                } else if (role === 'Supply Chain Manager') {
+                    document.getElementById('vendorPageTitle').textContent = 'Supplier Network Directory';
+                    document.getElementById('vendorPageSubtitle').textContent = 'Monitor logistics partners, on-time delivery accuracy, and supply chain continuity.';
+                }
+            }
+
+            await loadVendors();
+        });
+
+        function renderVendorRestrictedView(user) {
+            const container = document.getElementById('vendorsPageContainer');
+            const modal = document.getElementById('newVendorModal');
+            if (modal) modal.remove();
+
+            container.innerHTML = `
+                <div class="card-widget p-5 text-center my-4" style="max-width: 740px; margin: 0 auto; border: 1px solid #ebdcd0;">
+                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 72px; height: 72px; background: #fff7ed; color: #ea580c; font-size: 2rem; border: 1px solid #fed7aa;">
+                        <i class="bi bi-shield-lock-fill"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark mb-2">Access Restricted: External Supplier Boundary</h4>
+                    <span class="badge mb-3 px-3 py-1.5" style="font-size: 0.78rem; background-color: #faeee4; color: #5c331d; border: 1px solid #ebdcd0;">
+                        Role: ${user.role} (${user.email})
+                    </span>
+                    <p class="text-muted mb-4" style="line-height: 1.7; font-size: 0.92rem;">
+                        Under enterprise commercial compliance and anti-trust confidentiality guidelines, external suppliers (<strong>Vendors</strong>) are strictly restricted from accessing competitor vendor listings, network reliability benchmarks, or registering other suppliers.
+                        <br><br>
+                        Supplier onboarding and evaluation are managed exclusively by enterprise <strong>Procurement Managers</strong> and <strong>Administrators</strong>.
+                    </p>
+                    <div class="d-flex flex-wrap justify-content-center gap-2">
+                        <a href="dashboard.html" class="btn btn-primary btn-sm px-3" style="border-radius: 8px;">
+                            <i class="bi bi-grid-1x2-fill me-1"></i> Supplier Dashboard
+                        </a>
+                        <a href="procurement.html" class="btn btn-outline-primary btn-sm px-3" style="border-radius: 8px;">
+                            <i class="bi bi-box-seam me-1"></i> My Purchase Orders
+                        </a>
+                        <a href="performance.html" class="btn btn-light border btn-sm px-3" style="border-radius: 8px;">
+                            <i class="bi bi-star-fill text-warning me-1"></i> My Private Scorecard
+                        </a>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderFinanceRestrictedView(user) {
+            const container = document.getElementById('vendorsPageContainer');
+            const modal = document.getElementById('newVendorModal');
+            if (modal) modal.remove();
+
+            container.innerHTML = `
+                <div class="card-widget p-5 text-center my-4" style="max-width: 740px; margin: 0 auto; border: 1px solid #ebdcd0;">
+                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 72px; height: 72px; background: #faeee4; color: #7c4a2d; font-size: 2rem; border: 1px solid #ebdcd0;">
+                        <i class="bi bi-bank"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark mb-2">Departmental Access Control</h4>
+                    <span class="badge mb-3 px-3 py-1.5" style="font-size: 0.78rem; background-color: #ffedd5; color: #7c2d12; border: 1px solid #fed7aa;">
+                        Role: ${user.role} (${user.email})
+                    </span>
+                    <p class="text-muted mb-4" style="line-height: 1.7; font-size: 0.92rem;">
+                        Supplier onboarding and credential evaluation is governed by Procurement and Supply Chain management. Finance Officers have dedicated access to <strong>Purchase Orders & Invoices</strong> (3-Way Matching) and <strong>Spend Ledgers</strong>.
+                    </p>
+                    <div class="d-flex flex-wrap justify-content-center gap-2">
+                        <a href="procurement.html" class="btn btn-primary btn-sm px-3" style="border-radius: 8px;">
+                            <i class="bi bi-receipt-cutoff me-1"></i> Orders & Invoices
+                        </a>
+                        <a href="reports.html" class="btn btn-outline-primary btn-sm px-3" style="border-radius: 8px;">
+                            <i class="bi bi-cash-stack me-1"></i> Spend Ledgers
+                        </a>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function loadVendors() {
+            try {
+                const search = document.getElementById('vendorSearchInput').value.trim();
+                const vendors = await API.getVendors(currentCategory, currentStatus, search);
+                allVendorsCache = vendors || [];
+                renderVendorTable(allVendorsCache);
+            } catch (err) {
+                console.error("Error loading vendors:", err);
+            }
+        }
+
+        function renderVendorTable(vendors) {
+            const tbody = document.getElementById('vendorTableBody');
+            document.getElementById('vendorCountLabel').textContent = `Showing ${vendors.length} supplier(s)`;
+
+            if (vendors.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5 text-muted">No matching suppliers found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = vendors.map(v => `
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-3 bg-primary-subtle text-primary p-2 fw-bold" style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;">
+                                ${v.company_name.charAt(0)}
+                            </div>
+                            <div>
+                                <div class="fw-bold text-dark">${v.company_name}</div>
+                                <small class="text-muted">${v.email} • ${v.contact_name || 'N/A'}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="badge bg-light text-secondary border">${v.category}</span></td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="fw-bold" style="color: ${v.reliability_score >= 90 ? '#ea580c' : (v.reliability_score >= 75 ? '#c2410c' : '#7c4a2d')};">
+                                ${v.reliability_score}%
+                            </span>
+                            <div class="progress progress-thin w-100" style="width: 70px;">
+                                <div class="progress-bar" style="background: linear-gradient(135deg, #ea580c, #7c4a2d); width: ${v.reliability_score}%;"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="fw-semibold text-dark">${v.delivery_accuracy}%</span></td>
+                    <td><span class="text-muted">${v.response_time} hrs</span></td>
+                    <td><span class="status-chip ${getStatusClass(v.status)}">${v.status}</span></td>
+                    <td class="text-end">
+                        <button class="btn btn-light btn-sm border" onclick="showVendorScorecard(${v.id})">
+                            <i class="bi bi-eye text-primary"></i> Scorecard
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getStatusClass(status) {
+            switch (status) {
+                case 'Approved': return 'approved';
+                case 'Pending Approval': return 'pending';
+                case 'Suspended': return 'high-risk';
+                default: return 'approved';
+            }
+        }
+
+        function filterCategory(cat, btn) {
+            document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentCategory = cat;
+            loadVendors();
+        }
+
+        function handleStatusFilter() {
+            currentStatus = document.getElementById('statusFilterSelect').value;
+            loadVendors();
+        }
+
+        let searchTimeout = null;
+        function handleSearch() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                loadVendors();
+            }, 300);
+        }
+
+        function showVendorScorecard(id) {
+            const v = allVendorsCache.find(x => x.id === id);
+            if (!v) return;
+
+            document.getElementById('detailModalTitle').textContent = `${v.company_name} - Scorecard`;
+            document.getElementById('detailModalBody').innerHTML = `
+                <div class="d-flex justify-content-between align-items-center p-3 rounded-3 bg-light mb-3">
+                    <div>
+                        <div class="fw-bold fs-4" style="color: #ea580c;">${v.reliability_score} / 100</div>
+                        <small class="text-muted text-uppercase fw-semibold">Reliability Index</small>
+                    </div>
+                    <div>
+                        <span class="status-chip ${getStatusClass(v.status)}">${v.status}</span>
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <div class="p-2 border rounded text-center">
+                            <div class="fw-bold fs-5">${v.delivery_accuracy}%</div>
+                            <small class="text-muted">On-Time Accuracy</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-2 border rounded text-center">
+                            <div class="fw-bold fs-5">${v.response_time}h</div>
+                            <small class="text-muted">Avg Response Time</small>
+                        </div>
+                    </div>
+                </div>
+
+                <ul class="list-group list-group-flush small mb-3">
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Category:</span>
+                        <span class="fw-semibold">${v.category}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Risk Classification:</span>
+                        <span class="badge" style="background-color: #ffedd5; color: #7c2d12; border: 1px solid #fed7aa;">${v.risk_tier || 'Low Risk'}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Contact Person:</span>
+                        <span class="fw-semibold">${v.contact_name || 'N/A'}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Business Email:</span>
+                        <span class="fw-semibold">${v.email}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Phone:</span>
+                        <span class="fw-semibold">${v.phone || 'N/A'}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Tax ID / VAT / GST:</span>
+                        <span class="fw-semibold font-monospace">${v.tax_id || 'US-EIN-PENDING'}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Jurisdiction / Location:</span>
+                        <span class="fw-semibold">${v.city ? `${v.city}, ` : ''}${v.country || 'United States'}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Payment Terms:</span>
+                        <span class="fw-semibold">${v.payment_terms || 'Net 30'}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Settlement Account:</span>
+                        <span class="fw-semibold font-monospace">${v.bank_account || 'VERIFIED ON FILE'}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Certifications:</span>
+                        <span class="fw-semibold text-end" style="max-width: 60%;">${v.certifications || 'ISO 9001 Compliant'}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Website:</span>
+                        <span class="fw-semibold">${v.website ? `<a href="${v.website}" target="_blank" class="text-primary">${v.website}</a>` : 'N/A'}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Headquarters:</span>
+                        <span class="fw-semibold text-end" style="max-width: 60%;">${v.address || 'N/A'}</span>
+                    </li>
+                </ul>
+
+                <button class="btn btn-outline-primary btn-sm w-100" data-bs-dismiss="modal">Close</button>
+            `;
+
+            new bootstrap.Modal(document.getElementById('vendorDetailsModal')).show();
+        }
+
+        document.getElementById('createVendorForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('saveVendorBtn');
+            btn.disabled = true;
+            btn.textContent = 'Certifying & Registering...';
+
+            const payload = {
+                company_name: document.getElementById('vCompanyName').value.trim(),
+                contact_name: document.getElementById('vContactName').value.trim(),
+                email: document.getElementById('vEmail').value.trim(),
+                phone: document.getElementById('vPhone').value.trim(),
+                category: document.getElementById('vCategory').value,
+                tax_id: document.getElementById('vTaxId').value.trim(),
+                country: document.getElementById('vCountry').value.trim(),
+                city: document.getElementById('vCity').value.trim(),
+                payment_terms: document.getElementById('vPaymentTerms').value,
+                risk_tier: document.getElementById('vRiskTier').value,
+                bank_account: document.getElementById('vBankAccount').value.trim(),
+                website: document.getElementById('vWebsite').value.trim(),
+                certifications: document.getElementById('vCertifications').value.trim(),
+                address: document.getElementById('vAddress').value.trim()
+            };
+
+            try {
+                await API.createVendor(payload);
+                bootstrap.Modal.getInstance(document.getElementById('newVendorModal')).hide();
+                document.getElementById('createVendorForm').reset();
+                await loadVendors();
+            } catch (err) {
+                alert("Error registering vendor: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Register & Certify Supplier';
+            }
+        });
+    </script>
+</body>
+</html>
