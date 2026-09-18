@@ -6,7 +6,8 @@ from app.core.database import get_db
 from app.core.deps import get_current_user, require_roles
 from app.models.user import User, UserRole
 from app.models.vendor import Vendor
-from app.models.purchase_order import PurchaseOrder
+from app.models.purchase_order import PurchaseOrder, OrderStatus
+from app.models.purchase_order_item import PurchaseOrderItem
 from app.schemas.purchase_order import PurchaseOrderCreate, PurchaseOrderUpdate, PurchaseOrderOut
 
 router = APIRouter(prefix="/purchase-orders", tags=["Purchase Orders"])
@@ -28,17 +29,47 @@ def create_purchase_order(
     if existing:
         raise HTTPException(status_code=400, detail="Order number already exists")
 
-    total_amount = payload.quantity * payload.unit_price
+    if not payload.items:
+        raise HTTPException(status_code=400, detail="At least one order item is required")
+
+    subtotal = 0.0
+    tax_total = 0.0
+    order_items = []
+
+    for item in payload.items:
+        line_base = item.quantity * item.unit_price
+        line_tax = line_base * (item.tax_percent / 100)
+        line_total = line_base + line_tax
+
+        subtotal += line_base
+        tax_total += line_tax
+
+        order_items.append(PurchaseOrderItem(
+            item_description=item.item_description,
+            quantity=item.quantity,
+            unit_price=item.unit_price,
+            tax_percent=item.tax_percent,
+            line_total=round(line_total, 2),
+        ))
+
+    total_amount = subtotal + tax_total
 
     po = PurchaseOrder(
         order_number=payload.order_number,
         vendor_id=payload.vendor_id,
         created_by_id=current_user.id,
-        item_description=payload.item_description,
-        quantity=payload.quantity,
-        unit_price=payload.unit_price,
-        total_amount=total_amount,
+        procurement_request_id=payload.procurement_request_id,
+        department=payload.department,
+        payment_terms=payload.payment_terms,
+        shipping_address=payload.shipping_address,
+        billing_address=payload.billing_address,
+        remarks=payload.remarks,
         expected_delivery_date=payload.expected_delivery_date,
+        subtotal=round(subtotal, 2),
+        tax_amount=round(tax_total, 2),
+        total_amount=round(total_amount, 2),
+        status=OrderStatus.DRAFT if payload.save_as_draft else OrderStatus.PENDING,
+        items=order_items,
     )
     db.add(po)
     db.commit()
