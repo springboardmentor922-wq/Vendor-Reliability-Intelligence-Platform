@@ -1,0 +1,14 @@
+fastapi==0.141.1
+uvicorn[standard]
+sqlalchemy==2.0.52
+pymysql==2.2.8
+pydantic
+python-jose[cryptography]
+passlib[bcrypt]
+bcrypt==4.0.1
+python-multipart
+# Milestone-3: dataset import + Excel/PDF report export
+pandas
+openpyxl==3.1.5
+numpy
+reportlab==5.0.1
