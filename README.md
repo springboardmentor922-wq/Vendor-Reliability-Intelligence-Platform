@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # VendorIQ — Vendor Reliability Intelligence Platform
 
 Full-stack vendor reliability, procurement and contract management platform.
@@ -252,3 +253,7 @@ walkthrough and the end-to-end demonstration script.
 - Docker, cloud deployment and load testing are Milestone 4 scope.
 - `frontend_legacy/` holds the original single-file prototype, kept for
   reference. It is not part of the build.
+=======
+# Vendor-Reliability-Intelligence-Platform
+Predictive Vendor Intelligence Platform for Supplier Risk and Performance Management
+>>>>>>> cef37cba8743d922078aa9d856f597fbe9c3d722
