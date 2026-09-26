@@ -1,0 +1,231 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Contracts &amp; compliance</h1>
+      <p>
+        The contract repository with renewal tracking, compliance status and
+        expiry alerts.
+      </p>
+    </div>
+
+    <div class="page-actions">
+      @if (canApprove()) {
+        <button matButton (click)="runExpiryScan()">
+          <mat-icon>notifications_active</mat-icon>
+          Run expiry scan
+        </button>
+      }
+      @if (canEdit()) {
+        <button matButton="filled" (click)="create()">
+          <mat-icon>add</mat-icon>
+          New contract
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (stats(); as summary) {
+    <div class="stat-grid">
+      <div class="stat">
+        <div class="stat-label">Total contracts</div>
+        <div class="stat-value">{{ summary.total }}</div>
+        <div class="stat-hint">{{ summary.active }} currently active</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Expiring soon</div>
+        <div class="stat-value">{{ summary.expiring_within_30_days }}</div>
+        <div class="stat-hint">Within the next 30 days</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Non-compliant</div>
+        <div class="stat-value">{{ summary.non_compliant }}</div>
+        <div class="stat-hint">{{ summary.compliant }} passing compliance</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Contract value</div>
+        <div class="stat-value">{{ summary.total_value | number: '1.0-0' }}</div>
+        <div class="stat-hint">Live and expiring contracts</div>
+      </div>
+    </div>
+  }
+
+  <div class="filter-bar">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search</mat-label>
+      <input
+        matInput
+        [(ngModel)]="search"
+        (keyup.enter)="load()"
+        placeholder="Contract number, title or type"
+      />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Status</mat-label>
+      <mat-select [(ngModel)]="statusFilter" (selectionChange)="load()">
+        <mat-option value="">All statuses</mat-option>
+        @for (status of statuses; track status) {
+          <mat-option [value]="status">{{ status }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Compliance</mat-label>
+      <mat-select [(ngModel)]="complianceFilter" (selectionChange)="load()">
+        <mat-option value="">All</mat-option>
+        @for (status of complianceStatuses; track status) {
+          <mat-option [value]="status">{{ status }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <button matButton (click)="load()">
+      <mat-icon>filter_alt</mat-icon>
+      Apply
+    </button>
+    <button matButton (click)="clearFilters()">Clear</button>
+  </div>
+
+  <div class="table-wrap">
+    @if (loading()) {
+      <div class="loading-state"><mat-spinner diameter="38" /></div>
+    } @else if (contracts().length === 0) {
+      <div class="empty-state">
+        <mat-icon class="empty-icon">gavel</mat-icon>
+        <h3>No contracts found</h3>
+        <p>Adjust your filters, or create a contract for an approved vendor.</p>
+      </div>
+    } @else {
+      <table mat-table [dataSource]="contracts()">
+        <ng-container matColumnDef="contract_number">
+          <th mat-header-cell *matHeaderCellDef>Contract</th>
+          <td mat-cell *matCellDef="let contract" class="mono">
+            {{ contract.contract_number }}
+            @if (contract.auto_renew) {
+              <div class="list-meta">auto-renews</div>
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="vendor">
+          <th mat-header-cell *matHeaderCellDef>Vendor</th>
+          <td mat-cell *matCellDef="let contract">
+            <a
+              [routerLink]="['/vendors', contract.vendor_id]"
+              (click)="$event.stopPropagation()"
+            >
+              {{ contract.vendor_name }}
+            </a>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="type">
+          <th mat-header-cell *matHeaderCellDef>Type</th>
+          <td mat-cell *matCellDef="let contract">
+            <div class="list-title">{{ contract.contract_type }}</div>
+            @if (contract.title) {
+              <div class="list-meta">{{ contract.title }}</div>
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="period">
+          <th mat-header-cell *matHeaderCellDef>Period</th>
+          <td mat-cell *matCellDef="let contract" class="nowrap">
+            {{ contract.start_date | date: 'mediumDate' }} →
+            {{ contract.expiry_date | date: 'mediumDate' }}
+            @if (contract.days_to_expiry >= 0 && contract.is_expiring_soon) {
+              <div class="list-meta">
+                {{ contract.days_to_expiry }} day(s) remaining
+              </div>
+            } @else if (contract.days_to_expiry < 0) {
+              <div class="list-meta">
+                Expired {{ -contract.days_to_expiry }} day(s) ago
+              </div>
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="value">
+          <th mat-header-cell *matHeaderCellDef class="num">Value</th>
+          <td mat-cell *matCellDef="let contract" class="num nowrap">
+            @if (contract.contract_value) {
+              {{ contract.currency }}
+              {{ contract.contract_value | number: '1.0-0' }}
+            } @else {
+              —
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="compliance">
+          <th mat-header-cell *matHeaderCellDef>Compliance</th>
+          <td mat-cell *matCellDef="let contract">
+            <app-status-pill [status]="contract.compliance_status" />
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let contract">
+            <app-status-pill [status]="contract.status" />
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef class="row-actions">Actions</th>
+          <td mat-cell *matCellDef="let contract" class="row-actions">
+            <button
+              matIconButton
+              [matMenuTriggerFor]="menu"
+              (click)="$event.stopPropagation()"
+              aria-label="Contract actions"
+            >
+              <mat-icon>more_vert</mat-icon>
+            </button>
+
+            <mat-menu #menu="matMenu">
+              <button mat-menu-item (click)="open(contract)">
+                <mat-icon>visibility</mat-icon>
+                <span>View details</span>
+              </button>
+
+              <button mat-menu-item (click)="edit(contract, $event)">
+                <mat-icon>edit</mat-icon>
+                <span>Edit contract</span>
+              </button>
+
+              @if (
+                canApprove() &&
+                contract.status !== 'Terminated' &&
+                contract.status !== 'Renewed'
+              ) {
+                <button mat-menu-item (click)="terminate(contract, $event)">
+                  <mat-icon>gavel</mat-icon>
+                  <span>Terminate</span>
+                </button>
+              }
+
+              @if (canApprove()) {
+                <button mat-menu-item (click)="remove(contract, $event)">
+                  <mat-icon>delete</mat-icon>
+                  <span>Delete</span>
+                </button>
+              }
+            </mat-menu>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="columns()"></tr>
+        <tr
+          mat-row
+          *matRowDef="let contract; columns: columns()"
+          class="clickable-row"
+          (click)="open(contract)"
+        ></tr>
+      </table>
+    }
+  </div>
+</div>

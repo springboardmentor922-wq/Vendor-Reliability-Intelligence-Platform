@@ -1,0 +1,155 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>User management</h1>
+      <p>Accounts and role assignments across the platform.</p>
+    </div>
+
+    <div class="page-actions">
+      <button matButton="filled" (click)="create()">
+        <mat-icon>person_add</mat-icon>
+        Create account
+      </button>
+    </div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat">
+      <div class="stat-label">Accounts</div>
+      <div class="stat-value">{{ counts().total }}</div>
+      <div class="stat-hint">Matching the current filters</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Active</div>
+      <div class="stat-value">{{ counts().active }}</div>
+      <div class="stat-hint">Able to sign in</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Vendor logins</div>
+      <div class="stat-value">{{ counts().vendors }}</div>
+      <div class="stat-hint">Scoped to their own organisation</div>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search</mat-label>
+      <input
+        matInput
+        [(ngModel)]="search"
+        (keyup.enter)="load()"
+        placeholder="Name, email or department"
+      />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Role</mat-label>
+      <mat-select [(ngModel)]="roleFilter" (selectionChange)="load()">
+        <mat-option value="">All roles</mat-option>
+        @for (role of roles; track role) {
+          <mat-option [value]="role">{{ role }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <button matButton (click)="load()">
+      <mat-icon>filter_alt</mat-icon>
+      Apply
+    </button>
+    <button matButton (click)="clearFilters()">Clear</button>
+  </div>
+
+  <div class="table-wrap">
+    @if (loading()) {
+      <div class="loading-state"><mat-spinner diameter="38" /></div>
+    } @else if (users().length === 0) {
+      <div class="empty-state">
+        <mat-icon class="empty-icon">group</mat-icon>
+        <h3>No accounts found</h3>
+        <p>Adjust your filters, or create a new account.</p>
+      </div>
+    } @else {
+      <table mat-table [dataSource]="users()">
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Name</th>
+          <td mat-cell *matCellDef="let user">
+            <div class="list-title">
+              {{ user.name }}
+              @if (isSelf(user)) {
+                <span class="pill pill-info">You</span>
+              }
+            </div>
+            <div class="list-meta">{{ user.job_title || 'No job title' }}</div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef>Email</th>
+          <td mat-cell *matCellDef="let user">{{ user.email }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="role">
+          <th mat-header-cell *matHeaderCellDef>Role</th>
+          <td mat-cell *matCellDef="let user">
+            <span class="pill pill-neutral">{{ user.role }}</span>
+            @if (user.vendor_id) {
+              <div class="list-meta">vendor #{{ user.vendor_id }}</div>
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="department">
+          <th mat-header-cell *matHeaderCellDef>Department</th>
+          <td mat-cell *matCellDef="let user">{{ user.department || '—' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="last_login_at">
+          <th mat-header-cell *matHeaderCellDef>Last sign-in</th>
+          <td mat-cell *matCellDef="let user" class="nowrap">
+            {{ user.last_login_at ? (user.last_login_at | date: 'short') : 'Never' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let user">
+            <span
+              class="pill"
+              [class.pill-success]="user.is_active"
+              [class.pill-danger]="!user.is_active"
+            >
+              {{ user.is_active ? 'Active' : 'Deactivated' }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef class="row-actions">Actions</th>
+          <td mat-cell *matCellDef="let user" class="row-actions">
+            <button matIconButton [matMenuTriggerFor]="menu" aria-label="Account actions">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+
+            <mat-menu #menu="matMenu">
+              <button mat-menu-item (click)="edit(user)">
+                <mat-icon>edit</mat-icon>
+                <span>Edit account</span>
+              </button>
+
+              @if (!isSelf(user)) {
+                <button mat-menu-item (click)="toggleActive(user)">
+                  <mat-icon>{{ user.is_active ? 'block' : 'check_circle' }}</mat-icon>
+                  <span>{{ user.is_active ? 'Deactivate' : 'Activate' }}</span>
+                </button>
+              }
+            </mat-menu>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="columns"></tr>
+        <tr mat-row *matRowDef="let row; columns: columns"></tr>
+      </table>
+    }
+  </div>
+</div>

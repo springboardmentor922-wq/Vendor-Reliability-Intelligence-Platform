@@ -1,0 +1,174 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Approval queue</h1>
+      <p>
+        Everything waiting on a decision — vendor registrations and procurement
+        requests in one place.
+      </p>
+    </div>
+
+    <div class="page-actions">
+      <button matButton (click)="load()">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  @if (!canApprove()) {
+    <div class="alert alert-info section-gap">
+      <mat-icon>info</mat-icon>
+      <div>
+        You can review the queue, but only an Administrator or Procurement
+        Manager can approve or reject.
+      </div>
+    </div>
+  }
+
+  <div class="stat-grid">
+    <div class="stat">
+      <div class="stat-label">Vendors pending</div>
+      <div class="stat-value">{{ vendors().length }}</div>
+      <div class="stat-hint">Registrations awaiting review</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Requests pending</div>
+      <div class="stat-value">{{ requests().length }}</div>
+      <div class="stat-hint">Procurement requests awaiting review</div>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="card loading-state"><mat-spinner diameter="38" /></div>
+  } @else {
+    <mat-tab-group animationDuration="0ms" class="card">
+      <!-- Vendors -->
+      <mat-tab [label]="'Vendors (' + vendors().length + ')'">
+        <div class="tab-body">
+          @if (vendors().length === 0) {
+            <div class="empty-state">
+              <mat-icon class="empty-icon">verified</mat-icon>
+              <h3>No vendors awaiting approval</h3>
+              <p>Every registered supplier has been reviewed.</p>
+            </div>
+          } @else {
+            <div class="approval-list">
+              @for (vendor of vendors(); track vendor.id) {
+                <div class="approval-card">
+                  <div class="approval-main">
+                    <a [routerLink]="['/vendors', vendor.id]" class="approval-title">
+                      {{ vendor.vendor_name }}
+                    </a>
+                    <div class="approval-meta">
+                      <span class="mono">{{ vendor.vendor_code }}</span> ·
+                      {{ vendor.category }}
+                      @if (vendor.city || vendor.country) {
+                        · {{ vendor.city }}{{ vendor.city && vendor.country ? ', ' : ''
+                        }}{{ vendor.country }}
+                      }
+                    </div>
+                    <div class="approval-meta">
+                      {{ vendor.contact_person || 'No contact' }} ·
+                      {{ vendor.email || 'No email' }} · registered
+                      {{ vendor.created_at | date: 'mediumDate' }}
+                    </div>
+                    <div class="approval-pills">
+                      <app-status-pill [status]="vendor.status" />
+                      <app-status-pill [status]="vendor.risk_level" />
+                    </div>
+                  </div>
+
+                  @if (canApprove()) {
+                    <div class="approval-actions">
+                      <button matButton="filled" (click)="approveVendor(vendor)">
+                        <mat-icon>check</mat-icon>
+                        Approve
+                      </button>
+                      <button
+                        matButton
+                        class="danger-text"
+                        (click)="rejectVendor(vendor)"
+                      >
+                        <mat-icon>close</mat-icon>
+                        Reject
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </mat-tab>
+
+      <!-- Procurement requests -->
+      <mat-tab [label]="'Procurement requests (' + requests().length + ')'">
+        <div class="tab-body">
+          @if (requests().length === 0) {
+            <div class="empty-state">
+              <mat-icon class="empty-icon">assignment_turned_in</mat-icon>
+              <h3>No requests awaiting approval</h3>
+              <p>Every procurement request has been reviewed.</p>
+            </div>
+          } @else {
+            <div class="approval-list">
+              @for (request of requests(); track request.id) {
+                <div class="approval-card">
+                  <div class="approval-main">
+                    <a
+                      [routerLink]="['/procurement', request.id]"
+                      class="approval-title"
+                    >
+                      {{ request.item }}
+                    </a>
+                    <div class="approval-meta">
+                      <span class="mono">{{ request.request_number }}</span> ·
+                      {{ request.quantity | number: '1.0-2' }} {{ request.unit }} ·
+                      {{ request.currency }}
+                      {{ request.estimated_cost | number: '1.0-0' }}
+                    </div>
+                    <div class="approval-meta">
+                      {{ request.requester_name || 'Unknown requester' }} ·
+                      {{ request.department || 'No department' }}
+                      @if (request.required_date) {
+                        · required by
+                        {{ request.required_date | date: 'mediumDate' }}
+                      }
+                    </div>
+                    <div class="approval-pills">
+                      <app-status-pill [status]="request.status" />
+                      <app-status-pill [status]="request.priority" />
+                      @if (request.assigned_vendor_name) {
+                        <span class="pill pill-info">
+                          {{ request.assigned_vendor_name }}
+                        </span>
+                      }
+                    </div>
+                  </div>
+
+                  @if (canApprove()) {
+                    <div class="approval-actions">
+                      <button matButton="filled" (click)="approveRequest(request)">
+                        <mat-icon>check</mat-icon>
+                        Approve
+                      </button>
+                      <button
+                        matButton
+                        class="danger-text"
+                        (click)="rejectRequest(request)"
+                      >
+                        <mat-icon>close</mat-icon>
+                        Reject
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  }
+</div>

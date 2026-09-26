@@ -1,0 +1,63 @@
+<h2 mat-dialog-title>New conversation</h2>
+
+<mat-dialog-content class="dialog-body">
+  <form [formGroup]="form" class="form-grid">
+    <mat-form-field appearance="outline" class="span-2">
+      <mat-label>Subject</mat-label>
+      <input matInput formControlName="subject" />
+      @if (form.controls.subject.hasError('required')) {
+        <mat-error>A subject is required</mat-error>
+      } @else if (form.controls.subject.hasError('minlength')) {
+        <mat-error>Enter at least 2 characters</mat-error>
+      }
+    </mat-form-field>
+
+    @if (!isVendor()) {
+      <mat-form-field appearance="outline">
+        <mat-label>Vendor</mat-label>
+        <mat-select formControlName="vendor_id">
+          <mat-option [value]="null">Internal discussion</mat-option>
+          @for (vendor of vendors(); track vendor.id) {
+            <mat-option [value]="vendor.id">{{ vendor.vendor_name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    }
+
+    <mat-form-field appearance="outline" [class.span-2]="isVendor()">
+      <mat-label>Priority</mat-label>
+      <mat-select formControlName="priority">
+        @for (priority of priorities; track priority) {
+          <mat-option [value]="priority">{{ priority }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="span-2">
+      <mat-label>Related purchase order (optional)</mat-label>
+      <mat-select formControlName="purchase_order_id">
+        <mat-option [value]="null">Not linked to an order</mat-option>
+        @for (order of orders(); track order.id) {
+          <mat-option [value]="order.id">
+            {{ order.po_number }} — {{ order.vendor_name }}
+          </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="span-2">
+      <mat-label>Message</mat-label>
+      <textarea matInput rows="5" formControlName="body"></textarea>
+      @if (form.controls.body.hasError('required')) {
+        <mat-error>Write a message to open the conversation</mat-error>
+      }
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button matButton mat-dialog-close>Cancel</button>
+  <button matButton="filled" [disabled]="saving()" (click)="submit()">
+    {{ saving() ? 'Sending…' : 'Start conversation' }}
+  </button>
+</mat-dialog-actions>

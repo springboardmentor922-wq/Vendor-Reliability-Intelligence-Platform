@@ -1,0 +1,109 @@
+<h2 mat-dialog-title>
+  {{ isEdit ? 'Edit procurement request' : 'New procurement request' }}
+</h2>
+
+<mat-dialog-content class="dialog-body">
+  <form [formGroup]="form" class="form-grid">
+    <mat-form-field appearance="outline" class="span-2">
+      <mat-label>Item</mat-label>
+      <input matInput formControlName="item" placeholder="e.g. CNC tool holders BT40" />
+      @if (form.controls.item.hasError('required')) {
+        <mat-error>Item is required</mat-error>
+      } @else if (form.controls.item.hasError('minlength')) {
+        <mat-error>Enter at least 2 characters</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="span-2">
+      <mat-label>Description</mat-label>
+      <textarea matInput rows="2" formControlName="description"></textarea>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Category</mat-label>
+      <mat-select formControlName="category">
+        <mat-option value="">Not categorised</mat-option>
+        @for (category of categories; track category) {
+          <mat-option [value]="category">{{ category }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Priority</mat-label>
+      <mat-select formControlName="priority">
+        @for (priority of priorities; track priority) {
+          <mat-option [value]="priority">{{ priority }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Quantity</mat-label>
+      <input matInput type="number" min="0.01" step="0.01" formControlName="quantity" />
+      @if (form.controls.quantity.hasError('required')) {
+        <mat-error>Quantity is required</mat-error>
+      } @else if (form.controls.quantity.hasError('min')) {
+        <mat-error>Quantity must be greater than zero</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Unit</mat-label>
+      <mat-select formControlName="unit">
+        @for (unit of units; track unit) {
+          <mat-option [value]="unit">{{ unit }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Estimated cost</mat-label>
+      <input matInput type="number" min="0" step="0.01" formControlName="estimated_cost" />
+      @if (form.controls.estimated_cost.hasError('min')) {
+        <mat-error>Cost cannot be negative</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Currency</mat-label>
+      <mat-select formControlName="currency">
+        <mat-option value="USD">USD</mat-option>
+        <mat-option value="EUR">EUR</mat-option>
+        <mat-option value="GBP">GBP</mat-option>
+        <mat-option value="INR">INR</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Required by</mat-label>
+      <input matInput [matDatepicker]="picker" formControlName="required_date" />
+      <mat-datepicker-toggle matIconSuffix [for]="picker" />
+      <mat-datepicker #picker />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Department</mat-label>
+      <input matInput formControlName="department" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="span-2">
+      <mat-label>Justification</mat-label>
+      <textarea matInput rows="2" formControlName="justification"></textarea>
+    </mat-form-field>
+
+    @if (!isEdit) {
+      <p class="span-2 field-hint">
+        The request number is generated automatically and the request enters the
+        approval queue with status <strong>Pending</strong>.
+      </p>
+    }
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button matButton mat-dialog-close>Cancel</button>
+  <button matButton="filled" [disabled]="saving()" (click)="submit()">
+    {{ saving() ? 'Saving…' : isEdit ? 'Save changes' : 'Submit request' }}
+  </button>
+</mat-dialog-actions>

@@ -1,0 +1,140 @@
+<div class="page">
+  @if (loading()) {
+    <div class="loading-state"><mat-spinner diameter="42" /></div>
+  } @else if (thread(); as t) {
+    <div class="page-head">
+      <div>
+        <a matButton routerLink="/communication" class="back-link">
+          <mat-icon>arrow_back</mat-icon>
+          All conversations
+        </a>
+        <h1>{{ t.subject }}</h1>
+        <p>
+          @if (t.vendor_id) {
+            <a [routerLink]="['/vendors', t.vendor_id]">{{ t.vendor_name }}</a>
+          } @else {
+            Internal discussion
+          }
+          @if (t.po_number) {
+            &middot;
+            <a [routerLink]="['/purchase-orders', t.purchase_order_id]">
+              {{ t.po_number }}
+            </a>
+          }
+          &middot; started by {{ t.created_by_name }}
+        </p>
+        <div class="head-pills">
+          <app-status-pill [status]="t.status" />
+          <app-status-pill [status]="t.priority" />
+        </div>
+      </div>
+
+      @if (canEdit()) {
+        <div class="page-actions">
+          <button matButton [matMenuTriggerFor]="statusMenu">
+            <mat-icon>flag</mat-icon>
+            Change status
+          </button>
+
+          <mat-menu #statusMenu="matMenu">
+            @for (status of statuses; track status) {
+              @if (status !== t.status) {
+                <button mat-menu-item (click)="setStatus(status)">
+                  {{ status }}
+                </button>
+              }
+            }
+          </mat-menu>
+        </div>
+      }
+    </div>
+
+    <div class="card conversation">
+      <div class="messages">
+        @for (message of t.messages; track message.id) {
+          <div class="message" [class.mine]="isMine(message)">
+            <div class="message-head">
+              <span class="message-sender">{{ message.sender_name }}</span>
+              <span class="message-role">{{ message.sender_role }}</span>
+              <span class="message-time">
+                {{ message.created_at | date: 'short' }}
+              </span>
+            </div>
+
+            <div class="message-body">{{ message.body }}</div>
+
+            @if (message.attachments.length > 0) {
+              <div class="message-files">
+                @for (file of message.attachments; track file.id) {
+                  <a
+                    class="file-chip"
+                    [href]="attachmentUrl(file.file_path)"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    <mat-icon>attach_file</mat-icon>
+                    <span>{{ file.file_name }}</span>
+                  </a>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      @if (t.status === 'Closed') {
+        <div class="alert alert-info" style="margin: 18px">
+          <mat-icon>lock</mat-icon>
+          <div>This conversation is closed and no longer accepts replies.</div>
+        </div>
+      } @else {
+        <form class="reply-box" [formGroup]="replyForm" (ngSubmit)="send()">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Write a reply</mat-label>
+            <textarea matInput rows="3" formControlName="body"></textarea>
+            @if (replyForm.controls.body.hasError('required')) {
+              <mat-error>Write something before sending</mat-error>
+            }
+          </mat-form-field>
+
+          <div class="reply-actions">
+            <div class="reply-file">
+              <input
+                #fileInput
+                type="file"
+                hidden
+                (change)="onFileSelected($event)"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.png,.jpg,.jpeg"
+              />
+
+              <button matButton type="button" (click)="fileInput.click()">
+                <mat-icon>attach_file</mat-icon>
+                Attach file
+              </button>
+
+              @if (pendingFile(); as file) {
+                <span class="file-chip">
+                  <mat-icon>description</mat-icon>
+                  <span>{{ file.name }}</span>
+                  <button
+                    matIconButton
+                    type="button"
+                    (click)="clearFile()"
+                    aria-label="Remove attachment"
+                  >
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </span>
+              }
+            </div>
+
+            <button matButton="filled" type="submit" [disabled]="sending()">
+              <mat-icon>send</mat-icon>
+              {{ sending() ? 'Sending…' : 'Send reply' }}
+            </button>
+          </div>
+        </form>
+      }
+    </div>
+  }
+</div>

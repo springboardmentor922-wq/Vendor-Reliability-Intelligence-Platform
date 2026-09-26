@@ -1,0 +1,223 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Vendor management</h1>
+      <p>
+        Register suppliers, categorise them and move them through the approval
+        workflow.
+      </p>
+    </div>
+
+    @if (canEdit()) {
+      <div class="page-actions">
+        <button matButton="filled" (click)="register()">
+          <mat-icon>add</mat-icon>
+          Register vendor
+        </button>
+      </div>
+    }
+  </div>
+
+  @if (stats(); as summary) {
+    <div class="stat-grid">
+      <div class="stat">
+        <div class="stat-label">Total vendors</div>
+        <div class="stat-value">{{ summary.total }}</div>
+        <div class="stat-hint">Across all categories</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Approved</div>
+        <div class="stat-value">{{ summary.approved }}</div>
+        <div class="stat-hint">Eligible for purchase orders</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Pending approval</div>
+        <div class="stat-value">{{ summary.pending }}</div>
+        <div class="stat-hint">Awaiting a decision</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Suspended / rejected</div>
+        <div class="stat-value">
+          {{ summary.suspended + summary.rejected }}
+        </div>
+        <div class="stat-hint">Blocked from new work</div>
+      </div>
+    </div>
+  }
+
+  <div class="filter-bar">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search</mat-label>
+      <input
+        matInput
+        [(ngModel)]="search"
+        (keyup.enter)="load()"
+        placeholder="Name, code, email, contact or location"
+      />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Status</mat-label>
+      <mat-select [(ngModel)]="statusFilter" (selectionChange)="load()">
+        <mat-option value="">All statuses</mat-option>
+        @for (status of statuses; track status) {
+          <mat-option [value]="status">{{ status }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Category</mat-label>
+      <mat-select [(ngModel)]="categoryFilter" (selectionChange)="load()">
+        <mat-option value="">All categories</mat-option>
+        @for (category of categories; track category) {
+          <mat-option [value]="category">{{ category }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <button matButton (click)="load()">
+      <mat-icon>filter_alt</mat-icon>
+      Apply
+    </button>
+    <button matButton (click)="clearFilters()">Clear</button>
+  </div>
+
+  <div class="table-wrap">
+    @if (loading()) {
+      <div class="loading-state"><mat-spinner diameter="38" /></div>
+    } @else if (vendors().length === 0) {
+      <div class="empty-state">
+        <mat-icon class="empty-icon">store</mat-icon>
+        <h3>No vendors found</h3>
+        <p>Adjust your filters, or register a new supplier to get started.</p>
+      </div>
+    } @else {
+      <table mat-table [dataSource]="vendors()">
+        <ng-container matColumnDef="vendor_code">
+          <th mat-header-cell *matHeaderCellDef>Code</th>
+          <td mat-cell *matCellDef="let vendor" class="mono">
+            {{ vendor.vendor_code }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="vendor_name">
+          <th mat-header-cell *matHeaderCellDef>Vendor</th>
+          <td mat-cell *matCellDef="let vendor">
+            <div class="list-title">{{ vendor.vendor_name }}</div>
+            <div class="list-meta">
+              {{ vendor.contact_person || 'No contact recorded' }}
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="category">
+          <th mat-header-cell *matHeaderCellDef>Category</th>
+          <td mat-cell *matCellDef="let vendor">{{ vendor.category }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="location">
+          <th mat-header-cell *matHeaderCellDef>Location</th>
+          <td mat-cell *matCellDef="let vendor">
+            {{ vendor.city ? vendor.city + ', ' : '' }}{{ vendor.country || '—' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let vendor">
+            <app-status-pill [status]="vendor.status" />
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="risk_level">
+          <th mat-header-cell *matHeaderCellDef>Risk</th>
+          <td mat-cell *matCellDef="let vendor">
+            <app-status-pill [status]="vendor.risk_level" />
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="score">
+          <th mat-header-cell *matHeaderCellDef class="num">Reliability</th>
+          <td mat-cell *matCellDef="let vendor" class="num">
+            {{
+              vendor.reliability_score !== null
+                ? (vendor.reliability_score | number: '1.1-1')
+                : '—'
+            }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef class="row-actions">Actions</th>
+          <td mat-cell *matCellDef="let vendor" class="row-actions">
+            <button
+              matIconButton
+              [matMenuTriggerFor]="menu"
+              (click)="$event.stopPropagation()"
+              aria-label="Vendor actions"
+            >
+              <mat-icon>more_vert</mat-icon>
+            </button>
+
+            <mat-menu #menu="matMenu">
+              <button mat-menu-item (click)="open(vendor)">
+                <mat-icon>visibility</mat-icon>
+                <span>View details</span>
+              </button>
+
+              <button mat-menu-item (click)="edit(vendor, $event)">
+                <mat-icon>edit</mat-icon>
+                <span>Edit vendor</span>
+              </button>
+
+              @if (canApprove() && vendor.status === 'Pending') {
+                <button mat-menu-item (click)="approve(vendor, $event)">
+                  <mat-icon>check_circle</mat-icon>
+                  <span>Approve</span>
+                </button>
+                <button mat-menu-item (click)="reject(vendor, $event)">
+                  <mat-icon>cancel</mat-icon>
+                  <span>Reject</span>
+                </button>
+              }
+
+              @if (canApprove() && vendor.status === 'Approved') {
+                <button mat-menu-item (click)="suspend(vendor, $event)">
+                  <mat-icon>block</mat-icon>
+                  <span>Suspend</span>
+                </button>
+              }
+
+              @if (
+                canApprove() &&
+                (vendor.status === 'Suspended' || vendor.status === 'Rejected')
+              ) {
+                <button mat-menu-item (click)="reactivate(vendor, $event)">
+                  <mat-icon>restart_alt</mat-icon>
+                  <span>Reactivate</span>
+                </button>
+              }
+
+              @if (isAdmin()) {
+                <button mat-menu-item (click)="remove(vendor, $event)">
+                  <mat-icon>delete</mat-icon>
+                  <span>Delete</span>
+                </button>
+              }
+            </mat-menu>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="columns()"></tr>
+        <tr
+          mat-row
+          *matRowDef="let vendor; columns: columns()"
+          class="clickable-row"
+          (click)="open(vendor)"
+        ></tr>
+      </table>
+    }
+  </div>
+</div>

@@ -1,0 +1,185 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Reports &amp; Export</h1>
+      <p>
+        Every report is generated from the live database under the filters you
+        choose, then exported as PDF or Excel
+      </p>
+    </div>
+
+    <div class="page-actions">
+      <button
+        matButton
+        [disabled]="exporting() !== null || !report()"
+        (click)="download('pdf')"
+      >
+        @if (exporting() === 'pdf') {
+          <mat-spinner diameter="16" />
+        } @else {
+          <mat-icon>picture_as_pdf</mat-icon>
+        }
+        Export PDF
+      </button>
+
+      <button
+        matButton
+        [disabled]="exporting() !== null || !report()"
+        (click)="download('excel')"
+      >
+        @if (exporting() === 'excel') {
+          <mat-spinner diameter="16" />
+        } @else {
+          <mat-icon>table_view</mat-icon>
+        }
+        Export Excel
+      </button>
+
+      <button matButton="filled" [disabled]="generating()" (click)="generate()">
+        <mat-icon>play_arrow</mat-icon>
+        Generate report
+      </button>
+    </div>
+  </div>
+
+  <!-- ------------------------------------------- report picker -->
+  <div class="report-picker">
+    @for (item of catalogue(); track item.key) {
+      <button
+        type="button"
+        class="report-option"
+        [class.report-option-active]="selectedKey() === item.key"
+        (click)="select(item.key)"
+      >
+        <div class="report-option-title">{{ item.title }}</div>
+        <div class="report-option-desc">{{ item.description }}</div>
+      </button>
+    }
+  </div>
+
+  <!-- ------------------------------------------------- filters -->
+  <div class="filter-bar">
+    @if (!isVendorUser()) {
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Vendor</mat-label>
+        <mat-select [ngModel]="vendorId()" (ngModelChange)="vendorId.set($event)">
+          <mat-option [value]="null">All vendors</mat-option>
+          @for (vendor of options()?.vendors ?? []; track vendor.id) {
+            <mat-option [value]="vendor.id">{{ vendor.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Category</mat-label>
+        <mat-select [ngModel]="category()" (ngModelChange)="category.set($event)">
+          <mat-option [value]="null">All categories</mat-option>
+          @for (item of options()?.categories ?? []; track item) {
+            <mat-option [value]="item">{{ item }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Risk level</mat-label>
+        <mat-select [ngModel]="riskLevel()" (ngModelChange)="riskLevel.set($event)">
+          <mat-option [value]="null">Any risk level</mat-option>
+          @for (level of options()?.risk_levels ?? []; track level) {
+            <mat-option [value]="level">{{ level }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    }
+
+    @if (statusOptions().length > 0) {
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Status</mat-label>
+        <mat-select [ngModel]="status()" (ngModelChange)="status.set($event)">
+          <mat-option [value]="null">Any status</mat-option>
+          @for (item of statusOptions(); track item) {
+            <mat-option [value]="item">{{ item }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    }
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>From</mat-label>
+      <input matInput type="date" [ngModel]="start()" (ngModelChange)="start.set($event)" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>To</mat-label>
+      <input matInput type="date" [ngModel]="end()" (ngModelChange)="end.set($event)" />
+    </mat-form-field>
+
+    <button matButton (click)="resetFilters()">
+      <mat-icon>filter_alt_off</mat-icon>
+      Reset
+    </button>
+  </div>
+
+  @if (generating() && !report()) {
+    <div class="loading-state"><mat-spinner diameter="42" /></div>
+  } @else if (report(); as r) {
+    <section class="card card-pad">
+      <div class="chart-head">
+        <h2>{{ r.title }}</h2>
+        <span class="chart-sub">
+          {{ r.row_count | number }} row(s) · generated
+          {{ r.generated_at.slice(0, 16).replace('T', ' ') }}
+        </span>
+      </div>
+
+      <!-- summary block -->
+      @if (summaryRows().length > 0) {
+        <div class="report-summary">
+          @for (item of summaryRows(); track item.label) {
+            <div class="report-summary-item">
+              <div class="report-summary-label">{{ item.label }}</div>
+              <div class="report-summary-value">{{ item.value }}</div>
+            </div>
+          }
+        </div>
+      }
+
+      @if (r.truncated) {
+        <p class="model-note" style="margin-bottom: 12px">
+          Showing the first {{ r.rows.length | number }} of
+          {{ r.row_count | number }} rows on screen. The PDF and Excel exports
+          carry the full dataset.
+        </p>
+      }
+    </section>
+
+    <!-- preview table -->
+    <section class="card section-gap">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              @for (column of r.columns; track column.key) {
+                <th [class.num]="isNumeric(column)">{{ column.label }}</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of r.rows; track $index) {
+              <tr>
+                @for (column of r.columns; track column.key) {
+                  <td [class.num]="isNumeric(column)">{{ cell(row, column) }}</td>
+                }
+              </tr>
+            } @empty {
+              <tr>
+                <td [attr.colspan]="r.columns.length" class="empty-state">
+                  No records matched the selected filters.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+</div>

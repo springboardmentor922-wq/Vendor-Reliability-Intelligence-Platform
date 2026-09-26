@@ -1,0 +1,95 @@
+<mat-sidenav-container class="shell">
+  <mat-sidenav
+    class="sidebar"
+    mode="side"
+    [opened]="sidenavOpen()"
+    disableClose
+  >
+    <div class="brand">
+      <span class="brand-mark">V</span>
+      <span class="brand-text">Vendor<strong>IQ</strong></span>
+    </div>
+
+    <div class="menu-title">Main menu</div>
+
+    <nav class="nav">
+      @for (item of navItems(); track item.route) {
+        <a
+          class="nav-link"
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: false }"
+        >
+          <mat-icon>{{ item.icon }}</mat-icon>
+          <span>{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+
+    <div class="sidebar-foot">
+      <div class="foot-name">{{ user()?.name }}</div>
+      <div class="foot-role">{{ user()?.role }}</div>
+    </div>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="content-area">
+    <mat-toolbar class="topbar">
+      <button
+        matIconButton
+        (click)="toggleSidenav()"
+        aria-label="Toggle navigation"
+      >
+        <mat-icon>menu</mat-icon>
+      </button>
+
+      <span class="topbar-title">Vendor Reliability Intelligence Platform</span>
+
+      <span class="spacer"></span>
+
+      <a
+        matIconButton
+        routerLink="/notifications"
+        matTooltip="Notifications"
+        aria-label="Notifications"
+      >
+        <mat-icon
+          [matBadge]="unread()"
+          [matBadgeHidden]="unread() === 0"
+          matBadgeColor="warn"
+          matBadgeSize="small"
+        >
+          notifications
+        </mat-icon>
+      </a>
+
+      <button
+        matButton
+        class="account-button"
+        [matMenuTriggerFor]="accountMenu"
+        aria-label="Account menu"
+      >
+        <span class="avatar">{{ initials() }}</span>
+        <span class="account-name">{{ user()?.name }}</span>
+        <mat-icon>expand_more</mat-icon>
+      </button>
+
+      <mat-menu #accountMenu="matMenu">
+        <div class="menu-header">
+          <div class="menu-name">{{ user()?.name }}</div>
+          <div class="menu-email">{{ user()?.email }}</div>
+          <div class="menu-role">{{ user()?.role }}</div>
+        </div>
+        <a mat-menu-item routerLink="/profile">
+          <mat-icon>person</mat-icon>
+          <span>My profile</span>
+        </a>
+        <button mat-menu-item (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Sign out</span>
+        </button>
+      </mat-menu>
+    </mat-toolbar>
+
+    <router-outlet />
+  </mat-sidenav-content>
+</mat-sidenav-container>

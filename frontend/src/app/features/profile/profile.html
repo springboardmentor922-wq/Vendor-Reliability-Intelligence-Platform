@@ -1,0 +1,145 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>My profile</h1>
+      <p>Your account details and password.</p>
+    </div>
+  </div>
+
+  <div class="detail-grid">
+    <div>
+      <!-- Profile -->
+      <section class="card card-pad section-gap">
+        <h2 class="card-title">Profile details</h2>
+
+        <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="form-grid">
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Full name</mat-label>
+            <input matInput formControlName="name" />
+            @if (profileForm.controls.name.hasError('required')) {
+              <mat-error>Name is required</mat-error>
+            } @else if (profileForm.controls.name.hasError('minlength')) {
+              <mat-error>Enter at least 2 characters</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Phone</mat-label>
+            <input matInput formControlName="phone" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Department</mat-label>
+            <input matInput formControlName="department" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Job title</mat-label>
+            <input matInput formControlName="job_title" />
+          </mat-form-field>
+
+          <div class="span-2">
+            <button matButton="filled" type="submit" [disabled]="savingProfile()">
+              {{ savingProfile() ? 'Saving…' : 'Save changes' }}
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Password -->
+      <section class="card card-pad">
+        <h2 class="card-title">Change password</h2>
+
+        <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="form-grid">
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Current password</mat-label>
+            <input
+              matInput
+              type="password"
+              formControlName="current_password"
+              autocomplete="current-password"
+            />
+            @if (passwordForm.controls.current_password.hasError('required')) {
+              <mat-error>Enter your current password</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>New password</mat-label>
+            <input
+              matInput
+              type="password"
+              formControlName="new_password"
+              autocomplete="new-password"
+            />
+            <mat-hint>Minimum 8 characters</mat-hint>
+            @if (passwordForm.controls.new_password.hasError('minlength')) {
+              <mat-error>Password must be at least 8 characters</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Confirm new password</mat-label>
+            <input
+              matInput
+              type="password"
+              formControlName="confirm_password"
+              autocomplete="new-password"
+            />
+            @if (
+              passwordForm.hasError('mismatch') &&
+              passwordForm.controls.confirm_password.touched
+            ) {
+              <mat-error>Passwords do not match</mat-error>
+            }
+          </mat-form-field>
+
+          <div class="span-2">
+            <button matButton="filled" type="submit" [disabled]="savingPassword()">
+              {{ savingPassword() ? 'Updating…' : 'Change password' }}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <!-- Account summary -->
+    <aside class="card card-pad">
+      <h2 class="card-title">Account</h2>
+
+      @if (user(); as u) {
+        <dl class="kv">
+          <dt>Email</dt>
+          <dd>{{ u.email }}</dd>
+
+          <dt>Role</dt>
+          <dd><span class="pill pill-info">{{ u.role }}</span></dd>
+
+          <dt>Status</dt>
+          <dd>
+            <span class="pill" [class.pill-success]="u.is_active">
+              {{ u.is_active ? 'Active' : 'Deactivated' }}
+            </span>
+          </dd>
+
+          @if (u.vendor_id) {
+            <dt>Linked vendor</dt>
+            <dd>#{{ u.vendor_id }}</dd>
+          }
+
+          <dt>Member since</dt>
+          <dd>{{ u.created_at | date: 'mediumDate' }}</dd>
+
+          <dt>Last sign-in</dt>
+          <dd>
+            {{ u.last_login_at ? (u.last_login_at | date: 'short') : '—' }}
+          </dd>
+        </dl>
+
+        <p class="field-hint" style="margin-top: 18px">
+          Your email and role are managed by an administrator.
+        </p>
+      }
+    </aside>
+  </div>
+</div>

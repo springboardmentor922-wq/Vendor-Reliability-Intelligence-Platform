@@ -1,0 +1,205 @@
+{
+  "model_version": "delay-hgb-1.0",
+  "trained_at": "2026-09-10T05:53:31.158451+00:00",
+  "algorithm": "HistGradientBoostingClassifier",
+  "target": "late = slip > 1 day(s)",
+  "split": "chronological (earliest 75% train / latest 25% test)",
+  "rows_total": 180519,
+  "rows_train": 135389,
+  "rows_test": 45130,
+  "train_period": [
+    "2015-01-01",
+    "2017-03-01"
+  ],
+  "test_period": [
+    "2017-03-01",
+    "2018-01-31"
+  ],
+  "features": [
+    "shipping_mode",
+    "market",
+    "order_region",
+    "procurement_category",
+    "customer_segment",
+    "payment_type",
+    "scheduled_days",
+    "quantity",
+    "order_value",
+    "unit_price",
+    "discount_rate",
+    "order_month",
+    "order_quarter",
+    "order_weekday",
+    "vendor_prior_late_rate",
+    "vendor_prior_orders"
+  ],
+  "baseline_accuracy_majority_class": 0.7662,
+  "test": {
+    "accuracy": 0.8008,
+    "precision": 0.5938,
+    "recall": 0.4688,
+    "f1": 0.524,
+    "roc_auc": 0.7665,
+    "average_precision": 0.4838,
+    "brier_score": 0.1434,
+    "confusion_matrix": {
+      "true_negative": 31194,
+      "false_positive": 3384,
+      "false_negative": 5605,
+      "true_positive": 4947
+    },
+    "positive_rate": 0.2338,
+    "report": {
+      "On time": {
+        "precision": 0.8476860784260442,
+        "recall": 0.9021343050494534,
+        "f1-score": 0.8740630735390952,
+        "support": 34578.0
+      },
+      "Late": {
+        "precision": 0.5938062657544112,
+        "recall": 0.46882107657316147,
+        "f1-score": 0.5239633532807287,
+        "support": 10552.0
+      },
+      "accuracy": 0.8008198537558165,
+      "macro avg": {
+        "precision": 0.7207461720902277,
+        "recall": 0.6854776908113074,
+        "f1-score": 0.699013213409912,
+        "support": 45130.0
+      },
+      "weighted avg": {
+        "precision": 0.7883255691570198,
+        "recall": 0.8008198537558165,
+        "f1-score": 0.7922050578473983,
+        "support": 45130.0
+      }
+    }
+  },
+  "train": {
+    "accuracy": 0.8077,
+    "precision": 0.624,
+    "recall": 0.4823,
+    "f1": 0.544,
+    "roc_auc": 0.8373,
+    "average_precision": 0.6342,
+    "brier_score": 0.1356,
+    "confusion_matrix": {
+      "true_negative": 93830,
+      "false_positive": 9358,
+      "false_negative": 16672,
+      "true_positive": 15529
+    },
+    "positive_rate": 0.2378,
+    "report": {
+      "On time": {
+        "precision": 0.8491249027166929,
+        "recall": 0.9093111602124277,
+        "f1-score": 0.8781880293883664,
+        "support": 103188.0
+      },
+      "Late": {
+        "precision": 0.6239803913689879,
+        "recall": 0.48225210397192636,
+        "f1-score": 0.5440372757847534,
+        "support": 32201.0
+      },
+      "accuracy": 0.807739181174246,
+      "macro avg": {
+        "precision": 0.7365526470428404,
+        "recall": 0.695781632092177,
+        "f1-score": 0.7111126525865599,
+        "support": 135389.0
+      },
+      "weighted avg": {
+        "precision": 0.795576398703018,
+        "recall": 0.807739181174246,
+        "f1-score": 0.7987134161126206,
+        "support": 135389.0
+      }
+    }
+  },
+  "permutation_importance": [
+    {
+      "feature": "shipping_mode",
+      "importance": 0.2071,
+      "std": 0.00443
+    },
+    {
+      "feature": "order_weekday",
+      "importance": 0.00132,
+      "std": 0.00048
+    },
+    {
+      "feature": "procurement_category",
+      "importance": 0.00093,
+      "std": 0.00017
+    },
+    {
+      "feature": "scheduled_days",
+      "importance": 0.00043,
+      "std": 0.00089
+    },
+    {
+      "feature": "quantity",
+      "importance": 0.0004,
+      "std": 0.00028
+    },
+    {
+      "feature": "order_region",
+      "importance": 0.00037,
+      "std": 0.00171
+    },
+    {
+      "feature": "unit_price",
+      "importance": 0.00017,
+      "std": 0.00032
+    },
+    {
+      "feature": "order_quarter",
+      "importance": 0.0,
+      "std": 0.0
+    },
+    {
+      "feature": "market",
+      "importance": -0.0001,
+      "std": 1e-05
+    },
+    {
+      "feature": "order_month",
+      "importance": -0.0003,
+      "std": 2e-05
+    },
+    {
+      "feature": "order_value",
+      "importance": -0.00033,
+      "std": 0.00017
+    },
+    {
+      "feature": "vendor_prior_orders",
+      "importance": -0.00043,
+      "std": 0.0002
+    },
+    {
+      "feature": "payment_type",
+      "importance": -0.00104,
+      "std": 0.00023
+    },
+    {
+      "feature": "discount_rate",
+      "importance": -0.00105,
+      "std": 0.00091
+    },
+    {
+      "feature": "vendor_prior_late_rate",
+      "importance": -0.00135,
+      "std": 0.00033
+    },
+    {
+      "feature": "customer_segment",
+      "importance": -0.0015,
+      "std": 0.00024
+    }
+  ]
+}

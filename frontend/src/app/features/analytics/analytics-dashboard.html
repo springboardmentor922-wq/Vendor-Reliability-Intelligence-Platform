@@ -1,0 +1,788 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Analytics</h1>
+      <p>
+        Procurement, vendor and risk analytics — every chart reads the live
+        database under the filters below
+      </p>
+    </div>
+
+    <div class="page-actions">
+      @if (canRecalculate()) {
+        <button matButton (click)="runSweep()" matTooltip="Re-derive alerts from current data">
+          <mat-icon>notifications_active</mat-icon>
+          Run alert sweep
+        </button>
+        <button matButton="filled" (click)="recalculate()">
+          <mat-icon>calculate</mat-icon>
+          Recalculate scores
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- ------------------------------------------------ filters -->
+  <div class="filter-bar">
+    @if (!isVendorUser()) {
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Vendor</mat-label>
+        <mat-select [ngModel]="vendorId()" (ngModelChange)="vendorId.set($event)">
+          <mat-option [value]="null">All vendors</mat-option>
+          @for (vendor of options()?.vendors ?? []; track vendor.id) {
+            <mat-option [value]="vendor.id">{{ vendor.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Category</mat-label>
+        <mat-select [ngModel]="category()" (ngModelChange)="category.set($event)">
+          <mat-option [value]="null">All categories</mat-option>
+          @for (item of options()?.categories ?? []; track item) {
+            <mat-option [value]="item">{{ item }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Risk level</mat-label>
+        <mat-select [ngModel]="riskLevel()" (ngModelChange)="riskLevel.set($event)">
+          <mat-option [value]="null">Any risk level</mat-option>
+          @for (level of options()?.risk_levels ?? []; track level) {
+            <mat-option [value]="level">{{ level }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    }
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>From</mat-label>
+      <input matInput type="date" [ngModel]="start()" (ngModelChange)="start.set($event)" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>To</mat-label>
+      <input matInput type="date" [ngModel]="end()" (ngModelChange)="end.set($event)" />
+    </mat-form-field>
+
+    @if (activeFilterCount() > 0) {
+      <button matButton (click)="resetFilters()">
+        <mat-icon>filter_alt_off</mat-icon>
+        Clear {{ activeFilterCount() }} filter(s)
+      </button>
+    }
+  </div>
+
+  @if (selectedVendorName()) {
+    <p class="chart-sub" style="margin: -4px 0 12px">
+      Showing <strong>{{ selectedVendorName() }}</strong> only.
+    </p>
+  }
+
+  @if (loading() && !procurement()) {
+    <div class="loading-state"><mat-spinner diameter="42" /></div>
+  } @else {
+    <mat-tab-group animationDuration="150ms" [preserveContent]="true">
+      <!-- ================================================= -->
+      <!-- Procurement dashboard                             -->
+      <!-- ================================================= -->
+      <mat-tab label="Procurement">
+        @if (procurement(); as p) {
+          <div class="stat-grid section-gap">
+            <div class="stat">
+              <div class="stat-label">Total Requests</div>
+              <div class="stat-value">{{ p.overview['total_requests'] | number }}</div>
+              <div class="stat-hint">
+                {{ p.overview['pending_requests'] }} pending ·
+                {{ p.overview['completed_requests'] | number }} completed
+              </div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Completion Rate</div>
+              <div class="stat-value">{{ p.overview['completion_rate'] }}<span class="stat-unit">%</span></div>
+              <div class="stat-hint">of non-cancelled requests</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Active Purchase Orders</div>
+              <div class="stat-value">{{ p.purchase_orders['active_orders'] | number }}</div>
+              <div class="stat-hint">
+                {{ p.purchase_orders['in_transit_orders'] }} in transit ·
+                {{ p.purchase_orders['overdue_orders'] }} overdue
+              </div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Procurement Value</div>
+              <div class="stat-value">{{ p.purchase_orders['total_po_value'] | number: '1.0-0' }}</div>
+              <div class="stat-hint">
+                {{ p.purchase_orders['active_po_value'] | number: '1.0-0' }} still active
+              </div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">On-Time Delivery</div>
+              <div class="stat-value">{{ p.delivery_status.delivery_rate }}<span class="stat-unit">%</span></div>
+              <div class="stat-hint">
+                {{ p.delivery_status.on_time_deliveries | number }} on time,
+                {{ p.delivery_status.delayed_deliveries | number }} late
+              </div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Performance Score</div>
+              <div class="stat-value">{{ p.vendor_performance['performance_score'] }}</div>
+              <div class="stat-hint">
+                quality {{ p.vendor_performance['quality_rating'] }}/5 ·
+                response {{ p.vendor_performance['avg_response_time_hours'] }}h
+              </div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Issue Resolution</div>
+              <div class="stat-value">{{ p.vendor_performance['issue_resolution_rate'] }}<span class="stat-unit">%</span></div>
+              <div class="stat-hint">
+                averaging {{ p.vendor_performance['avg_issue_resolution_hours'] }}h to close
+              </div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Outstanding Invoices</div>
+              <div class="stat-value">{{ p.invoices['outstanding_value'] | number: '1.0-0' }}</div>
+              <div class="stat-hint">
+                {{ p.invoices['pending_invoices'] }} pending ·
+                {{ p.invoices['overdue_invoices'] }} overdue
+              </div>
+            </div>
+          </div>
+
+          <div class="analytics-grid section-gap">
+            <section class="card card-pad span-full">
+              <div class="chart-head">
+                <h2>Procurement spend by month</h2>
+                <span class="chart-sub">
+                  Committed value of non-cancelled orders
+                  @if (lastMonthIsPartial()) {
+                    · the final month is still in progress
+                  }
+                </span>
+              </div>
+              <app-line-chart [series]="spendSeries()" [formatMonths]="true" />
+            </section>
+
+            <section class="card card-pad">
+              <div class="chart-head">
+                <h2>Purchase order volume</h2>
+                <span class="chart-sub">
+                  Orders raised per month
+                  @if (lastMonthIsPartial()) {
+                    · the final month is still in progress
+                  }
+                </span>
+              </div>
+              <app-line-chart [series]="orderVolumeSeries()" [formatMonths]="true" />
+            </section>
+
+            <section class="card card-pad">
+              <div class="chart-head">
+                <h2>Delivery status</h2>
+                <span class="chart-sub">Across the filtered order book</span>
+              </div>
+              <app-donut-chart [data]="deliverySlices()" centreLabel="Deliveries" />
+            </section>
+
+            <section class="card card-pad">
+              <div class="chart-head">
+                <h2>Purchase orders by status</h2>
+              </div>
+              <app-donut-chart [data]="orderStatusSlices()" centreLabel="Orders" />
+            </section>
+
+            <section class="card card-pad">
+              <div class="chart-head">
+                <h2>Cost by category</h2>
+                <span class="chart-sub">Click a bar to filter the whole dashboard</span>
+              </div>
+              <app-bar-chart
+                [data]="spendByCategoryBars()"
+                [clickable]="true"
+                [highlight]="category()"
+                (barClick)="selectCategory($event)"
+              />
+            </section>
+
+            <section class="card card-pad">
+              <div class="chart-head">
+                <h2>Cost by vendor</h2>
+                <span class="chart-sub">Top 10 by committed spend</span>
+              </div>
+              <app-bar-chart
+                [data]="spendByVendorBars()"
+                [clickable]="true"
+                [highlight]="selectedVendorName()"
+                (barClick)="selectVendorByName($event)"
+              />
+            </section>
+
+            <section class="card card-pad">
+              <div class="chart-head">
+                <h2>On-time rate by category</h2>
+              </div>
+              <app-bar-chart [data]="categoryOnTimeBars()" valueSuffix="%" [colour]="'#17794c'" />
+            </section>
+
+            @if (budgetVariance(); as bv) {
+              <section class="card card-pad">
+                <div class="chart-head">
+                  <h2>Budget versus actual</h2>
+                  <span class="chart-sub">
+                    Requested estimate against committed order value
+                  </span>
+                </div>
+
+                <div class="metric-row">
+                  <span>Budgeted (from requests)</span>
+                  <span class="metric-value">{{ bv.budget | number: '1.0-0' }}</span>
+                </div>
+                <div class="metric-row">
+                  <span>Actual (purchase orders)</span>
+                  <span class="metric-value">{{ bv.actual | number: '1.0-0' }}</span>
+                </div>
+                <div class="metric-row">
+                  <span>Variance</span>
+                  <span
+                    class="metric-value"
+                    [class.trend-down]="bv.over"
+                    [class.trend-up]="!bv.over"
+                  >
+                    {{ bv.variance | number: '1.0-0' }} ({{ bv.pct | number: '1.0-2' }}%)
+                  </span>
+                </div>
+
+                <p class="model-note" style="margin-top: 10px">
+                  @if (bv.over) {
+                    Committed spend is running above the estimates raised on the
+                    originating procurement requests.
+                  } @else {
+                    Committed spend is tracking at or below the estimates raised
+                    on the originating procurement requests.
+                  }
+                </p>
+              </section>
+            }
+          </div>
+        }
+      </mat-tab>
+
+      <!-- ================================================= -->
+      <!-- Vendor risk & reliability                          -->
+      <!-- ================================================= -->
+      <mat-tab label="Vendor risk">
+        <div class="analytics-grid section-gap">
+          <section class="card card-pad">
+            <div class="chart-head">
+              <h2>Vendors by risk level</h2>
+              <span class="chart-sub">Click a band to filter</span>
+            </div>
+            <app-donut-chart
+              [data]="riskSlices()"
+              centreLabel="Vendors"
+              [clickable]="true"
+              [highlight]="riskLevel()"
+              (sliceClick)="selectRisk($event)"
+            />
+          </section>
+
+          <section class="card card-pad">
+            <div class="chart-head">
+              <h2>Reliability score by vendor</h2>
+              <span class="chart-sub">Coloured by risk band</span>
+            </div>
+            <app-bar-chart
+              [data]="reliabilityBars()"
+              [colourMap]="reliabilityColours()"
+              [clickable]="true"
+              [highlight]="selectedVendorName()"
+              (barClick)="selectVendorByName($event)"
+            />
+          </section>
+
+          <!-- ------------------------- at-risk vendors -->
+          <section class="card card-pad span-full">
+            <div class="chart-head">
+              <h2>Vendors needing attention</h2>
+              <span class="chart-sub">
+                {{ risk()?.high_risk_count ?? 0 }} vendor(s) at High or Critical risk
+              </span>
+            </div>
+
+            @if ((risk()?.at_risk_vendors ?? []).length === 0) {
+              <p class="muted">
+                No vendors are currently classified High or Critical risk under
+                these filters.
+              </p>
+            } @else {
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Vendor</th>
+                      <th>Category</th>
+                      <th>Risk</th>
+                      <th class="num">Score</th>
+                      <th>Trend</th>
+                      <th class="num">Predicted delay</th>
+                      <th>Why, and what to do</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (v of risk()?.at_risk_vendors ?? []; track v.vendor_id) {
+                      <tr>
+                        <td>
+                          <a [routerLink]="['/vendors', v.vendor_id]">
+                            <strong>{{ v.vendor_name }}</strong>
+                          </a>
+                          <div class="list-meta">{{ v.vendor_code }}</div>
+                        </td>
+                        <td>{{ v.category }}</td>
+                        <td><app-status-pill [status]="v.risk_level" /></td>
+                        <td class="num">
+                          <strong>{{ v.reliability_score | number: '1.0-1' }}</strong>
+                        </td>
+                        <td [class]="trendClass(v.trend)">
+                          <mat-icon
+                            style="font-size: 16px; height: 16px; width: 16px; vertical-align: -3px"
+                            >{{ trendIcon(v.trend) }}</mat-icon
+                          >
+                          {{ v.trend }}
+                        </td>
+                        <td class="num">
+                          @if (v.predicted_delay_risk !== null) {
+                            {{ v.predicted_delay_risk * 100 | number: '1.0-0' }}%
+                          } @else {
+                            <span class="muted">—</span>
+                          }
+                        </td>
+                        <td style="max-width: 460px; font-size: 12px; line-height: 1.5">
+                          {{ v.recommendation }}
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </section>
+
+          <!-- ------------------------- ranking table -->
+          <section class="card span-full">
+            <div class="card-pad" style="padding-bottom: 0">
+              <div class="chart-head">
+                <h2>Supplier ranking</h2>
+                <span class="chart-sub">
+                  Ordered by overall reliability · {{ ranking().length }} vendor(s)
+                </span>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th class="num">#</th>
+                    <th>Vendor</th>
+                    <th>Category</th>
+                    <th class="num">Reliability</th>
+                    <th>Risk</th>
+                    <th class="num">Delivery</th>
+                    <th class="num">Quality</th>
+                    <th class="num">Comms</th>
+                    <th class="num">Compliance</th>
+                    <th class="num">Orders</th>
+                    <th class="num">Spend</th>
+                    <th>Trend</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of ranking(); track row.vendor_id) {
+                    <tr class="clickable-row" (click)="vendorId.set(row.vendor_id)">
+                      <td class="num">{{ row.rank_position ?? '—' }}</td>
+                      <td>
+                        <strong>{{ row.vendor_name }}</strong>
+                        <div class="list-meta">{{ row.vendor_code }}</div>
+                      </td>
+                      <td>{{ row.category }}</td>
+                      <td class="num">
+                        <strong>{{ row.reliability_score | number: '1.0-1' }}</strong>
+                      </td>
+                      <td><app-status-pill [status]="row.risk_level" /></td>
+                      <td class="num">{{ row.delivery_score | number: '1.0-0' }}</td>
+                      <td class="num">{{ row.quality_score | number: '1.0-0' }}</td>
+                      <td class="num">{{ row.communication_score | number: '1.0-0' }}</td>
+                      <td class="num">{{ row.compliance_score | number: '1.0-0' }}</td>
+                      <td class="num">{{ row.orders_considered | number }}</td>
+                      <td class="num">{{ row.total_spend | number: '1.0-0' }}</td>
+                      <td [class]="trendClass(row.trend)">{{ row.trend ?? '—' }}</td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="12" class="empty-state">
+                        No vendors match the selected filters.
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </mat-tab>
+
+      <!-- ================================================= -->
+      <!-- Predictions                                        -->
+      <!-- ================================================= -->
+      <mat-tab label="Delay predictions">
+        <div class="analytics-grid section-gap">
+          @if (model(); as info) {
+            <section class="card card-pad span-full">
+              <div class="chart-head">
+                <h2>The delivery-delay model</h2>
+                <span class="chart-sub">{{ info.model_version }}</span>
+              </div>
+
+              @if (info.metrics; as mm) {
+                <div class="report-summary">
+                  <div class="report-summary-item">
+                    <div class="report-summary-label">Held-out accuracy</div>
+                    <div class="report-summary-value">
+                      {{ mm.test.accuracy * 100 | number: '1.1-1' }}%
+                    </div>
+                  </div>
+                  <div class="report-summary-item">
+                    <div class="report-summary-label">Majority baseline</div>
+                    <div class="report-summary-value">
+                      {{ mm.baseline_accuracy_majority_class * 100 | number: '1.1-1' }}%
+                    </div>
+                  </div>
+                  <div class="report-summary-item">
+                    <div class="report-summary-label">ROC AUC</div>
+                    <div class="report-summary-value">{{ mm.test.roc_auc }}</div>
+                  </div>
+                  <div class="report-summary-item">
+                    <div class="report-summary-label">Precision / Recall</div>
+                    <div class="report-summary-value">
+                      {{ mm.test.precision }} / {{ mm.test.recall }}
+                    </div>
+                  </div>
+                  <div class="report-summary-item">
+                    <div class="report-summary-label">Training rows</div>
+                    <div class="report-summary-value">{{ mm.rows_train | number }}</div>
+                  </div>
+                  <div class="report-summary-item">
+                    <div class="report-summary-label">Tested on</div>
+                    <div class="report-summary-value">{{ mm.rows_test | number }}</div>
+                  </div>
+                </div>
+
+                <p class="model-note">
+                  <strong>What it predicts:</strong> {{ mm.target }} — the
+                  probability that a purchase order misses its committed
+                  delivery date, using only attributes known when the order is
+                  raised.
+                  <br />
+                  <strong>How it was validated:</strong> {{ mm.split }}, training
+                  on {{ mm.train_period[0] }} to {{ mm.train_period[1] }} and
+                  testing on later orders ({{ mm.test_period[0] }} to
+                  {{ mm.test_period[1] }}), so the score reflects genuine
+                  forecasting rather than recall.
+                </p>
+              } @else {
+                <p class="muted">
+                  No trained model artifact is loaded — predictions fall back to
+                  a transparent heuristic. Run
+                  <code>python -m ml.train_delay_model</code> in the backend to
+                  train it.
+                </p>
+              }
+            </section>
+          }
+
+          <section class="card span-full">
+            <div class="card-pad" style="padding-bottom: 0">
+              <div class="chart-head">
+                <h2>Open orders at risk of running late</h2>
+                <span class="chart-sub">
+                  {{ highRiskPredictions().length }} of {{ predictions().length }}
+                  open order(s) flagged High or Critical
+                </span>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Purchase order</th>
+                    <th>Vendor</th>
+                    <th>Committed</th>
+                    <th class="num">Delay probability</th>
+                    <th>Risk</th>
+                    <th>What the model is saying</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (p of predictions(); track p.purchase_order_id) {
+                    <tr>
+                      <td>
+                        <a [routerLink]="['/purchase-orders', p.purchase_order_id]">
+                          <strong>{{ p.po_number }}</strong>
+                        </a>
+                      </td>
+                      <td>{{ p.vendor_name }}</td>
+                      <td>{{ p.expected_delivery ?? '—' }}</td>
+                      <td class="num">
+                        <strong>{{ p.delay_probability * 100 | number: '1.0-1' }}%</strong>
+                      </td>
+                      <td><app-status-pill [status]="p.risk_band" /></td>
+                      <td style="max-width: 420px; font-size: 12px; line-height: 1.5">
+                        {{ p.explanation }}
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="6" class="empty-state">
+                        No open purchase orders to score.
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </mat-tab>
+
+      <!-- ================================================= -->
+      <!-- Vendor dashboard                                   -->
+      <!-- ================================================= -->
+      <mat-tab label="Vendor view">
+        @if (vendorView(); as v) {
+          <div class="stat-grid section-gap">
+            <div class="stat">
+              <div class="stat-label">Total Orders</div>
+              <div class="stat-value">{{ v.order_history['total_orders'] | number }}</div>
+              <div class="stat-hint">
+                {{ v.order_history['completed_orders'] | number }} completed ·
+                {{ v.order_history['cancelled_orders'] }} cancelled
+              </div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Order Value</div>
+              <div class="stat-value">{{ v.order_history['order_value'] | number: '1.0-0' }}</div>
+              <div class="stat-hint">across all non-cancelled orders</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Delivery Rate</div>
+              <div class="stat-value">{{ v.delivery_status.delivery_rate }}<span class="stat-unit">%</span></div>
+              <div class="stat-hint">
+                {{ v.delivery_status.delayed_deliveries | number }} delayed
+              </div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Messages</div>
+              <div class="stat-value">{{ v.communication['total_messages'] | number }}</div>
+              <div class="stat-hint">
+                {{ v.communication['open_queries'] }} open ·
+                {{ v.communication['resolved_queries'] }} resolved
+              </div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Response Time</div>
+              <div class="stat-value">{{ v.communication['avg_response_hours'] }}<span class="stat-unit">h</span></div>
+              <div class="stat-hint">measured from message timestamps</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Active Contracts</div>
+              <div class="stat-value">{{ v.contract_status.active_contracts }}</div>
+              <div class="stat-hint">
+                {{ v.contract_status.expiring_contracts }} expiring ·
+                {{ v.contract_status.expired_contracts }} expired
+              </div>
+            </div>
+          </div>
+
+          <div class="analytics-grid section-gap">
+            <section class="card card-pad span-full">
+              <div class="chart-head">
+                <h2>On-time delivery trend</h2>
+                <span class="chart-sub">
+                  {{ selectedVendorName() ?? 'All vendors' }}
+                </span>
+              </div>
+              <app-line-chart [series]="vendorTrendSeries()" [formatMonths]="true" />
+            </section>
+
+            @if (v.reliability; as r) {
+              <section class="card card-pad">
+                <div class="chart-head">
+                  <h2>Reliability breakdown</h2>
+                  <span class="chart-sub">
+                    Overall {{ r.overall_score | number: '1.0-1' }} ·
+                    {{ r.risk_level }} risk
+                  </span>
+                </div>
+                <app-bar-chart [data]="vendorReliabilityBars()" />
+              </section>
+            }
+
+            <section class="card card-pad">
+              <div class="chart-head">
+                <h2>Contract status</h2>
+              </div>
+              <app-donut-chart [data]="contractSlices()" centreLabel="Contracts" />
+            </section>
+
+            @if (v.contract_status.expiring_soon.length > 0) {
+              <section class="card card-pad span-full">
+                <div class="chart-head">
+                  <h2>Contracts expiring soon</h2>
+                </div>
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Contract</th>
+                        <th>Vendor</th>
+                        <th>Type</th>
+                        <th>Expires</th>
+                        <th class="num">Days left</th>
+                        <th class="num">Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (c of v.contract_status.expiring_soon; track c.id) {
+                        <tr>
+                          <td>
+                            <a [routerLink]="['/contracts', c.id]">{{ c.contract_number }}</a>
+                          </td>
+                          <td>{{ c.vendor_name }}</td>
+                          <td>{{ c.contract_type }}</td>
+                          <td>{{ c.expiry_date }}</td>
+                          <td class="num">{{ c.days_to_expiry }}</td>
+                          <td class="num">{{ c.contract_value | number: '1.0-0' }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            }
+          </div>
+        }
+      </mat-tab>
+
+      <!-- ================================================= -->
+      <!-- Admin dashboard                                    -->
+      <!-- ================================================= -->
+      @if (isAdmin()) {
+        <mat-tab label="Administration">
+          @if (admin(); as a) {
+            <div class="stat-grid section-gap">
+              <div class="stat">
+                <div class="stat-label">Total Users</div>
+                <div class="stat-value">{{ a.user_management.total_users }}</div>
+                <div class="stat-hint">
+                  {{ a.user_management.active_users }} active ·
+                  {{ a.user_management.inactive_users }} inactive
+                </div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">Total Vendors</div>
+                <div class="stat-value">{{ a.vendor_analytics['total_vendors'] }}</div>
+                <div class="stat-hint">
+                  {{ a.vendor_analytics['active_vendors'] }} approved ·
+                  {{ a.vendor_analytics['pending_vendors'] }} pending
+                </div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">High-Risk Vendors</div>
+                <div class="stat-value">{{ a.vendor_analytics['high_risk_vendors'] }}</div>
+                <div class="stat-hint">
+                  average reliability {{ a.vendor_analytics['average_reliability'] }}
+                </div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">Compliance Rate</div>
+                <div class="stat-value">{{ a.compliance['compliance_rate'] }}<span class="stat-unit">%</span></div>
+                <div class="stat-hint">
+                  {{ a.compliance['non_compliant_vendors'] }} vendor(s) with failures
+                </div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">Certifications</div>
+                <div class="stat-value">{{ a.compliance['total_certifications'] }}</div>
+                <div class="stat-hint">
+                  {{ a.compliance['expired_certifications'] }} expired ·
+                  {{ a.compliance['expiring_certifications'] }} expiring
+                </div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">Transactions</div>
+                <div class="stat-value">{{ a.system['total_transactions'] | number }}</div>
+                <div class="stat-hint">orders, requests and invoices</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">Performance Records</div>
+                <div class="stat-value">{{ a.system['total_performance_records'] | number }}</div>
+                <div class="stat-hint">
+                  {{ a.system['total_reliability_snapshots'] | number }} reliability snapshots
+                </div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">Pending Approvals</div>
+                <div class="stat-value">{{ a.user_management.pending_approvals }}</div>
+                <div class="stat-hint">vendor accounts awaiting a decision</div>
+              </div>
+            </div>
+
+            <div class="analytics-grid section-gap">
+              <section class="card card-pad">
+                <div class="chart-head">
+                  <h2>Users by role</h2>
+                </div>
+                <app-donut-chart [data]="usersByRoleSlices()" centreLabel="Users" />
+              </section>
+
+              <section class="card card-pad">
+                <div class="chart-head">
+                  <h2>Vendors by category</h2>
+                </div>
+                <app-donut-chart
+                  [data]="vendorsByCategorySlices()"
+                  centreLabel="Vendors"
+                  [clickable]="true"
+                  [highlight]="category()"
+                  (sliceClick)="selectCategory($event)"
+                />
+              </section>
+
+              <section class="card card-pad">
+                <div class="chart-head">
+                  <h2>Vendors by status</h2>
+                </div>
+                <app-bar-chart [data]="vendorsByStatusBars()" />
+              </section>
+
+              <section class="card card-pad">
+                <div class="chart-head">
+                  <h2>System statistics</h2>
+                </div>
+                @for (entry of systemRows(); track entry.key) {
+                  <div class="metric-row">
+                    <span>{{ entry.label }}</span>
+                    <span class="metric-value">{{ entry.value | number }}</span>
+                  </div>
+                }
+              </section>
+            </div>
+          }
+        </mat-tab>
+      }
+    </mat-tab-group>
+  }
+</div>

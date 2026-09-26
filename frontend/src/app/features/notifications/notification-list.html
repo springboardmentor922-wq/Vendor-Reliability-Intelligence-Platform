@@ -1,0 +1,109 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Notifications</h1>
+      <p>
+        Procurement alerts, delivery delays, vendor approvals, contract expiries
+        and compliance warnings.
+      </p>
+    </div>
+
+    <div class="page-actions">
+      <button matButton (click)="markAllRead()">
+        <mat-icon>done_all</mat-icon>
+        Mark all read
+      </button>
+    </div>
+  </div>
+
+  @if (summary(); as s) {
+    <div class="stat-grid">
+      <div class="stat">
+        <div class="stat-label">Total</div>
+        <div class="stat-value">{{ s.total }}</div>
+        <div class="stat-hint">In your inbox</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Unread</div>
+        <div class="stat-value">{{ s.unread }}</div>
+        <div class="stat-hint">Awaiting your attention</div>
+      </div>
+    </div>
+  }
+
+  <div class="filter-bar">
+    <mat-form-field appearance="outline">
+      <mat-label>Type</mat-label>
+      <mat-select [(ngModel)]="typeFilter" (selectionChange)="load()">
+        <mat-option value="">All types</mat-option>
+        @for (type of types; track type) {
+          <mat-option [value]="type">{{ type }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-checkbox [(ngModel)]="unreadOnly" (change)="load()">
+      Unread only
+    </mat-checkbox>
+  </div>
+
+  @if (loading()) {
+    <div class="card loading-state"><mat-spinner diameter="38" /></div>
+  } @else if (notifications().length === 0) {
+    <div class="card empty-state">
+      <mat-icon class="empty-icon">notifications_none</mat-icon>
+      <h3>Nothing to show</h3>
+      <p>You are all caught up.</p>
+    </div>
+  } @else {
+    <div class="card">
+      @for (notification of notifications(); track notification.id) {
+        <button
+          type="button"
+          class="notification-row"
+          [class.unread]="!notification.is_read"
+          (click)="open(notification)"
+        >
+          <span class="notification-icon">
+            <mat-icon>{{ iconFor(notification.notification_type) }}</mat-icon>
+          </span>
+
+          <span class="notification-body">
+            <span class="notification-title">{{ notification.title }}</span>
+            <span class="notification-text">{{ notification.message }}</span>
+            <span class="notification-meta">
+              {{ notification.notification_type }} ·
+              {{ notification.created_at | date: 'short' }}
+            </span>
+          </span>
+
+          <span class="notification-side">
+            <app-status-pill [status]="notification.priority" />
+
+            <span class="notification-actions">
+              @if (!notification.is_read) {
+                <button
+                  matIconButton
+                  type="button"
+                  matTooltip="Mark read"
+                  (click)="markRead(notification, $event)"
+                  aria-label="Mark as read"
+                >
+                  <mat-icon>mark_email_read</mat-icon>
+                </button>
+              }
+              <button
+                matIconButton
+                type="button"
+                (click)="remove(notification, $event)"
+                aria-label="Delete notification"
+              >
+                <mat-icon>delete_outline</mat-icon>
+              </button>
+            </span>
+          </span>
+        </button>
+      }
+    </div>
+  }
+</div>

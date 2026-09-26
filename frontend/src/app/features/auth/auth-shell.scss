@@ -1,0 +1,260 @@
+// Shared styling for the login / register / password screens.
+
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.auth-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: 100vh;
+
+  @media (max-width: 980px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.auth-aside {
+  background: var(--viq-sidebar);
+  color: #fff;
+  padding: 56px 56px 48px;
+  display: flex;
+  flex-direction: column;
+
+  @media (max-width: 980px) {
+    display: none;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 20px;
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: var(--viq-accent);
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+    }
+
+    strong {
+      color: #7aa8ff;
+    }
+  }
+
+  h2 {
+    margin: auto 0 0;
+    font-size: 34px;
+    line-height: 1.2;
+    letter-spacing: -0.9px;
+    font-weight: 600;
+    max-width: 460px;
+  }
+
+  p {
+    margin: 18px 0 0;
+    color: var(--viq-sidebar-soft);
+    font-size: 14.5px;
+    line-height: 1.65;
+    max-width: 460px;
+  }
+
+  .aside-points {
+    margin: 30px 0 auto;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    li {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      color: #cdd4de;
+      font-size: 13.5px;
+
+      mat-icon {
+        color: #7aa8ff;
+        font-size: 19px;
+        width: 19px;
+        height: 19px;
+      }
+    }
+  }
+}
+
+.auth-main {
+  display: grid;
+  place-items: center;
+  padding: 40px 24px;
+  background: var(--viq-ground);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--viq-surface);
+  border: 1px solid var(--viq-line);
+  border-radius: 14px;
+  box-shadow: var(--viq-shadow);
+  padding: 34px 34px 28px;
+
+  h1 {
+    margin: 0 0 6px;
+    font-size: 23px;
+    font-weight: 600;
+    letter-spacing: -0.4px;
+  }
+
+  .subtitle {
+    margin: 0 0 24px;
+    color: var(--viq-ink-soft);
+    font-size: 13.5px;
+  }
+}
+
+.auth-card-wide {
+  max-width: 620px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+
+  mat-form-field {
+    width: 100%;
+  }
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 14px;
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.auth-actions {
+  margin-top: 6px;
+
+  button {
+    width: 100%;
+    height: 44px;
+  }
+}
+
+.auth-links {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  font-size: 13px;
+  flex-wrap: wrap;
+
+  a {
+    color: var(--viq-accent);
+    text-decoration: none;
+    font-weight: 500;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.error-banner {
+  background: var(--viq-danger-bg);
+  color: var(--viq-danger);
+  border-radius: 8px;
+  padding: 11px 14px;
+  font-size: 13px;
+  margin-bottom: 18px;
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.info-banner {
+  background: var(--viq-info-bg);
+  color: var(--viq-info);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 13px;
+  margin-bottom: 18px;
+  line-height: 1.6;
+  word-break: break-all;
+}
+
+.demo-accounts {
+  margin-top: 26px;
+  padding-top: 18px;
+  border-top: 1px solid var(--viq-line);
+
+  .demo-title {
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--viq-ink-soft);
+    margin-bottom: 10px;
+  }
+
+  .demo-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+
+    @media (max-width: 480px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .demo-chip {
+    text-align: left;
+    border: 1px solid var(--viq-line);
+    background: #fff;
+    border-radius: 8px;
+    padding: 7px 10px;
+    cursor: pointer;
+    font: inherit;
+    transition: border-color 0.15s ease, background 0.15s ease;
+
+    &:hover {
+      border-color: var(--viq-accent);
+      background: #f5f8ff;
+    }
+
+    .demo-role {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .demo-email {
+      display: block;
+      font-size: 11px;
+      color: var(--viq-ink-soft);
+    }
+  }
+
+  .demo-note {
+    margin: 10px 0 0;
+    font-size: 11.5px;
+    color: var(--viq-ink-soft);
+  }
+}

@@ -1,0 +1,378 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Vendor Performance</h1>
+      <p>
+        Delivery, quality, responsiveness and issue resolution — measured from
+        the live order book
+      </p>
+    </div>
+
+    <div class="page-actions">
+      <button matButton (click)="resetFilters()">
+        <mat-icon>filter_alt_off</mat-icon>
+        Reset filters
+      </button>
+      <button matButton="filled" (click)="load()">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- ------------------------------------------------ filters -->
+  <div class="filter-bar">
+    @if (!isVendorUser()) {
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Vendor</mat-label>
+        <mat-select
+          [ngModel]="vendorId()"
+          (ngModelChange)="selectVendor($event)"
+        >
+          <mat-option [value]="null">All vendors</mat-option>
+          @for (vendor of options()?.vendors ?? []; track vendor.id) {
+            <mat-option [value]="vendor.id">{{ vendor.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Category</mat-label>
+        <mat-select
+          [ngModel]="category()"
+          (ngModelChange)="category.set($event)"
+        >
+          <mat-option [value]="null">All categories</mat-option>
+          @for (item of options()?.categories ?? []; track item) {
+            <mat-option [value]="item">{{ item }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    }
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>From</mat-label>
+      <input
+        matInput
+        type="date"
+        [ngModel]="start()"
+        (ngModelChange)="start.set($event)"
+      />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>To</mat-label>
+      <input
+        matInput
+        type="date"
+        [ngModel]="end()"
+        (ngModelChange)="end.set($event)"
+      />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Trend window</mat-label>
+      <mat-select [ngModel]="months()" (ngModelChange)="months.set($event)">
+        <mat-option [value]="6">Last 6 months</mat-option>
+        <mat-option [value]="12">Last 12 months</mat-option>
+        <mat-option [value]="24">Last 24 months</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  @if (loading() && !metrics()) {
+    <div class="loading-state"><mat-spinner diameter="42" /></div>
+  } @else if (metrics(); as m) {
+    <!-- ------------------------------------------ headline -->
+    <div class="stat-grid">
+      <div class="stat">
+        <div class="stat-label">On-Time Deliveries</div>
+        <div class="stat-value">{{ m.on_time_deliveries | number }}</div>
+        <div class="stat-hint">{{ m.on_time_rate }}% of delivered orders</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Delayed Deliveries</div>
+        <div class="stat-value">{{ m.delayed_deliveries | number }}</div>
+        <div class="stat-hint">
+          averaging {{ m.avg_delay_days }} day(s) over, worst
+          {{ m.max_delay_days }}
+        </div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Quality Rating</div>
+        <div class="stat-value">{{ m.quality_rating }}<span class="stat-unit"> / 5</span></div>
+        <div class="stat-hint">across {{ m.evaluations | number }} evaluations</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Response Time</div>
+        <div class="stat-value">{{ m.avg_response_time_hours }}<span class="stat-unit">h</span></div>
+        <div class="stat-hint">
+          measured on {{ m.communication.threads_measured }} answered thread(s)
+        </div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Issue Resolution</div>
+        <div class="stat-value">{{ m.avg_issue_resolution_hours }}<span class="stat-unit">h</span></div>
+        <div class="stat-hint">
+          {{ m.communication.resolution_rate }}% of queries resolved
+        </div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Order Completion</div>
+        <div class="stat-value">{{ m.order_completion_rate }}<span class="stat-unit">%</span></div>
+        <div class="stat-hint">
+          {{ m.completed_orders | number }} of
+          {{ m.total_orders - m.cancelled_orders | number }} non-cancelled
+        </div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Overdue Orders</div>
+        <div class="stat-value">{{ m.overdue_orders | number }}</div>
+        <div class="stat-hint">open and past the committed date</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Total Spend</div>
+        <div class="stat-value">{{ m.total_spend | number: '1.0-0' }}</div>
+        <div class="stat-hint">
+          {{ m.avg_order_value | number: '1.0-0' }} average order
+        </div>
+      </div>
+    </div>
+
+    <div class="analytics-grid section-gap">
+      <!-- ------------------------------- delivery trend -->
+      <section class="card card-pad span-full">
+        <div class="chart-head">
+          <h2>Delivery performance over time</h2>
+          <span class="chart-sub">
+            {{ selectedVendorName() }} · on-time rate and average delay by month
+          </span>
+        </div>
+
+        <app-line-chart
+          [series]="deliveryTrend()"
+          [formatMonths]="true"
+          emptyText="No deliveries recorded in this period."
+        />
+
+        <p class="model-note">
+          The delay line is scaled ten-fold so it stays readable against the
+          percentage axis — hover any month for the real figure.
+        </p>
+      </section>
+
+      <!-- ------------------------------- volume split -->
+      <section class="card card-pad">
+        <div class="chart-head">
+          <h2>On-time versus delayed volume</h2>
+          <span class="chart-sub">Delivered orders per month</span>
+        </div>
+
+        <app-line-chart
+          [series]="volumeTrend()"
+          [formatMonths]="true"
+          emptyText="No deliveries in this period."
+        />
+      </section>
+
+      <!-- ------------------------------- quality trend -->
+      <section class="card card-pad">
+        <div class="chart-head">
+          <h2>Quality rating trend</h2>
+          <span class="chart-sub">Mean recorded rating, 0–5</span>
+        </div>
+
+        <app-line-chart
+          [series]="qualityTrend()"
+          [formatMonths]="true"
+          [startAtZero]="false"
+          emptyText="No quality evaluations in this period."
+        />
+      </section>
+
+      <!-- ------------------------------- reliability -->
+      @if (score(); as s) {
+        <section class="card card-pad">
+          <div class="chart-head">
+            <h2>Reliability score</h2>
+            <span class="chart-sub">
+              @if (s.rank_position) {
+                Ranked {{ s.rank_position }} of {{ s.ranked_out_of }}
+              } @else {
+                Not ranked
+              }
+            </span>
+          </div>
+
+          <app-score-gauge
+            [value]="s.overall_score"
+            [band]="s.risk_level"
+            caption="Reliability"
+          />
+
+          <div class="inline-pills" style="justify-content: center; margin-top: 8px">
+            <app-status-pill [status]="s.risk_level" />
+            <span class="chart-sub" [class]="trendClass(s.trend)">
+              <mat-icon
+                style="font-size: 15px; height: 15px; width: 15px; vertical-align: -2px"
+                >{{ trendIcon(s.trend) }}</mat-icon
+              >
+              {{ s.trend }}
+            </span>
+            @if (s.provisional) {
+              <span class="pill pill-neutral">Provisional</span>
+            }
+          </div>
+
+          @if (s.predicted_delay_risk !== null) {
+            <div class="metric-row" style="margin-top: 12px">
+              <span>Predicted delay risk (next delivery)</span>
+              <span class="metric-value">
+                {{ s.predicted_delay_risk * 100 | number: '1.0-1' }}%
+              </span>
+            </div>
+          }
+        </section>
+
+        <section class="card card-pad">
+          <div class="chart-head">
+            <h2>Reliability factor profile</h2>
+            <span class="chart-sub">Six factors, each scored 0–100</span>
+          </div>
+
+          <app-radar-chart [data]="factorRadar()" [colour]="riskColour()" />
+
+          <div class="factor-list" style="margin-top: 14px">
+            @for (factor of factorRows(); track factor.key) {
+              <div class="factor-row">
+                <span class="factor-name">
+                  {{ factor.label }}
+                  <span class="factor-weight">· weight {{ factor.weight }}%</span>
+                </span>
+                <span class="factor-score">
+                  @if (factor.scored) {
+                    {{ factor.value | number: '1.0-1' }}
+                  } @else {
+                    <span class="muted">n/a</span>
+                  }
+                </span>
+                <span class="factor-track">
+                  <span
+                    class="factor-fill"
+                    [style.width.%]="factor.value"
+                    [style.background]="factor.colour"
+                  ></span>
+                </span>
+              </div>
+            }
+          </div>
+        </section>
+
+        <section class="card card-pad span-full">
+          <div class="chart-head">
+            <h2>Procurement recommendation</h2>
+            <span class="chart-sub">Generated from the factor scores above</span>
+          </div>
+
+          <div
+            class="recommendation"
+            [class.recommendation-good]="s.risk_level === 'Low'"
+            [class.recommendation-warn]="s.risk_level === 'High'"
+            [class.recommendation-critical]="s.risk_level === 'Critical'"
+          >
+            {{ s.recommendation }}
+          </div>
+        </section>
+      }
+
+      <!-- ------------------------------- ranking -->
+      <section class="card card-pad span-full">
+        <div class="chart-head">
+          <h2>On-time rate by vendor</h2>
+          <span class="chart-sub">
+            Click a bar to focus this dashboard on that vendor
+          </span>
+        </div>
+
+        <app-bar-chart
+          [data]="rankingBars()"
+          [colourMap]="rankingColours()"
+          valueSuffix="%"
+          [clickable]="true"
+          [highlight]="selectedVendorName()"
+          (barClick)="onVendorBarClick($event)"
+          emptyText="No vendors match the selected filters."
+        />
+      </section>
+
+      <!-- ------------------------------- detail table -->
+      <section class="card span-full">
+        <div class="card-pad" style="padding-bottom: 0">
+          <div class="chart-head">
+            <h2>Performance by vendor</h2>
+            <span class="chart-sub">{{ summary().length }} vendor(s)</span>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Vendor</th>
+                <th>Category</th>
+                <th class="num">Orders</th>
+                <th class="num">Delivered</th>
+                <th class="num">On time</th>
+                <th class="num">Delayed</th>
+                <th class="num">On-time %</th>
+                <th class="num">Avg delay</th>
+                <th class="num">Spend</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of summary(); track row.vendor_id) {
+                <tr
+                  class="clickable-row"
+                  [class.hbar-active]="row.vendor_id === vendorId()"
+                  (click)="selectVendor(row.vendor_id)"
+                >
+                  <td>
+                    <strong>{{ row.vendor_name }}</strong>
+                    <div class="list-meta">{{ row.vendor_code }}</div>
+                  </td>
+                  <td>{{ row.category }}</td>
+                  <td class="num">{{ row.orders | number }}</td>
+                  <td class="num">{{ row.delivered | number }}</td>
+                  <td class="num">{{ row.on_time_deliveries | number }}</td>
+                  <td class="num">{{ row.delayed_deliveries | number }}</td>
+                  <td class="num">
+                    <strong>{{ row.on_time_rate }}%</strong>
+                  </td>
+                  <td class="num">{{ row.avg_delay_days }}d</td>
+                  <td class="num">{{ row.total_spend | number: '1.0-0' }}</td>
+                  <td>
+                    <a
+                      matIconButton
+                      [routerLink]="['/vendors', row.vendor_id]"
+                      matTooltip="Open vendor"
+                      (click)="$event.stopPropagation()"
+                    >
+                      <mat-icon>open_in_new</mat-icon>
+                    </a>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="10" class="empty-state">
+                    No vendors match the selected filters.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  }
+</div>

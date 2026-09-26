@@ -1,0 +1,222 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>{{ greeting() }}, {{ user()?.name }}</h1>
+      <p>
+        Signed in as {{ user()?.role }} &middot; procurement and vendor position
+        at a glance
+      </p>
+    </div>
+
+    <div class="page-actions">
+      @if (canEdit()) {
+        <a matButton routerLink="/vendors">
+          <mat-icon>store</mat-icon>
+          Vendors
+        </a>
+        <a matButton="filled" routerLink="/procurement">
+          <mat-icon>add</mat-icon>
+          New request
+        </a>
+      }
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state"><mat-spinner diameter="42" /></div>
+  } @else if (data(); as overview) {
+    <!-- Headline cards -->
+    <div class="stat-grid">
+      @for (card of overview.cards; track card.label) {
+        <div class="stat">
+          <div class="stat-label">{{ card.label }}</div>
+          <div class="stat-value">{{ card.value }}</div>
+          <div class="stat-hint">{{ card.hint }}</div>
+        </div>
+      }
+    </div>
+
+    <div class="dash-grid">
+      <!-- Spend trend -->
+      <section class="card card-pad">
+        <h2 class="card-title">Procurement spend by month</h2>
+
+        @if (spendBars().length === 0) {
+          <p class="muted">No purchase orders in the last six months.</p>
+        } @else {
+          <div class="bars">
+            @for (bar of spendBars(); track bar.label) {
+              <div class="bar-row">
+                <div class="bar-label">
+                  <span>{{ bar.label }}</span>
+                  <span>{{ bar.value | number: '1.0-0' }}</span>
+                </div>
+                <div class="bar-track">
+                  <div class="bar-fill" [style.width.%]="bar.percent"></div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </section>
+
+      <!-- Top vendors -->
+      <section class="card card-pad">
+        <h2 class="card-title">Top vendors by spend</h2>
+
+        @if (topVendorBars().length === 0) {
+          <p class="muted">No spend recorded yet.</p>
+        } @else {
+          <div class="bars">
+            @for (bar of topVendorBars(); track bar.label) {
+              <div class="bar-row">
+                <div class="bar-label">
+                  <span>{{ bar.label }}</span>
+                  <span>{{ bar.value | number: '1.0-0' }}</span>
+                </div>
+                <div class="bar-track">
+                  <div class="bar-fill" [style.width.%]="bar.percent"></div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </section>
+
+      <!-- Vendors by status -->
+      <section class="card card-pad">
+        <h2 class="card-title">Vendors by status</h2>
+        <div class="bars">
+          @for (bar of vendorBars(); track bar.label) {
+            <div class="bar-row">
+              <div class="bar-label">
+                <span>{{ bar.label }}</span>
+                <span>{{ bar.value }}</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill" [style.width.%]="bar.percent"></div>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+
+      <!-- Vendors by category -->
+      <section class="card card-pad">
+        <h2 class="card-title">Vendors by category</h2>
+        <div class="bars">
+          @for (bar of categoryBars(); track bar.label) {
+            <div class="bar-row">
+              <div class="bar-label">
+                <span>{{ bar.label }}</span>
+                <span>{{ bar.value }}</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill" [style.width.%]="bar.percent"></div>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+
+      <!-- Purchase orders by status -->
+      <section class="card card-pad">
+        <h2 class="card-title">Purchase orders by status</h2>
+        @if (orderBars().length === 0) {
+          <p class="muted">No purchase orders yet.</p>
+        } @else {
+          <div class="bars">
+            @for (bar of orderBars(); track bar.label) {
+              <div class="bar-row">
+                <div class="bar-label">
+                  <span>{{ bar.label }}</span>
+                  <span>{{ bar.value }}</span>
+                </div>
+                <div class="bar-track">
+                  <div class="bar-fill" [style.width.%]="bar.percent"></div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </section>
+
+      <!-- Requests by status -->
+      <section class="card card-pad">
+        <h2 class="card-title">Procurement requests by status</h2>
+        @if (requestBars().length === 0) {
+          <p class="muted">No procurement requests yet.</p>
+        } @else {
+          <div class="bars">
+            @for (bar of requestBars(); track bar.label) {
+              <div class="bar-row">
+                <div class="bar-label">
+                  <span>{{ bar.label }}</span>
+                  <span>{{ bar.value }}</span>
+                </div>
+                <div class="bar-track">
+                  <div class="bar-fill" [style.width.%]="bar.percent"></div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </section>
+
+      <!-- Contracts expiring -->
+      <section class="card card-pad">
+        <h2 class="card-title">Contracts expiring soon</h2>
+
+        @if (overview.contracts_expiring.length === 0) {
+          <p class="muted">Nothing expiring in the next 30 days.</p>
+        } @else {
+          <ul class="plain-list">
+            @for (contract of overview.contracts_expiring; track contract.id) {
+              <li>
+                <a [routerLink]="['/contracts', contract.id]" class="list-link">
+                  <div>
+                    <div class="list-title">{{ contract.contract_number }}</div>
+                    <div class="list-meta">{{ contract.vendor_name }}</div>
+                  </div>
+                  <app-status-pill
+                    [status]="contract.days_to_expiry <= 7 ? 'Urgent' : 'Expiring'"
+                  />
+                </a>
+                <div class="list-meta">
+                  Expires {{ contract.expiry_date | date: 'mediumDate' }} ·
+                  {{ contract.days_to_expiry }} day(s) left
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      <!-- Recent activity -->
+      <section class="card card-pad">
+        <h2 class="card-title">Recent activity</h2>
+
+        @if (overview.recent_activity.length === 0) {
+          <p class="muted">No activity recorded yet.</p>
+        } @else {
+          <ul class="timeline">
+            @for (entry of overview.recent_activity; track entry.id) {
+              <li>
+                <div class="timeline-title">
+                  {{ entry.entity_type }} — {{ entry.action }}
+                </div>
+                <div class="timeline-meta">
+                  {{ entry.user_name ?? 'System' }} ·
+                  {{ entry.created_at | date: 'short' }}
+                </div>
+                @if (entry.description) {
+                  <div class="timeline-body">{{ entry.description }}</div>
+                }
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    </div>
+  }
+</div>

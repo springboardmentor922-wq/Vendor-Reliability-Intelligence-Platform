@@ -1,0 +1,23 @@
+fastapi==0.141.1
+uvicorn[standard]==0.52.4
+SQLAlchemy==2.0.52
+psycopg2-binary==2.9.12
+pydantic==2.13.4
+pydantic[email]
+email-validator==2.3.0
+python-dotenv==1.2.3
+python-multipart==0.0.32
+bcrypt==5.0.0
+PyJWT==2.13.0
+alembic==1.19.1
+
+# --- Milestone 3: predictive model, analytics and reporting ---
+pandas==3.0.5
+numpy==2.5.3
+scikit-learn==1.9.0
+joblib==1.5.3
+reportlab==5.0.1
+openpyxl==3.1.5
+
+# Optional: SMS delivery for notifications. Only needed when SMS_ENABLED=true.
+# twilio==9.4.1

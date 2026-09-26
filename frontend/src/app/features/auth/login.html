@@ -1,0 +1,124 @@
+<div class="auth-layout">
+  <aside class="auth-aside">
+    <div class="brand">
+      <span class="brand-mark">V</span>
+      <span>Vendor<strong>IQ</strong></span>
+    </div>
+
+    <ul class="aside-points">
+      <li>
+        <mat-icon>verified_user</mat-icon>
+        <span>Vendor onboarding with a controlled approval workflow</span>
+      </li>
+      <li>
+        <mat-icon>assignment_turned_in</mat-icon>
+        <span>Procurement requests, approvals and vendor assignment</span>
+      </li>
+      <li>
+        <mat-icon>local_shipping</mat-icon>
+        <span>Purchase order tracking from raise to delivery</span>
+      </li>
+      <li>
+        <mat-icon>gavel</mat-icon>
+        <span>Contract repository with compliance and expiry monitoring</span>
+      </li>
+    </ul>
+
+    <h2>Vendor Reliability Intelligence &amp; Procurement Risk Management</h2>
+    <p>
+      Centralised supplier records, procurement operations and contract
+      compliance for procurement teams that need one source of truth.
+    </p>
+  </aside>
+
+  <main class="auth-main">
+    <div class="auth-card">
+      <h1>Sign in</h1>
+      <p class="subtitle">Use your VendorIQ account to continue.</p>
+
+      @if (errorMessage()) {
+        <div class="error-banner" role="alert">
+          <mat-icon>error_outline</mat-icon>
+          <span>{{ errorMessage() }}</span>
+        </div>
+      }
+
+      @if (loading()) {
+        <mat-progress-bar mode="indeterminate" />
+      }
+
+      <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()">
+        <mat-form-field appearance="outline">
+          <mat-label>Email address</mat-label>
+          <input
+            matInput
+            type="email"
+            formControlName="email"
+            autocomplete="username"
+            placeholder="you@company.com"
+          />
+          <mat-icon matSuffix>mail_outline</mat-icon>
+          @if (form.controls.email.hasError('required')) {
+            <mat-error>Email is required</mat-error>
+          } @else if (form.controls.email.hasError('email')) {
+            <mat-error>Enter a valid email address</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Password</mat-label>
+          <input
+            matInput
+            [type]="hidePassword() ? 'password' : 'text'"
+            formControlName="password"
+            autocomplete="current-password"
+          />
+          <button
+            matIconButton
+            matSuffix
+            type="button"
+            [attr.aria-label]="hidePassword() ? 'Show password' : 'Hide password'"
+            (click)="hidePassword.set(!hidePassword())"
+          >
+            <mat-icon>{{
+              hidePassword() ? 'visibility_off' : 'visibility'
+            }}</mat-icon>
+          </button>
+          @if (form.controls.password.hasError('required')) {
+            <mat-error>Password is required</mat-error>
+          } @else if (form.controls.password.hasError('minlength')) {
+            <mat-error>Password must be at least 8 characters</mat-error>
+          }
+        </mat-form-field>
+
+        <div class="auth-actions">
+          <button matButton="filled" type="submit" [disabled]="loading()">
+            {{ loading() ? 'Signing in…' : 'Sign in' }}
+          </button>
+        </div>
+      </form>
+
+      <div class="auth-links">
+        <a routerLink="/forgot-password">Forgot your password?</a>
+        <a routerLink="/register">Create an account</a>
+      </div>
+
+      <div class="demo-accounts">
+        <div class="demo-title">Demo accounts — click to fill</div>
+        <div class="demo-grid">
+          @for (account of demoAccounts; track account.email) {
+            <button
+              type="button"
+              class="demo-chip"
+              (click)="useDemoAccount(account.email)"
+            >
+              <span class="demo-role">{{ account.role }}</span>
+              <span class="demo-email">{{ account.email }}</span>
+            </button>
+          }
+        </div>
+        <p class="demo-note">All demo accounts use the password VendorIQ&#64;2026</p>
+      </div>
+    </div>
+  </main>
+</div>

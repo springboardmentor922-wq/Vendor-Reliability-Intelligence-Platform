@@ -1,0 +1,130 @@
+<h2 mat-dialog-title>
+  {{ isEdit ? 'Edit vendor' : 'Register vendor' }}
+</h2>
+
+<mat-dialog-content class="dialog-body">
+  <form [formGroup]="form" class="form-grid">
+    <mat-form-field appearance="outline" class="span-2">
+      <mat-label>Vendor name</mat-label>
+      <input matInput formControlName="vendor_name" />
+      @if (form.controls.vendor_name.hasError('required')) {
+        <mat-error>Vendor name is required</mat-error>
+      } @else if (form.controls.vendor_name.hasError('minlength')) {
+        <mat-error>Enter at least 2 characters</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Category</mat-label>
+      <mat-select formControlName="category">
+        @for (category of categories; track category) {
+          <mat-option [value]="category">{{ category }}</mat-option>
+        }
+      </mat-select>
+      @if (form.controls.category.hasError('required')) {
+        <mat-error>Select a category</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Risk level</mat-label>
+      <mat-select formControlName="risk_level">
+        @for (level of riskLevels; track level) {
+          <mat-option [value]="level">{{ level }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Primary contact person</mat-label>
+      <input matInput formControlName="contact_person" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Email</mat-label>
+      <input matInput type="email" formControlName="email" />
+      @if (form.controls.email.hasError('email')) {
+        <mat-error>Enter a valid email address</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Phone</mat-label>
+      <input matInput formControlName="phone" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Website</mat-label>
+      <input matInput formControlName="website" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="span-2">
+      <mat-label>Address</mat-label>
+      <textarea matInput rows="2" formControlName="address"></textarea>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>City</mat-label>
+      <input matInput formControlName="city" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Country</mat-label>
+      <input matInput formControlName="country" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Tax ID</mat-label>
+      <input matInput formControlName="tax_id" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Registration number</mat-label>
+      <input matInput formControlName="registration_number" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="span-2">
+      <mat-label>Notes</mat-label>
+      <textarea matInput rows="2" formControlName="notes"></textarea>
+    </mat-form-field>
+
+    @if (!isEdit) {
+      <div class="span-2 subform-head">
+        <mat-icon>contact_page</mat-icon>
+        <span>Primary contact (optional)</span>
+      </div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Contact name</mat-label>
+        <input matInput formControlName="contact_name" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Designation</mat-label>
+        <input matInput formControlName="contact_designation" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Contact email</mat-label>
+        <input matInput type="email" formControlName="contact_email" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Contact phone</mat-label>
+        <input matInput formControlName="contact_phone" />
+      </mat-form-field>
+
+      <p class="span-2 field-hint">
+        New vendors are created with status <strong>Pending</strong> and appear in
+        the approval queue.
+      </p>
+    }
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button matButton mat-dialog-close>Cancel</button>
+  <button matButton="filled" [disabled]="saving()" (click)="submit()">
+    {{ saving() ? 'Saving…' : isEdit ? 'Save changes' : 'Register vendor' }}
+  </button>
+</mat-dialog-actions>

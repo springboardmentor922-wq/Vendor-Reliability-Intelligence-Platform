@@ -1,0 +1,188 @@
+<h2 mat-dialog-title>
+  {{ isEdit ? 'Edit purchase order' : 'Raise purchase order' }}
+</h2>
+
+<mat-dialog-content class="dialog-body po-dialog">
+  <form [formGroup]="form">
+    <div class="form-grid">
+      @if (!isEdit) {
+        <mat-form-field appearance="outline" class="span-2">
+          <mat-label>Convert an approved request (optional)</mat-label>
+          <mat-select
+            formControlName="procurement_request_id"
+            (selectionChange)="onRequestSelected($event.value)"
+          >
+            <mat-option [value]="null">Standalone order</mat-option>
+            @for (request of approvedRequests(); track request.id) {
+              <mat-option [value]="request.id">
+                {{ request.request_number }} — {{ request.item }}
+              </mat-option>
+            }
+          </mat-select>
+          <mat-hint>Selecting a request prefills the vendor and line item</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Vendor</mat-label>
+          <mat-select formControlName="vendor_id">
+            @for (vendor of vendors(); track vendor.id) {
+              <mat-option [value]="vendor.id">
+                {{ vendor.vendor_name }} — {{ vendor.category }}
+              </mat-option>
+            }
+          </mat-select>
+          <mat-hint>Only approved vendors are listed</mat-hint>
+          @if (form.controls.vendor_id.hasError('required')) {
+            <mat-error>Select a vendor</mat-error>
+          }
+        </mat-form-field>
+      }
+
+      <mat-form-field appearance="outline" [class.span-2]="isEdit">
+        <mat-label>Title</mat-label>
+        <input matInput formControlName="title" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="span-2">
+        <mat-label>Description</mat-label>
+        <textarea matInput rows="2" formControlName="description"></textarea>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Expected delivery</mat-label>
+        <input matInput [matDatepicker]="picker" formControlName="expected_delivery" />
+        <mat-datepicker-toggle matIconSuffix [for]="picker" />
+        <mat-datepicker #picker />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Payment terms</mat-label>
+        <mat-select formControlName="payment_terms">
+          <mat-option value="Net 15">Net 15</mat-option>
+          <mat-option value="Net 30">Net 30</mat-option>
+          <mat-option value="Net 45">Net 45</mat-option>
+          <mat-option value="Net 60">Net 60</mat-option>
+          <mat-option value="Prepaid">Prepaid</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="span-2">
+        <mat-label>Shipping address</mat-label>
+        <textarea matInput rows="2" formControlName="shipping_address"></textarea>
+      </mat-form-field>
+    </div>
+
+    <!-- Line items -->
+    <div class="subform-head">
+      <mat-icon>list_alt</mat-icon>
+      <span>Line items</span>
+    </div>
+
+    <div formArrayName="items" class="line-items">
+      @for (item of items.controls; track $index; let i = $index) {
+        <div class="line-item" [formGroupName]="i">
+          <mat-form-field appearance="outline" class="li-name">
+            <mat-label>Item</mat-label>
+            <input matInput formControlName="item_name" />
+            @if (item.get('item_name')?.hasError('required')) {
+              <mat-error>Required</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="li-qty">
+            <mat-label>Qty</mat-label>
+            <input matInput type="number" min="0.01" step="0.01" formControlName="quantity" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="li-unit">
+            <mat-label>Unit</mat-label>
+            <mat-select formControlName="unit">
+              @for (unit of units; track unit) {
+                <mat-option [value]="unit">{{ unit }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="li-price">
+            <mat-label>Unit price</mat-label>
+            <input matInput type="number" min="0" step="0.01" formControlName="unit_price" />
+          </mat-form-field>
+
+          <div class="li-total">
+            <span class="li-total-label">Line total</span>
+            <span class="li-total-value">
+              {{ lineTotal(i) | number: '1.2-2' }}
+            </span>
+          </div>
+
+          <button
+            matIconButton
+            type="button"
+            class="li-remove"
+            (click)="removeItem(i)"
+            aria-label="Remove line item"
+          >
+            <mat-icon>delete_outline</mat-icon>
+          </button>
+        </div>
+      }
+    </div>
+
+    <button matButton type="button" (click)="addItem()">
+      <mat-icon>add</mat-icon>
+      Add line item
+    </button>
+
+    <!-- Totals -->
+    <div class="subform-head">
+      <mat-icon>calculate</mat-icon>
+      <span>Totals</span>
+    </div>
+
+    <div class="form-grid">
+      <mat-form-field appearance="outline">
+        <mat-label>Currency</mat-label>
+        <mat-select formControlName="currency">
+          <mat-option value="USD">USD</mat-option>
+          <mat-option value="EUR">EUR</mat-option>
+          <mat-option value="GBP">GBP</mat-option>
+          <mat-option value="INR">INR</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Tax amount</mat-label>
+        <input matInput type="number" min="0" step="0.01" formControlName="tax_amount" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Shipping amount</mat-label>
+        <input matInput type="number" min="0" step="0.01" formControlName="shipping_amount" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Notes</mat-label>
+        <input matInput formControlName="notes" />
+      </mat-form-field>
+    </div>
+
+    <div class="totals-box">
+      <div><span>Subtotal</span><span>{{ totals().subtotal | number: '1.2-2' }}</span></div>
+      <div><span>Tax</span><span>{{ totals().tax | number: '1.2-2' }}</span></div>
+      <div><span>Shipping</span><span>{{ totals().shipping | number: '1.2-2' }}</span></div>
+      <div class="totals-grand">
+        <span>Total</span>
+        <span>
+          {{ form.controls.currency.value }} {{ totals().total | number: '1.2-2' }}
+        </span>
+      </div>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button matButton mat-dialog-close>Cancel</button>
+  <button matButton="filled" [disabled]="saving()" (click)="submit()">
+    {{ saving() ? 'Saving…' : isEdit ? 'Save changes' : 'Raise purchase order' }}
+  </button>
+</mat-dialog-actions>

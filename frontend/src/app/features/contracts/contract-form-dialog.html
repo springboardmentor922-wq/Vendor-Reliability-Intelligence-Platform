@@ -1,0 +1,109 @@
+<h2 mat-dialog-title>{{ isEdit ? 'Edit contract' : 'New contract' }}</h2>
+
+<mat-dialog-content class="dialog-body">
+  <form [formGroup]="form" class="form-grid">
+    @if (!isEdit) {
+      <mat-form-field appearance="outline" class="span-2">
+        <mat-label>Vendor</mat-label>
+        <mat-select formControlName="vendor_id">
+          @for (vendor of vendors(); track vendor.id) {
+            <mat-option [value]="vendor.id">
+              {{ vendor.vendor_name }} — {{ vendor.category }}
+            </mat-option>
+          }
+        </mat-select>
+        @if (form.controls.vendor_id.hasError('required')) {
+          <mat-error>Select a vendor</mat-error>
+        }
+      </mat-form-field>
+    }
+
+    <mat-form-field appearance="outline" class="span-2">
+      <mat-label>Title</mat-label>
+      <input matInput formControlName="title" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Contract type</mat-label>
+      <mat-select formControlName="contract_type">
+        @for (type of types; track type) {
+          <mat-option [value]="type">{{ type }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Status</mat-label>
+      <mat-select formControlName="status">
+        @for (status of statuses; track status) {
+          <mat-option [value]="status">{{ status }}</mat-option>
+        }
+      </mat-select>
+      <mat-hint>Active contracts move to Expiring / Expired automatically</mat-hint>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Start date</mat-label>
+      <input matInput [matDatepicker]="start" formControlName="start_date" />
+      <mat-datepicker-toggle matIconSuffix [for]="start" />
+      <mat-datepicker #start />
+      @if (form.controls.start_date.hasError('required')) {
+        <mat-error>Start date is required</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Expiry date</mat-label>
+      <input matInput [matDatepicker]="expiry" formControlName="expiry_date" />
+      <mat-datepicker-toggle matIconSuffix [for]="expiry" />
+      <mat-datepicker #expiry />
+      @if (form.controls.expiry_date.hasError('required')) {
+        <mat-error>Expiry date is required</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Contract value</mat-label>
+      <input matInput type="number" min="0" step="0.01" formControlName="contract_value" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Currency</mat-label>
+      <mat-select formControlName="currency">
+        <mat-option value="USD">USD</mat-option>
+        <mat-option value="EUR">EUR</mat-option>
+        <mat-option value="GBP">GBP</mat-option>
+        <mat-option value="INR">INR</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Renewal notice (days)</mat-label>
+      <input matInput type="number" min="0" max="365" formControlName="renewal_notice_days" />
+      <mat-hint>Contract flips to Expiring inside this window</mat-hint>
+    </mat-form-field>
+
+    <div class="span-2" style="padding: 6px 0 14px">
+      <mat-checkbox formControlName="auto_renew">
+        Renews automatically at expiry
+      </mat-checkbox>
+    </div>
+
+    <mat-form-field appearance="outline" class="span-2">
+      <mat-label>Terms</mat-label>
+      <textarea matInput rows="3" formControlName="terms"></textarea>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="span-2">
+      <mat-label>Notes</mat-label>
+      <textarea matInput rows="2" formControlName="notes"></textarea>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button matButton mat-dialog-close>Cancel</button>
+  <button matButton="filled" [disabled]="saving()" (click)="submit()">
+    {{ saving() ? 'Saving…' : isEdit ? 'Save changes' : 'Create contract' }}
+  </button>
+</mat-dialog-actions>

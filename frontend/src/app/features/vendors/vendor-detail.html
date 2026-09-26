@@ -1,0 +1,328 @@
+<div class="page">
+  @if (loading()) {
+    <div class="loading-state"><mat-spinner diameter="42" /></div>
+  } @else if (vendor(); as v) {
+    <div class="page-head">
+      <div>
+        <a matButton routerLink="/vendors" class="back-link">
+          <mat-icon>arrow_back</mat-icon>
+          All vendors
+        </a>
+        <h1>{{ v.vendor_name }}</h1>
+        <p>
+          <span class="mono">{{ v.vendor_code }}</span> &middot;
+          {{ v.category }}
+        </p>
+        <div class="head-pills">
+          <app-status-pill [status]="v.status" />
+          <app-status-pill [status]="v.risk_level" />
+        </div>
+      </div>
+
+      <div class="page-actions">
+        @if (canEdit()) {
+          <button matButton (click)="edit()">
+            <mat-icon>edit</mat-icon>
+            Edit
+          </button>
+        }
+
+        @if (canApprove() && v.status === 'Pending') {
+          <button matButton="filled" (click)="approve()">
+            <mat-icon>check_circle</mat-icon>
+            Approve
+          </button>
+          <button matButton class="danger-text" (click)="reject()">
+            <mat-icon>cancel</mat-icon>
+            Reject
+          </button>
+        }
+
+        @if (canApprove() && v.status === 'Approved') {
+          <button matButton class="danger-text" (click)="suspend()">
+            <mat-icon>block</mat-icon>
+            Suspend
+          </button>
+        }
+
+        @if (
+          canApprove() && (v.status === 'Suspended' || v.status === 'Rejected')
+        ) {
+          <button matButton="filled" (click)="reactivate()">
+            <mat-icon>restart_alt</mat-icon>
+            Reactivate
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (v.status === 'Rejected' && v.rejection_reason) {
+      <div class="alert alert-danger section-gap">
+        <mat-icon>report</mat-icon>
+        <div>
+          <strong>Rejected</strong>
+          <div>{{ v.rejection_reason }}</div>
+        </div>
+      </div>
+    }
+
+    <div class="stat-grid">
+      <div class="stat">
+        <div class="stat-label">Open purchase orders</div>
+        <div class="stat-value">{{ v.open_purchase_orders }}</div>
+        <div class="stat-hint">{{ v.total_purchase_orders }} raised in total</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Total spend</div>
+        <div class="stat-value">{{ v.total_spend | number: '1.0-0' }}</div>
+        <div class="stat-hint">Excludes cancelled orders</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Active contracts</div>
+        <div class="stat-value">{{ v.active_contracts }}</div>
+        <div class="stat-hint">{{ contracts().length }} on file</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Reliability score</div>
+        <div class="stat-value">
+          {{
+            v.reliability_score !== null
+              ? (v.reliability_score | number: '1.1-1')
+              : '—'
+          }}
+        </div>
+        <div class="stat-hint">{{ v.risk_level }} procurement risk</div>
+      </div>
+    </div>
+
+    <div class="detail-grid">
+      <div>
+        <mat-tab-group animationDuration="0ms" class="card">
+          <!-- Reliability (Milestone 3) -->
+          <mat-tab label="Reliability">
+            <div class="tab-body">
+              <app-vendor-reliability-panel [vendorId]="v.id" />
+            </div>
+          </mat-tab>
+
+          <!-- Profile -->
+          <mat-tab label="Profile">
+            <div class="tab-body">
+              <dl class="kv">
+                <dt>Vendor code</dt>
+                <dd class="mono">{{ v.vendor_code }}</dd>
+
+                <dt>Category</dt>
+                <dd>{{ v.category }}</dd>
+
+                <dt>Contact person</dt>
+                <dd>{{ v.contact_person || '—' }}</dd>
+
+                <dt>Email</dt>
+                <dd>{{ v.email || '—' }}</dd>
+
+                <dt>Phone</dt>
+                <dd>{{ v.phone || '—' }}</dd>
+
+                <dt>Website</dt>
+                <dd>{{ v.website || '—' }}</dd>
+
+                <dt>Address</dt>
+                <dd>{{ v.address || '—' }}</dd>
+
+                <dt>City / country</dt>
+                <dd>
+                  {{ v.city ? v.city + ', ' : '' }}{{ v.country || '—' }}
+                </dd>
+
+                <dt>Tax ID</dt>
+                <dd>{{ v.tax_id || '—' }}</dd>
+
+                <dt>Registration number</dt>
+                <dd>{{ v.registration_number || '—' }}</dd>
+
+                <dt>Onboarded on</dt>
+                <dd>
+                  {{ v.onboarded_on ? (v.onboarded_on | date: 'mediumDate') : '—' }}
+                </dd>
+
+                <dt>Registered</dt>
+                <dd>{{ v.created_at | date: 'medium' }}</dd>
+
+                <dt>Notes</dt>
+                <dd>{{ v.notes || '—' }}</dd>
+              </dl>
+            </div>
+          </mat-tab>
+
+          <!-- Contacts -->
+          <mat-tab [label]="'Contacts (' + v.contacts.length + ')'">
+            <div class="tab-body">
+              @if (v.contacts.length === 0) {
+                <p class="muted">No contacts recorded for this vendor.</p>
+              } @else {
+                <ul class="plain-list">
+                  @for (contact of v.contacts; track contact.id) {
+                    <li>
+                      <div class="list-link">
+                        <div>
+                          <div class="list-title">
+                            {{ contact.name }}
+                            @if (contact.is_primary) {
+                              <span class="pill pill-info">Primary</span>
+                            }
+                          </div>
+                          <div class="list-meta">
+                            {{ contact.designation || 'No designation' }}
+                          </div>
+                        </div>
+                        <div class="list-meta text-right">
+                          <div>{{ contact.email || '—' }}</div>
+                          <div>{{ contact.phone || '—' }}</div>
+                        </div>
+                      </div>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          </mat-tab>
+
+          <!-- Purchase orders -->
+          <mat-tab [label]="'Purchase orders (' + orders().length + ')'">
+            <div class="tab-body">
+              @if (orders().length === 0) {
+                <p class="muted">No purchase orders raised for this vendor.</p>
+              } @else {
+                <ul class="plain-list">
+                  @for (order of orders(); track order.id) {
+                    <li>
+                      <a
+                        [routerLink]="['/purchase-orders', order.id]"
+                        class="list-link"
+                      >
+                        <div>
+                          <div class="list-title mono">{{ order.po_number }}</div>
+                          <div class="list-meta">
+                            {{ order.title || 'Untitled order' }} ·
+                            {{ order.currency }}
+                            {{ order.total_amount | number: '1.2-2' }}
+                          </div>
+                        </div>
+                        <div class="text-right">
+                          <app-status-pill [status]="order.status" />
+                          @if (order.is_delayed) {
+                            <div class="list-meta">
+                              {{ order.days_late }} day(s) late
+                            </div>
+                          }
+                        </div>
+                      </a>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          </mat-tab>
+
+          <!-- Contracts -->
+          <mat-tab [label]="'Contracts (' + contracts().length + ')'">
+            <div class="tab-body">
+              @if (contracts().length === 0) {
+                <p class="muted">No contracts recorded for this vendor.</p>
+              } @else {
+                <ul class="plain-list">
+                  @for (contract of contracts(); track contract.id) {
+                    <li>
+                      <a [routerLink]="['/contracts', contract.id]" class="list-link">
+                        <div>
+                          <div class="list-title mono">
+                            {{ contract.contract_number }}
+                          </div>
+                          <div class="list-meta">
+                            {{ contract.contract_type }} · expires
+                            {{ contract.expiry_date | date: 'mediumDate' }}
+                          </div>
+                        </div>
+                        <div class="text-right">
+                          <app-status-pill [status]="contract.status" />
+                          <div class="list-meta">
+                            {{ contract.compliance_status }}
+                          </div>
+                        </div>
+                      </a>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          </mat-tab>
+
+          <!-- Certifications -->
+          <mat-tab [label]="'Certifications (' + certifications().length + ')'">
+            <div class="tab-body">
+              @if (certifications().length === 0) {
+                <p class="muted">No certifications on file.</p>
+              } @else {
+                <ul class="plain-list">
+                  @for (cert of certifications(); track cert.id) {
+                    <li>
+                      <div class="list-link">
+                        <div>
+                          <div class="list-title">
+                            {{ cert.certification_name }}
+                          </div>
+                          <div class="list-meta">
+                            {{ cert.issuing_authority || 'Unknown authority' }}
+                            @if (cert.certificate_number) {
+                              · {{ cert.certificate_number }}
+                            }
+                          </div>
+                        </div>
+                        <div class="text-right">
+                          <app-status-pill [status]="cert.status" />
+                          @if (cert.expiry_date) {
+                            <div class="list-meta">
+                              Expires {{ cert.expiry_date | date: 'mediumDate' }}
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          </mat-tab>
+        </mat-tab-group>
+      </div>
+
+      <!-- Approval trail -->
+      <aside class="card card-pad">
+        <h2 class="card-title">Approval history</h2>
+
+        @if (v.approvals.length === 0) {
+          <p class="muted">No approval activity recorded.</p>
+        } @else {
+          <ul class="timeline">
+            @for (entry of v.approvals; track entry.id) {
+              <li>
+                <div class="timeline-title">{{ entry.action }}</div>
+                <div class="timeline-meta">
+                  {{ entry.performed_by_name ?? 'System' }} ·
+                  {{ entry.created_at | date: 'short' }}
+                </div>
+                <div class="timeline-meta">
+                  {{ entry.previous_status ?? 'New' }} → {{ entry.new_status }}
+                </div>
+                @if (entry.comments) {
+                  <div class="timeline-body">{{ entry.comments }}</div>
+                }
+              </li>
+            }
+          </ul>
+        }
+      </aside>
+    </div>
+  }
+</div>

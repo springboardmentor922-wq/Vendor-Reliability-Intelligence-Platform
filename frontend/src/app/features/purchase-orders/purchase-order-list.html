@@ -1,0 +1,221 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Purchase orders</h1>
+      <p>
+        Raise orders against approved vendors and track them from approval
+        through to delivery and completion.
+      </p>
+    </div>
+
+    @if (canEdit()) {
+      <div class="page-actions">
+        <button matButton="filled" (click)="create()">
+          <mat-icon>add</mat-icon>
+          Raise purchase order
+        </button>
+      </div>
+    }
+  </div>
+
+  @if (stats(); as summary) {
+    <div class="stat-grid">
+      <div class="stat">
+        <div class="stat-label">Total orders</div>
+        <div class="stat-value">{{ summary.total }}</div>
+        <div class="stat-hint">All statuses</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Open value</div>
+        <div class="stat-value">{{ summary.open_value | number: '1.0-0' }}</div>
+        <div class="stat-hint">Pending, approved or ordered</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Delayed</div>
+        <div class="stat-value">{{ summary.delayed }}</div>
+        <div class="stat-hint">Past the expected delivery date</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">On-time rate</div>
+        <div class="stat-value">{{ summary.on_time_rate }}%</div>
+        <div class="stat-hint">Across delivered and completed orders</div>
+      </div>
+    </div>
+  }
+
+  <div class="filter-bar">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search</mat-label>
+      <input
+        matInput
+        [(ngModel)]="search"
+        (keyup.enter)="load()"
+        placeholder="PO number, title or description"
+      />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Status</mat-label>
+      <mat-select [(ngModel)]="statusFilter" (selectionChange)="load()">
+        <mat-option value="">All statuses</mat-option>
+        @for (status of statuses; track status) {
+          <mat-option [value]="status">{{ status }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-checkbox [(ngModel)]="delayedOnly" (change)="load()">
+      Delayed only
+    </mat-checkbox>
+
+    <button matButton (click)="load()">
+      <mat-icon>filter_alt</mat-icon>
+      Apply
+    </button>
+    <button matButton (click)="clearFilters()">Clear</button>
+  </div>
+
+  <div class="table-wrap">
+    @if (loading()) {
+      <div class="loading-state"><mat-spinner diameter="38" /></div>
+    } @else if (orders().length === 0) {
+      <div class="empty-state">
+        <mat-icon class="empty-icon">receipt_long</mat-icon>
+        <h3>No purchase orders found</h3>
+        <p>Adjust your filters, or raise an order against an approved vendor.</p>
+      </div>
+    } @else {
+      <table mat-table [dataSource]="orders()">
+        <ng-container matColumnDef="po_number">
+          <th mat-header-cell *matHeaderCellDef>PO number</th>
+          <td mat-cell *matCellDef="let order" class="mono">
+            {{ order.po_number }}
+            @if (order.request_number) {
+              <div class="list-meta">from {{ order.request_number }}</div>
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="vendor">
+          <th mat-header-cell *matHeaderCellDef>Vendor</th>
+          <td mat-cell *matCellDef="let order">{{ order.vendor_name || '—' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="title">
+          <th mat-header-cell *matHeaderCellDef>Title</th>
+          <td mat-cell *matCellDef="let order">{{ order.title || '—' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="order_date">
+          <th mat-header-cell *matHeaderCellDef>Ordered</th>
+          <td mat-cell *matCellDef="let order" class="nowrap">
+            {{ order.order_date ? (order.order_date | date: 'mediumDate') : '—' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="expected_delivery">
+          <th mat-header-cell *matHeaderCellDef>Delivery</th>
+          <td mat-cell *matCellDef="let order" class="nowrap">
+            @if (order.actual_delivery) {
+              {{ order.actual_delivery | date: 'mediumDate' }}
+              @if (order.is_delayed) {
+                <span
+                  class="pill pill-danger"
+                  [matTooltip]="
+                    'Expected ' + (order.expected_delivery | date: 'mediumDate')
+                  "
+                >
+                  {{ order.days_late }}d late
+                </span>
+              }
+            } @else if (order.expected_delivery) {
+              {{ order.expected_delivery | date: 'mediumDate' }}
+              @if (order.is_delayed) {
+                <span class="pill pill-warn">
+                  {{ order.days_late }}d overdue
+                </span>
+              }
+            } @else {
+              —
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="total">
+          <th mat-header-cell *matHeaderCellDef class="num">Total</th>
+          <td mat-cell *matCellDef="let order" class="num nowrap">
+            {{ order.currency }} {{ order.total_amount | number: '1.2-2' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let order">
+            <app-status-pill [status]="order.status" />
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef class="row-actions">Actions</th>
+          <td mat-cell *matCellDef="let order" class="row-actions">
+            <button
+              matIconButton
+              [matMenuTriggerFor]="menu"
+              (click)="$event.stopPropagation()"
+              aria-label="Purchase order actions"
+            >
+              <mat-icon>more_vert</mat-icon>
+            </button>
+
+            <mat-menu #menu="matMenu">
+              <button mat-menu-item (click)="open(order)">
+                <mat-icon>visibility</mat-icon>
+                <span>View details</span>
+              </button>
+
+              @if (order.status !== 'Completed' && order.status !== 'Cancelled') {
+                <button mat-menu-item (click)="edit(order, $event)">
+                  <mat-icon>edit</mat-icon>
+                  <span>Edit order</span>
+                </button>
+              }
+
+              @for (next of nextStatuses(order); track next) {
+                <button mat-menu-item (click)="changeStatus(order, next, $event)">
+                  <mat-icon>
+                    {{
+                      next === 'Cancelled'
+                        ? 'do_not_disturb'
+                        : next === 'Delivered'
+                          ? 'local_shipping'
+                          : next === 'Completed'
+                            ? 'task_alt'
+                            : 'arrow_forward'
+                    }}
+                  </mat-icon>
+                  <span>Mark {{ next }}</span>
+                </button>
+              }
+
+              @if (canApprove()) {
+                <button mat-menu-item (click)="remove(order, $event)">
+                  <mat-icon>delete</mat-icon>
+                  <span>Delete</span>
+                </button>
+              }
+            </mat-menu>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="columns()"></tr>
+        <tr
+          mat-row
+          *matRowDef="let order; columns: columns()"
+          class="clickable-row"
+          (click)="open(order)"
+        ></tr>
+      </table>
+    }
+  </div>
+</div>

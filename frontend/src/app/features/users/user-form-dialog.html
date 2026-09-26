@@ -1,0 +1,108 @@
+<h2 mat-dialog-title>{{ isEdit ? 'Edit account' : 'Create account' }}</h2>
+
+<mat-dialog-content class="dialog-body">
+  <form [formGroup]="form" class="form-grid">
+    <mat-form-field appearance="outline">
+      <mat-label>Full name</mat-label>
+      <input matInput formControlName="name" />
+      @if (form.controls.name.hasError('required')) {
+        <mat-error>Name is required</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Email</mat-label>
+      <input matInput type="email" formControlName="email" />
+      @if (form.controls.email.hasError('required')) {
+        <mat-error>Email is required</mat-error>
+      } @else if (form.controls.email.hasError('email')) {
+        <mat-error>Enter a valid email address</mat-error>
+      }
+    </mat-form-field>
+
+    @if (!isEdit) {
+      <mat-form-field appearance="outline" class="span-2">
+        <mat-label>Password</mat-label>
+        <input
+          matInput
+          [type]="hidePassword() ? 'password' : 'text'"
+          formControlName="password"
+          autocomplete="new-password"
+        />
+        <button
+          matIconButton
+          matSuffix
+          type="button"
+          [attr.aria-label]="hidePassword() ? 'Show password' : 'Hide password'"
+          (click)="hidePassword.set(!hidePassword())"
+        >
+          <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        <mat-hint>Minimum 8 characters</mat-hint>
+        @if (form.controls.password.hasError('required')) {
+          <mat-error>A password is required</mat-error>
+        } @else if (form.controls.password.hasError('minlength')) {
+          <mat-error>Password must be at least 8 characters</mat-error>
+        }
+      </mat-form-field>
+    }
+
+    <mat-form-field appearance="outline">
+      <mat-label>Role</mat-label>
+      <mat-select formControlName="role">
+        @for (role of roles; track role) {
+          <mat-option [value]="role">{{ role }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    @if (form.controls.role.value === 'Vendor') {
+      <mat-form-field appearance="outline">
+        <mat-label>Linked vendor</mat-label>
+        <mat-select formControlName="vendor_id">
+          @for (vendor of vendors(); track vendor.id) {
+            <mat-option [value]="vendor.id">
+              {{ vendor.vendor_name }} ({{ vendor.vendor_code }})
+            </mat-option>
+          }
+        </mat-select>
+        @if (form.controls.vendor_id.hasError('required')) {
+          <mat-error>Select the vendor this login represents</mat-error>
+        }
+      </mat-form-field>
+    } @else {
+      <mat-form-field appearance="outline">
+        <mat-label>Phone</mat-label>
+        <input matInput formControlName="phone" />
+      </mat-form-field>
+    }
+
+    @if (form.controls.role.value === 'Vendor') {
+      <mat-form-field appearance="outline">
+        <mat-label>Phone</mat-label>
+        <input matInput formControlName="phone" />
+      </mat-form-field>
+    }
+
+    <mat-form-field appearance="outline">
+      <mat-label>Department</mat-label>
+      <input matInput formControlName="department" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Job title</mat-label>
+      <input matInput formControlName="job_title" />
+    </mat-form-field>
+
+    <div class="span-2" style="padding: 4px 0 8px">
+      <mat-checkbox formControlName="is_active">Account is active</mat-checkbox>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button matButton mat-dialog-close>Cancel</button>
+  <button matButton="filled" [disabled]="saving()" (click)="submit()">
+    {{ saving() ? 'Saving…' : isEdit ? 'Save changes' : 'Create account' }}
+  </button>
+</mat-dialog-actions>

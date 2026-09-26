@@ -1,0 +1,93 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Communication</h1>
+      <p>
+        Vendor discussions, procurement queries and their full message history.
+      </p>
+    </div>
+
+    <div class="page-actions">
+      <button matButton="filled" (click)="create()">
+        <mat-icon>add_comment</mat-icon>
+        New conversation
+      </button>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search</mat-label>
+      <input
+        matInput
+        [(ngModel)]="search"
+        (keyup.enter)="load()"
+        placeholder="Subject"
+      />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Status</mat-label>
+      <mat-select [(ngModel)]="statusFilter" (selectionChange)="load()">
+        <mat-option value="">All statuses</mat-option>
+        @for (status of statuses; track status) {
+          <mat-option [value]="status">{{ status }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <button matButton (click)="load()">
+      <mat-icon>filter_alt</mat-icon>
+      Apply
+    </button>
+    <button matButton (click)="clearFilters()">Clear</button>
+  </div>
+
+  @if (loading()) {
+    <div class="card loading-state"><mat-spinner diameter="38" /></div>
+  } @else if (threads().length === 0) {
+    <div class="card empty-state">
+      <mat-icon class="empty-icon">forum</mat-icon>
+      <h3>No conversations yet</h3>
+      <p>Start a conversation with a vendor about an order or a query.</p>
+    </div>
+  } @else {
+    <div class="thread-grid">
+      @for (thread of threads(); track thread.id) {
+        <button type="button" class="thread-card" (click)="open(thread)">
+          <div class="thread-top">
+            <span class="thread-subject">{{ thread.subject }}</span>
+            @if (thread.unread_count > 0) {
+              <span class="pill pill-danger">{{ thread.unread_count }} new</span>
+            }
+          </div>
+
+          <div class="thread-meta">
+            {{ thread.vendor_name || 'Internal discussion' }}
+            @if (thread.po_number) {
+              &middot; {{ thread.po_number }}
+            }
+          </div>
+
+          @if (thread.last_message_preview) {
+            <p class="thread-preview">{{ thread.last_message_preview }}</p>
+          }
+
+          <div class="thread-foot">
+            <div class="thread-pills">
+              <app-status-pill [status]="thread.status" />
+              <app-status-pill [status]="thread.priority" />
+            </div>
+            <span class="thread-time">
+              {{ thread.message_count }} message(s)
+              @if (thread.last_message_at) {
+                &middot; {{ thread.last_message_at | date: 'short' }}
+              }
+            </span>
+          </div>
+        </button>
+      }
+    </div>
+  }
+</div>

@@ -1,0 +1,95 @@
+<h2 mat-dialog-title>Record invoice</h2>
+
+<mat-dialog-content class="dialog-body">
+  <form [formGroup]="form" class="form-grid">
+    @if (fixedOrder) {
+      <p class="span-2 field-hint" style="margin-top: 0">
+        Recording against <strong>{{ fixedOrder.po_number }}</strong> for
+        {{ fixedOrder.vendor_name }}.
+      </p>
+    } @else {
+      <mat-form-field appearance="outline" class="span-2">
+        <mat-label>Purchase order (optional)</mat-label>
+        <mat-select
+          formControlName="purchase_order_id"
+          (selectionChange)="onOrderSelected($event.value)"
+        >
+          <mat-option [value]="null">Not linked to an order</mat-option>
+          @for (order of orders(); track order.id) {
+            <mat-option [value]="order.id">
+              {{ order.po_number }} — {{ order.vendor_name }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="span-2">
+        <mat-label>Vendor</mat-label>
+        <mat-select formControlName="vendor_id">
+          @for (vendor of vendors(); track vendor.id) {
+            <mat-option [value]="vendor.id">{{ vendor.vendor_name }}</mat-option>
+          }
+        </mat-select>
+        <mat-hint>Set automatically when a purchase order is selected</mat-hint>
+      </mat-form-field>
+    }
+
+    <mat-form-field appearance="outline">
+      <mat-label>Invoice date</mat-label>
+      <input matInput [matDatepicker]="issued" formControlName="invoice_date" />
+      <mat-datepicker-toggle matIconSuffix [for]="issued" />
+      <mat-datepicker #issued />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Due date</mat-label>
+      <input matInput [matDatepicker]="due" formControlName="due_date" />
+      <mat-datepicker-toggle matIconSuffix [for]="due" />
+      <mat-datepicker #due />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Amount (excl. tax)</mat-label>
+      <input matInput type="number" min="0" step="0.01" formControlName="amount" />
+      @if (form.controls.amount.hasError('required')) {
+        <mat-error>Amount is required</mat-error>
+      } @else if (form.controls.amount.hasError('min')) {
+        <mat-error>Amount cannot be negative</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Tax amount</mat-label>
+      <input matInput type="number" min="0" step="0.01" formControlName="tax_amount" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Currency</mat-label>
+      <mat-select formControlName="currency">
+        <mat-option value="USD">USD</mat-option>
+        <mat-option value="EUR">EUR</mat-option>
+        <mat-option value="GBP">GBP</mat-option>
+        <mat-option value="INR">INR</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Notes</mat-label>
+      <input matInput formControlName="notes" />
+    </mat-form-field>
+
+    <div class="span-2 totals-box" style="margin-left: 0; max-width: none">
+      <div class="totals-grand" style="margin: 0; padding: 0; border: none">
+        <span>Invoice total</span>
+        <span>{{ form.controls.currency.value }} {{ total().toFixed(2) }}</span>
+      </div>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button matButton mat-dialog-close>Cancel</button>
+  <button matButton="filled" [disabled]="saving()" (click)="submit()">
+    {{ saving() ? 'Saving…' : 'Record invoice' }}
+  </button>
+</mat-dialog-actions>

@@ -1,0 +1,254 @@
+<div class="page">
+  @if (loading()) {
+    <div class="loading-state"><mat-spinner diameter="42" /></div>
+  } @else if (order(); as po) {
+    <div class="page-head">
+      <div>
+        <a matButton routerLink="/purchase-orders" class="back-link">
+          <mat-icon>arrow_back</mat-icon>
+          All purchase orders
+        </a>
+        <h1>{{ po.title || po.po_number }}</h1>
+        <p>
+          <span class="mono">{{ po.po_number }}</span> &middot;
+          <a [routerLink]="['/vendors', po.vendor_id]">{{ po.vendor_name }}</a>
+          @if (po.request_number) {
+            &middot; raised from
+            <a [routerLink]="['/procurement', po.procurement_request_id]">
+              {{ po.request_number }}
+            </a>
+          }
+        </p>
+        <div class="head-pills">
+          <app-status-pill [status]="po.status" />
+          @if (po.is_delayed) {
+            <span class="pill pill-danger">{{ po.days_late }} day(s) late</span>
+          }
+        </div>
+      </div>
+
+      <div class="page-actions">
+        @if (canEdit() && po.status !== 'Completed' && po.status !== 'Cancelled') {
+          <button matButton (click)="edit()">
+            <mat-icon>edit</mat-icon>
+            Edit
+          </button>
+        }
+
+        @for (next of nextStatuses(); track next) {
+          <button
+            matButton="filled"
+            [class.danger-button]="next === 'Cancelled'"
+            (click)="changeStatus(next)"
+          >
+            Mark {{ next }}
+          </button>
+        }
+
+        @if (canManageFinance()) {
+          <button matButton (click)="addInvoice()">
+            <mat-icon>payments</mat-icon>
+            Record invoice
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (po.is_delayed) {
+      <div class="alert alert-warn section-gap">
+        <mat-icon>schedule</mat-icon>
+        <div>
+          <strong>Delivery delay</strong>
+          <div>
+            Expected {{ po.expected_delivery | date: 'mediumDate' }}
+            @if (po.actual_delivery) {
+              but delivered {{ po.actual_delivery | date: 'mediumDate' }}
+            } @else {
+              and still outstanding
+            }
+            — {{ po.days_late }} day(s) late.
+          </div>
+        </div>
+      </div>
+    }
+
+    <div class="stat-grid">
+      <div class="stat">
+        <div class="stat-label">Subtotal</div>
+        <div class="stat-value">{{ po.subtotal | number: '1.2-2' }}</div>
+        <div class="stat-hint">{{ po.items.length }} line item(s)</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Tax</div>
+        <div class="stat-value">{{ po.tax_amount | number: '1.2-2' }}</div>
+        <div class="stat-hint">Applied to the subtotal</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Shipping</div>
+        <div class="stat-value">{{ po.shipping_amount | number: '1.2-2' }}</div>
+        <div class="stat-hint">Freight and handling</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Order total</div>
+        <div class="stat-value">
+          {{ po.currency }} {{ po.total_amount | number: '1.2-2' }}
+        </div>
+        <div class="stat-hint">{{ po.payment_terms || 'No payment terms' }}</div>
+      </div>
+    </div>
+
+    <div class="detail-grid">
+      <div>
+        <!-- Line items -->
+        <section class="card section-gap">
+          <div class="card-pad">
+            <h2 class="card-title">Line items</h2>
+          </div>
+
+          <table mat-table [dataSource]="po.items">
+            <ng-container matColumnDef="item_name">
+              <th mat-header-cell *matHeaderCellDef>Item</th>
+              <td mat-cell *matCellDef="let item">
+                <div class="list-title">{{ item.item_name }}</div>
+                @if (item.description) {
+                  <div class="list-meta">{{ item.description }}</div>
+                }
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="quantity">
+              <th mat-header-cell *matHeaderCellDef class="num">Quantity</th>
+              <td mat-cell *matCellDef="let item" class="num nowrap">
+                {{ item.quantity | number: '1.0-2' }} {{ item.unit }}
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="unit_price">
+              <th mat-header-cell *matHeaderCellDef class="num">Unit price</th>
+              <td mat-cell *matCellDef="let item" class="num">
+                {{ item.unit_price | number: '1.2-2' }}
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="line_total">
+              <th mat-header-cell *matHeaderCellDef class="num">Line total</th>
+              <td mat-cell *matCellDef="let item" class="num">
+                {{ item.line_total | number: '1.2-2' }}
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="itemColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: itemColumns"></tr>
+          </table>
+        </section>
+
+        <!-- Invoices -->
+        <section class="card">
+          <div class="card-pad">
+            <h2 class="card-title">Invoices</h2>
+          </div>
+
+          @if (po.invoices.length === 0) {
+            <div class="empty-state" style="padding: 34px 24px">
+              <mat-icon class="empty-icon">payments</mat-icon>
+              <h3>No invoices recorded</h3>
+              <p>Finance can record an invoice against this order.</p>
+            </div>
+          } @else {
+            <table mat-table [dataSource]="po.invoices">
+              <ng-container matColumnDef="invoice_number">
+                <th mat-header-cell *matHeaderCellDef>Invoice</th>
+                <td mat-cell *matCellDef="let invoice" class="mono">
+                  {{ invoice.invoice_number }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="invoice_date">
+                <th mat-header-cell *matHeaderCellDef>Issued</th>
+                <td mat-cell *matCellDef="let invoice" class="nowrap">
+                  {{ invoice.invoice_date | date: 'mediumDate' }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="due_date">
+                <th mat-header-cell *matHeaderCellDef>Due</th>
+                <td mat-cell *matCellDef="let invoice" class="nowrap">
+                  {{ invoice.due_date ? (invoice.due_date | date: 'mediumDate') : '—' }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="total">
+                <th mat-header-cell *matHeaderCellDef class="num">Total</th>
+                <td mat-cell *matCellDef="let invoice" class="num nowrap">
+                  {{ invoice.currency }} {{ invoice.total_amount | number: '1.2-2' }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let invoice">
+                  <app-status-pill [status]="invoice.status" />
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="invoiceColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: invoiceColumns"></tr>
+            </table>
+          }
+        </section>
+      </div>
+
+      <!-- Order summary -->
+      <aside class="card card-pad">
+        <h2 class="card-title">Order details</h2>
+
+        <dl class="kv">
+          <dt>PO number</dt>
+          <dd class="mono">{{ po.po_number }}</dd>
+
+          <dt>Vendor</dt>
+          <dd>
+            <a [routerLink]="['/vendors', po.vendor_id]">{{ po.vendor_name }}</a>
+          </dd>
+
+          <dt>Order date</dt>
+          <dd>{{ po.order_date ? (po.order_date | date: 'mediumDate') : '—' }}</dd>
+
+          <dt>Expected delivery</dt>
+          <dd>
+            {{
+              po.expected_delivery
+                ? (po.expected_delivery | date: 'mediumDate')
+                : '—'
+            }}
+          </dd>
+
+          <dt>Actual delivery</dt>
+          <dd>
+            {{
+              po.actual_delivery ? (po.actual_delivery | date: 'mediumDate') : '—'
+            }}
+          </dd>
+
+          <dt>Payment terms</dt>
+          <dd>{{ po.payment_terms || '—' }}</dd>
+
+          <dt>Shipping address</dt>
+          <dd>{{ po.shipping_address || '—' }}</dd>
+
+          <dt>Raised by</dt>
+          <dd>{{ po.created_by_name || '—' }}</dd>
+
+          <dt>Approved at</dt>
+          <dd>{{ po.approved_at ? (po.approved_at | date: 'short') : '—' }}</dd>
+
+          <dt>Description</dt>
+          <dd>{{ po.description || '—' }}</dd>
+
+          <dt>Notes</dt>
+          <dd>{{ po.notes || '—' }}</dd>
+        </dl>
+      </aside>
+    </div>
+  }
+</div>

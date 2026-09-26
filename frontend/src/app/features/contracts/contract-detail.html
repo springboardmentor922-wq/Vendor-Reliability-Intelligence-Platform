@@ -1,0 +1,248 @@
+<div class="page">
+  @if (loading()) {
+    <div class="loading-state"><mat-spinner diameter="42" /></div>
+  } @else if (contract(); as c) {
+    <div class="page-head">
+      <div>
+        <a matButton routerLink="/contracts" class="back-link">
+          <mat-icon>arrow_back</mat-icon>
+          All contracts
+        </a>
+        <h1>{{ c.title || c.contract_type }}</h1>
+        <p>
+          <span class="mono">{{ c.contract_number }}</span> &middot;
+          <a [routerLink]="['/vendors', c.vendor_id]">{{ c.vendor_name }}</a>
+        </p>
+        <div class="head-pills">
+          <app-status-pill [status]="c.status" />
+          <app-status-pill [status]="c.compliance_status" />
+          @if (c.auto_renew) {
+            <span class="pill pill-info">Auto-renews</span>
+          }
+        </div>
+      </div>
+
+      <div class="page-actions">
+        @if (canEdit()) {
+          <button matButton (click)="edit()">
+            <mat-icon>edit</mat-icon>
+            Edit
+          </button>
+        }
+
+        @if (canApprove() && c.status !== 'Renewed') {
+          <button matButton="filled" (click)="renew()">
+            <mat-icon>autorenew</mat-icon>
+            Renew
+          </button>
+        }
+
+        @if (
+          canApprove() && c.status !== 'Terminated' && c.status !== 'Renewed'
+        ) {
+          <button matButton class="danger-text" (click)="terminate()">
+            <mat-icon>gavel</mat-icon>
+            Terminate
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (c.days_to_expiry < 0 && c.status !== 'Renewed' && c.status !== 'Terminated') {
+      <div class="alert alert-danger section-gap">
+        <mat-icon>event_busy</mat-icon>
+        <div>
+          <strong>Expired</strong>
+          <div>
+            This contract lapsed {{ -c.days_to_expiry }} day(s) ago on
+            {{ c.expiry_date | date: 'mediumDate' }}.
+          </div>
+        </div>
+      </div>
+    } @else if (c.is_expiring_soon) {
+      <div class="alert alert-warn section-gap">
+        <mat-icon>schedule</mat-icon>
+        <div>
+          <strong>Expiring soon</strong>
+          <div>
+            {{ c.days_to_expiry }} day(s) remaining — expires
+            {{ c.expiry_date | date: 'mediumDate' }}.
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (c.compliance_status === 'Non-Compliant') {
+      <div class="alert alert-danger section-gap">
+        <mat-icon>report</mat-icon>
+        <div>
+          <strong>Compliance breach</strong>
+          <div>The most recent compliance check on this contract failed.</div>
+        </div>
+      </div>
+    }
+
+    <div class="detail-grid">
+      <div>
+        <!-- Contract terms -->
+        <section class="card card-pad section-gap">
+          <h2 class="card-title">Contract details</h2>
+
+          <dl class="kv">
+            <dt>Contract number</dt>
+            <dd class="mono">{{ c.contract_number }}</dd>
+
+            <dt>Type</dt>
+            <dd>{{ c.contract_type }}</dd>
+
+            <dt>Vendor</dt>
+            <dd>
+              <a [routerLink]="['/vendors', c.vendor_id]">{{ c.vendor_name }}</a>
+            </dd>
+
+            <dt>Start date</dt>
+            <dd>{{ c.start_date | date: 'mediumDate' }}</dd>
+
+            <dt>Expiry date</dt>
+            <dd>{{ c.expiry_date | date: 'mediumDate' }}</dd>
+
+            <dt>Contract value</dt>
+            <dd>
+              @if (c.contract_value) {
+                {{ c.currency }} {{ c.contract_value | number: '1.2-2' }}
+              } @else {
+                —
+              }
+            </dd>
+
+            <dt>Auto-renew</dt>
+            <dd>{{ c.auto_renew ? 'Yes' : 'No' }}</dd>
+
+            <dt>Renewal notice</dt>
+            <dd>{{ c.renewal_notice_days }} days</dd>
+
+            <dt>Renewed from</dt>
+            <dd>
+              @if (c.renewed_from_id) {
+                <a [routerLink]="['/contracts', c.renewed_from_id]">
+                  Previous contract
+                </a>
+              } @else {
+                —
+              }
+            </dd>
+
+            <dt>Owner</dt>
+            <dd>{{ c.owner_name || '—' }}</dd>
+
+            <dt>Terms</dt>
+            <dd>{{ c.terms || '—' }}</dd>
+
+            <dt>Notes</dt>
+            <dd>{{ c.notes || '—' }}</dd>
+          </dl>
+        </section>
+
+        <!-- Compliance checks -->
+        <section class="card card-pad">
+          <h2 class="card-title">Compliance checks</h2>
+
+          @if (canEdit()) {
+            <form [formGroup]="checkForm" class="form-grid check-form">
+              <mat-form-field appearance="outline">
+                <mat-label>Check type</mat-label>
+                <mat-select formControlName="check_type">
+                  @for (type of checkTypes; track type) {
+                    <mat-option [value]="type">{{ type }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Result</mat-label>
+                <mat-select formControlName="result">
+                  @for (result of results; track result) {
+                    <mat-option [value]="result">{{ result }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="span-2">
+                <mat-label>Remarks</mat-label>
+                <input matInput formControlName="remarks" />
+              </mat-form-field>
+
+              <div class="span-2">
+                <button
+                  matButton="filled"
+                  type="button"
+                  [disabled]="savingCheck()"
+                  (click)="recordCheck()"
+                >
+                  <mat-icon>fact_check</mat-icon>
+                  Record check
+                </button>
+                <span class="field-hint" style="margin-left: 12px">
+                  A failed check flips the contract to Non-Compliant and alerts
+                  procurement and audit.
+                </span>
+              </div>
+            </form>
+          }
+
+          @if (c.compliance_checks.length === 0) {
+            <p class="muted">No compliance checks recorded yet.</p>
+          } @else {
+            <ul class="timeline">
+              @for (check of c.compliance_checks; track check.id) {
+                <li>
+                  <div class="timeline-title">
+                    {{ check.check_type }} —
+                    <app-status-pill [status]="check.result" />
+                  </div>
+                  <div class="timeline-meta">
+                    {{ check.checked_by_name ?? 'System' }} ·
+                    {{ check.check_date | date: 'mediumDate' }}
+                  </div>
+                  @if (check.remarks) {
+                    <div class="timeline-body">{{ check.remarks }}</div>
+                  }
+                </li>
+              }
+            </ul>
+          }
+        </section>
+      </div>
+
+      <!-- Vendor certifications -->
+      <aside class="card card-pad">
+        <h2 class="card-title">Vendor certifications</h2>
+
+        @if (certifications().length === 0) {
+          <p class="muted">No certifications on file for this vendor.</p>
+        } @else {
+          <ul class="plain-list">
+            @for (cert of certifications(); track cert.id) {
+              <li>
+                <div class="list-link">
+                  <div>
+                    <div class="list-title">{{ cert.certification_name }}</div>
+                    <div class="list-meta">
+                      {{ cert.issuing_authority || 'Unknown authority' }}
+                    </div>
+                  </div>
+                  <app-status-pill [status]="cert.status" />
+                </div>
+                @if (cert.expiry_date) {
+                  <div class="list-meta">
+                    Expires {{ cert.expiry_date | date: 'mediumDate' }}
+                  </div>
+                }
+              </li>
+            }
+          </ul>
+        }
+      </aside>
+    </div>
+  }
+</div>

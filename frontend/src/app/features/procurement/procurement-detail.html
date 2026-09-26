@@ -1,0 +1,181 @@
+<div class="page">
+  @if (loading()) {
+    <div class="loading-state"><mat-spinner diameter="42" /></div>
+  } @else if (request(); as r) {
+    <div class="page-head">
+      <div>
+        <a matButton routerLink="/procurement" class="back-link">
+          <mat-icon>arrow_back</mat-icon>
+          All requests
+        </a>
+        <h1>{{ r.item }}</h1>
+        <p>
+          <span class="mono">{{ r.request_number }}</span> &middot; raised by
+          {{ r.requester_name || 'unknown' }} on
+          {{ r.created_at | date: 'mediumDate' }}
+        </p>
+        <div class="head-pills">
+          <app-status-pill [status]="r.status" />
+          <app-status-pill [status]="r.priority" />
+        </div>
+      </div>
+
+      <div class="page-actions">
+        @if (canEdit() && (r.status === 'Pending' || r.status === 'Rejected')) {
+          <button matButton (click)="edit()">
+            <mat-icon>edit</mat-icon>
+            Edit
+          </button>
+        }
+
+        @if (canApprove() && r.status === 'Pending') {
+          <button matButton="filled" (click)="approve()">
+            <mat-icon>check_circle</mat-icon>
+            Approve
+          </button>
+          <button matButton class="danger-text" (click)="reject()">
+            <mat-icon>cancel</mat-icon>
+            Reject
+          </button>
+        }
+
+        @if (
+          canEdit() &&
+          r.status !== 'Cancelled' &&
+          r.status !== 'Completed' &&
+          r.status !== 'Rejected'
+        ) {
+          <button matButton (click)="assignVendor()">
+            <mat-icon>storefront</mat-icon>
+            {{ r.assigned_vendor_id ? 'Change vendor' : 'Assign vendor' }}
+          </button>
+        }
+
+        @if (canEdit() && r.status === 'Approved') {
+          <button matButton="filled" (click)="raisePurchaseOrder()">
+            <mat-icon>receipt_long</mat-icon>
+            Raise purchase order
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (r.status === 'Rejected' && r.rejection_reason) {
+      <div class="alert alert-danger section-gap">
+        <mat-icon>report</mat-icon>
+        <div>
+          <strong>Rejected</strong>
+          <div>{{ r.rejection_reason }}</div>
+        </div>
+      </div>
+    }
+
+    @if (r.status === 'Approved' && !r.assigned_vendor_id) {
+      <div class="alert alert-warn section-gap">
+        <mat-icon>info</mat-icon>
+        <div>
+          This request is approved but no vendor is assigned yet. Assign an
+          approved vendor before raising the purchase order.
+        </div>
+      </div>
+    }
+
+    <div class="detail-grid">
+      <div class="card card-pad">
+        <h2 class="card-title">Request details</h2>
+
+        <dl class="kv">
+          <dt>Request number</dt>
+          <dd class="mono">{{ r.request_number }}</dd>
+
+          <dt>Item</dt>
+          <dd>{{ r.item }}</dd>
+
+          <dt>Description</dt>
+          <dd>{{ r.description || '—' }}</dd>
+
+          <dt>Category</dt>
+          <dd>{{ r.category || '—' }}</dd>
+
+          <dt>Quantity</dt>
+          <dd>{{ r.quantity | number: '1.0-2' }} {{ r.unit }}</dd>
+
+          <dt>Estimated cost</dt>
+          <dd>{{ r.currency }} {{ r.estimated_cost | number: '1.2-2' }}</dd>
+
+          <dt>Required by</dt>
+          <dd>
+            {{ r.required_date ? (r.required_date | date: 'mediumDate') : '—' }}
+          </dd>
+
+          <dt>Priority</dt>
+          <dd><app-status-pill [status]="r.priority" /></dd>
+
+          <dt>Department</dt>
+          <dd>{{ r.department || '—' }}</dd>
+
+          <dt>Justification</dt>
+          <dd>{{ r.justification || '—' }}</dd>
+
+          <dt>Assigned vendor</dt>
+          <dd>
+            @if (r.assigned_vendor_id) {
+              <a [routerLink]="['/vendors', r.assigned_vendor_id]">
+                {{ r.assigned_vendor_name }}
+              </a>
+            } @else {
+              —
+            }
+          </dd>
+
+          <dt>Approved by</dt>
+          <dd>
+            {{ r.approver_name || '—' }}
+            @if (r.approved_at) {
+              <span class="muted"> · {{ r.approved_at | date: 'short' }}</span>
+            }
+          </dd>
+
+          <dt>Purchase orders</dt>
+          <dd>
+            @if (r.purchase_order_ids.length === 0) {
+              <span class="muted">None raised yet</span>
+            } @else {
+              @for (poId of r.purchase_order_ids; track poId) {
+                <a [routerLink]="['/purchase-orders', poId]" class="po-link">
+                  PO #{{ poId }}
+                </a>
+              }
+            }
+          </dd>
+        </dl>
+      </div>
+
+      <aside class="card card-pad">
+        <h2 class="card-title">Approval history</h2>
+
+        @if (r.approvals.length === 0) {
+          <p class="muted">No approval activity recorded.</p>
+        } @else {
+          <ul class="timeline">
+            @for (entry of r.approvals; track entry.id) {
+              <li>
+                <div class="timeline-title">{{ entry.action }}</div>
+                <div class="timeline-meta">
+                  {{ entry.performed_by_name ?? 'System' }} ·
+                  {{ entry.created_at | date: 'short' }}
+                </div>
+                <div class="timeline-meta">
+                  {{ entry.previous_status ?? 'New' }} → {{ entry.new_status }}
+                </div>
+                @if (entry.comments) {
+                  <div class="timeline-body">{{ entry.comments }}</div>
+                }
+              </li>
+            }
+          </ul>
+        }
+      </aside>
+    </div>
+  }
+</div>

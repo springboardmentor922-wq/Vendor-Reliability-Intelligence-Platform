@@ -1,0 +1,238 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Procurement requests</h1>
+      <p>
+        Raise requests, route them through approval and assign an approved
+        vendor before the purchase order is issued.
+      </p>
+    </div>
+
+    @if (canEdit()) {
+      <div class="page-actions">
+        <button matButton="filled" (click)="create()">
+          <mat-icon>add</mat-icon>
+          New request
+        </button>
+      </div>
+    }
+  </div>
+
+  @if (stats(); as summary) {
+    <div class="stat-grid">
+      <div class="stat">
+        <div class="stat-label">Total requests</div>
+        <div class="stat-value">{{ summary.total }}</div>
+        <div class="stat-hint">All time</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Pending approval</div>
+        <div class="stat-value">{{ summary.pending }}</div>
+        <div class="stat-hint">Waiting on a decision</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">In progress</div>
+        <div class="stat-value">
+          {{ summary.approved + summary.ordered + summary.delivered }}
+        </div>
+        <div class="stat-hint">Approved, ordered or delivered</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Estimated value</div>
+        <div class="stat-value">
+          {{ summary.total_estimated_value | number: '1.0-0' }}
+        </div>
+        <div class="stat-hint">Sum of estimated costs</div>
+      </div>
+    </div>
+  }
+
+  <div class="filter-bar">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search</mat-label>
+      <input
+        matInput
+        [(ngModel)]="search"
+        (keyup.enter)="load()"
+        placeholder="Request number, item, description or department"
+      />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Status</mat-label>
+      <mat-select [(ngModel)]="statusFilter" (selectionChange)="load()">
+        <mat-option value="">All statuses</mat-option>
+        @for (status of statuses; track status) {
+          <mat-option [value]="status">{{ status }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Priority</mat-label>
+      <mat-select [(ngModel)]="priorityFilter" (selectionChange)="load()">
+        <mat-option value="">All priorities</mat-option>
+        @for (priority of priorities; track priority) {
+          <mat-option [value]="priority">{{ priority }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <button matButton (click)="load()">
+      <mat-icon>filter_alt</mat-icon>
+      Apply
+    </button>
+    <button matButton (click)="clearFilters()">Clear</button>
+  </div>
+
+  <div class="table-wrap">
+    @if (loading()) {
+      <div class="loading-state"><mat-spinner diameter="38" /></div>
+    } @else if (requests().length === 0) {
+      <div class="empty-state">
+        <mat-icon class="empty-icon">assignment</mat-icon>
+        <h3>No procurement requests found</h3>
+        <p>Adjust your filters, or raise a new request.</p>
+      </div>
+    } @else {
+      <table mat-table [dataSource]="requests()">
+        <ng-container matColumnDef="request_number">
+          <th mat-header-cell *matHeaderCellDef>Request</th>
+          <td mat-cell *matCellDef="let request" class="mono">
+            {{ request.request_number }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="item">
+          <th mat-header-cell *matHeaderCellDef>Item</th>
+          <td mat-cell *matCellDef="let request">
+            <div class="list-title">{{ request.item }}</div>
+            <div class="list-meta">
+              {{ request.department || 'No department' }} ·
+              {{ request.requester_name || 'Unknown requester' }}
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="quantity">
+          <th mat-header-cell *matHeaderCellDef class="num">Qty</th>
+          <td mat-cell *matCellDef="let request" class="num">
+            {{ request.quantity | number: '1.0-2' }} {{ request.unit }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="estimated_cost">
+          <th mat-header-cell *matHeaderCellDef class="num">Est. cost</th>
+          <td mat-cell *matCellDef="let request" class="num">
+            {{ request.currency }} {{ request.estimated_cost | number: '1.0-0' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="required_date">
+          <th mat-header-cell *matHeaderCellDef>Required by</th>
+          <td mat-cell *matCellDef="let request" class="nowrap">
+            {{
+              request.required_date
+                ? (request.required_date | date: 'mediumDate')
+                : '—'
+            }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="priority">
+          <th mat-header-cell *matHeaderCellDef>Priority</th>
+          <td mat-cell *matCellDef="let request">
+            <app-status-pill [status]="request.priority" />
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="vendor">
+          <th mat-header-cell *matHeaderCellDef>Vendor</th>
+          <td mat-cell *matCellDef="let request">
+            {{ request.assigned_vendor_name || '—' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let request">
+            <app-status-pill [status]="request.status" />
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef class="row-actions">Actions</th>
+          <td mat-cell *matCellDef="let request" class="row-actions">
+            <button
+              matIconButton
+              [matMenuTriggerFor]="menu"
+              (click)="$event.stopPropagation()"
+              aria-label="Request actions"
+            >
+              <mat-icon>more_vert</mat-icon>
+            </button>
+
+            <mat-menu #menu="matMenu">
+              <button mat-menu-item (click)="open(request)">
+                <mat-icon>visibility</mat-icon>
+                <span>View details</span>
+              </button>
+
+              @if (request.status === 'Pending' || request.status === 'Rejected') {
+                <button mat-menu-item (click)="edit(request, $event)">
+                  <mat-icon>edit</mat-icon>
+                  <span>Edit request</span>
+                </button>
+              }
+
+              @if (canApprove() && request.status === 'Pending') {
+                <button mat-menu-item (click)="approve(request, $event)">
+                  <mat-icon>check_circle</mat-icon>
+                  <span>Approve</span>
+                </button>
+                <button mat-menu-item (click)="reject(request, $event)">
+                  <mat-icon>cancel</mat-icon>
+                  <span>Reject</span>
+                </button>
+              }
+
+              @if (
+                request.status !== 'Cancelled' &&
+                request.status !== 'Completed' &&
+                request.status !== 'Rejected'
+              ) {
+                <button mat-menu-item (click)="assignVendor(request, $event)">
+                  <mat-icon>storefront</mat-icon>
+                  <span>Assign vendor</span>
+                </button>
+              }
+
+              @if (request.status !== 'Completed' && request.status !== 'Cancelled') {
+                <button mat-menu-item (click)="cancel(request, $event)">
+                  <mat-icon>do_not_disturb</mat-icon>
+                  <span>Cancel request</span>
+                </button>
+              }
+
+              @if (canApprove()) {
+                <button mat-menu-item (click)="remove(request, $event)">
+                  <mat-icon>delete</mat-icon>
+                  <span>Delete</span>
+                </button>
+              }
+            </mat-menu>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="columns()"></tr>
+        <tr
+          mat-row
+          *matRowDef="let request; columns: columns()"
+          class="clickable-row"
+          (click)="open(request)"
+        ></tr>
+      </table>
+    }
+  </div>
+</div>
