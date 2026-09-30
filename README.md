@@ -50,9 +50,6 @@ streamlit run <entry_file>.py
 
 Developed as part of the **Infosys Springboard Internship Program**.
 
-## License
-
-License information to be added.
 
 ```
 ```
