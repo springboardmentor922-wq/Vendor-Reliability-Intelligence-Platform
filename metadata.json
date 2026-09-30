@@ -1,0 +1,6 @@
+{
+  "name": "VendorIQ",
+  "description": "VendorIQ - Autonomous Supplier Intelligence, Predictive Procurement Risk, and Compliance Governance Platform",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
