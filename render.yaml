@@ -1,0 +1,44 @@
+# ==============================================================================
+# Render Infrastructure Blueprint (render.yaml)
+# Root blueprint referencing backend service
+# ==============================================================================
+services:
+  - type: web
+    name: vendor-reliability-backend
+    runtime: python
+    rootDir: backend
+    plan: free
+    region: oregon
+    branch: main
+    buildCommand: pip install -r requirements.txt && alembic upgrade head
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+
+    envVars:
+      - key: PORT
+        value: 10000
+
+      - key: DATABASE_URL
+        placeholder: "postgresql+asyncpg://<db_user>:<db_password>@<db_host>/<db_name>"
+
+      - key: SYNC_DATABASE_URL
+        placeholder: "postgresql://<db_user>:<db_password>@<db_host>/<db_name>"
+
+      - key: REDIS_URL
+        placeholder: "redis://<redis_host>:6379"
+
+      - key: SECRET_KEY
+        generateValue: true
+
+      - key: ALGORITHM
+        value: HS256
+
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 60
+
+      - key: REFRESH_TOKEN_EXPIRE_DAYS
+        value: 7
+
+      - key: CORS_ORIGINS
+        placeholder: "https://<your-frontend-subdomain>.vercel.app,http://localhost:4200"

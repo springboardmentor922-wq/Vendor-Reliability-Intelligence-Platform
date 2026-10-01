@@ -1,0 +1,50 @@
+# Pyrefly configuration for vendor-reliability-platform backend
+# Points to Python 3.12 where all backend packages (sqlalchemy, alembic, fastapi, etc.) are installed
+
+project-excludes = [
+    "**/node_modules",
+    "**/__pycache__",
+    "**/venv/**/*",
+]
+
+python-version = "3.12.0"
+python-platform = "windows"
+skip-interpreter-query = true
+
+site-package-path = [
+    "C:/Users/tejut/AppData/Local/Programs/Python/Python312/Lib/site-packages",
+    "C:/Users/tejut/AppData/Local/Programs/Python/Python312",
+]
+
+enabled-ignores = [
+    "type",
+    "pyrefly",
+    "pyright",
+    "mypy",
+    "ty",
+    "pyre",
+    "zuban",
+]
+
+check-unannotated-defs = false
+infer-return-types = "never"
+disable-type-errors-in-ide = true
+ignore-errors-in-generated-code = true
+infer-with-first-use = false
+strict-callable-subtyping = false
+strict-partial-subtyping = false
+spec-compliant-overloads = false
+legacy-overload-expansion = false
+
+[errors]
+bad-override = "ignore"
+bad-override-param-name = "ignore"
+invalid-variance = "ignore"
+deprecated = "ignore"
+unannotated-attribute = "ignore"
+bad-assignment = "ignore"
+bad-argument-type = "ignore"
+unknown-attribute-type = "ignore"
+unknown-variable-type = "ignore"
+missing-import = "ignore"
+untyped-import = "ignore"

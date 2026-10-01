@@ -1,0 +1,76 @@
+# ==============================================================================
+# Render Infrastructure Blueprint (render.yaml)
+# Vendor Reliability & Procurement Platform — Backend Web Service
+# ==============================================================================
+# This configuration file can be used directly with Render Blueprints or as a
+# reference for manual Web Service setup on the Render Dashboard.
+#
+# MANUAL DASHBOARD SETUP REFERENCE:
+# - Name: vendor-reliability-backend
+# - Region: Oregon (US West) or Frankfurt (EU)
+# - Branch: main (or your target branch)
+# - Root Directory: backend
+# - Runtime: Python 3
+# - Build Command: pip install -r requirements.txt
+# - Start Command: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+# - Plan: Free
+# ==============================================================================
+
+services:
+  - type: web
+    name: vendor-reliability-backend
+    runtime: python
+    rootDir: backend
+    plan: free
+    region: oregon
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+
+    envVars:
+      # Render dynamically assigns PORT (usually 10000 on Render).
+      # The app reads $PORT with fallback to 8000 for local development.
+      - key: PORT
+        value: 10000
+
+      # PostgreSQL Async Connection String
+      # Obtain from your Render PostgreSQL instance:
+      # Copy "Internal Database URL" if backend is deployed in the same Render region,
+      # or "External Database URL" if deploying across regions or external DBs (e.g., Neon / Supabase).
+      # Format: postgresql+asyncpg://<user>:<password>@<host>/<database>
+      # Note: If Render provides postgres://..., the app auto-converts it to postgresql+asyncpg://
+      - key: DATABASE_URL
+        placeholder: "postgresql+asyncpg://<db_user>:<db_password>@<db_host>/<db_name>"
+
+      # Synchronous connection string for Alembic CLI migrations
+      - key: SYNC_DATABASE_URL
+        placeholder: "postgresql://<db_user>:<db_password>@<db_host>/<db_name>"
+
+      # Redis Connection String
+      # Obtain from Render Redis "Internal Redis URL" or Upstash Redis URL.
+      # Note: The platform includes an automatic in-memory fallback if Redis is not configured.
+      - key: REDIS_URL
+        placeholder: "redis://<redis_host>:6379"
+
+      # JWT Secret Key — Render will automatically generate a secure 256-bit random value
+      # or you can supply your own via the dashboard.
+      - key: SECRET_KEY
+        generateValue: true
+
+      # JWT Algorithm
+      - key: ALGORITHM
+        value: HS256
+
+      # Token lifetimes
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 60
+
+      - key: REFRESH_TOKEN_EXPIRE_DAYS
+        value: 7
+
+      # Allowed CORS Origins (comma-separated, NO trailing slashes)
+      # Add your deployed frontend URL (e.g. Vercel / Netlify domain) along with local dev URLs.
+      - key: CORS_ORIGINS
+        placeholder: "https://<your-frontend-subdomain>.vercel.app,http://localhost:4200"

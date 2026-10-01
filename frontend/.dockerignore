@@ -1,0 +1,26 @@
+# ── Frontend .dockerignore ───────────────────────────────────────────────────
+# Exclude files/dirs that must not be sent to the Docker build context
+
+# Node modules (rebuilt inside the container)
+node_modules/
+
+# Angular build cache
+.angular/
+
+# Previous build output (rebuilt inside the container)
+dist/
+
+# Development config files
+.vscode/
+.prettierrc
+
+# Git metadata
+.git/
+.gitignore
+
+# Secrets and local environment
+*.env
+.env*
+
+# Documentation (not needed in the image)
+README.md

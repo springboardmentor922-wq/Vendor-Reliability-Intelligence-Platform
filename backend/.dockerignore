@@ -1,0 +1,46 @@
+# ── Backend .dockerignore ────────────────────────────────────────────────────
+# Exclude files/dirs that must not be baked into the Docker image
+
+# Python byte-code and cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Secrets — use env vars or Docker secrets instead
+.env
+*.env
+
+# Local developer files
+.ruff_cache/
+pyrefly.toml
+*.log
+
+# One-off utility / verification scripts (not needed in production image)
+check_*.py
+seed_*.py
+test_*.py
+verify_*.py
+
+# Development artefacts
+.git/
+.gitignore
+README.md
+docs/
+
+# Alembic cache
+alembic/__pycache__/
+
+# Uploaded files (mounted as a Docker volume in production)
+uploads/
