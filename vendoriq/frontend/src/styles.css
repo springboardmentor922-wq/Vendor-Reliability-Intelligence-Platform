@@ -1,0 +1,940 @@
+:root {
+  --brand-primary: #1e3a8a;
+  --brand-secondary: #2563eb;
+  --brand-accent: #0ea5e9;
+  --brand-bg: #f4f6f9;
+}
+
+body {
+  background-color: var(--brand-bg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.navbar-brand-vendoriq {
+  font-weight: 700;
+  color: var(--brand-primary) !important;
+}
+
+.btn-brand {
+  background-color: var(--brand-secondary);
+  color: #fff;
+  border: none;
+}
+.btn-brand:hover {
+  background-color: var(--brand-primary);
+  color: #fff;
+}
+
+.card-elevated {
+  border: none;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+
+.page-title {
+  font-weight: 700;
+  color: var(--brand-primary);
+}
+
+.stat-card {
+  border-radius: 0.75rem;
+  color: #fff;
+  padding: 1.25rem;
+}
+.stat-card h3 { font-weight: 700; margin-bottom: 0; }
+.stat-card small { opacity: 0.85; }
+
+.bg-grad-1 { background: linear-gradient(135deg, #1e3a8a, #2563eb); }
+.bg-grad-2 { background: linear-gradient(135deg, #0f766e, #14b8a6); }
+.bg-grad-3 { background: linear-gradient(135deg, #b45309, #f59e0b); }
+.bg-grad-4 { background: linear-gradient(135deg, #7c3aed, #a855f7); }
+
+.badge-status {
+  text-transform: capitalize;
+  font-weight: 600;
+}
+
+.table thead th {
+  color: var(--brand-primary);
+  border-bottom-width: 2px;
+  white-space: nowrap;
+}
+
+.sidebar {
+  min-height: calc(100vh - 56px);
+  background: #fff;
+  border-right: 1px solid #e5e7eb;
+}
+.sidebar .nav-link {
+  color: #374151;
+  border-radius: 0.5rem;
+  margin-bottom: 2px;
+}
+.sidebar .nav-link.active, .sidebar .nav-link:hover {
+  background-color: #eef2ff;
+  color: var(--brand-primary);
+}
+
+/* =========================================================
+   VendorIQ Application Shell
+   ========================================================= */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  background: #f4f6f9;
+}
+
+/* Top header */
+.app-header {
+  height: 64px;
+  background: #ffffff;
+  border-bottom: 1px solid #dee2e6;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
+.brand-name {
+  color: #21408f;
+  font-size: 21px;
+}
+
+/* Main two-column application layout */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  padding-top: 64px;
+}
+
+/* Left sidebar */
+.sidebar {
+  width: 250px;
+  min-width: 250px;
+  background: #ffffff;
+  border-right: 1px solid #dee2e6;
+  min-height: calc(100vh - 64px);
+  position: fixed;
+  top: 64px;
+  left: 0;
+  bottom: 0;
+  overflow-y: auto;
+  z-index: 900;
+}
+
+/* Sidebar navigation */
+.sidebar .nav {
+  padding: 16px 10px;
+}
+
+.sidebar .nav-link {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 4px;
+  border-radius: 8px;
+  color: #343a40;
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.sidebar .nav-link:hover {
+  background: #eef3ff;
+  color: #21408f;
+}
+
+.sidebar .nav-link.active {
+  background: #e8efff;
+  color: #21408f;
+  font-weight: 600;
+}
+
+.sidebar .nav-link i {
+  width: 22px;
+  text-align: center;
+}
+
+/* Right-side page content */
+.main-content {
+  flex: 1;
+  min-width: 0;
+  margin-left: 250px;
+  padding: 28px;
+  min-height: calc(100vh - 64px);
+  background: #f4f6f9;
+}
+
+/* Responsive layout */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 210px;
+    min-width: 210px;
+  }
+
+  .main-content {
+    margin-left: 210px;
+    padding: 18px;
+  }
+}
+
+
+/* VendorIQ application shell */
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: #f4f6f9;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background: #ffffff;
+  border-bottom: 1px solid #dee2e6;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.brand {
+  font-size: 20px;
+  font-weight: 700;
+  color: #24438f;
+}
+
+.topbar-user {
+  display: flex;
+  align-items: center;
+}
+
+.app-body {
+  display: flex;
+  flex: 1;
+  min-height: calc(100vh - 64px);
+}
+
+.sidebar {
+  width: 250px;
+  min-width: 250px;
+  background: #ffffff;
+  border-right: 1px solid #dee2e6;
+  padding: 18px 10px;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 4px;
+  border-radius: 8px;
+  color: #344054;
+  text-decoration: none;
+  transition: 0.15s ease;
+}
+
+.sidebar-link:hover {
+  background: #f1f5ff;
+  color: #24438f;
+}
+
+.sidebar-link.active {
+  background: #e9efff;
+  color: #24438f;
+  font-weight: 600;
+}
+
+.main-content {
+  flex: 1;
+  min-width: 0;
+  padding: 24px;
+  background: #f4f6f9;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 210px;
+    min-width: 210px;
+  }
+
+  .topbar {
+    padding: 0 12px;
+  }
+
+  .topbar-user > span:first-child {
+    display: none;
+  }
+
+  .main-content {
+    padding: 16px;
+  }
+}
+
+/* =========================================================
+   VENDORIQ ANALYTICS DASHBOARD
+   ========================================================= */
+
+.analytics-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.analytics-heading h4 {
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.analytics-heading p {
+  font-size: 13px;
+}
+
+
+/* Analytics KPI */
+
+.analytics-kpi {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 20px;
+  min-height: 120px;
+
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  border: 1px solid #e5e7eb;
+
+  box-shadow:
+    0 4px 12px rgba(15, 23, 42, 0.06);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.analytics-kpi:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 8px 20px rgba(15, 23, 42, 0.10);
+}
+
+.analytics-kpi span {
+  display: block;
+  color: #6b7280;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.analytics-kpi strong {
+  display: block;
+  font-size: 28px;
+  line-height: 1.1;
+  color: #111827;
+}
+
+.analytics-kpi small {
+  display: block;
+  margin-top: 5px;
+  color: #6b7280;
+}
+
+
+/* Analytics Icons */
+
+.analytics-icon {
+  width: 52px;
+  height: 52px;
+
+  border-radius: 14px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 21px;
+}
+
+.icon-blue {
+  background: #e8f0ff;
+  color: #2563eb;
+}
+
+.icon-green {
+  background: #e9f9f0;
+  color: #16a34a;
+}
+
+.icon-red {
+  background: #fff0f0;
+  color: #dc2626;
+}
+
+.icon-purple {
+  background: #f3eaff;
+  color: #7c3aed;
+}
+
+
+/* Chart Cards */
+
+.analytics-card {
+  background: #ffffff;
+
+  border-radius: 16px;
+
+  padding: 20px;
+
+  border: 1px solid #e5e7eb;
+
+  box-shadow:
+    0 4px 14px rgba(15, 23, 42, 0.06);
+
+  min-height: 390px;
+}
+
+.analytics-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  margin-bottom: 12px;
+}
+
+.analytics-card-header h5 {
+  margin: 0;
+
+  font-size: 16px;
+  font-weight: 700;
+
+  color: #1f2937;
+}
+
+.analytics-card-header p {
+  margin: 5px 0 0;
+
+  font-size: 12px;
+
+  color: #6b7280;
+}
+
+
+/* Chart Area */
+
+.chart-container {
+  position: relative;
+
+  width: 100%;
+  height: 285px;
+}
+
+.chart-large {
+  height: 320px;
+}
+
+
+/* Side Statistics */
+
+.analytics-side-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+
+  height: 100%;
+}
+
+.side-stat {
+  background: #ffffff;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 14px;
+
+  padding: 20px;
+
+  flex: 1;
+
+  box-shadow:
+    0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+.side-stat span {
+  display: block;
+
+  color: #6b7280;
+
+  font-size: 13px;
+}
+
+.side-stat span i {
+  margin-right: 7px;
+}
+
+.side-stat strong {
+  display: block;
+
+  font-size: 28px;
+
+  color: #111827;
+
+  margin-top: 7px;
+}
+
+.side-stat small {
+  color: #6b7280;
+}
+
+
+/* Bottom Statistics */
+
+.bottom-stat {
+  background: #ffffff;
+
+  border-radius: 14px;
+
+  border: 1px solid #e5e7eb;
+
+  padding: 22px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 16px;
+
+  box-shadow:
+    0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+.bottom-stat > i {
+  width: 48px;
+  height: 48px;
+
+  border-radius: 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #eef2ff;
+
+  color: #4f46e5;
+
+  font-size: 20px;
+}
+
+.bottom-stat span {
+  display: block;
+
+  color: #6b7280;
+
+  font-size: 13px;
+}
+
+.bottom-stat strong {
+  display: block;
+
+  font-size: 24px;
+
+  color: #111827;
+}
+
+.bottom-stat small {
+  color: #6b7280;
+}
+
+
+/* Quick Action Cards */
+
+.dashboard-action {
+  min-height: 100px;
+
+  padding: 20px;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.dashboard-action:hover {
+  transform: translateY(-3px);
+
+  box-shadow:
+    0 8px 18px rgba(15, 23, 42, 0.10);
+}
+
+
+/* Main KPI */
+
+.dashboard-kpi {
+  min-height: 110px;
+}
+
+
+/* Responsive */
+
+@media (max-width: 768px) {
+
+  .analytics-heading {
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    gap: 12px;
+  }
+
+  .analytics-card {
+    min-height: 350px;
+  }
+
+  .chart-container {
+    height: 250px;
+  }
+
+}
+
+
+/* =========================================================
+   VENDORIQ ANALYTICS DASHBOARD
+   ========================================================= */
+
+.analytics-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.analytics-heading h4 {
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.analytics-heading p {
+  font-size: 13px;
+}
+
+
+/* Analytics KPI */
+
+.analytics-kpi {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 20px;
+  min-height: 120px;
+
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  border: 1px solid #e5e7eb;
+
+  box-shadow:
+    0 4px 12px rgba(15, 23, 42, 0.06);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.analytics-kpi:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 8px 20px rgba(15, 23, 42, 0.10);
+}
+
+.analytics-kpi span {
+  display: block;
+  color: #6b7280;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.analytics-kpi strong {
+  display: block;
+  font-size: 28px;
+  line-height: 1.1;
+  color: #111827;
+}
+
+.analytics-kpi small {
+  display: block;
+  margin-top: 5px;
+  color: #6b7280;
+}
+
+
+/* Analytics Icons */
+
+.analytics-icon {
+  width: 52px;
+  height: 52px;
+
+  border-radius: 14px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 21px;
+}
+
+.icon-blue {
+  background: #e8f0ff;
+  color: #2563eb;
+}
+
+.icon-green {
+  background: #e9f9f0;
+  color: #16a34a;
+}
+
+.icon-red {
+  background: #fff0f0;
+  color: #dc2626;
+}
+
+.icon-purple {
+  background: #f3eaff;
+  color: #7c3aed;
+}
+
+
+/* Chart Cards */
+
+.analytics-card {
+  background: #ffffff;
+
+  border-radius: 16px;
+
+  padding: 20px;
+
+  border: 1px solid #e5e7eb;
+
+  box-shadow:
+    0 4px 14px rgba(15, 23, 42, 0.06);
+
+  min-height: 390px;
+}
+
+.analytics-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  margin-bottom: 12px;
+}
+
+.analytics-card-header h5 {
+  margin: 0;
+
+  font-size: 16px;
+  font-weight: 700;
+
+  color: #1f2937;
+}
+
+.analytics-card-header p {
+  margin: 5px 0 0;
+
+  font-size: 12px;
+
+  color: #6b7280;
+}
+
+
+/* Chart Area */
+
+.chart-container {
+  position: relative;
+
+  width: 100%;
+  height: 285px;
+}
+
+.chart-large {
+  height: 320px;
+}
+
+
+/* Side Statistics */
+
+.analytics-side-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+
+  height: 100%;
+}
+
+.side-stat {
+  background: #ffffff;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 14px;
+
+  padding: 20px;
+
+  flex: 1;
+
+  box-shadow:
+    0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+.side-stat span {
+  display: block;
+
+  color: #6b7280;
+
+  font-size: 13px;
+}
+
+.side-stat span i {
+  margin-right: 7px;
+}
+
+.side-stat strong {
+  display: block;
+
+  font-size: 28px;
+
+  color: #111827;
+
+  margin-top: 7px;
+}
+
+.side-stat small {
+  color: #6b7280;
+}
+
+
+/* Bottom Statistics */
+
+.bottom-stat {
+  background: #ffffff;
+
+  border-radius: 14px;
+
+  border: 1px solid #e5e7eb;
+
+  padding: 22px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 16px;
+
+  box-shadow:
+    0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+.bottom-stat > i {
+  width: 48px;
+  height: 48px;
+
+  border-radius: 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #eef2ff;
+
+  color: #4f46e5;
+
+  font-size: 20px;
+}
+
+.bottom-stat span {
+  display: block;
+
+  color: #6b7280;
+
+  font-size: 13px;
+}
+
+.bottom-stat strong {
+  display: block;
+
+  font-size: 24px;
+
+  color: #111827;
+}
+
+.bottom-stat small {
+  color: #6b7280;
+}
+
+
+/* Quick Action Cards */
+
+.dashboard-action {
+  min-height: 100px;
+
+  padding: 20px;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.dashboard-action:hover {
+  transform: translateY(-3px);
+
+  box-shadow:
+    0 8px 18px rgba(15, 23, 42, 0.10);
+}
+
+
+/* Main KPI */
+
+.dashboard-kpi {
+  min-height: 110px;
+}
+
+
+/* Responsive */
+
+@media (max-width: 768px) {
+
+  .analytics-heading {
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    gap: 12px;
+  }
+
+  .analytics-card {
+    min-height: 350px;
+  }
+
+  .chart-container {
+    height: 250px;
+  }
+
+}
+

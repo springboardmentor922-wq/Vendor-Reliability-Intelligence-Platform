@@ -1,0 +1,76 @@
+:root {
+  --brand-primary: #1e3a8a;
+  --brand-secondary: #2563eb;
+  --brand-accent: #0ea5e9;
+  --brand-bg: #f4f6f9;
+}
+
+body {
+  background-color: var(--brand-bg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.navbar-brand-vendoriq {
+  font-weight: 700;
+  color: var(--brand-primary) !important;
+}
+
+.btn-brand {
+  background-color: var(--brand-secondary);
+  color: #fff;
+  border: none;
+}
+.btn-brand:hover {
+  background-color: var(--brand-primary);
+  color: #fff;
+}
+
+.card-elevated {
+  border: none;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+
+.page-title {
+  font-weight: 700;
+  color: var(--brand-primary);
+}
+
+.stat-card {
+  border-radius: 0.75rem;
+  color: #fff;
+  padding: 1.25rem;
+}
+.stat-card h3 { font-weight: 700; margin-bottom: 0; }
+.stat-card small { opacity: 0.85; }
+
+.bg-grad-1 { background: linear-gradient(135deg, #1e3a8a, #2563eb); }
+.bg-grad-2 { background: linear-gradient(135deg, #0f766e, #14b8a6); }
+.bg-grad-3 { background: linear-gradient(135deg, #b45309, #f59e0b); }
+.bg-grad-4 { background: linear-gradient(135deg, #7c3aed, #a855f7); }
+
+.badge-status {
+  text-transform: capitalize;
+  font-weight: 600;
+}
+
+.table thead th {
+  color: var(--brand-primary);
+  border-bottom-width: 2px;
+  white-space: nowrap;
+}
+
+.sidebar {
+  min-height: calc(100vh - 56px);
+  background: #fff;
+  border-right: 1px solid #e5e7eb;
+}
+.sidebar .nav-link {
+  color: #374151;
+  border-radius: 0.5rem;
+  margin-bottom: 2px;
+}
+.sidebar .nav-link.active, .sidebar .nav-link:hover {
+  background-color: #eef2ff;
+  color: var(--brand-primary);
+}

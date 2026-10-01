@@ -1,0 +1,162 @@
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <div>
+    <h3 class="page-title mb-0">Purchase Orders</h3>
+    <p class="text-muted mb-0 small">Creation, order tracking &amp; invoice management</p>
+  </div>
+  <button class="btn btn-brand" (click)="toggleForm()" *ngIf="canManage()">
+    <i class="fa-solid fa-plus me-1"></i>{{ showForm ? 'Cancel' : 'New Purchase Order' }}
+  </button>
+</div>
+
+<div class="card card-elevated p-3 mb-3" *ngIf="showForm">
+  <h6 class="mb-3">Create Purchase Order</h6>
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Vendor</label>
+        <select class="form-select" formControlName="vendor_id">
+          <option value="" disabled>Select approved vendor</option>
+          <option *ngFor="let v of vendors" [value]="v.id">{{ v.company_name }}</option>
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Expected Delivery Date</label>
+        <input type="date" class="form-control" formControlName="expected_delivery_date" />
+      </div>
+      <div class="col-12">
+        <label class="form-label">Notes</label>
+        <textarea class="form-control" rows="2" formControlName="notes"></textarea>
+      </div>
+    </div>
+
+    <hr />
+    <h6>Line Items</h6>
+    <div formArrayName="items">
+      <div class="row g-2 align-items-end mb-2" *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
+        <div class="col-md-4">
+          <label class="form-label small">Item</label>
+          <input class="form-control form-control-sm" formControlName="item_name" />
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small">Description</label>
+          <input class="form-control form-control-sm" formControlName="description" />
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small">Qty</label>
+          <input type="number" class="form-control form-control-sm" formControlName="quantity" />
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small">Unit Price</label>
+          <input type="number" class="form-control form-control-sm" formControlName="unit_price" />
+        </div>
+        <div class="col-md-1">
+          <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeItem(i)">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    <button type="button" class="btn btn-sm btn-outline-secondary mb-3" (click)="addItem()">
+      <i class="fa-solid fa-plus me-1"></i>Add Item
+    </button>
+
+    <div>
+      <button class="btn btn-brand" type="submit" [disabled]="form.invalid || submitting">
+        <span *ngIf="submitting" class="spinner-border spinner-border-sm me-2"></span>Create Purchase Order
+      </button>
+    </div>
+  </form>
+</div>
+
+<div class="card card-elevated p-3 mb-3">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-4">
+      <label class="form-label small">Status</label>
+      <select class="form-select form-select-sm" [(ngModel)]="statusFilter" (change)="load()">
+        <option value="">All Statuses</option>
+        <option *ngFor="let s of statuses" [value]="s">{{ s }}</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="alert alert-danger" *ngIf="error">{{ error }}</div>
+<div class="text-center py-5" *ngIf="loading"><div class="spinner-border text-primary"></div></div>
+
+<div class="card card-elevated" *ngIf="!loading">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>PO #</th>
+          <th>Vendor</th>
+          <th>Total</th>
+          <th>Expected Delivery</th>
+          <th>Status</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container *ngFor="let o of orders">
+          <tr style="cursor:pointer" (click)="toggleExpand(o)">
+            <td><small class="text-muted">{{ o.po_number }}</small></td>
+            <td>{{ vendorName(o.vendor_id) }}</td>
+            <td>${{ o.total_amount | number:'1.2-2' }}</td>
+            <td>{{ o.expected_delivery_date ? (o.expected_delivery_date | date:'mediumDate') : '—' }}</td>
+            <td><span class="badge badge-status" [ngClass]="statusBadgeClass(o.status)">{{ o.status }}</span></td>
+            <td class="text-end" (click)="$event.stopPropagation()">
+              <ng-container *ngIf="canManage()">
+                <button
+                  *ngFor="let next of nextStatuses(o.status)"
+                  class="btn btn-sm btn-outline-primary me-1 text-capitalize"
+                  (click)="updateStatus(o, next)"
+                >
+                  {{ next }}
+                </button>
+              </ng-container>
+            </td>
+          </tr>
+          <tr *ngIf="expandedOrder?.id === o.id">
+            <td colspan="6" class="bg-light">
+              <div class="p-2">
+                <strong>Items</strong>
+                <table class="table table-sm mb-3">
+                  <thead><tr><th>Item</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
+                  <tbody>
+                    <tr *ngFor="let it of o.items">
+                      <td>{{ it.item_name }} <span class="text-muted small">{{ it.description }}</span></td>
+                      <td>{{ it.quantity }}</td>
+                      <td>${{ it.unit_price | number:'1.2-2' }}</td>
+                      <td>${{ it.total_price | number:'1.2-2' }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <strong>Invoices</strong>
+                  <button class="btn btn-sm btn-outline-secondary" (click)="addInvoice(o)" *ngIf="canManage()">
+                    <i class="fa-solid fa-plus me-1"></i>Add Invoice
+                  </button>
+                </div>
+                <table class="table table-sm mb-0" *ngIf="invoicesByPo[o.id]?.length">
+                  <thead><tr><th>Invoice #</th><th>Amount</th><th>Status</th></tr></thead>
+                  <tbody>
+                    <tr *ngFor="let inv of invoicesByPo[o.id]">
+                      <td>{{ inv.invoice_number }}</td>
+                      <td>${{ inv.amount | number:'1.2-2' }}</td>
+                      <td class="text-capitalize">{{ inv.status }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p class="text-muted small mb-0" *ngIf="!invoicesByPo[o.id]?.length">No invoices recorded yet.</p>
+              </div>
+            </td>
+          </tr>
+        </ng-container>
+        <tr *ngIf="!orders.length">
+          <td colspan="6" class="text-center text-muted py-4">No purchase orders found.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

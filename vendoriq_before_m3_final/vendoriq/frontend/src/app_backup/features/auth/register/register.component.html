@@ -1,0 +1,51 @@
+<div class="d-flex align-items-center justify-content-center bg-grad-1 py-5" style="min-height: 100vh;">
+  <div class="card card-elevated p-4" style="width: 100%; max-width: 480px;">
+    <div class="text-center mb-3">
+      <i class="fa-solid fa-user-plus fa-2x text-primary"></i>
+      <h4 class="mt-2 page-title">Create your account</h4>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="mb-3">
+        <label class="form-label">Full name</label>
+        <input class="form-control" formControlName="full_name" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-control" formControlName="email" />
+      </div>
+      <div class="row">
+        <div class="col-6 mb-3">
+          <label class="form-label">Phone</label>
+          <input class="form-control" formControlName="phone" />
+        </div>
+        <div class="col-6 mb-3">
+          <label class="form-label">Department</label>
+          <input class="form-control" formControlName="department" />
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Role</label>
+        <select class="form-select" formControlName="role">
+          <option *ngFor="let r of roles" [value]="r.value">{{ r.label }}</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-control" formControlName="password" />
+      </div>
+
+      <div class="alert alert-danger py-2" *ngIf="error">{{ error }}</div>
+      <div class="alert alert-success py-2" *ngIf="success">Account created! Redirecting to login…</div>
+
+      <button type="submit" class="btn btn-brand w-100" [disabled]="form.invalid || loading">
+        <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+        Register
+      </button>
+    </form>
+
+    <p class="text-center text-muted small mt-3 mb-0">
+      Already have an account? <a routerLink="/login">Sign in</a>
+    </p>
+  </div>
+</div>

@@ -1,0 +1,81 @@
+<ng-container *ngIf="auth.isAuthenticated(); else authOnly">
+
+  <div class="app-shell">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+
+      <div class="brand">
+        <i class="fa-solid fa-boxes-stacked me-2"></i>
+        VendorIQ
+      </div>
+
+      <div class="topbar-user">
+
+        <span class="me-2">
+          {{ auth.currentUser()?.full_name }}
+        </span>
+
+        <span class="badge bg-secondary me-3">
+          {{ roleLabel }}
+        </span>
+
+        <button
+          type="button"
+          class="btn btn-outline-danger btn-sm"
+          (click)="logout()">
+
+          <i class="fa-solid fa-right-from-bracket me-1"></i>
+          Logout
+
+        </button>
+
+      </div>
+
+    </header>
+
+
+    <div class="app-body">
+
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+
+        <a
+          *ngFor="let item of navItems()"
+          [routerLink]="item.path"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{
+            exact: item.path === '/dashboard'
+          }"
+          class="sidebar-link">
+
+          <i class="fa-solid {{ item.icon }} me-2"></i>
+
+          <span>
+            {{ item.label }}
+          </span>
+
+        </a>
+
+      </aside>
+
+
+      <!-- MAIN CONTENT -->
+      <main class="main-content">
+
+        <router-outlet></router-outlet>
+
+      </main>
+
+    </div>
+
+  </div>
+
+</ng-container>
+
+
+<ng-template #authOnly>
+
+  <router-outlet></router-outlet>
+
+</ng-template>

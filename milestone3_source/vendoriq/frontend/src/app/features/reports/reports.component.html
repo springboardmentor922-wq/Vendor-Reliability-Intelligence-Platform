@@ -1,0 +1,73 @@
+<div class="mb-3">
+  <h3 class="page-title mb-0">Reports &amp; Export</h3>
+  <p class="text-muted mb-0 small">Vendor performance, procurement, purchase order, compliance &amp; contract reports — PDF / Excel export</p>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-6 col-lg-4" *ngFor="let r of reportTypes">
+    <div class="card card-elevated p-3 h-100">
+      <h6><i class="fa-solid {{ r.icon }} me-2 text-primary"></i>{{ r.label }}</h6>
+      <div class="d-flex gap-2 mt-2 flex-wrap">
+        <button class="btn btn-sm btn-outline-secondary" (click)="viewPreview(r.type)">Preview</button>
+        <button class="btn btn-sm btn-outline-success" (click)="download(r.type, 'xlsx')">
+          <i class="fa-solid fa-file-excel me-1"></i>Excel
+        </button>
+        <button class="btn btn-sm btn-outline-danger" (click)="download(r.type, 'pdf')">
+          <i class="fa-solid fa-file-pdf me-1"></i>PDF
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card card-elevated p-3 mb-4" *ngIf="loadingPreview || preview">
+  <div class="text-center py-3" *ngIf="loadingPreview"><div class="spinner-border text-primary"></div></div>
+  <ng-container *ngIf="!loadingPreview && preview">
+    <h6>{{ preview.title }}</h6>
+    <div class="table-responsive">
+      <table class="table table-sm table-striped mb-0">
+        <thead><tr><th *ngFor="let h of preview.headers">{{ h }}</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let row of preview.rows">
+            <td *ngFor="let cell of row">{{ cell }}</td>
+          </tr>
+          <tr *ngIf="!preview.rows.length"><td [attr.colspan]="preview.headers.length" class="text-center text-muted py-3">No data yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </ng-container>
+</div>
+
+<div class="card card-elevated p-3" *ngIf="auth.hasAnyRole(['administrator'])">
+  <h6><i class="fa-solid fa-bell me-2"></i>Notification System</h6>
+  <p class="text-muted small">Scan for contracts and certifications expiring soon and notify Admins/Procurement Managers (in production this runs on a schedule).</p>
+  <div class="d-flex gap-2 flex-wrap">
+    <button class="btn btn-sm btn-brand" (click)="runChecks()" [disabled]="runningChecks">
+      <span *ngIf="runningChecks" class="spinner-border spinner-border-sm me-1"></span>Run Expiry &amp; Compliance Checks
+    </button>
+    <button class="btn btn-sm btn-outline-secondary" (click)="toggleEmailLogs()">
+      {{ showEmailLogs ? 'Hide' : 'View' }} Simulated Email Outbox
+    </button>
+  </div>
+
+  <div class="alert alert-info mt-3 mb-0" *ngIf="checksResult">
+    Found {{ checksResult.expiring_contracts }} expiring contract(s) and {{ checksResult.expiring_certifications }} expiring certification(s).
+    Sent {{ checksResult.notifications_sent }} notification(s).
+  </div>
+
+  <div class="table-responsive mt-3" *ngIf="showEmailLogs">
+    <table class="table table-sm mb-0">
+      <thead><tr><th>To</th><th>Subject</th><th>Event</th><th>Status</th><th>Sent</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let l of emailLogs">
+          <td>{{ l.to_email }}</td>
+          <td>{{ l.subject }}</td>
+          <td class="text-capitalize">{{ l.event_type }}</td>
+          <td><span class="badge bg-secondary">{{ l.status }}</span></td>
+          <td><small class="text-muted">{{ l.sent_at | date:'short' }}</small></td>
+        </tr>
+        <tr *ngIf="!emailLogs.length"><td colspan="5" class="text-center text-muted py-3">No emails logged yet.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>

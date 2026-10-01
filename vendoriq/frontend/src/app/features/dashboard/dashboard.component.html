@@ -1,0 +1,936 @@
+<div class="dashboard-page">
+
+  <!-- ========================================================= -->
+  <!-- HEADER -->
+  <!-- ========================================================= -->
+
+  <div class="dashboard-header">
+
+    <div>
+      <h3 class="page-title">
+        {{ roleTitle }}
+      </h3>
+
+      <p class="page-subtitle">
+        Welcome back, {{ auth.currentUser()?.full_name }}.
+        {{ roleDescription }}
+      </p>
+    </div>
+
+    <button
+      class="dashboard-refresh-btn"
+      (click)="refreshDashboard()"
+      [disabled]="loading || analyticsLoading">
+
+      <i class="fa-solid fa-arrows-rotate"></i>
+      Refresh
+
+    </button>
+
+  </div>
+
+
+  <!-- ========================================================= -->
+  <!-- LOADING -->
+  <!-- ========================================================= -->
+
+  <div
+    class="dashboard-loading"
+    *ngIf="loading">
+
+    <div class="spinner-border text-primary"></div>
+
+    <p>Loading dashboard...</p>
+
+  </div>
+
+
+  <!-- ========================================================= -->
+  <!-- GENERAL ERROR -->
+  <!-- ========================================================= -->
+
+  <div
+    class="dashboard-alert"
+    *ngIf="error">
+
+    {{ error }}
+
+  </div>
+
+
+  <!-- ========================================================= -->
+  <!-- PROCUREMENT MANAGER -->
+  <!-- ========================================================= -->
+
+  <ng-container *ngIf="role === 'procurement_manager'">
+
+    <!-- PROCUREMENT HERO -->
+
+    <section class="procurement-hero">
+
+      <div class="procurement-hero-icon">
+        <i class="fa-solid fa-cart-shopping"></i>
+      </div>
+
+      <div>
+
+        <h2>
+          Procurement Management
+        </h2>
+
+        <p>
+          Manage procurement requests, purchase orders,
+          approvals, vendor assignment, order tracking and invoices.
+        </p>
+
+      </div>
+
+    </section>
+
+
+    <!-- ======================================================= -->
+    <!-- SIX REQUIRED PROCUREMENT FEATURES -->
+    <!-- ======================================================= -->
+
+    <section class="procurement-features-section">
+
+      <div class="section-title-row">
+
+        <div>
+          <h4>Procurement Management</h4>
+
+          <p>
+            Access the core procurement operations.
+          </p>
+        </div>
+
+      </div>
+
+
+      <div class="procurement-feature-grid">
+
+
+        <!-- PROCUREMENT REQUESTS -->
+
+        <a
+          routerLink="/procurement"
+          class="procurement-feature-card">
+
+          <div class="feature-icon feature-blue">
+
+            <i class="fa-solid fa-file-circle-plus"></i>
+
+          </div>
+
+          <div class="feature-content">
+
+            <h5>
+              Procurement Requests
+            </h5>
+
+            <p>
+              Create, review and manage procurement requests.
+            </p>
+
+            <span>
+              Open Requests
+              <i class="fa-solid fa-arrow-right"></i>
+            </span>
+
+          </div>
+
+        </a>
+
+
+        <!-- PURCHASE ORDER CREATION -->
+
+        <a
+          routerLink="/purchase-orders"
+          class="procurement-feature-card">
+
+          <div class="feature-icon feature-purple">
+
+            <i class="fa-solid fa-file-invoice"></i>
+
+          </div>
+
+          <div class="feature-content">
+
+            <h5>
+              Purchase Order Creation
+            </h5>
+
+            <p>
+              Create and manage purchase orders for approved requests.
+            </p>
+
+            <span>
+              Manage Purchase Orders
+              <i class="fa-solid fa-arrow-right"></i>
+            </span>
+
+          </div>
+
+        </a>
+
+
+        <!-- PROCUREMENT APPROVAL -->
+
+        <a
+          routerLink="/procurement"
+          class="procurement-feature-card">
+
+          <div class="feature-icon feature-orange">
+
+            <i class="fa-solid fa-circle-check"></i>
+
+          </div>
+
+          <div class="feature-content">
+
+            <h5>
+              Procurement Approval Workflow
+            </h5>
+
+            <p>
+              Review procurement requests and manage approval workflow.
+            </p>
+
+            <span>
+              Review Approvals
+              <i class="fa-solid fa-arrow-right"></i>
+            </span>
+
+          </div>
+
+        </a>
+
+
+        <!-- VENDOR ASSIGNMENT -->
+
+        <a
+          routerLink="/vendors"
+          class="procurement-feature-card">
+
+          <div class="feature-icon feature-green">
+
+            <i class="fa-solid fa-users"></i>
+
+          </div>
+
+          <div class="feature-content">
+
+            <h5>
+              Vendor Assignment
+            </h5>
+
+            <p>
+              Assign suitable vendors to approved procurement requests.
+            </p>
+
+            <span>
+              Manage Vendors
+              <i class="fa-solid fa-arrow-right"></i>
+            </span>
+
+          </div>
+
+        </a>
+
+
+        <!-- ORDER TRACKING -->
+
+        <a
+          routerLink="/purchase-orders"
+          class="procurement-feature-card">
+
+          <div class="feature-icon feature-cyan">
+
+            <i class="fa-solid fa-truck-fast"></i>
+
+          </div>
+
+          <div class="feature-content">
+
+            <h5>
+              Order Tracking
+            </h5>
+
+            <p>
+              Track purchase orders through delivery and completion.
+            </p>
+
+            <span>
+              Track Orders
+              <i class="fa-solid fa-arrow-right"></i>
+            </span>
+
+          </div>
+
+        </a>
+
+
+        <!-- INVOICE MANAGEMENT -->
+
+        <a
+          routerLink="/purchase-orders"
+          class="procurement-feature-card">
+
+          <div class="feature-icon feature-red">
+
+            <i class="fa-solid fa-receipt"></i>
+
+          </div>
+
+          <div class="feature-content">
+
+            <h5>
+              Invoice Management
+            </h5>
+
+            <p>
+              Manage invoices and payment information associated with orders.
+            </p>
+
+            <span>
+              Manage Invoices
+              <i class="fa-solid fa-arrow-right"></i>
+            </span>
+
+          </div>
+
+        </a>
+
+      </div>
+
+    </section>
+
+
+    <!-- ======================================================= -->
+    <!-- PROCUREMENT KPI -->
+    <!-- ======================================================= -->
+
+    <section class="procurement-kpi-grid">
+
+      <div class="procurement-kpi kpi-blue">
+
+        <div class="kpi-icon">
+          <i class="fa-solid fa-file-circle-plus"></i>
+        </div>
+
+        <div>
+          <span>Procurement Requests</span>
+
+          <strong>
+            {{ summary?.procurement?.total_requests ?? 0 }}
+          </strong>
+
+          <small>
+            Total requests
+          </small>
+        </div>
+
+      </div>
+
+
+      <div class="procurement-kpi kpi-purple">
+
+        <div class="kpi-icon">
+          <i class="fa-solid fa-file-invoice"></i>
+        </div>
+
+        <div>
+          <span>Purchase Orders</span>
+
+          <strong>
+            {{ summary?.purchase_orders?.total ?? 0 }}
+          </strong>
+
+          <small>
+            {{ summary?.purchase_orders?.active ?? 0 }} active
+          </small>
+        </div>
+
+      </div>
+
+
+      <div class="procurement-kpi kpi-green">
+
+        <div class="kpi-icon">
+          <i class="fa-solid fa-truck-fast"></i>
+        </div>
+
+        <div>
+          <span>Delivery Performance</span>
+
+          <strong>
+            {{ procurementAnalytics?.delivery_performance_rate ?? 0 }}%
+          </strong>
+
+          <small>
+            On-time delivery performance
+          </small>
+        </div>
+
+      </div>
+
+
+      <div class="procurement-kpi kpi-orange">
+
+        <div class="kpi-icon">
+          <i class="fa-solid fa-clock"></i>
+        </div>
+
+        <div>
+          <span>Pending Approvals</span>
+
+          <strong>
+            {{ analytics?.procurement_reports?.pending_approvals ?? 0 }}
+          </strong>
+
+          <small>
+            Awaiting approval
+          </small>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ======================================================= -->
+    <!-- PROCUREMENT STATUS -->
+    <!-- ======================================================= -->
+
+    <section class="procurement-status-section">
+
+      <div class="section-title-row">
+
+        <div>
+          <h4>Procurement Status</h4>
+
+          <p>
+            Current procurement lifecycle status.
+          </p>
+        </div>
+
+      </div>
+
+
+      <div class="status-grid">
+
+        <div class="status-item status-pending">
+          <i class="fa-solid fa-clock"></i>
+          <span>Pending</span>
+          <strong>
+            {{ procurementStatus.pending }}
+          </strong>
+        </div>
+
+        <div class="status-item status-approved">
+          <i class="fa-solid fa-circle-check"></i>
+          <span>Approved</span>
+          <strong>
+            {{ procurementStatus.approved }}
+          </strong>
+        </div>
+
+        <div class="status-item status-ordered">
+          <i class="fa-solid fa-file-invoice"></i>
+          <span>Ordered</span>
+          <strong>
+            {{ procurementStatus.ordered }}
+          </strong>
+        </div>
+
+        <div class="status-item status-delivered">
+          <i class="fa-solid fa-truck"></i>
+          <span>Delivered</span>
+          <strong>
+            {{ procurementStatus.delivered }}
+          </strong>
+        </div>
+
+        <div class="status-item status-completed">
+          <i class="fa-solid fa-circle-check"></i>
+          <span>Completed</span>
+          <strong>
+            {{ procurementStatus.completed }}
+          </strong>
+        </div>
+
+        <div class="status-item status-cancelled">
+          <i class="fa-solid fa-circle-xmark"></i>
+          <span>Cancelled</span>
+          <strong>
+            {{ procurementStatus.cancelled }}
+          </strong>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ======================================================= -->
+    <!-- PROCUREMENT DASHBOARD VISUALS -->
+    <!-- ======================================================= -->
+
+    <section class="visual-dashboard-section">
+
+      <div class="visual-dashboard-header">
+
+        <div>
+          <h4>
+            <i class="fa-solid fa-chart-column"></i>
+            Procurement Dashboard
+          </h4>
+
+          <p>
+            Procurement overview, purchase orders,
+            vendor performance, procurement cost and delivery status.
+          </p>
+        </div>
+
+        <div class="live-badge">
+          <span></span>
+          Live Data
+        </div>
+
+      </div>
+
+
+      <div
+        class="analytics-error"
+        *ngIf="analyticsError">
+
+        {{ analyticsError }}
+
+      </div>
+
+
+      <div
+        class="analytics-loading"
+        *ngIf="analyticsLoading">
+
+        <div class="spinner-border text-primary"></div>
+
+        <span>
+          Loading procurement analytics...
+        </span>
+
+      </div>
+
+
+      <div
+        class="procurement-charts-grid"
+        *ngIf="!analyticsLoading">
+
+
+        <!-- ================================================= -->
+        <!-- PROCUREMENT OVERVIEW -->
+        <!-- ================================================= -->
+
+        <div class="procurement-chart-card chart-overview">
+
+          <div class="chart-card-header">
+
+            <div>
+
+              <h5>
+                Procurement Overview
+              </h5>
+
+              <p>
+                Delivery and procurement performance
+              </p>
+
+            </div>
+
+            <div class="chart-header-icon blue">
+              <i class="fa-solid fa-chart-column"></i>
+            </div>
+
+          </div>
+
+          <div class="chart-wrapper chart-tall">
+
+            <canvas #procurementOverviewChart></canvas>
+
+          </div>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- ACTIVE PURCHASE ORDERS -->
+        <!-- ================================================= -->
+
+        <div class="procurement-chart-card">
+
+          <div class="chart-card-header">
+
+            <div>
+
+              <h5>
+                Active Purchase Orders
+              </h5>
+
+              <p>
+                Current purchase order activity
+              </p>
+
+            </div>
+
+            <div class="chart-header-icon purple">
+              <i class="fa-solid fa-file-invoice"></i>
+            </div>
+
+          </div>
+
+          <div class="chart-wrapper">
+
+            <canvas #activePurchaseOrdersChart></canvas>
+
+          </div>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- VENDOR PERFORMANCE -->
+        <!-- ================================================= -->
+
+        <div class="procurement-chart-card">
+
+          <div class="chart-card-header">
+
+            <div>
+
+              <h5>
+                Vendor Performance Summary
+              </h5>
+
+              <p>
+                Delivery, completion and supplier concentration
+              </p>
+
+            </div>
+
+            <div class="chart-header-icon green">
+              <i class="fa-solid fa-chart-radar"></i>
+            </div>
+
+          </div>
+
+          <div class="chart-wrapper">
+
+            <canvas #vendorPerformanceSummaryChart></canvas>
+
+          </div>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- PROCUREMENT COST -->
+        <!-- ================================================= -->
+
+        <div class="procurement-chart-card">
+
+          <div class="chart-card-header">
+
+            <div>
+
+              <h5>
+                Procurement Cost Analysis
+              </h5>
+
+              <p>
+                Procurement value and purchase volume
+              </p>
+
+            </div>
+
+            <div class="chart-header-icon orange">
+              <i class="fa-solid fa-coins"></i>
+            </div>
+
+          </div>
+
+          <div class="chart-wrapper">
+
+            <canvas #procurementCostChart></canvas>
+
+          </div>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- DELIVERY STATUS -->
+        <!-- ================================================= -->
+
+        <div class="procurement-chart-card delivery-card">
+
+          <div class="chart-card-header">
+
+            <div>
+
+              <h5>
+                Delivery Status
+              </h5>
+
+              <p>
+                Current delivery performance
+              </p>
+
+            </div>
+
+            <div class="chart-header-icon cyan">
+              <i class="fa-solid fa-truck-fast"></i>
+            </div>
+
+          </div>
+
+          <div class="chart-wrapper">
+
+            <canvas #deliveryStatusChart></canvas>
+
+          </div>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- PROCESSING PERFORMANCE -->
+        <!-- ================================================= -->
+
+        <div class="procurement-chart-card">
+
+          <div class="chart-card-header">
+
+            <div>
+
+              <h5>
+                Procurement Processing
+              </h5>
+
+              <p>
+                Request-to-order and PO processing time
+              </p>
+
+            </div>
+
+            <div class="chart-header-icon red">
+              <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+
+          </div>
+
+          <div class="chart-wrapper">
+
+            <canvas #procurementProcessingChart></canvas>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </ng-container>
+
+
+  <!-- ========================================================= -->
+  <!-- VENDOR DASHBOARD -->
+  <!-- Existing vendor functionality -->
+  <!-- ========================================================= -->
+
+  <ng-container *ngIf="role === 'vendor'">
+
+    <div class="role-placeholder-card">
+
+      <i class="fa-solid fa-building"></i>
+
+      <h4>Vendor Dashboard</h4>
+
+      <p>
+        Monitor your purchase orders, contracts,
+        communication and vendor performance.
+      </p>
+
+      <div class="placeholder-actions">
+
+        <a routerLink="/purchase-orders">
+          Purchase Orders
+        </a>
+
+        <a routerLink="/contracts">
+          Contracts
+        </a>
+
+        <a routerLink="/communication">
+          Communication
+        </a>
+
+      </div>
+
+    </div>
+
+  </ng-container>
+
+
+  <!-- ========================================================= -->
+  <!-- ADMINISTRATOR -->
+  <!-- ========================================================= -->
+
+  <ng-container *ngIf="role === 'administrator'">
+
+    <div class="role-placeholder-card admin-role-card">
+
+      <i class="fa-solid fa-user-shield"></i>
+
+      <h4>Administrator Dashboard</h4>
+
+      <p>
+        Manage users, vendors, procurement,
+        compliance and system performance.
+      </p>
+
+      <div class="placeholder-actions">
+
+        <a routerLink="/vendors">
+          Vendors
+        </a>
+
+        <a routerLink="/procurement">
+          Procurement
+        </a>
+
+        <a routerLink="/analytics">
+          Analytics
+        </a>
+
+      </div>
+
+    </div>
+
+  </ng-container>
+
+
+  <!-- ========================================================= -->
+  <!-- SUPPLY CHAIN MANAGER -->
+  <!-- ========================================================= -->
+
+  <ng-container *ngIf="role === 'supply_chain_manager'">
+
+    <div class="role-placeholder-card">
+
+      <i class="fa-solid fa-truck-fast"></i>
+
+      <h4>Supply Chain Dashboard</h4>
+
+      <p>
+        Monitor vendors, delivery performance,
+        reliability, risk and supply chain operations.
+      </p>
+
+      <div class="placeholder-actions">
+
+        <a routerLink="/vendors">
+          Vendors
+        </a>
+
+        <a routerLink="/purchase-orders">
+          Delivery Tracking
+        </a>
+
+        <a routerLink="/contracts">
+          Contracts
+        </a>
+
+      </div>
+
+    </div>
+
+  </ng-container>
+
+
+  <!-- ========================================================= -->
+  <!-- FINANCE OFFICER -->
+  <!-- ========================================================= -->
+
+  <ng-container *ngIf="role === 'finance_officer'">
+
+    <div class="role-placeholder-card">
+
+      <i class="fa-solid fa-coins"></i>
+
+      <h4>Finance Dashboard</h4>
+
+      <p>
+        Monitor procurement value, purchase orders,
+        financial activity and contracts.
+      </p>
+
+      <div class="placeholder-actions">
+
+        <a routerLink="/purchase-orders">
+          Purchase Orders
+        </a>
+
+        <a routerLink="/procurement">
+          Procurement
+        </a>
+
+        <a routerLink="/contracts">
+          Contracts
+        </a>
+
+      </div>
+
+    </div>
+
+  </ng-container>
+
+
+  <!-- ========================================================= -->
+  <!-- AUDITOR -->
+  <!-- ========================================================= -->
+
+  <ng-container *ngIf="role === 'auditor'">
+
+    <div class="role-placeholder-card">
+
+      <i class="fa-solid fa-user-check"></i>
+
+      <h4>Audit Dashboard</h4>
+
+      <p>
+        Review procurement, vendor, compliance,
+        performance and risk information.
+      </p>
+
+      <div class="placeholder-actions">
+
+        <a routerLink="/vendors">
+          Vendors
+        </a>
+
+        <a routerLink="/procurement">
+          Procurement
+        </a>
+
+        <a routerLink="/analytics">
+          Analytics
+        </a>
+
+      </div>
+
+    </div>
+
+  </ng-container>
+
+</div>
