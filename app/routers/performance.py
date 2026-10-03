@@ -8,7 +8,8 @@ from app.core.scoring import calculate_reliability_score
 from app.models.user import User, UserRole
 from app.models.vendor import Vendor
 from app.models.performance import PerformanceRecord
-from app.schemas.performance import PerformanceRecordCreate, PerformanceRecordOut, ReliabilityScoreOut
+from app.models.score_history import ScoreHistory
+from app.schemas.performance import PerformanceRecordCreate, PerformanceRecordOut
 
 router = APIRouter(prefix="/performance", tags=["Vendor Performance"])
 
@@ -30,10 +31,10 @@ def log_performance(
     db.commit()
     db.refresh(record)
 
-    # Recalculate and update the vendor's stored reliability score
-    all_records = db.query(PerformanceRecord).filter(PerformanceRecord.vendor_id == vendor.id).all()
-    score_data = calculate_reliability_score(all_records)
+    score_data = calculate_reliability_score(db, vendor.id)
+    vendor.previous_reliability_score = vendor.reliability_score
     vendor.reliability_score = score_data["reliability_score"]
+    db.add(ScoreHistory(vendor_id=vendor.id, score=score_data["reliability_score"]))
     db.commit()
 
     return record
@@ -52,7 +53,7 @@ def get_vendor_performance_history(
     return db.query(PerformanceRecord).filter(PerformanceRecord.vendor_id == vendor_id).all()
 
 
-@router.get("/vendor/{vendor_id}/score", response_model=ReliabilityScoreOut)
+@router.get("/vendor/{vendor_id}/score")
 def get_vendor_reliability_score(
     vendor_id: int,
     db: Session = Depends(get_db),
@@ -62,7 +63,50 @@ def get_vendor_reliability_score(
     if not vendor:
         raise HTTPException(status_code=404, detail="Vendor not found")
 
-    records = db.query(PerformanceRecord).filter(PerformanceRecord.vendor_id == vendor_id).all()
-    score_data = calculate_reliability_score(records)
+    score_data = calculate_reliability_score(db, vendor_id)
+    return {"vendor_id": vendor_id, **score_data}
 
-    return ReliabilityScoreOut(vendor_id=vendor_id, **score_data)
+
+@router.get("/vendor/{vendor_id}/trend")
+def get_vendor_score_trend(
+    vendor_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    history = db.query(ScoreHistory).filter(ScoreHistory.vendor_id == vendor_id).order_by(ScoreHistory.recorded_at).all()
+    return [{"date": h.recorded_at, "score": h.score} for h in history]
+
+
+@router.get("/vendor/{vendor_id}/forecast")
+def forecast_vendor_score(
+    vendor_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    history = db.query(ScoreHistory).filter(ScoreHistory.vendor_id == vendor_id).order_by(ScoreHistory.recorded_at).all()
+
+    if len(history) < 2:
+        return {"projected_score": None, "direction": "insufficient_data", "message": "Need at least 2 performance records to forecast a trend"}
+
+    scores = [h.score for h in history]
+    n = len(scores)
+    x_vals = list(range(n))
+    x_mean = sum(x_vals) / n
+    y_mean = sum(scores) / n
+
+    numerator = sum((x_vals[i] - x_mean) * (scores[i] - y_mean) for i in range(n))
+    denominator = sum((x_vals[i] - x_mean) ** 2 for i in range(n))
+    slope = numerator / denominator if denominator != 0 else 0
+
+    next_x = n
+    projected = y_mean + slope * (next_x - x_mean)
+    projected = max(0, min(100, round(projected, 2)))
+
+    direction = "improving" if slope > 0.5 else "declining" if slope < -0.5 else "stable"
+
+    return {
+        "current_score": scores[-1],
+        "projected_score": projected,
+        "direction": direction,
+        "slope_per_entry": round(slope, 3),
+    }

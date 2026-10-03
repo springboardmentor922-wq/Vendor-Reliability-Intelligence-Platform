@@ -10,12 +10,12 @@ function Performance() {
   const [error, setError] = useState('')
   const [form, setForm] = useState({ on_time_delivery: 'true', quality_rating: '', communication_rating: '', response_time_hours: '', notes: '' })
 
-  useEffect(() => {
-    apiClient.get('/vendors/').then((res) => {
-      setVendors(res.data)
-      if (res.data.length > 0) setSelectedVendor(String(res.data[0].id))
+  useEffect(() => {    apiClient.get('/vendors/').then((res) => {
+      const approved = res.data.filter((v) => v.status === 'approved')
+      setVendors(approved)
+      if (approved.length > 0) setSelectedVendor(String(approved[0].id))
     }).catch(() => {})
-  }, [])
+      }, [])
 
   const loadVendorData = (vendorId) => {
     if (!vendorId) return

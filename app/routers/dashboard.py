@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
+from collections import defaultdict
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 
 from app.core.database import get_db
 from app.core.deps import get_current_user, require_roles
@@ -11,6 +11,7 @@ from app.models.vendor import Vendor, VendorStatus, VendorCategory
 from app.models.purchase_order import PurchaseOrder, OrderStatus
 from app.models.contract import Contract, ContractStatus
 from app.models.performance import PerformanceRecord
+from app.models.score_history import ScoreHistory
 from app.schemas.dashboard import ProcurementDashboard, VendorDashboard, AdminDashboard
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard & Analytics"])
@@ -71,6 +72,62 @@ def procurement_dashboard(
     )
 
 
+@router.get("/procurement/charts")
+def procurement_charts(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    all_orders = db.query(PurchaseOrder).all()
+
+    # Monthly cost + PO count trend
+    monthly = defaultdict(lambda: {"cost": 0.0, "po_count": 0})
+    for o in all_orders:
+        if o.order_date:
+            key = o.order_date.strftime("%b")
+            monthly[key]["cost"] += o.total_amount
+            monthly[key]["po_count"] += 1
+    month_order = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    monthly_trend = [
+        {"month": m, "cost": round(monthly[m]["cost"], 2), "po_count": monthly[m]["po_count"]}
+        for m in month_order if m in monthly
+    ]
+
+    # PO status breakdown
+    status_breakdown = {}
+    for s in OrderStatus:
+        status_breakdown[s.value] = sum(1 for o in all_orders if o.status == s)
+
+    # Vendor performance radar (top vendors by reliability score)
+    vendors = db.query(Vendor).filter(Vendor.status == VendorStatus.APPROVED).all()
+    radar = []
+    for v in vendors[:6]:
+        score_data = calculate_reliability_score(db, v.id)
+        fb = score_data.get("factor_breakdown")
+        if fb:
+            radar.append({
+                "vendor": v.company_name,
+                "delivery": fb["delivery_history"]["score"],
+                "quality": fb["product_quality"]["score"],
+                "compliance": fb["contract_compliance"]["score"],
+                "communication": fb["communication_efficiency"]["score"],
+            })
+
+    # Cost by vendor category
+    category_cost = defaultdict(float)
+    for o in all_orders:
+        vendor = db.query(Vendor).filter(Vendor.id == o.vendor_id).first()
+        if vendor:
+            category_cost[vendor.category.value] += o.total_amount
+    cost_by_category = [{"category": k, "cost": round(v, 2)} for k, v in category_cost.items()]
+
+    return {
+        "monthly_trend": monthly_trend,
+        "po_status_breakdown": status_breakdown,
+        "vendor_performance_radar": radar,
+        "cost_by_category": cost_by_category,
+    }
+
+
 @router.get("/vendor/{vendor_id}", response_model=VendorDashboard)
 def vendor_dashboard(
     vendor_id: int,
@@ -81,8 +138,7 @@ def vendor_dashboard(
     if not vendor:
         raise HTTPException(status_code=404, detail="Vendor not found")
 
-    records = db.query(PerformanceRecord).filter(PerformanceRecord.vendor_id == vendor_id).all()
-    score_data = calculate_reliability_score(records)
+    score_data = calculate_reliability_score(db, vendor_id)
 
     contracts = db.query(Contract).filter(Contract.vendor_id == vendor_id).all()
     active_contracts = sum(1 for c in contracts if c.status == ContractStatus.ACTIVE)
@@ -114,6 +170,55 @@ def vendor_dashboard(
     )
 
 
+@router.get("/vendor/{vendor_id}/charts")
+def vendor_charts(
+    vendor_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    vendor = db.query(Vendor).filter(Vendor.id == vendor_id).first()
+    if not vendor:
+        raise HTTPException(status_code=404, detail="Vendor not found")
+
+    score_data = calculate_reliability_score(db, vendor_id)
+    fb = score_data.get("factor_breakdown") or {}
+
+    performance_bars = [
+        {"metric": "Delivery", "score": fb.get("delivery_history", {}).get("score", 0)},
+        {"metric": "Quality", "score": fb.get("product_quality", {}).get("score", 0)},
+        {"metric": "Communication", "score": fb.get("communication_efficiency", {}).get("score", 0)},
+        {"metric": "Compliance", "score": fb.get("contract_compliance", {}).get("score", 0)},
+    ]
+
+    history = db.query(ScoreHistory).filter(ScoreHistory.vendor_id == vendor_id).order_by(ScoreHistory.recorded_at).all()
+    reliability_trend = [{"point": f"#{i+1}", "score": h.score} for i, h in enumerate(history)]
+
+    contracts = db.query(Contract).filter(Contract.vendor_id == vendor_id).all()
+    contract_breakdown = {}
+    for s in ContractStatus:
+        contract_breakdown[s.value] = sum(1 for c in contracts if c.status == s)
+
+    orders = db.query(PurchaseOrder).filter(PurchaseOrder.vendor_id == vendor_id).all()
+    monthly_orders = defaultdict(lambda: {"value": 0.0, "count": 0})
+    for o in orders:
+        if o.order_date:
+            key = o.order_date.strftime("%b")
+            monthly_orders[key]["value"] += o.total_amount
+            monthly_orders[key]["count"] += 1
+    month_order = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    order_history = [
+        {"month": m, "value": round(monthly_orders[m]["value"], 2), "count": monthly_orders[m]["count"]}
+        for m in month_order if m in monthly_orders
+    ]
+
+    return {
+        "performance_bars": performance_bars,
+        "reliability_trend": reliability_trend,
+        "contract_status_breakdown": contract_breakdown,
+        "order_history": order_history,
+    }
+
+
 @router.get("/admin", response_model=AdminDashboard)
 def admin_dashboard(
     db: Session = Depends(get_db),
@@ -132,7 +237,7 @@ def admin_dashboard(
     vendors_by_category = {}
     for category in VendorCategory:
         vendors_by_category[category.value] = sum(1 for v in vendors if v.category == category)
-    high_risk_vendors = sum(1 for v in vendors if v.reliability_score < 50)
+    high_risk_vendors = sum(1 for v in vendors if v.reliability_score < 60 and v.reliability_score > 0)
 
     orders = db.query(PurchaseOrder).all()
     total_orders = len(orders)
@@ -159,3 +264,48 @@ def admin_dashboard(
         compliant_vendors=compliant_vendors,
         expired_certifications=expired_certifications,
     )
+
+
+@router.get("/admin/charts")
+def admin_charts(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(UserRole.ADMIN)),
+):
+    vendors = db.query(Vendor).all()
+
+    risk_distribution = {"low_risk": 0, "medium_risk": 0, "high_risk": 0}
+    for v in vendors:
+        if v.reliability_score == 0:
+            continue
+        score_data = calculate_reliability_score(db, v.id)
+        risk_distribution[score_data["risk_level"]] += 1
+
+    users = db.query(User).all()
+    users_by_role = {}
+    for role in UserRole:
+        users_by_role[role.value] = sum(1 for u in users if u.role == role)
+
+    all_orders = db.query(PurchaseOrder).all()
+    monthly = defaultdict(lambda: {"cost": 0.0, "po_count": 0})
+    for o in all_orders:
+        if o.order_date:
+            key = o.order_date.strftime("%b")
+            monthly[key]["cost"] += o.total_amount
+            monthly[key]["po_count"] += 1
+    month_order = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    monthly_trend = [
+        {"month": m, "cost": round(monthly[m]["cost"], 2), "po_count": monthly[m]["po_count"]}
+        for m in month_order if m in monthly
+    ]
+
+    contracts = db.query(Contract).all()
+    compliance_breakdown = {}
+    for s in ContractStatus:
+        compliance_breakdown[s.value] = sum(1 for c in contracts if c.status == s)
+
+    return {
+        "vendor_risk_distribution": risk_distribution,
+        "users_by_role": users_by_role,
+        "procurement_monthly_trend": monthly_trend,
+        "compliance_breakdown": compliance_breakdown,
+    }

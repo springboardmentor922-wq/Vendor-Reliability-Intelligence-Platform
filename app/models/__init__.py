@@ -6,3 +6,8 @@ from app.models.purchase_order_item import PurchaseOrderItem
 from app.models.contract import Contract
 from app.models.performance import PerformanceRecord
 from app.models.notification import Notification
+from app.models.audit_log import AuditLog
+from app.models.score_history import ScoreHistory
+from app.models.invoice import Invoice
+from app.models.issue import Issue
+from app.models.certification import Certification

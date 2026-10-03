@@ -13,13 +13,11 @@ class VendorCategory(str, enum.Enum):
     LOGISTICS = "logistics_partner"
     MAINTENANCE = "maintenance_vendor"
 
-
 class VendorStatus(str, enum.Enum):
     PENDING = "pending"
     APPROVED = "approved"
     SUSPENDED = "suspended"
     REJECTED = "rejected"
-
 
 class Vendor(Base):
     __tablename__ = "vendors"
@@ -36,6 +34,7 @@ class Vendor(Base):
 
     # Reliability score, computed/updated later by the scoring engine (0-100)
     reliability_score = Column(Float, default=0.0)
+    previous_reliability_score = Column(Float, nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

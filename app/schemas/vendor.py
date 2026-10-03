@@ -32,6 +32,9 @@ class VendorOut(BaseModel):
     category: VendorCategory
     status: VendorStatus
     reliability_score: float
+    risk_level: Optional[str] = None
+    trend: Optional[str] = None
+    recommendation: Optional[str] = None
     created_at: datetime
 
     class Config:

@@ -13,8 +13,10 @@ function CreatePurchaseOrder() {
   })
   const [items, setItems] = useState([{ item_description: '', quantity: 1, unit_price: 0, tax_percent: 18 }])
 
-  useEffect(() => {
-    apiClient.get('/vendors/').then((res) => setVendors(res.data)).catch(() => {})
+  useEffect(() => {    apiClient.get('/vendors/').then((res) => {
+      setVendors(res.data.filter((v) => v.status === 'approved'))
+    }).catch(() => {})
+    
   }, [])
 
   const updateItem = (i, field, value) => {
