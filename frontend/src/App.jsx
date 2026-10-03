@@ -13,6 +13,9 @@ import Contracts from './pages/Contracts'
 import Communication from './pages/Communication'
 import Notifications from './pages/Notifications'
 import Reports from './pages/Reports'
+import Invoices from './pages/Invoices'
+import Issues from './pages/Issues'
+import Certifications from './pages/Certifications'
 
 function App() {
   return (
@@ -31,6 +34,9 @@ function App() {
       <Route path="/communication" element={<ProtectedRoute><Communication /></ProtectedRoute>} />
       <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
       <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+      <Route path="/invoices" element={<ProtectedRoute><Invoices /></ProtectedRoute>} />
+<Route path="/issues" element={<ProtectedRoute><Issues /></ProtectedRoute>} />
+<Route path="/certifications" element={<ProtectedRoute><Certifications /></ProtectedRoute>} />
 
       <Route path="/" element={<Navigate to="/login" replace />} />
     </Routes>
