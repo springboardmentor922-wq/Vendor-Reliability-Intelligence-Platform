@@ -1,0 +1,51 @@
+id,purchase_order_id,item_name,description,quantity,unit_price,total_price,sku
+1,6,High-Grade Industrial Fasteners,,100.0,115.0,11500.0,
+2,7,High-Grade Industrial Fasteners,,100.0,115.0,11500.0,
+3,8,High-Grade Industrial Fasteners,,100.0,115.0,11500.0,
+4,9,High-Grade Industrial Fasteners,,100.0,115.0,11500.0,
+5,10,High-Grade Industrial Fasteners,,100.0,115.0,11500.0,
+6,11,High-Grade Industrial Fasteners,,100.0,115.0,11500.0,
+7,135,Laptop,Enterprise hardware refresh for operations and engineering teams,50.0,50000.0,2500000.0,SKU-0023
+8,136,Laptop,Procurement manager selecting yashwanth for 50 laptops,50.0,49000.0,2450000.0,SKU-0026
+9,139,Annual AC Maintenance,it is month end,5.0,3000.0,15000.0,SKU-0013
+10,140,Laptop,New employee requirements - 50 high-performance engineering laptops,50.0,50000.0,2500000.0,SKU-0018
+11,141,laptop service,Enterprise hardware refresh for operations and engineering teams,50.0,50.0,2500.0,SKU-0032
+12,142,PHONES,Enterprise hardware refresh for operations and engineering teams,31.0,1612.16,49977.0,SKU-0033
+13,145,Laptop,Enterprise hardware refresh for operations and engineering teams,50.0,50.0,2500.0,SKU-0037
+14,146,Fluke 87V Precision Multimeter,,10.0,4850.0,48500.0,FLK-87V-PRO
+15,147,Laptop,Enterprise hardware refresh for operations and engineering teams,50.0,500.0,25000.0,SKU-0040
+16,148,Laptop,Enterprise hardware refresh for operations and engineering teams,50.0,50.0,2500.0,SKU-0042
+17,149,Fluke 87V Precision Multimeter,,10.0,4850.0,48500.0,FLK-87V-PRO
+18,150,phones,Enterprise hardware refresh for operations and engineering teams,45.0,55.56,2500.0,SKU-0044
+19,152,High-Density Storage Server,Data storage expansion for analytics team,2.0,7700.0,15400.0,SKU-0048
+20,154,Fluke 87V Precision Multimeter,,10.0,4850.0,48500.0,FLK-87V-PRO
+21,155,Fluke 87V Precision Multimeter,,10.0,4850.0,48500.0,FLK-87V-PRO
+22,156,High-Density Storage Server,Data storage expansion for analytics team,2.0,7700.0,15400.0,SKU-0053
+23,157,Fluke 87V Precision Multimeter,,10.0,4850.0,48500.0,FLK-87V-PRO
+24,158,Fluke 87V Precision Multimeter,,10.0,4850.0,48500.0,FLK-87V-PRO
+25,159,Fluke 87V Precision Multimeter,,10.0,4850.0,48500.0,FLK-87V-PRO
+26,160,Fluke 87V Precision Multimeter,,10.0,4850.0,48500.0,FLK-87V-PRO
+27,161,High-Density Storage Server,Data storage expansion for analytics team,2.0,7700.0,15400.0,SKU-0059
+28,162,Fluke 87V Precision Multimeter,,10.0,4850.0,48500.0,FLK-87V-PRO
+29,163,Fluke 87V Precision Multimeter,,10.0,4850.0,48500.0,FLK-87V-PRO
+30,164,Laptop,Enterprise hardware refresh for operations and engineering teams,50.0,50000.0,2500000.0,SKU-0062
+31,1,Industrial Grade Titanium Rods,High-tensile Grade 5 Ti-6Al-4V titanium rods,50.0,500.0,25000.0,SKU-TI-050
+32,1,Carbon Fiber Reinforcement Sheets,Heavy-duty woven carbon weave panels,29.0,500.0,14500.0,SKU-CF-029
+33,165,Fluke 87V Precision Multimeter,,10.0,4850.0,48500.0,FLK-87V-PRO
+34,166,Fluke 87V Precision Multimeter,,10.0,4850.0,48500.0,FLK-87V-PRO
+35,167,Fluke 87V Precision Multimeter,,10.0,4850.0,48500.0,FLK-87V-PRO
+36,168,Fluke 87V Precision Multimeter,,10.0,4850.0,48500.0,FLK-87V-PRO
+37,169,phone,Enterprise hardware refresh for operations and engineering teams,50.0,499.54,24977.0,SKU-0067
+38,170,Fluke 87V Precision Multimeter,,10.0,4850.0,48500.0,FLK-87V-PRO
+39,171,Fluke 87V Precision Multimeter,,10.0,4850.0,48500.0,FLK-87V-PRO
+40,172,mouse,Enterprise hardware refresh for operations and engineering teams,5.0,50.0,250.0,SKU-0070
+41,173,Fluke 87V Precision Multimeter,,10.0,4850.0,48500.0,FLK-87V-PRO
+42,174,High-Grade Industrial Fasteners,,100.0,115.0,11500.0,
+43,176,Laptop,Data storage expansion for analytics team,2.0,7700.0,15400.0,SKU-0077
+44,177,Laptop,Data storage expansion for analytics team,2.0,7700.0,15400.0,SKU-0078
+45,178,High-Density Storage Server,Data storage expansion for analytics team,2.0,8000.0,16000.0,SKU-0076
+46,179,Fluke 87V Precision Multimeter,,10.0,4850.0,48500.0,FLK-87V-PRO
+47,180,Fluke 87V Precision Multimeter,,10.0,4850.0,48500.0,FLK-87V-PRO
+48,181,Fluke 87V Precision Multimeter,,10.0,4850.0,48500.0,FLK-87V-PRO
+49,182,High-Grade Industrial Fasteners,,100.0,115.0,11500.0,
+50,183,keyboard,Enterprise hardware refresh for operations and engineering teams,50.0,5000.0,250000.0,SKU-0089

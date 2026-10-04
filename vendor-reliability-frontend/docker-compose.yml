@@ -1,0 +1,50 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: vendoriq-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-vendoriq}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vendoriq_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-vendor_reliability}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vendoriq} -d ${POSTGRES_DB:-vendor_reliability}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ../vendor-reliability-backend
+      dockerfile: Dockerfile
+    container_name: vendoriq-backend
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-vendoriq}:${POSTGRES_PASSWORD:-vendoriq_secret}@db:5432/${POSTGRES_DB:-vendor_reliability}
+      - SECRET_KEY=${SECRET_KEY:-vendoriq_production_jwt_secret_key_2026}
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=480
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vendoriq-frontend
+    restart: unless-stopped
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+    driver: local

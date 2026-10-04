@@ -1,0 +1,191 @@
+<div class="reports-page">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+      <h1 class="page-title">Reports & Export Module</h1>
+      <p class="page-subtitle mb-0">
+        Generate dynamic intelligence reports across vendor performance, procurement, orders, compliance, and contracts
+      </p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <button class="btn btn-outline-danger btn-sm d-flex align-items-center gap-2 fw-semibold" (click)="exportPdf()" [disabled]="isLoading || !currentReport">
+        <i class="bi bi-file-earmark-pdf-fill"></i> Export PDF
+      </button>
+      <button class="btn btn-outline-success btn-sm d-flex align-items-center gap-2 fw-semibold" (click)="exportExcel()" [disabled]="isLoading || !currentReport">
+        <i class="bi bi-file-earmark-excel-fill"></i> Export Excel (.xls)
+      </button>
+      <button class="btn btn-outline-primary btn-sm d-flex align-items-center gap-2 fw-semibold" (click)="exportCsv()" [disabled]="isLoading || !currentReport">
+        <i class="bi bi-file-earmark-spreadsheet-fill"></i> Export CSV (.csv)
+      </button>
+      <button class="btn btn-light btn-sm border" (click)="loadSelectedReport()" title="Refresh Data">
+        <i class="bi bi-arrow-clockwise"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mandatory Report Selectors (6 Official Report Types) -->
+  <div class="row g-3 mb-4">
+    <div *ngFor="let rt of reportTypes" class="col-md-4 col-lg-2">
+      <div
+        class="iq-card p-3 h-100 cursor-pointer transition-all border"
+        [ngClass]="{
+          'border-primary bg-primary-subtle shadow-sm': selectedReportType === rt.key,
+          'hover-shadow': selectedReportType !== rt.key
+        }"
+        (click)="selectReport(rt.key)"
+        style="cursor: pointer;"
+      >
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <div class="stat-icon p-2 rounded" [ngClass]="selectedReportType === rt.key ? 'bg-primary text-white' : 'bg-light text-primary'" style="width: 34px; height: 34px; font-size: 1rem;">
+            <i class="bi" [ngClass]="rt.icon"></i>
+          </div>
+          <span class="fw-bold text-dark small">{{ rt.name }}</span>
+        </div>
+        <div class="text-muted" style="font-size: 0.72rem; line-height: 1.3;">
+          {{ rt.desc }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dynamic KPI Summary for Selected Report -->
+  <div *ngIf="currentReport" class="row g-3 mb-4">
+    <div *ngFor="let m of currentReport.keyMetrics" class="col-6 col-md-3">
+      <div class="stat-card p-3">
+        <div class="stat-value fs-4 fw-bold text-primary">{{ m.value }}</div>
+        <div class="stat-label small text-muted text-uppercase fw-semibold">{{ m.label }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Advanced Multi-Criteria Filter Toolbar (Date, Vendor, Category, Status, Risk) -->
+  <div class="iq-card p-3 mb-4 border">
+    <div class="row g-2 align-items-end">
+      <!-- Search Keyword -->
+      <div class="col-lg-3 col-md-6">
+        <label class="form-label small text-muted fw-bold mb-1">Search Keywords</label>
+        <div class="input-group input-group-sm">
+          <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+          <input
+            type="text"
+            class="form-control border-start-0"
+            [(ngModel)]="searchFilter"
+            (ngModelChange)="applyFilter()"
+            placeholder="Search vendor, title, ID..."
+          />
+        </div>
+      </div>
+
+      <!-- Category Filter -->
+      <div class="col-lg-2 col-md-6">
+        <label class="form-label small text-muted fw-bold mb-1">Vendor Category</label>
+        <select class="form-select form-select-sm" [(ngModel)]="categoryFilter" (ngModelChange)="applyFilter()">
+          <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
+        </select>
+      </div>
+
+      <!-- Risk Filter -->
+      <div class="col-lg-2 col-md-4">
+        <label class="form-label small text-muted fw-bold mb-1">Risk Exposure</label>
+        <select class="form-select form-select-sm" [(ngModel)]="riskFilter" (ngModelChange)="applyFilter()">
+          <option *ngFor="let r of riskLevels" [value]="r">{{ r }}</option>
+        </select>
+      </div>
+
+      <!-- Status Filter -->
+      <div class="col-lg-2 col-md-4">
+        <label class="form-label small text-muted fw-bold mb-1">Status</label>
+        <select class="form-select form-select-sm" [(ngModel)]="statusFilter" (ngModelChange)="applyFilter()">
+          <option *ngFor="let s of statuses" [value]="s">{{ s }}</option>
+        </select>
+      </div>
+
+      <!-- Date Range (From / To) -->
+      <div class="col-lg-2 col-md-4">
+        <label class="form-label small text-muted fw-bold mb-1">Date Range</label>
+        <div class="d-flex gap-1">
+          <input type="date" class="form-control form-control-sm" [(ngModel)]="dateFrom" (ngModelChange)="applyFilter()" title="From Date" />
+          <input type="date" class="form-control form-control-sm" [(ngModel)]="dateTo" (ngModelChange)="applyFilter()" title="To Date" />
+        </div>
+      </div>
+
+      <!-- Reset Button -->
+      <div class="col-lg-1 col-md-12 text-end">
+        <button type="button" class="btn btn-outline-secondary btn-sm w-100" (click)="resetFilters(); applyFilter()" title="Clear all filters">
+          Reset
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report Data Container & Interactive Table -->
+  <div class="iq-card p-0">
+    <div class="p-3 border-bottom d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+      <div class="d-flex align-items-center gap-2">
+        <h2 class="iq-card-title m-0">{{ currentReport?.reportType }}</h2>
+        <span class="badge bg-light text-dark border ms-2">
+          {{ filteredRows.length }} {{ filteredRows.length === 1 ? 'Record' : 'Records' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status"></div>
+      <div class="mt-2 text-muted small">Compiling live database report...</div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && filteredRows.length === 0" class="text-center py-5 text-muted">
+      <i class="bi bi-file-earmark-x fs-2 d-block mb-2"></i>
+      No records found matching your filter criteria.
+    </div>
+
+    <!-- Interactive Data Preview Table -->
+    <div *ngIf="!isLoading && filteredRows.length > 0" class="iq-table-container">
+      <table class="iq-table">
+        <thead>
+          <tr>
+            <th *ngFor="let col of currentReport?.columns">{{ col }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of filteredRows">
+            <td *ngFor="let col of currentReport?.columns">
+              <!-- Render badges for status columns -->
+              <ng-container [ngSwitch]="col">
+                <span *ngSwitchCase="'Approval Status'" class="iq-badge" [ngClass]="row[col] === 'Approved' ? 'badge-approved' : 'badge-pending'">
+                  {{ row[col] }}
+                </span>
+                <span *ngSwitchCase="'Status'" class="iq-badge" [ngClass]="row[col] === 'Active' || row[col] === 'Delivered' || row[col] === 'Completed' || row[col] === 'Approved' ? 'badge-approved' : 'badge-pending'">
+                  {{ row[col] }}
+                </span>
+                <span *ngSwitchCase="'Compliance Status'" class="iq-badge" [ngClass]="row[col] === 'Compliant' ? 'badge-compliant' : 'badge-rejected'">
+                  <i class="bi bi-shield-check"></i> {{ row[col] }}
+                </span>
+                <span *ngSwitchCase="'Risk Level'" class="badge" [ngClass]="row[col] === 'Low' ? 'bg-success' : (row[col] === 'Medium' ? 'bg-warning text-dark' : 'bg-danger')">
+                  {{ row[col] }}
+                </span>
+                <span *ngSwitchCase="'Delivery Rate'" class="fw-bold text-success">
+                  {{ row[col] }}
+                </span>
+                <span *ngSwitchDefault class="text-dark">
+                  {{ row[col] !== undefined && row[col] !== null ? row[col] : '-' }}
+                </span>
+              </ng-container>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Table Footer Metadata -->
+    <div *ngIf="currentReport" class="p-3 border-top bg-light d-flex justify-content-between align-items-center small text-muted">
+      <div>
+        <i class="bi bi-info-circle me-1"></i> Data automatically refreshed from live production database.
+      </div>
+      <div>
+        Generated at: <strong>{{ currentReport.generatedAt }}</strong>
+      </div>
+    </div>
+  </div>
+</div>

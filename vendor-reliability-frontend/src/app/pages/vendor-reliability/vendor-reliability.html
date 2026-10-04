@@ -1,0 +1,311 @@
+<div class="reliability-page">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+      <h1 class="page-title">Vendor Reliability & Risk Intelligence Module</h1>
+      <p class="page-subtitle mb-0">
+        Predictive supplier reliability scoring, multi-factor risk exposure, trend trajectories, and procurement recommendations
+      </p>
+    </div>
+    <div class="d-flex gap-2">
+      <a routerLink="/vendor-performance" class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1 fw-semibold">
+        <i class="bi bi-speedometer2"></i> Operational Performance
+      </a>
+      <button class="btn btn-light btn-sm border" (click)="loadProfiles()" title="Refresh reliability data">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters & Search -->
+  <div class="iq-card py-3 mb-4">
+    <div class="row g-3 align-items-center">
+      <div class="col-md-4">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+          <input
+            type="text"
+            class="form-control border-start-0"
+            [(ngModel)]="searchQuery"
+            (ngModelChange)="applyFilter()"
+            placeholder="Search vendor, company, or category..."
+          />
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <select class="form-select form-select-sm" [(ngModel)]="selectedCategory" (ngModelChange)="applyFilter()">
+          <option value="All">All Categories (6 Categories)</option>
+          <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+        </select>
+      </div>
+
+      <div class="col-md-3">
+        <select class="form-select form-select-sm" [(ngModel)]="selectedTier" (ngModelChange)="applyFilter()">
+          <option value="All">All Supplier Tiers</option>
+          <option value="Tier-1 Strategic">Tier-1 Strategic (90-100)</option>
+          <option value="Tier-2 Preferred">Tier-2 Preferred (80-89)</option>
+          <option value="Tier-3 Standard">Tier-3 Standard (65-79)</option>
+          <option value="At-Risk">At-Risk (&lt; 65)</option>
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <select class="form-select form-select-sm" [(ngModel)]="selectedRisk" (ngModelChange)="applyFilter()">
+          <option value="All">All Risk Levels</option>
+          <option value="Low">Low Risk</option>
+          <option value="Medium">Medium Risk</option>
+          <option value="High">High Risk</option>
+          <option value="Critical">Critical Risk</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status"></div>
+    <div class="mt-2 text-muted small">Computing supplier reliability matrices...</div>
+  </div>
+
+  <div *ngIf="!isLoading && filteredProfiles.length > 0" class="row g-4">
+    <!-- Left Column: Supplier Ranking & Tiering Table -->
+    <div class="col-lg-6">
+      <div class="iq-card p-0 h-100">
+        <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+          <div>
+            <h2 class="iq-card-title m-0">Supplier Reliability Rankings</h2>
+            <span class="text-muted small">Select any supplier to inspect 6 reliability factors</span>
+          </div>
+          <span class="badge bg-light text-dark border">{{ filteredProfiles.length }} Suppliers</span>
+        </div>
+
+        <div class="iq-table-container">
+          <table class="iq-table">
+            <thead>
+              <tr>
+                <th style="width: 50px;">Rank</th>
+                <th>Supplier</th>
+                <th>Score</th>
+                <th>Tier</th>
+                <th>Risk</th>
+                <th>Trend</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let p of filteredProfiles"
+                (click)="selectProfile(p)"
+                [ngClass]="{ 'table-primary': selectedProfile?.vendorId === p.vendorId }"
+                style="cursor: pointer;"
+              >
+                <td>
+                  <span class="badge rounded-circle px-2 py-1" [ngClass]="p.rank <= 3 ? 'bg-primary text-white' : 'bg-light text-dark border'">
+                    {{ p.rank }}
+                  </span>
+                </td>
+                <td>
+                  <div class="fw-bold text-dark">{{ p.vendorName }}</div>
+                  <div class="small text-muted">{{ p.category }}</div>
+                </td>
+                <td>
+                  <span class="fs-6 fw-bold" [ngClass]="p.reliabilityScore >= 90 ? 'text-success' : (p.reliabilityScore >= 80 ? 'text-primary' : 'text-danger')">
+                    {{ p.reliabilityScore }}
+                  </span>
+                  <span class="small text-muted">/100</span>
+                </td>
+                <td>
+                  <span class="badge small" [ngClass]="getTierBadgeClass(p.tier)">
+                    {{ p.tier }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge small" [ngClass]="getRiskBadgeClass(p.riskLevel)">
+                    {{ p.riskLevel }}
+                  </span>
+                </td>
+                <td>
+                  <span class="small fw-semibold d-flex align-items-center gap-1">
+                    <i class="bi" [ngClass]="getTrendIcon(p.trend)"></i>
+                    {{ p.trendDelta > 0 ? '+' : '' }}{{ p.trendDelta }}%
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Deep Dive on Selected Vendor -->
+    <div class="col-lg-6" *ngIf="selectedProfile as sp">
+      <!-- Profile Header Summary -->
+      <div class="iq-card mb-4">
+        <div class="d-flex justify-content-between align-items-start border-bottom pb-3 mb-3">
+          <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <h2 class="fs-5 fw-bold m-0 text-dark">{{ sp.vendorName }}</h2>
+              <span class="badge" [ngClass]="getTierBadgeClass(sp.tier)">{{ sp.tier }}</span>
+              <span class="badge" [ngClass]="getRiskBadgeClass(sp.riskLevel)">Risk: {{ sp.riskLevel }}</span>
+            </div>
+            <div class="small text-muted">{{ sp.company }} &bull; {{ sp.category }}</div>
+          </div>
+          <div class="text-end">
+            <div class="display-6 fw-bold" [ngClass]="sp.reliabilityScore >= 90 ? 'text-success' : 'text-primary'">
+              {{ sp.reliabilityScore }}
+            </div>
+            <div class="small text-muted text-uppercase fw-semibold">Reliability Score</div>
+          </div>
+        </div>
+
+        <!-- The 6 Reliability Factors Breakdown -->
+        <div class="mb-4">
+          <h3 class="fs-6 fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+            <i class="bi bi-grid-3x3-gap-fill text-primary"></i> 6-Factor Reliability Matrix
+          </h3>
+
+          <div class="row g-2">
+            <!-- 1. Delivery History (30%) -->
+            <div class="col-md-6">
+              <div class="p-2 bg-light rounded border">
+                <div class="d-flex justify-content-between small mb-1">
+                  <span class="fw-semibold">1. Delivery History (30% wt)</span>
+                  <span class="fw-bold text-success">{{ sp.factors.deliveryHistory.onTimeRate }}%</span>
+                </div>
+                <div class="progress mb-1" style="height: 6px;">
+                  <div class="progress-bar bg-success" [style.width.%]="sp.factors.deliveryHistory.score"></div>
+                </div>
+                <div class="text-muted" style="font-size: 0.7rem;">
+                  {{ sp.factors.deliveryHistory.onTimeDeliveries }} on-time &bull; {{ sp.factors.deliveryHistory.delayedDeliveries }} delayed
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. Product Quality (25%) -->
+            <div class="col-md-6">
+              <div class="p-2 bg-light rounded border">
+                <div class="d-flex justify-content-between small mb-1">
+                  <span class="fw-semibold">2. Product Quality (25% wt)</span>
+                  <span class="fw-bold text-primary">{{ sp.factors.productQuality.rating }} / 5.0</span>
+                </div>
+                <div class="progress mb-1" style="height: 6px;">
+                  <div class="progress-bar bg-primary" [style.width.%]="sp.factors.productQuality.score"></div>
+                </div>
+                <div class="text-muted" style="font-size: 0.7rem;">
+                  Pass rate: {{ sp.factors.productQuality.inspectionPassRate }}% &bull; Defect: {{ sp.factors.productQuality.defectRate }}%
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. Communication Efficiency (15%) -->
+            <div class="col-md-6">
+              <div class="p-2 bg-light rounded border">
+                <div class="d-flex justify-content-between small mb-1">
+                  <span class="fw-semibold">3. Communication (15% wt)</span>
+                  <span class="fw-bold text-warning">{{ sp.factors.communicationEfficiency.responseTimeHours }}h avg</span>
+                </div>
+                <div class="progress mb-1" style="height: 6px;">
+                  <div class="progress-bar bg-warning" [style.width.%]="sp.factors.communicationEfficiency.score"></div>
+                </div>
+                <div class="text-muted" style="font-size: 0.7rem;">
+                  Response rate: {{ sp.factors.communicationEfficiency.responseRate }}% within SLA
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. Contract Compliance (15%) -->
+            <div class="col-md-6">
+              <div class="p-2 bg-light rounded border">
+                <div class="d-flex justify-content-between small mb-1">
+                  <span class="fw-semibold">4. Compliance (15% wt)</span>
+                  <span class="fw-bold text-info">{{ sp.factors.contractCompliance.complianceStatus }}</span>
+                </div>
+                <div class="progress mb-1" style="height: 6px;">
+                  <div class="progress-bar bg-info" [style.width.%]="sp.factors.contractCompliance.score"></div>
+                </div>
+                <div class="text-muted" style="font-size: 0.7rem;">
+                  SLA adherence: {{ sp.factors.contractCompliance.slaAdherenceRate }}%
+                </div>
+              </div>
+            </div>
+
+            <!-- 5. Purchase History (10%) -->
+            <div class="col-md-6">
+              <div class="p-2 bg-light rounded border">
+                <div class="d-flex justify-content-between small mb-1">
+                  <span class="fw-semibold">5. Purchase Volume (10% wt)</span>
+                  <span class="fw-bold text-dark">{{ sp.factors.purchaseHistory.totalOrders }} POs</span>
+                </div>
+                <div class="progress mb-1" style="height: 6px;">
+                  <div class="progress-bar bg-secondary" [style.width.%]="sp.factors.purchaseHistory.score"></div>
+                </div>
+                <div class="text-muted" style="font-size: 0.7rem;">
+                  {{ sp.factors.purchaseHistory.completedOrders }} completed &bull; Total ${{ sp.factors.purchaseHistory.totalSpend.toLocaleString() }}
+                </div>
+              </div>
+            </div>
+
+            <!-- 6. Issue Resolution (5%) -->
+            <div class="col-md-6">
+              <div class="p-2 bg-light rounded border">
+                <div class="d-flex justify-content-between small mb-1">
+                  <span class="fw-semibold">6. Issue Resolution (5% wt)</span>
+                  <span class="fw-bold text-success">{{ sp.factors.issueResolution.resolutionRate }}%</span>
+                </div>
+                <div class="progress mb-1" style="height: 6px;">
+                  <div class="progress-bar bg-success" [style.width.%]="sp.factors.issueResolution.score"></div>
+                </div>
+                <div class="text-muted" style="font-size: 0.7rem;">
+                  Avg resolution: {{ sp.factors.issueResolution.avgResolutionTimeHours }} hrs
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Performance Trend Analysis (Historical Trajectory) -->
+        <div class="mb-4">
+          <h3 class="fs-6 fw-bold text-dark mb-2 d-flex align-items-center gap-2">
+            <i class="bi bi-graph-up-arrow text-primary"></i> Performance Trend Trajectory (Last 6 Months)
+          </h3>
+          <div class="p-3 bg-light rounded border">
+            <div class="d-flex justify-content-between align-items-center mb-2 small text-muted">
+              <span>Trajectory Direction: <strong class="text-dark">{{ sp.trend }} ({{ sp.trendDelta > 0 ? '+' : '' }}{{ sp.trendDelta }}%)</strong></span>
+              <span>Benchmark: 85+ Target</span>
+            </div>
+            <div class="d-flex justify-content-between gap-1 text-center">
+              <div *ngFor="let t of sp.historicalTrends" class="flex-grow-1">
+                <div class="d-flex flex-column align-items-center" style="height: 80px; justify-content: flex-end;">
+                  <div class="small fw-bold mb-1" style="font-size: 0.7rem;">{{ t.score }}</div>
+                  <div class="w-100 rounded-top" [style.height.px]="t.score * 0.5" [ngClass]="t.score >= 90 ? 'bg-success' : (t.score >= 80 ? 'bg-primary' : 'bg-warning')"></div>
+                </div>
+                <div class="small text-muted mt-1" style="font-size: 0.75rem;">{{ t.month }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Procurement Recommendations -->
+        <div>
+          <h3 class="fs-6 fw-bold text-dark mb-2 d-flex align-items-center gap-2">
+            <i class="bi bi-lightbulb-fill text-warning"></i> Predictive Procurement Recommendations
+          </h3>
+          <div class="d-flex flex-column gap-2">
+            <div *ngFor="let rec of sp.recommendations" class="p-2 px-3 rounded border d-flex align-items-start gap-2 small bg-white">
+              <i class="bi bi-check-circle-fill text-primary mt-1"></i>
+              <span>{{ rec }}</span>
+            </div>
+          </div>
+
+          <div class="mt-3 d-flex justify-content-end gap-2">
+            <a [routerLink]="['/vendor-details', sp.vendorId]" class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-person-lines-fill"></i> Vendor Profile
+            </a>
+            <a routerLink="/procurement" class="btn btn-sm btn-primary">
+              <i class="bi bi-cart-plus"></i> Initiate Requisition
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

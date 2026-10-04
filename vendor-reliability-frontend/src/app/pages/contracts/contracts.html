@@ -1,0 +1,422 @@
+<div class="contracts-page">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+      <h1 class="page-title">{{ authService.currentUserValue?.role === 'Vendor' ? 'My Contracts & Compliance' : 'Contract & Compliance Module' }}</h1>
+      <p class="page-subtitle mb-0">
+        {{ authService.currentUserValue?.role === 'Vendor' ? 'Master agreements, regulatory certifications, and renewal schedules' : 'Contract repository, automated renewal tracking, certification compliance, and documentation' }}
+      </p>
+    </div>
+    <div class="d-flex gap-2">
+      <button *ngIf="authService.hasRole(['Administrator', 'Procurement Manager', 'Supply Chain Manager'])" class="btn-iq-primary btn-sm" (click)="openNewModal()">
+        <i class="bi bi-file-earmark-plus"></i> Add New Contract
+      </button>
+      <button class="btn btn-light btn-sm border" (click)="loadContracts()" title="Refresh contracts">
+        <i class="bi bi-arrow-clockwise"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mandatory Expiry Notification Banner -->
+  <div *ngIf="expiringContracts.length > 0" class="alert alert-warning border-warning d-flex align-items-center justify-content-between mb-4 shadow-sm">
+    <div class="d-flex align-items-center gap-3">
+      <i class="bi bi-exclamation-triangle-fill fs-4 text-warning"></i>
+      <div>
+        <strong>Contract Expiry Alert:</strong>
+        {{ expiringContracts.length }} contract{{ expiringContracts.length > 1 ? 's are' : ' is' }} expiring within 90 days.
+        <span class="d-block small text-muted">Review renewal terms and execute extensions to maintain compliant procurement operations.</span>
+      </div>
+    </div>
+    <button class="btn btn-warning btn-sm fw-semibold" (click)="activeTab = 'renewals'">
+      <i class="bi bi-calendar-event"></i> View Expirations
+    </button>
+  </div>
+
+  <!-- KPI Metrics Bar -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="stat-card p-3">
+        <div class="stat-value fs-4 fw-bold text-dark">{{ contracts.length }}</div>
+        <div class="stat-label small text-muted text-uppercase fw-semibold">Active Repository</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card p-3">
+        <div class="stat-value fs-4 fw-bold text-primary">{{ totalContractValue | currency }}</div>
+        <div class="stat-label small text-muted text-uppercase fw-semibold">Committed Portfolio Value</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card p-3">
+        <div class="stat-value fs-4 fw-bold text-success">
+          {{ contracts.length ? ((compliantCount / contracts.length) * 100 | number:'1.0-1') : 100 }}%
+        </div>
+        <div class="stat-label small text-muted text-uppercase fw-semibold">Compliance Rate</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card p-3">
+        <div class="stat-value fs-4 fw-bold" [ngClass]="expiringCount > 0 ? 'text-warning' : 'text-muted'">
+          {{ expiringCount }}
+        </div>
+        <div class="stat-label small text-muted text-uppercase fw-semibold">Expiring in &le; 60 Days</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Module Navigation Tabs -->
+  <div class="iq-card p-0 mb-4">
+    <div class="d-flex border-bottom px-4 pt-2 gap-3 flex-wrap">
+      <button
+        class="btn pb-3 px-2 border-0 fw-semibold"
+        [ngClass]="activeTab === 'repository' ? 'text-primary border-bottom border-primary border-3' : 'text-muted'"
+        (click)="activeTab = 'repository'"
+      >
+        <i class="bi bi-journal-text me-1"></i> Contract Repository ({{ contracts.length }})
+      </button>
+      <button
+        class="btn pb-3 px-2 border-0 fw-semibold"
+        [ngClass]="activeTab === 'renewals' ? 'text-primary border-bottom border-primary border-3' : 'text-muted'"
+        (click)="activeTab = 'renewals'"
+      >
+        <i class="bi bi-calendar-check me-1"></i> Renewal Tracking ({{ expiringContracts.length }})
+      </button>
+      <button
+        class="btn pb-3 px-2 border-0 fw-semibold"
+        [ngClass]="activeTab === 'certifications' ? 'text-primary border-bottom border-primary border-3' : 'text-muted'"
+        (click)="activeTab = 'certifications'"
+      >
+        <i class="bi bi-patch-check me-1"></i> Certification Management ({{ certifications.length }})
+      </button>
+      <button
+        class="btn pb-3 px-2 border-0 fw-semibold"
+        [ngClass]="activeTab === 'documents' ? 'text-primary border-bottom border-primary border-3' : 'text-muted'"
+        (click)="activeTab = 'documents'"
+      >
+        <i class="bi bi-file-earmark-lock me-1"></i> Vendor Documentation ({{ documents.length }})
+      </button>
+    </div>
+
+    <!-- TAB 1: CONTRACT REPOSITORY -->
+    <div *ngIf="activeTab === 'repository'" class="p-3">
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <select class="form-select form-select-sm" [(ngModel)]="selectedStatus" (ngModelChange)="loadContracts()">
+            <option value="All">All Contract Statuses</option>
+            <option value="Active">Active</option>
+            <option value="Pending Review">Pending Review</option>
+            <option value="Renewed">Renewed</option>
+            <option value="Expired">Expired</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <select class="form-select form-select-sm" [(ngModel)]="selectedCompliance" (ngModelChange)="loadContracts()">
+            <option value="All">All Compliance Statuses</option>
+            <option value="Compliant">Compliant</option>
+            <option value="Under Review">Under Review</option>
+            <option value="Non-Compliant">Non-Compliant</option>
+          </select>
+        </div>
+      </div>
+
+      <div *ngIf="isLoading" class="text-center py-5">
+        <div class="spinner-border text-primary"></div>
+      </div>
+
+      <div *ngIf="!isLoading && contracts.length === 0" class="text-center py-5 text-muted">
+        <i class="bi bi-file-earmark-text fs-2 d-block mb-2"></i> No contracts found.
+      </div>
+
+      <div *ngIf="!isLoading && contracts.length > 0" class="iq-table-container">
+        <table class="iq-table">
+          <thead>
+            <tr>
+              <th>Contract # & Title</th>
+              <th *ngIf="authService.currentUserValue?.role !== 'Vendor'">Vendor</th>
+              <th>Value</th>
+              <th>Start Date</th>
+              <th>Expiry Date</th>
+              <th>Renewal Countdown</th>
+              <th>Compliance</th>
+              <th>Status</th>
+              <th class="text-end" *ngIf="authService.hasRole(['Administrator', 'Procurement Manager'])">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of contracts">
+              <td>
+                <div class="fw-bold text-dark">{{ c.contract_number }}</div>
+                <div class="small text-muted">{{ c.title }}</div>
+              </td>
+              <td *ngIf="authService.currentUserValue?.role !== 'Vendor'">
+                <span *ngIf="c.vendor" class="fw-semibold text-primary">{{ c.vendor.name }}</span>
+              </td>
+              <td class="fw-bold">{{ c.contract_value | currency }}</td>
+              <td class="small">{{ c.start_date | date:'mediumDate' }}</td>
+              <td class="small fw-semibold">{{ c.expiry_date | date:'mediumDate' }}</td>
+              <td>
+                <span class="badge" [ngClass]="getExpiryBadgeClass(c.expiry_date)">
+                  {{ getExpiryLabel(c.expiry_date) }}
+                </span>
+              </td>
+              <td>
+                <span class="iq-badge" [ngClass]="c.compliance_status === 'Compliant' ? 'badge-compliant' : 'badge-rejected'">
+                  <i class="bi bi-shield-check"></i> {{ c.compliance_status }}
+                </span>
+              </td>
+              <td>
+                <span class="iq-badge badge-active">{{ c.status }}</span>
+              </td>
+              <td class="text-end" *ngIf="authService.hasRole(['Administrator', 'Procurement Manager'])">
+                <button class="btn btn-outline-primary btn-sm py-0 px-2" (click)="openRenewModal(c)">
+                  Renew
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 2: CONTRACT RENEWAL TRACKING -->
+    <div *ngIf="activeTab === 'renewals'" class="p-3">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="fs-6 fw-bold m-0">Upcoming Renewal Schedule (Within 90 Days)</h3>
+        <span class="text-muted small">Automatic early notifications generated 60 days prior to expiry</span>
+      </div>
+
+      <div *ngIf="expiringContracts.length === 0" class="p-4 text-center text-muted bg-light rounded border">
+        <i class="bi bi-check-circle-fill text-success fs-2 d-block mb-2"></i>
+        All active vendor contracts are healthy and outside the immediate 90-day renewal window.
+      </div>
+
+      <div *ngIf="expiringContracts.length > 0" class="d-flex flex-column gap-3">
+        <div *ngFor="let c of expiringContracts" class="p-3 bg-light rounded border d-flex justify-content-between align-items-center flex-wrap gap-3">
+          <div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="fw-bold text-dark fs-6">{{ c.title }}</span>
+              <span class="badge bg-dark">{{ c.contract_number }}</span>
+              <span class="badge" [ngClass]="getExpiryBadgeClass(c.expiry_date)">
+                {{ getExpiryLabel(c.expiry_date) }}
+              </span>
+            </div>
+            <div class="small text-muted mt-1">
+              <strong>Supplier:</strong> {{ c.vendor?.name || 'Associated Vendor' }} &bull;
+              <strong>Current Value:</strong> {{ c.contract_value | currency }} &bull;
+              <strong>Expiry:</strong> {{ c.expiry_date | date:'mediumDate' }}
+            </div>
+            <div class="small text-muted mt-1">
+              <i class="bi bi-arrow-repeat me-1"></i> <strong>Renewal Terms:</strong> {{ c.renewal_terms }}
+            </div>
+          </div>
+          <button *ngIf="authService.hasRole(['Administrator', 'Procurement Manager'])" class="btn btn-primary btn-sm fw-semibold" (click)="openRenewModal(c)">
+            <i class="bi bi-check2-circle"></i> Execute Renewal Extension
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: CERTIFICATION MANAGEMENT -->
+    <div *ngIf="activeTab === 'certifications'" class="p-3">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h3 class="fs-6 fw-bold m-0">Supplier Certification Registry</h3>
+          <span class="text-muted small">Track ISO, OSHA, environmental, and security compliance credentials</span>
+        </div>
+        <button *ngIf="authService.hasRole(['Administrator', 'Procurement Manager'])" class="btn btn-sm btn-outline-primary" (click)="openCertModal()">
+          <i class="bi bi-plus-circle"></i> Register Certification
+        </button>
+      </div>
+
+      <div class="iq-table-container">
+        <table class="iq-table">
+          <thead>
+            <tr>
+              <th>Supplier</th>
+              <th>Certification Standard</th>
+              <th>Certificate #</th>
+              <th>Auditing / Issuing Body</th>
+              <th>Valid Until</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let cert of certifications">
+              <td class="fw-bold text-dark">{{ cert.vendor_name }}</td>
+              <td>
+                <span class="fw-semibold text-primary">{{ cert.cert_name }}</span>
+              </td>
+              <td><code>{{ cert.cert_number }}</code></td>
+              <td>{{ cert.issuing_body }}</td>
+              <td>{{ cert.expiry_date | date:'mediumDate' }}</td>
+              <td>
+                <span class="badge" [ngClass]="cert.status === 'Valid' ? 'bg-success' : 'bg-warning text-dark'">
+                  <i class="bi" [ngClass]="cert.status === 'Valid' ? 'bi-shield-check' : 'bi-exclamation-circle'"></i>
+                  {{ cert.status }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 4: VENDOR DOCUMENTATION -->
+    <div *ngIf="activeTab === 'documents'" class="p-3">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h3 class="fs-6 fw-bold m-0">Vendor Documentation Repository</h3>
+          <span class="text-muted small">Centralized storage for NDAs, MSAs, Tax W-9 forms, and Insurance Certificates</span>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <div *ngFor="let doc of documents" class="col-md-6">
+          <div class="p-3 bg-light rounded border d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+              <div class="stat-icon blue p-2 rounded" style="width: 40px; height: 40px; font-size: 1.2rem;">
+                <i class="bi bi-file-earmark-pdf"></i>
+              </div>
+              <div>
+                <div class="fw-bold text-dark small">{{ doc.title }}</div>
+                <div class="text-muted" style="font-size: 0.75rem;">
+                  {{ doc.vendor_name }} &bull; {{ doc.category }} &bull; {{ doc.file_size }}
+                </div>
+                <div class="badge bg-success-subtle text-success border border-success mt-1" style="font-size: 0.7rem;">
+                  <i class="bi bi-check2"></i> {{ doc.status }}
+                </div>
+              </div>
+            </div>
+            <button class="btn btn-outline-primary btn-sm" (click)="downloadDoc(doc)" title="Download document">
+              <i class="bi bi-download"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Contract Modal -->
+  <div *ngIf="showModal" class="iq-modal-backdrop" (click)="closeModal()">
+    <div class="iq-modal" (click)="$event.stopPropagation()">
+      <h3 class="fs-5 fw-bold mb-3 border-bottom pb-2">Register Vendor Contract</h3>
+      <form (ngSubmit)="submitContract()">
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Contract Title *</label>
+          <input type="text" class="form-control form-control-sm" [(ngModel)]="newContract.title" name="ctitle" placeholder="e.g. Master Supply Agreement 2026" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Associated Vendor *</label>
+          <select class="form-select form-select-sm" [(ngModel)]="newContract.vendor_id" name="cvendor" required>
+            <option *ngFor="let v of vendors" [value]="v.id">{{ v.name }} ({{ v.company }})</option>
+          </select>
+        </div>
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label fw-semibold small">Start Date *</label>
+            <input type="date" class="form-control form-control-sm" [(ngModel)]="newContract.start_date" name="cstart" required>
+          </div>
+          <div class="col-6">
+            <label class="form-label fw-semibold small">Expiry Date *</label>
+            <input type="date" class="form-control form-control-sm" [(ngModel)]="newContract.expiry_date" name="cexpiry" required>
+          </div>
+        </div>
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label fw-semibold small">Contract Value ($)</label>
+            <input type="number" class="form-control form-control-sm" [(ngModel)]="newContract.contract_value" name="cval">
+          </div>
+          <div class="col-6">
+            <label class="form-label fw-semibold small">Compliance Status</label>
+            <select class="form-select form-select-sm" [(ngModel)]="newContract.compliance_status" name="ccomp">
+              <option value="Compliant">Compliant</option>
+              <option value="Under Review">Under Review</option>
+              <option value="Non-Compliant">Non-Compliant</option>
+            </select>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Renewal Terms</label>
+          <input type="text" class="form-control form-control-sm" [(ngModel)]="newContract.renewal_terms" name="crenewal">
+        </div>
+        <div class="d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm">Save Contract</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Renew Contract Modal -->
+  <div *ngIf="showRenewModal && selectedContractForRenew" class="iq-modal-backdrop" (click)="closeRenewModal()">
+    <div class="iq-modal" (click)="$event.stopPropagation()">
+      <h3 class="fs-5 fw-bold mb-3 border-bottom pb-2">
+        <i class="bi bi-arrow-repeat text-primary"></i> Renew Contract: {{ selectedContractForRenew.contract_number }}
+      </h3>
+      <p class="text-muted small mb-3">
+        Extend duration and update commercial terms for <strong>{{ selectedContractForRenew.title }}</strong>.
+      </p>
+      <form (ngSubmit)="submitRenewal()">
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Extension Duration (Months) *</label>
+          <select class="form-select form-select-sm" [(ngModel)]="renewalForm.extensionMonths" name="extMonths">
+            <option [ngValue]="6">6 Months</option>
+            <option [ngValue]="12">12 Months (1 Year)</option>
+            <option [ngValue]="24">24 Months (2 Years)</option>
+            <option [ngValue]="36">36 Months (3 Years)</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Updated Renewal Terms & Conditions</label>
+          <textarea class="form-control form-control-sm" rows="3" [(ngModel)]="renewalForm.revisedTerms" name="revTerms"></textarea>
+        </div>
+        <div class="d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="closeRenewModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm fw-bold">Confirm Renewal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Register Certification Modal -->
+  <div *ngIf="showCertModal" class="iq-modal-backdrop" (click)="showCertModal = false">
+    <div class="iq-modal" (click)="$event.stopPropagation()">
+      <h3 class="fs-5 fw-bold mb-3 border-bottom pb-2">Register Supplier Certification</h3>
+      <form (ngSubmit)="submitCert()">
+        <div class="mb-2">
+          <label class="form-label fw-semibold small">Supplier *</label>
+          <select class="form-select form-select-sm" [(ngModel)]="newCert.vendor_id" name="certVendor" required>
+            <option *ngFor="let v of vendors" [value]="v.id">{{ v.name }}</option>
+          </select>
+        </div>
+        <div class="mb-2">
+          <label class="form-label fw-semibold small">Certification Standard *</label>
+          <input type="text" class="form-control form-control-sm" [(ngModel)]="newCert.cert_name" name="certName" placeholder="e.g. ISO 9001:2015 Quality Management" required>
+        </div>
+        <div class="row g-2 mb-2">
+          <div class="col-6">
+            <label class="form-label fw-semibold small">Certificate # *</label>
+            <input type="text" class="form-control form-control-sm" [(ngModel)]="newCert.cert_number" name="certNum" required>
+          </div>
+          <div class="col-6">
+            <label class="form-label fw-semibold small">Issuing Body</label>
+            <input type="text" class="form-control form-control-sm" [(ngModel)]="newCert.issuing_body" name="certBody">
+          </div>
+        </div>
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label fw-semibold small">Issue Date</label>
+            <input type="date" class="form-control form-control-sm" [(ngModel)]="newCert.issue_date" name="certIssue">
+          </div>
+          <div class="col-6">
+            <label class="form-label fw-semibold small">Expiry Date *</label>
+            <input type="date" class="form-control form-control-sm" [(ngModel)]="newCert.expiry_date" name="certExpiry" required>
+          </div>
+        </div>
+        <div class="d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="showCertModal = false">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm">Save Certification</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

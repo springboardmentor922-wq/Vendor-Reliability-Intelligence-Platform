@@ -1,0 +1,345 @@
+<div class="comms-page">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+      <h1 class="page-title">Communication Module</h1>
+      <p class="page-subtitle mb-0">
+        Vendor messaging, procurement discussions, communication history, email dispatch tracking, file sharing, and audit logs
+      </p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1 fw-semibold" (click)="openEmailModal()">
+        <i class="bi bi-envelope-paper"></i> Dispatch Email Alert
+      </button>
+      <button class="btn btn-light btn-sm border" (click)="loadMessages(); loadAuditLogs()" title="Refresh messages">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+      </button>
+    </div>
+  </div>
+
+  <div class="iq-card p-0 mb-4">
+    <!-- Sub-Module Tabs -->
+    <div class="d-flex border-bottom px-4 pt-2 gap-3 flex-wrap">
+      <button
+        class="btn pb-3 px-2 border-0 fw-semibold"
+        [ngClass]="activeTab === 'threads' ? 'text-primary border-bottom border-primary border-3' : 'text-muted'"
+        (click)="activeTab = 'threads'"
+      >
+        <i class="bi bi-chat-dots me-1"></i> Vendor Messaging ({{ messages.length }})
+      </button>
+      <button
+        class="btn pb-3 px-2 border-0 fw-semibold"
+        [ngClass]="activeTab === 'procurement' ? 'text-primary border-bottom border-primary border-3' : 'text-muted'"
+        (click)="activeTab = 'procurement'"
+      >
+        <i class="bi bi-cart-check me-1"></i> Procurement Discussions
+      </button>
+      <button
+        class="btn pb-3 px-2 border-0 fw-semibold"
+        [ngClass]="activeTab === 'files' ? 'text-primary border-bottom border-primary border-3' : 'text-muted'"
+        (click)="activeTab = 'files'"
+      >
+        <i class="bi bi-paperclip me-1"></i> Shared Files & Specs
+      </button>
+      <button
+        class="btn pb-3 px-2 border-0 fw-semibold"
+        [ngClass]="activeTab === 'email_logs' ? 'text-primary border-bottom border-primary border-3' : 'text-muted'"
+        (click)="activeTab = 'email_logs'"
+      >
+        <i class="bi bi-envelope-check me-1"></i> Email Notifications Log ({{ emailLogs.length }})
+      </button>
+      <button
+        class="btn pb-3 px-2 border-0 fw-semibold"
+        [ngClass]="activeTab === 'audit' ? 'text-primary border-bottom border-primary border-3' : 'text-muted'"
+        (click)="activeTab = 'audit'"
+      >
+        <i class="bi bi-clock-history me-1"></i> Activity Audit Logs ({{ auditLogs.length }})
+      </button>
+    </div>
+
+    <!-- TAB 1 & 2: VENDOR MESSAGING & PROCUREMENT DISCUSSIONS -->
+    <div *ngIf="activeTab === 'threads' || activeTab === 'procurement'" class="p-4">
+      <!-- Post New Message Form with File Sharing -->
+      <div class="p-3 bg-light rounded border mb-4">
+        <h2 class="fs-6 fw-bold mb-3 text-dark d-flex align-items-center gap-2">
+          <i class="bi bi-pencil-square text-primary"></i>
+          {{ activeTab === 'procurement' ? 'Post Procurement Requisition Discussion' : 'Send Vendor Message / Inquiry' }}
+        </h2>
+        <form (ngSubmit)="sendMessage()">
+          <div class="row g-2 mb-2">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Subject / Topic *</label>
+              <input type="text" class="form-control form-control-sm" [(ngModel)]="newMessage.subject" name="msgsub" placeholder="e.g. Delivery Schedule Coordination" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Target Supplier</label>
+              <select class="form-select form-select-sm" [(ngModel)]="newMessage.vendor_id" name="msgvendor">
+                <option [ngValue]="undefined">Select Relevant Supplier (Optional)</option>
+                <option *ngFor="let v of vendors" [value]="v.id">{{ v.name }} ({{ v.company }})</option>
+              </select>
+            </div>
+            <div class="col-md-6" *ngIf="activeTab === 'procurement'">
+              <label class="form-label small fw-semibold">Link Procurement Request</label>
+              <select class="form-select form-select-sm" [(ngModel)]="newMessage.procurement_request_id" name="msgpr">
+                <option [ngValue]="undefined">Link Procurement Request (Optional)</option>
+                <option *ngFor="let pr of procurementRequests" [value]="pr.id">PR-{{ pr.request_number || pr.id }}: {{ pr.title }}</option>
+              </select>
+            </div>
+            <div class="col-md-6" *ngIf="activeTab === 'procurement'">
+              <label class="form-label small fw-semibold">Link Purchase Order</label>
+              <select class="form-select form-select-sm" [(ngModel)]="newMessage.purchase_order_id" name="msgpo">
+                <option [ngValue]="undefined">Link Purchase Order (Optional)</option>
+                <option *ngFor="let po of purchaseOrders" [value]="po.id">{{ po.po_number }} ({{ po.vendor?.name }})</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">Message Content *</label>
+            <textarea class="form-control form-control-sm" rows="3" [(ngModel)]="newMessage.message" name="msgbody" placeholder="Write discussion details, delivery updates, or SLA queries..." required></textarea>
+          </div>
+
+          <!-- File Attachment Control -->
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 pt-2 border-top">
+            <div class="d-flex align-items-center gap-2">
+              <label class="btn btn-sm btn-outline-secondary mb-0 cursor-pointer" style="cursor: pointer;">
+                <i class="bi bi-paperclip"></i> Attach File / Spec
+                <input type="file" (change)="onFileSelected($event)" style="display: none;">
+              </label>
+
+              <span *ngIf="attachedFileName" class="badge bg-light text-dark border d-flex align-items-center gap-1">
+                <i class="bi bi-file-earmark-check text-success"></i>
+                {{ attachedFileName }} ({{ attachedFileSize }})
+                <i class="bi bi-x text-danger cursor-pointer ms-1" (click)="removeAttachment()" style="cursor: pointer;" title="Remove"></i>
+              </span>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-sm fw-bold px-3">
+              <i class="bi bi-send"></i> Post Discussion
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Filters for Message Stream -->
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h3 class="fs-6 fw-bold m-0 text-dark">Communication History</h3>
+        <div class="d-flex gap-2" style="max-width: 450px; width: 100%;">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+            <input
+              type="text"
+              class="form-control border-start-0"
+              [(ngModel)]="messageSearchQuery"
+              (ngModelChange)="filterMessages()"
+              placeholder="Search conversations..."
+            />
+          </div>
+          <select class="form-select form-select-sm" style="width: 170px;" [(ngModel)]="selectedVendorFilter" (ngModelChange)="filterMessages()">
+            <option value="All">All Suppliers</option>
+            <option *ngFor="let v of vendors" [value]="v.id">{{ v.name }}</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Messages Stream -->
+      <div *ngIf="filteredMessages.length === 0" class="p-5 text-center text-muted bg-light rounded border">
+        <i class="bi bi-chat-left-text fs-2 d-block mb-2"></i>
+        No communication messages found.
+      </div>
+
+      <div class="d-flex flex-column gap-3">
+        <div *ngFor="let m of filteredMessages" class="p-3 bg-white border rounded shadow-sm">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+              <div class="fw-bold text-dark fs-6">{{ m.subject }}</div>
+              <div class="small text-muted">
+                <strong>Recipient/Vendor:</strong> {{ getVendorName(m.vendor_id) }}
+                <span *ngIf="m.procurement_request_id" class="ms-2 badge bg-light text-primary border">
+                  {{ getPRTitle(m.procurement_request_id) }}
+                </span>
+                <span *ngIf="m.purchase_order_id" class="ms-2 badge bg-light text-success border">
+                  PO #{{ m.purchase_order_id }}
+                </span>
+              </div>
+            </div>
+            <span class="text-muted small" style="font-size: 0.75rem;">{{ m.created_at | date:'medium' }}</span>
+          </div>
+
+          <p class="text-dark small mb-3 bg-light p-2 rounded">{{ m.message }}</p>
+
+          <!-- Attachment Pill if present -->
+          <div *ngIf="m.attachment_name" class="p-2 mb-2 bg-light border rounded d-inline-flex align-items-center gap-2 small">
+            <i class="bi bi-file-earmark-arrow-down text-primary fs-5"></i>
+            <div>
+              <div class="fw-semibold">{{ m.attachment_name }}</div>
+              <div class="text-muted" style="font-size: 0.7rem;">Shared Document / Specification</div>
+            </div>
+            <button class="btn btn-sm btn-outline-primary ms-3" (click)="downloadAttachment(m.attachment_name)">
+              <i class="bi bi-download"></i> Download
+            </button>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center pt-2 border-top" style="font-size: 0.75rem;">
+            <span class="text-muted">Author ID: #{{ m.sender_id }}</span>
+            <span class="badge bg-light text-success border"><i class="bi bi-shield-check"></i> Recorded in Immutable Audit</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: FILE SHARING REPOSITORY -->
+    <div *ngIf="activeTab === 'files'" class="p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h2 class="fs-6 fw-bold m-0 text-dark">Procurement File Sharing Center</h2>
+          <span class="text-muted small">Access technical specifications, drawing packages, and inspection certificates</span>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <div *ngFor="let m of messages" class="col-md-6" [hidden]="!m.attachment_name">
+          <div class="p-3 bg-light rounded border d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+              <div class="stat-icon blue p-2 rounded" style="width: 40px; height: 40px; font-size: 1.2rem;">
+                <i class="bi bi-file-earmark-code"></i>
+              </div>
+              <div>
+                <div class="fw-bold text-dark small">{{ m.attachment_name }}</div>
+                <div class="text-muted" style="font-size: 0.75rem;">
+                  Thread: {{ m.subject }} &bull; {{ getVendorName(m.vendor_id) }}
+                </div>
+              </div>
+            </div>
+            <button class="btn btn-sm btn-outline-primary" (click)="downloadAttachment(m.attachment_name)">
+              <i class="bi bi-download"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: EMAIL NOTIFICATIONS LOG -->
+    <div *ngIf="activeTab === 'email_logs'" class="p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h2 class="fs-6 fw-bold m-0 text-dark">Automated Email Dispatch History</h2>
+          <span class="text-muted small">Audit records for purchase order transmissions, contract notifications, and approval emails</span>
+        </div>
+        <button class="btn btn-sm btn-primary" (click)="openEmailModal()">
+          <i class="bi bi-send"></i> Manual Email Dispatch
+        </button>
+      </div>
+
+      <div class="iq-table-container">
+        <table class="iq-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Recipient</th>
+              <th>Subject</th>
+              <th>Template Category</th>
+              <th>Delivery Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let log of emailLogs">
+              <td class="small text-muted">{{ log.dispatchedAt }}</td>
+              <td>
+                <div class="fw-bold text-dark small">{{ log.recipientName }}</div>
+                <div class="small text-muted">{{ log.recipientEmail }}</div>
+              </td>
+              <td class="small fw-semibold">{{ log.subject }}</td>
+              <td>
+                <span class="badge bg-light text-dark border">{{ log.templateType }}</span>
+              </td>
+              <td>
+                <span class="badge bg-success-subtle text-success border border-success">
+                  <i class="bi bi-check2-all"></i> {{ log.status }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 5: ACTIVITY AUDIT LOGS -->
+    <div *ngIf="activeTab === 'audit'" class="p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+          <h2 class="fs-6 fw-bold m-0 text-dark">System Activity & Audit Logs</h2>
+          <span class="text-muted small">Tamper-evident logs of approvals, updates, creations, and user operations</span>
+        </div>
+        <div style="max-width: 320px; width: 100%;">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+            <input
+              type="text"
+              class="form-control border-start-0"
+              [(ngModel)]="auditSearchQuery"
+              (ngModelChange)="filterAuditLogs()"
+              placeholder="Search audit trail..."
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="iq-table-container">
+        <table class="iq-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Action Code</th>
+              <th>Target Entity</th>
+              <th>User ID</th>
+              <th>Action Summary</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let log of filteredAuditLogs">
+              <td class="small text-muted">{{ log.created_at | date:'medium' }}</td>
+              <td><span class="badge bg-dark">{{ log.action }}</span></td>
+              <td><span class="badge bg-light text-dark border">{{ log.entity_type }} (ID: {{ log.entity_id }})</span></td>
+              <td class="small fw-semibold">User #{{ log.user_id }}</td>
+              <td class="small text-dark">{{ log.details }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manual Email Modal -->
+  <div *ngIf="showEmailModal" class="iq-modal-backdrop" (click)="showEmailModal = false">
+    <div class="iq-modal" (click)="$event.stopPropagation()">
+      <h3 class="fs-5 fw-bold mb-3 border-bottom pb-2">Dispatch Email Notification</h3>
+      <form (ngSubmit)="sendManualEmail()">
+        <div class="mb-2">
+          <label class="form-label small fw-semibold">Recipient Email *</label>
+          <input type="email" class="form-control form-control-sm" [(ngModel)]="manualEmail.to" name="eto" required>
+        </div>
+        <div class="mb-2">
+          <label class="form-label small fw-semibold">Subject *</label>
+          <input type="text" class="form-control form-control-sm" [(ngModel)]="manualEmail.subject" name="esub" required>
+        </div>
+        <div class="mb-2">
+          <label class="form-label small fw-semibold">Notification Template</label>
+          <select class="form-select form-select-sm" [(ngModel)]="manualEmail.template" name="etemp">
+            <option value="PO Dispatch">Purchase Order Dispatch</option>
+            <option value="Approval Required">Procurement Approval Required</option>
+            <option value="Contract Expiry">Contract Expiration Alert</option>
+            <option value="Dispute Notice">Dispute / Performance Notice</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Email Body</label>
+          <textarea class="form-control form-control-sm" rows="3" [(ngModel)]="manualEmail.body" name="ebody"></textarea>
+        </div>
+        <div class="d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="showEmailModal = false">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm fw-bold">Dispatch Email</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

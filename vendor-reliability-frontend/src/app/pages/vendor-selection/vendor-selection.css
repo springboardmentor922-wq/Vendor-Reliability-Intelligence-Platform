@@ -1,0 +1,43 @@
+/* Vendor Selection & Comparison Styling */
+.vendor-selection-page {
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.requisition-context-card {
+  background: #ffffff;
+  border-left: 4px solid #2563eb;
+}
+
+.smaller {
+  font-size: 0.72rem;
+}
+
+.comparison-matrix-table th {
+  font-size: 0.78rem;
+  background-color: #f8fafc;
+}
+
+.comparison-matrix-table td {
+  padding: 14px 16px;
+  vertical-align: middle;
+}
+
+.table-primary-subtle {
+  background-color: rgba(239, 246, 255, 0.6) !important;
+}
+
+.vendor-selection-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.vendor-selection-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.vendor-selection-card.selected-for-compare {
+  border: 2px solid #2563eb;
+  background-color: #fbfdff;
+}

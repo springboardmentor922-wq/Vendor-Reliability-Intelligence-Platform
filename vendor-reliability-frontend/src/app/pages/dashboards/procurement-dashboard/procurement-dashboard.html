@@ -1,0 +1,1581 @@
+<div class="procurement-dashboard-container">
+  <!-- Top Role Header / Banner matching reference photo -->
+  <div class="procurement-header-banner p-3 rounded-3 mb-4 shadow-sm text-white d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div class="d-flex align-items-center gap-3">
+      <div class="banner-icon-box bg-white bg-opacity-20 p-2 rounded-3 text-white fs-4 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+        <i class="bi bi-cart3"></i>
+      </div>
+      <div>
+        <div class="d-flex align-items-center gap-2">
+          <h4 class="fw-bold mb-0 text-white">Procurement Dashboard</h4>
+          <span class="badge bg-white text-primary fw-semibold rounded-pill px-2 py-1">Procurement Manager</span>
+        </div>
+        <p class="text-white-50 small mb-0">Track procurement activities, costs, vendors and delivery performance in real-time</p>
+      </div>
+    </div>
+
+    <!-- Filter Controls & Actions -->
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <!-- Category Filter -->
+      <div class="category-filter-select">
+        <select class="form-select form-select-sm bg-white text-dark border-0 shadow-sm"
+                [(ngModel)]="selectedCategoryFilter"
+                (ngModelChange)="onCategoryFilterChange($event)">
+          <option value="All Categories">All Categories</option>
+          <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+        </select>
+      </div>
+
+      <!-- Date Range Indicator -->
+      <div class="date-range-badge bg-white bg-opacity-20 text-white px-3 py-1 rounded-2 small d-flex align-items-center gap-1">
+        <i class="bi bi-calendar3"></i>
+        <span>{{ selectedDateRange }}</span>
+      </div>
+
+      <button (click)="openCreatePRModal()" class="btn btn-light btn-sm fw-semibold text-primary d-flex align-items-center gap-1 shadow-sm">
+        <i class="bi bi-plus-lg"></i> New PR
+      </button>
+      <button (click)="openCompareModal()" class="btn btn-outline-light btn-sm d-flex align-items-center gap-1 shadow-sm">
+        <i class="bi bi-columns-gap"></i> Compare
+      </button>
+      <button (click)="loadData()" class="btn btn-light btn-sm bg-white bg-opacity-20 text-white border-0" title="Refresh">
+        <i class="bi bi-arrow-clockwise"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Action Alert -->
+  <div *ngIf="actionMessage" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i> {{ actionMessage }}
+    <button type="button" class="btn-close" (click)="actionMessage = ''"></button>
+  </div>
+
+  <!-- Error Alert -->
+  <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+    <i class="bi bi-exclamation-octagon-fill me-2"></i> {{ errorMessage }}
+    <button type="button" class="btn-close" (click)="errorMessage = ''"></button>
+  </div>
+
+  <!-- Category Active Banner (if filtered) -->
+  <div *ngIf="selectedCategoryFilter !== 'All Categories'" class="alert alert-primary bg-primary bg-opacity-10 border-primary border-opacity-25 d-flex align-items-center justify-content-between py-2 px-3 mb-3 rounded-3">
+    <span class="small text-primary fw-medium">
+      <i class="bi bi-funnel-fill me-1"></i> Filtered by Category: <strong>{{ selectedCategoryFilter }}</strong>. Only vendors and purchase requirements in this category are displayed.
+    </span>
+    <button (click)="onCategoryFilterChange('All Categories')" class="btn btn-sm btn-link text-primary text-decoration-none py-0">Reset Filter</button>
+  </div>
+
+  <!-- TOP 8 KPI CARDS -->
+  <div class="row g-3 mb-4">
+    <!-- 1. Total Vendors -->
+    <div class="col-xl-3 col-lg-3 col-md-6 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box bg-primary-subtle text-primary rounded-3 p-2">
+            <i class="bi bi-building fs-5"></i>
+          </div>
+          <span class="badge bg-success-subtle text-success small fw-semibold">+8% YoY</span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">Total Vendors</span>
+        <h3 class="fw-bold my-1 text-dark">{{ stats?.total_vendors || vendors.length || 24 }}</h3>
+        <span class="smaller text-muted">registered suppliers</span>
+      </div>
+    </div>
+
+    <!-- 2. Active Vendors -->
+    <div class="col-xl-3 col-lg-3 col-md-6 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box bg-success-subtle text-success rounded-3 p-2">
+            <i class="bi bi-patch-check-fill fs-5"></i>
+          </div>
+          <span class="badge bg-success-subtle text-success small fw-semibold">Verified</span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">Active Vendors</span>
+        <h3 class="fw-bold my-1 text-dark">{{ stats?.approved_vendors || procurementSummary?.kpis?.active_vendors || 21 }}</h3>
+        <span class="smaller text-muted">approved for contracts</span>
+      </div>
+    </div>
+
+    <!-- 3. Average Reliability -->
+    <div class="col-xl-3 col-lg-3 col-md-6 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box bg-info-subtle text-info rounded-3 p-2">
+            <i class="bi bi-shield-check fs-5"></i>
+          </div>
+          <span class="badge bg-info-subtle text-info small fw-semibold">Target &gt;90%</span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">Average Reliability</span>
+        <h3 class="fw-bold my-1 text-success">{{ (stats?.avg_reliability_score || procurementSummary?.kpis?.avg_vendor_reliability || 92.4) }}%</h3>
+        <span class="smaller text-muted">composite SLA metric</span>
+      </div>
+    </div>
+
+    <!-- 4. High-Risk Vendors -->
+    <div class="col-xl-3 col-lg-3 col-md-6 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box bg-danger-subtle text-danger rounded-3 p-2">
+            <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+          </div>
+          <span class="badge bg-danger-subtle text-danger small fw-semibold">Monitored</span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">High-Risk Vendors</span>
+        <h3 class="fw-bold my-1 text-danger">{{ stats?.high_risk_vendors || 2 }}</h3>
+        <span class="smaller text-muted">require audit review</span>
+      </div>
+    </div>
+
+    <!-- 5. Pending Requirements -->
+    <div class="col-xl-3 col-lg-3 col-md-6 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card clickable-kpi" (click)="scrollToSection('all-requisitions-section')">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box bg-warning-subtle text-warning rounded-3 p-2">
+            <i class="bi bi-clipboard-data-fill fs-5"></i>
+          </div>
+          <span class="badge bg-warning-subtle text-dark small fw-semibold">Action Req</span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">Pending Requirements</span>
+        <h3 class="fw-bold my-1 text-warning">{{ stats?.pending_procurement_requests || eligiblePRs.length || 3 }}</h3>
+        <span class="smaller text-muted">awaiting vendor evaluation</span>
+      </div>
+    </div>
+
+    <!-- 6. Purchase Orders -->
+    <div class="col-xl-3 col-lg-3 col-md-6 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box bg-primary-subtle text-primary rounded-3 p-2">
+            <i class="bi bi-receipt fs-5"></i>
+          </div>
+          <span class="badge bg-success-subtle text-success small fw-semibold">+12% MoM</span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">Purchase Orders</span>
+        <h3 class="fw-bold my-1 text-dark">{{ stats?.active_purchase_orders || purchaseOrders.length || 18 }}</h3>
+        <span class="smaller text-muted">active in pipeline</span>
+      </div>
+    </div>
+
+    <!-- 7. Pending Deliveries -->
+    <div class="col-xl-3 col-lg-3 col-md-6 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box rounded-3 p-2" style="background: rgba(6, 182, 212, 0.15); color: #0891b2;">
+            <i class="bi bi-truck fs-5"></i>
+          </div>
+          <span class="badge bg-info-subtle text-info small fw-semibold">In Transit</span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">Pending Deliveries</span>
+        <h3 class="fw-bold my-1 text-dark">{{ stats?.in_transit_pos_count || procurementSummary?.delivery_status?.in_transit?.count || 4 }}</h3>
+        <span class="smaller text-muted">en route to facility</span>
+      </div>
+    </div>
+
+    <!-- 8. Pending Payments -->
+    <div class="col-xl-3 col-lg-3 col-md-6 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box bg-warning-subtle text-warning rounded-3 p-2">
+            <i class="bi bi-credit-card-2-front-fill fs-5"></i>
+          </div>
+          <span class="badge bg-warning-subtle text-dark small fw-semibold">Net 30</span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">Pending Payments</span>
+        <h3 class="fw-bold my-1 text-dark">{{ pendingPayoutDisplay }}</h3>
+        <span class="smaller text-muted">invoices awaiting payout</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEANINGFUL RESPONSIVE CHARTS ROW 1: Reliability, Delivery Performance, Risk Distribution -->
+  <div class="row g-3 mb-4">
+    <!-- Chart 1: Vendor Reliability Trend -->
+    <div class="col-lg-4 col-md-12">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-graph-up text-primary me-1"></i> Vendor Reliability Trend
+          </h6>
+          <span class="badge bg-success-subtle text-success small">Target: &gt;90%</span>
+        </div>
+        <app-chart
+          type="line"
+          [data]="vendorReliabilityChartData"
+          [options]="vendorReliabilityChartOptions"
+          [height]="240"
+          [loading]="isLoadingSummary">
+        </app-chart>
+      </div>
+    </div>
+
+    <!-- Chart 2: Delivery Performance Breakdown -->
+    <div class="col-lg-4 col-md-6">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <app-delivery-status-chart
+          [deliveredCount]="procurementSummary?.delivery_status?.delivered?.count || 124"
+          [deliveredPct]="procurementSummary?.delivery_status?.delivered?.percentage || 52"
+          [inTransitCount]="procurementSummary?.delivery_status?.in_transit?.count || 68"
+          [inTransitPct]="procurementSummary?.delivery_status?.in_transit?.percentage || 28"
+          [delayedCount]="procurementSummary?.delivery_status?.delayed?.count || 36"
+          [delayedPct]="procurementSummary?.delivery_status?.delayed?.percentage || 15"
+          [cancelledCount]="procurementSummary?.delivery_status?.cancelled?.count || 12"
+          [cancelledPct]="procurementSummary?.delivery_status?.cancelled?.percentage || 5"
+          [onTimeRate]="procurementSummary?.delivery_status?.on_time_rate || 78"
+          [loading]="isLoadingSummary">
+        </app-delivery-status-chart>
+      </div>
+    </div>
+
+    <!-- Chart 3: Vendor Risk Distribution -->
+    <div class="col-lg-4 col-md-6">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-shield-exclamation text-danger me-1"></i> Vendor Risk Distribution
+          </h6>
+          <span class="badge bg-light text-dark border small">Multi-Tier Risk</span>
+        </div>
+        <app-chart
+          type="doughnut"
+          [data]="riskDistributionChartData"
+          [options]="riskDistributionChartOptions"
+          [height]="240"
+          centerText="24"
+          centerSubtext="Suppliers"
+          [loading]="isLoadingSummary">
+        </app-chart>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEANINGFUL RESPONSIVE CHARTS ROW 2: Procurement Status, Monthly Spending, Category Dist, On-Time vs Delayed -->
+  <div class="row g-3 mb-4">
+    <!-- Chart 4: Procurement Status Pipeline -->
+    <div class="col-lg-3 col-md-6">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <app-purchase-order-status-chart
+          [labels]="procurementSummary?.purchase_order_status?.labels || []"
+          [counts]="procurementSummary?.purchase_order_status?.counts || []"
+          [loading]="isLoadingSummary">
+        </app-purchase-order-status-chart>
+      </div>
+    </div>
+
+    <!-- Chart 5: Monthly Procurement Spending -->
+    <div class="col-lg-3 col-md-6">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <app-procurement-overview-chart
+          [months]="procurementSummary?.procurement_overview?.months || []"
+          [costData]="procurementSummary?.procurement_overview?.procurement_cost || []"
+          [orderData]="procurementSummary?.procurement_overview?.purchase_orders || []"
+          [loading]="isLoadingSummary">
+        </app-procurement-overview-chart>
+      </div>
+    </div>
+
+    <!-- Chart 6: Vendor Category Distribution (6 Official Categories) -->
+    <div class="col-lg-3 col-md-6">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-diagram-3-fill text-primary me-1"></i> Vendor Categories (6)
+          </h6>
+        </div>
+        <app-chart
+          type="bar"
+          [data]="categoryDistributionChartData"
+          [options]="categoryDistributionChartOptions"
+          [height]="240"
+          [loading]="isLoadingSummary">
+        </app-chart>
+      </div>
+    </div>
+
+    <!-- Chart 7: On-Time vs Delayed Deliveries -->
+    <div class="col-lg-3 col-md-6">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-clock-history text-success me-1"></i> On-Time vs Delayed
+          </h6>
+          <span class="badge bg-success-subtle text-success small">88.5% Rate</span>
+        </div>
+        <app-chart
+          type="doughnut"
+          [data]="onTimeVsDelayedChartData"
+          [options]="onTimeVsDelayedChartOptions"
+          [height]="240"
+          centerText="88.5%"
+          centerSubtext="On-Time"
+          [loading]="isLoadingSummary">
+        </app-chart>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS SECTION: ROW 3 (Vendor Selection Analytics) -->
+  <div class="card p-3 shadow-sm border-0 mb-4 bg-white">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-award-fill text-primary fs-5"></i>
+        <h6 class="mb-0 fw-bold">Vendor Selection Analytics & Sourcing Filter</h6>
+        <span *ngIf="selectedCategoryFilter !== 'All Categories'" class="badge bg-primary text-white ms-2">
+          {{ selectedCategoryFilter }}
+        </span>
+      </div>
+      <div class="small text-muted">
+        Procurement Manager evaluates and selects vendors strictly matching the requirement's category.
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-3 col-sm-6">
+        <div class="p-3 rounded-3 bg-light border text-center">
+          <span class="text-muted smaller text-uppercase fw-semibold d-block">Vendors Evaluated</span>
+          <h4 class="fw-bold text-dark my-1">{{ procurementSummary?.vendor_selection_analytics?.vendors_evaluated || vendors.length }}</h4>
+          <span class="smaller text-muted">in active evaluation</span>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="p-3 rounded-3 bg-success-subtle border border-success-subtle text-center">
+          <span class="text-success smaller text-uppercase fw-semibold d-block">Vendors Selected</span>
+          <h4 class="fw-bold text-success my-1">{{ procurementSummary?.vendor_selection_analytics?.vendors_selected || approvedSelections.length }}</h4>
+          <span class="smaller text-success">forwarded to Finance Officer</span>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="p-3 rounded-3 bg-danger-subtle border border-danger-subtle text-center">
+          <span class="text-danger smaller text-uppercase fw-semibold d-block">Vendors Rejected</span>
+          <h4 class="fw-bold text-danger my-1">{{ procurementSummary?.vendor_selection_analytics?.vendors_rejected || 0 }}</h4>
+          <span class="smaller text-danger">low reliability / capacity</span>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="p-3 rounded-3 bg-primary-subtle border border-primary-subtle text-center">
+          <span class="text-primary smaller text-uppercase fw-semibold d-block">Avg Reliability of Selected</span>
+          <h4 class="fw-bold text-primary my-1">{{ procurementSummary?.vendor_selection_analytics?.avg_reliability_score || 92.5 }}%</h4>
+          <span class="smaller text-primary">proven high-performance</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- All Procurement Requests & Order Tracking Lifecycle -->
+  <div id="all-requisitions-section" class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-file-earmark-text text-warning fs-5"></i>
+        <h5 class="mb-0 fw-bold">All Procurement Requests & Order Tracking</h5>
+        <span class="badge bg-warning text-dark ms-2">{{ allRequisitions.length }}</span>
+      </div>
+      <div class="d-flex gap-2 align-items-center flex-wrap">
+        <div class="input-group input-group-sm" style="width: 220px;">
+          <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+          <input [(ngModel)]="prSearchQuery" type="text" class="form-control border-start-0" placeholder="Search PR / requirement...">
+        </div>
+        <select [(ngModel)]="prStatusFilter" (change)="loadRequisitions()" class="form-select form-select-sm" style="width: auto;">
+          <option value="All">All Statuses</option>
+          <option value="SUBMITTED">PR Submitted</option>
+          <option value="UNDER_REVIEW">Under Review</option>
+          <option value="VENDOR_SELECTED">Vendor Selected</option>
+          <option value="READY_FOR_PO">Finance Approved</option>
+          <option value="PO_CREATED">PO Issued</option>
+          <option value="In Transit">In Transit</option>
+          <option value="Delivered">Delivered</option>
+          <option value="COMPLETED">Completed</option>
+        </select>
+        <button (click)="openCreatePRModal()" class="btn btn-primary btn-sm d-flex align-items-center gap-1 shadow-sm">
+          <i class="bi bi-plus-lg"></i> New PR
+        </button>
+      </div>
+    </div>
+    <div class="card-body p-0">
+      <div *ngIf="getFilteredRequisitions().length === 0" class="text-center py-4 text-muted">
+        <i class="bi bi-inbox fs-3 d-block mb-1"></i>
+        <span>No procurement requests match your filter. Click "New PR" to create one.</span>
+      </div>
+
+      <div *ngIf="getFilteredRequisitions().length > 0" class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light text-muted small text-uppercase">
+            <tr>
+              <th class="ps-3">Request ID</th>
+              <th>Department</th>
+              <th>Requirement / Material</th>
+              <th>Vendor Category</th>
+              <th>Quantity</th>
+              <th>Priority</th>
+              <th>Est. Budget</th>
+              <th>Status Pipeline</th>
+              <th>Submitted</th>
+              <th class="text-end pe-3">Actions & Lifecycle</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let pr of getFilteredRequisitions()">
+              <td class="ps-3 fw-bold text-primary">{{ pr.request_number }}</td>
+              <td><span class="badge bg-light text-dark border">{{ pr.department }}</span></td>
+              <td>
+                <div class="fw-bold">{{ pr.title }}</div>
+                <div class="small text-muted text-truncate" style="max-width: 240px;">{{ pr.description }}</div>
+              </td>
+              <td>
+                <span class="badge bg-primary-subtle text-primary border border-primary fw-semibold">{{ pr.category || 'General' }}</span>
+              </td>
+              <td class="fw-semibold">{{ pr.quantity }}</td>
+              <td>
+                <span class="badge" [ngClass]="{
+                  'bg-danger': pr.priority === 'Urgent',
+                  'bg-warning text-dark': pr.priority === 'High',
+                  'bg-info text-dark': pr.priority === 'Medium',
+                  'bg-secondary': pr.priority === 'Low'
+                }">{{ pr.priority }}</span>
+              </td>
+              <td class="fw-semibold text-dark">
+                <div>₹{{ pr.estimated_budget | number:'1.0-0' }}</div>
+                <div class="extra-small text-muted" *ngIf="pr.quantity" style="font-size: 0.73rem;">
+                  ₹{{ (pr.unit_budget || (pr.estimated_budget / pr.quantity)) | number:'1.0-2' }} / unit ({{ pr.quantity }} units)
+                </div>
+              </td>
+              <td>
+                <span class="status-pill" [ngClass]="getStatusBadgeClass(pr.status)">
+                  {{ pr.status }}
+                </span>
+              </td>
+              <td class="small text-muted">{{ pr.created_at | date:'mediumDate' }}</td>
+              <td class="text-end pe-3">
+                <div class="d-inline-flex gap-2">
+                  <button *ngIf="pr.status === 'SUBMITTED' || pr.status === 'UNDER_REVIEW'"
+                          (click)="openSelectVendorModal(pr)"
+                          class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1 shadow-sm"
+                          title="Evaluate & select vendor for this category">
+                    <i class="bi bi-building-check"></i> Select Vendor
+                  </button>
+                  <button (click)="trackRequisition(pr)" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1 shadow-sm">
+                    <i class="bi bi-clock-history"></i> Track Order
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Requisitions Awaiting Vendor Evaluation (Steps 9 & 10) -->
+  <div id="awaiting-sourcing-section" class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-cart-check text-primary fs-5"></i>
+        <h5 class="mb-0 fw-bold">Requirements Awaiting Vendor Evaluation & Selection</h5>
+        <span class="badge bg-primary ms-2">{{ eligiblePRs.length }}</span>
+      </div>
+    </div>
+    <div class="card-body p-0">
+      <div *ngIf="eligiblePRs.length === 0" class="text-center py-4 text-muted">
+        <i class="bi bi-check-all text-success fs-3 d-block mb-1"></i>
+        <span>No requisitions pending vendor selection. All requirements have been sourced!</span>
+      </div>
+
+      <div *ngIf="eligiblePRs.length > 0" class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light text-muted small text-uppercase">
+            <tr>
+              <th class="ps-3">PR Number</th>
+              <th>Department</th>
+              <th>Requirement</th>
+              <th>Vendor Category</th>
+              <th>Quantity</th>
+              <th>Priority</th>
+              <th>Est. Budget</th>
+              <th>Requested By</th>
+              <th class="text-end pe-3">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let pr of eligiblePRs">
+              <td class="ps-3 fw-bold text-primary">{{ pr.request_number }}</td>
+              <td><span class="badge bg-light text-dark border">{{ pr.department }}</span></td>
+              <td>
+                <div class="fw-bold">{{ pr.title }}</div>
+                <div class="small text-muted text-truncate" style="max-width: 220px;">{{ pr.description }}</div>
+              </td>
+              <td>
+                <span class="badge bg-primary-subtle text-primary border border-primary fw-semibold">{{ pr.category }}</span>
+              </td>
+              <td class="fw-semibold">{{ pr.quantity }}</td>
+              <td>
+                <span class="badge" [ngClass]="{
+                  'bg-danger': pr.priority === 'Urgent',
+                  'bg-warning text-dark': pr.priority === 'High',
+                  'bg-info text-dark': pr.priority === 'Medium',
+                  'bg-secondary': pr.priority === 'Low'
+                }">{{ pr.priority }}</span>
+              </td>
+              <td class="fw-semibold text-dark">
+                <div>₹{{ pr.estimated_budget | number:'1.0-0' }}</div>
+                <div class="extra-small text-muted" *ngIf="pr.quantity" style="font-size: 0.73rem;">
+                  ₹{{ (pr.unit_budget || (pr.estimated_budget / pr.quantity)) | number:'1.0-2' }} / unit ({{ pr.quantity }} units)
+                </div>
+              </td>
+              <td class="small">{{ pr.requested_by }}</td>
+              <td class="text-end pe-3">
+                <button (click)="openSelectVendorModal(pr)" class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1 shadow-sm">
+                  <i class="bi bi-building-check"></i> Evaluate & Select Vendor
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Approved Vendor Selections (Forwarded to Finance) -->
+  <div id="approved-selections-section" class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-patch-check-fill text-success fs-5"></i>
+        <h5 class="mb-0 fw-bold">Approved Vendor Selections (Sent to Finance)</h5>
+      </div>
+    </div>
+    <div class="card-body p-0">
+      <div *ngIf="approvedSelections.length === 0" class="text-center py-4 text-muted">
+        <span>No vendor selections recorded yet.</span>
+      </div>
+
+      <div *ngIf="approvedSelections.length > 0" class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light text-muted small text-uppercase">
+            <tr>
+              <th class="ps-3">PR Number</th>
+              <th>Department</th>
+              <th>Requirement</th>
+              <th>Category</th>
+              <th>Selected Vendor</th>
+              <th>Quotation</th>
+              <th>Reliability Score</th>
+              <th>Risk Level</th>
+              <th>Status</th>
+              <th>Selected By</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let sel of approvedSelections">
+              <td class="ps-3 fw-bold text-primary">{{ sel.request_number }}</td>
+              <td><span class="badge bg-light text-dark border">{{ sel.department }}</span></td>
+              <td class="fw-semibold">{{ sel.title }}</td>
+              <td><span class="badge bg-light text-dark border">{{ sel.category || 'General' }}</span></td>
+              <td class="fw-bold text-dark">{{ sel.vendor_name }}</td>
+              <td class="fw-bold text-success">₹{{ sel.quotation_amount | number:'1.0-0' }}</td>
+              <td>
+                <span class="fw-bold text-primary">{{ sel.vendor_reliability | number:'1.1-1' }}%</span>
+              </td>
+              <td>
+                <span class="badge" [ngClass]="getRiskBadgeClass(sel.vendor_risk)">{{ sel.vendor_risk }}</span>
+              </td>
+              <td>
+                <span class="badge" [ngClass]="sel.status === 'Approved' ? 'bg-success' : 'bg-warning text-dark'">
+                  {{ sel.status }}
+                </span>
+              </td>
+              <td class="small text-muted">{{ sel.selected_by }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Purchase Orders: VIEW ONLY (No Create or Issue Buttons) -->
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-receipt text-secondary fs-5"></i>
+        <h5 class="mb-0 fw-bold">Purchase Orders — VIEW ONLY</h5>
+        <span class="badge bg-secondary">Read-Only</span>
+      </div>
+      <span class="small text-muted fst-italic">Creation and Issuance restricted to Supply Chain Manager</span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light text-muted small text-uppercase">
+            <tr>
+              <th class="ps-3">PO Number</th>
+              <th>PR Reference</th>
+              <th>Vendor</th>
+              <th>Total Amount</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th>Expected Delivery</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let po of purchaseOrders">
+              <td class="ps-3 fw-bold text-dark">{{ po.po_number }}</td>
+              <td><span class="badge bg-light text-dark border">{{ po.requisition_number || 'N/A' }}</span></td>
+              <td class="fw-semibold">{{ po.vendor_name }}</td>
+              <td class="fw-bold text-dark">${{ po.total_amount | number:'1.2-2' }}</td>
+              <td>
+                <span class="badge" [ngClass]="{
+                  'bg-secondary': po.status === 'Draft',
+                  'bg-primary': po.status === 'Issued',
+                  'bg-info text-dark': po.status === 'Accepted' || po.status === 'In Transit',
+                  'bg-success': po.status === 'Delivered' || po.status === 'Completed',
+                  'bg-danger': po.status === 'Rejected'
+                }">{{ po.status }}</span>
+              </td>
+              <td class="small text-muted">{{ po.created_at | date:'mediumDate' }}</td>
+              <td class="small text-muted">{{ po.expected_delivery_date ? (po.expected_delivery_date | date:'mediumDate') : 'TBD' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vendor Selection Modal with Dynamic Category Filtering & Reliability Evaluation -->
+  <div *ngIf="showVendorSelectionModal && selectedPRForSelection" class="modal-backdrop-custom">
+    <div class="modal-card-custom shadow-lg modal-card-xl">
+      <!-- Modal Header -->
+      <div class="modal-header-custom">
+        <div>
+          <h5 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-shield-check text-primary me-2"></i> Vendor Selection & Reliability Matrix
+          </h5>
+          <span class="small text-muted">
+            Requisition: <strong>{{ selectedPRForSelection.request_number }}</strong> — {{ selectedPRForSelection.title }}
+          </span>
+        </div>
+        <button type="button" class="btn-close" (click)="closeSelectVendorModal()"></button>
+      </div>
+
+      <div class="modal-body-custom">
+        <!-- Requisition Sourcing Context Banner -->
+        <div class="p-3 bg-light rounded-3 mb-3 border">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+              <div class="d-flex align-items-center gap-2">
+                <span class="fs-5 fw-bold text-dark">{{ selectedPRForSelection.title }}</span>
+                <span class="badge bg-primary px-3 py-1 rounded-pill">
+                  <i class="bi bi-tag-fill me-1"></i> {{ selectedPRForSelection.category }}
+                </span>
+                <span class="badge" [ngClass]="{
+                  'bg-danger': selectedPRForSelection.priority === 'Urgent',
+                  'bg-warning text-dark': selectedPRForSelection.priority === 'High',
+                  'bg-info text-dark': selectedPRForSelection.priority === 'Medium',
+                  'bg-secondary': selectedPRForSelection.priority === 'Low'
+                }">{{ selectedPRForSelection.priority }} Priority</span>
+              </div>
+              <div class="small text-muted mt-1">
+                <span>Department: <strong>{{ selectedPRForSelection.department }}</strong></span> • 
+                <span>Required Quantity: <strong>{{ selectedPRForSelection.quantity }} units</strong></span> • 
+                <span>Required By: <strong>{{ selectedPRForSelection.required_date ? (selectedPRForSelection.required_date | date:'mediumDate') : 'Immediate' }}</strong></span>
+              </div>
+            </div>
+            <div class="text-end">
+              <span class="small text-muted d-block">Authorized Budget:</span>
+              <span class="fw-bold text-success fs-5">₹{{ selectedPRForSelection.estimated_budget | number:'1.0-0' }}</span>
+            </div>
+          </div>
+          <!-- Strict Category Filtering Notice -->
+          <div class="mt-2 pt-2 border-top small text-secondary d-flex align-items-center gap-2">
+            <i class="bi bi-funnel-fill text-primary"></i>
+            <span>
+              <strong>Dynamic Category Filter:</strong> Displaying only Admin-verified, Active vendors qualified for <strong>{{ selectedPRForSelection.category }}</strong>. Vendors from other categories, inactive suppliers, and suspended vendors are strictly filtered out.
+            </span>
+          </div>
+        </div>
+
+        <!-- STEP 1: BROWSE & EVALUATE ELIGIBLE VENDORS -->
+        <div *ngIf="vendorSelectionStep === 'select'">
+          <!-- Filter and Switcher Controls -->
+          <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <div class="d-flex gap-2 align-items-center flex-grow-1" style="max-width: 400px;">
+              <div class="input-group input-group-sm">
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                <input [(ngModel)]="eligibleVendorSearch" type="text" class="form-control border-start-0" placeholder="Filter vendors by name, company, products...">
+              </div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-light text-dark border px-2 py-1 small">
+                {{ getFilteredEligibleVendors().length }} of {{ eligibleVendorsList.length }} eligible vendors
+              </span>
+              <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn" [ngClass]="matrixViewMode === 'matrix' ? 'btn-primary' : 'btn-outline-secondary'" (click)="matrixViewMode = 'matrix'">
+                  <i class="bi bi-table me-1"></i> Matrix Table
+                </button>
+                <button type="button" class="btn" [ngClass]="matrixViewMode === 'cards' ? 'btn-primary' : 'btn-outline-secondary'" (click)="matrixViewMode = 'cards'">
+                  <i class="bi bi-grid me-1"></i> Cards View
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Loading State -->
+          <div *ngIf="isLoadingEligibleVendors" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <div class="small text-muted mt-2">Computing real-time reliability scores from historical transactions...</div>
+          </div>
+
+          <!-- Empty State -->
+          <div *ngIf="!isLoadingEligibleVendors && getFilteredEligibleVendors().length === 0" class="text-center py-5 text-muted border rounded-3 bg-light">
+            <i class="bi bi-exclamation-octagon text-warning fs-1 d-block mb-2"></i>
+            <h6 class="fw-bold text-dark">No Eligible Vendors Found</h6>
+            <p class="small mb-0">No active, Admin-verified vendors found for category "<strong>{{ selectedPRForSelection.category }}</strong>".<br>Only Admin-verified vendors in this category are eligible for procurement selection.</p>
+          </div>
+
+          <!-- Table View: Ranked by Calculated Reliability Score -->
+          <div *ngIf="!isLoadingEligibleVendors && getFilteredEligibleVendors().length > 0 && matrixViewMode === 'matrix'" class="matrix-table-wrapper mb-3">
+            <table class="table table-hover align-middle mb-0 small">
+              <thead class="table-light text-muted text-uppercase" style="position: sticky; top: 0; z-index: 1;">
+                <tr>
+                  <th class="text-center" style="width: 45px;">Select</th>
+                  <th class="text-center" style="width: 55px;">Rank</th>
+                  <th>Vendor & Company</th>
+                  <th>Category & Products</th>
+                  <th class="text-center">Reliability Score</th>
+                  <th class="text-center">On-Time Rate</th>
+                  <th class="text-center">Order Record</th>
+                  <th class="text-center">Avg Delivery</th>
+                  <th class="text-center">Risk Level</th>
+                  <th class="text-center">Status</th>
+                  <th class="text-end pe-3" style="width: 170px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let v of getFilteredEligibleVendors(); let idx = index"
+                    (click)="stageVendorForSelection(v)"
+                    class="matrix-row"
+                    [ngClass]="{'selected-matrix-row': selectedVendorCard?.vendor_id === v.vendor_id}">
+                  <td class="text-center">
+                    <input type="radio" name="selectedVendorRadio" [checked]="selectedVendorCard?.vendor_id === v.vendor_id">
+                  </td>
+                  <td class="text-center">
+                    <span class="rank-badge" [ngClass]="{'rank-badge-top': idx === 0}">
+                      {{ idx === 0 ? '🏆 1' : '#' + (idx + 1) }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="fw-bold text-dark">{{ v.name }}</div>
+                    <div class="small text-muted">{{ v.company }}</div>
+                  </td>
+                  <td>
+                    <span class="badge bg-primary-subtle text-primary border border-primary me-1">{{ v.category }}</span>
+                    <div class="mt-1 d-flex flex-wrap gap-1">
+                      <span *ngFor="let prod of v.products" class="badge bg-light text-secondary border" style="font-size: 0.7rem;">
+                        {{ prod }}
+                      </span>
+                    </div>
+                  </td>
+                  <td class="text-center">
+                    <span class="score-badge" [ngClass]="v.reliability_score >= 90 ? 'score-badge-high' : (v.reliability_score >= 75 ? 'score-badge-mid' : 'score-badge-low')">
+                      <i class="bi bi-shield-check"></i> {{ v.reliability_score }}/100
+                    </span>
+                  </td>
+                  <td class="text-center fw-semibold text-primary">
+                    {{ v.on_time_delivery_rate }}%
+                  </td>
+                  <td class="text-center">
+                    <div class="fw-bold">{{ v.completed_orders }}/{{ v.total_orders }} done</div>
+                    <div class="small text-muted" style="font-size: 0.7rem;">
+                      <span *ngIf="v.delayed_orders > 0" class="text-warning">{{ v.delayed_orders }} delayed</span>
+                      <span *ngIf="v.delayed_orders > 0 && v.partial_deliveries > 0"> • </span>
+                      <span *ngIf="v.partial_deliveries > 0" class="text-purple">{{ v.partial_deliveries }} partial</span>
+                    </div>
+                  </td>
+                  <td class="text-center text-muted">
+                    {{ v.average_delivery_time }}
+                  </td>
+                  <td class="text-center">
+                    <span class="badge" [ngClass]="getRiskBadgeClass(v.risk_level)">{{ v.risk_level }} Risk</span>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge bg-success-subtle text-success border border-success" style="font-size: 0.7rem;">
+                      <i class="bi bi-check-circle-fill me-1"></i> {{ v.status }}
+                    </span>
+                  </td>
+                  <td class="text-end pe-3">
+                    <div class="d-inline-flex gap-1">
+                      <button type="button" (click)="$event.stopPropagation(); openVendorDetailsModal(v.vendor_id)" class="btn btn-outline-info btn-sm py-1 px-2" title="View full profile, performance breakdown & past orders">
+                        <i class="bi bi-eye"></i> Details
+                      </button>
+                      <button type="button" (click)="$event.stopPropagation(); proceedToConfirmSelection(v)" class="btn btn-primary btn-sm py-1 px-2" title="Select this vendor">
+                        <i class="bi bi-check2-circle"></i> Select
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Cards View: Rich Vendor Evaluation Cards -->
+          <div *ngIf="!isLoadingEligibleVendors && getFilteredEligibleVendors().length > 0 && matrixViewMode === 'cards'" class="row g-3 mb-3">
+            <div *ngFor="let v of getFilteredEligibleVendors(); let idx = index" class="col-md-6">
+              <div class="vendor-card-comparison h-100 d-flex flex-column justify-content-between"
+                   [ngClass]="{'selected': selectedVendorCard?.vendor_id === v.vendor_id}"
+                   (click)="stageVendorForSelection(v)">
+                <div>
+                  <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="rank-badge" [ngClass]="{'rank-badge-top': idx === 0}">
+                        {{ idx === 0 ? '🏆 1' : '#' + (idx + 1) }}
+                      </span>
+                      <div>
+                        <h6 class="fw-bold mb-0 text-dark">{{ v.name }}</h6>
+                        <span class="small text-muted">{{ v.company }}</span>
+                      </div>
+                    </div>
+                    <span class="badge" [ngClass]="getRiskBadgeClass(v.risk_level)">{{ v.risk_level }} Risk</span>
+                  </div>
+
+                  <div class="d-flex align-items-center gap-2 my-2">
+                    <span class="badge bg-primary-subtle text-primary border border-primary">{{ v.category }}</span>
+                    <span class="badge bg-success-subtle text-success border border-success">
+                      <i class="bi bi-check-circle-fill me-1"></i> {{ v.status }}
+                    </span>
+                  </div>
+
+                  <div class="row g-2 my-2 text-center small">
+                    <div class="col-4">
+                      <div class="p-2 bg-light rounded">
+                        <div class="text-muted" style="font-size: 0.7rem;">Reliability</div>
+                        <div class="fw-bold text-success fs-6">{{ v.reliability_score }}/100</div>
+                      </div>
+                    </div>
+                    <div class="col-4">
+                      <div class="p-2 bg-light rounded">
+                        <div class="text-muted" style="font-size: 0.7rem;">On-Time Rate</div>
+                        <div class="fw-bold text-primary fs-6">{{ v.on_time_delivery_rate }}%</div>
+                      </div>
+                    </div>
+                    <div class="col-4">
+                      <div class="p-2 bg-light rounded">
+                        <div class="text-muted" style="font-size: 0.7rem;">Completed</div>
+                        <div class="fw-bold text-dark fs-6">{{ v.completed_orders }}/{{ v.total_orders }}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="small text-muted mb-2">
+                    <strong>Supplied Products:</strong>
+                    <div class="d-flex flex-wrap gap-1 mt-1">
+                      <span *ngFor="let p of v.products" class="badge bg-light text-dark border">{{ p }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center pt-2 border-top mt-2">
+                  <button type="button" (click)="$event.stopPropagation(); openVendorDetailsModal(v.vendor_id)" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-info-circle me-1"></i> View Details
+                  </button>
+                  <button type="button" (click)="$event.stopPropagation(); proceedToConfirmSelection(v)" class="btn btn-primary btn-sm px-3 shadow-sm">
+                    <i class="bi bi-check-circle me-1"></i> Select Vendor
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Staged Vendor Bottom Summary Bar -->
+          <div *ngIf="selectedVendorCard" class="matrix-summary-box mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-3">
+              <i class="bi bi-award-fill text-primary fs-3"></i>
+              <div>
+                <span class="small text-muted d-block">Currently Staged for Selection:</span>
+                <strong class="text-dark fs-6">{{ selectedVendorCard.name }}</strong> ({{ selectedVendorCard.company }})
+                <span class="badge bg-success ms-2">{{ selectedVendorCard.reliability_score }}/100 Score</span>
+                <span class="badge ms-1" [ngClass]="getRiskBadgeClass(selectedVendorCard.risk_level)">{{ selectedVendorCard.risk_level }} Risk</span>
+              </div>
+            </div>
+            <button type="button" class="btn btn-primary px-4 shadow-sm" (click)="proceedToConfirmSelection()">
+              <span>Proceed to Confirmation</span> <i class="bi bi-arrow-right ms-1"></i>
+            </button>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 mt-3">
+            <button type="button" class="btn btn-outline-secondary" (click)="closeSelectVendorModal()">Cancel</button>
+          </div>
+        </div>
+
+        <!-- STEP 2: VENDOR SELECTION CONFIRMATION -->
+        <div *ngIf="vendorSelectionStep === 'confirm'">
+          <div class="alert alert-info d-flex align-items-center gap-2 mb-3">
+            <i class="bi bi-info-circle-fill fs-5 text-primary"></i>
+            <div>
+              <strong>Confirmation Summary:</strong> Review the procurement requirement and chosen vendor details before submitting to the Finance Officer for budget signoff.
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <!-- Left: Requirement Summary -->
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded-3 border h-100">
+                <h6 class="fw-bold text-primary mb-3 pb-2 border-bottom">
+                  <i class="bi bi-file-earmark-text me-1"></i> Requisition Summary
+                </h6>
+                <table class="table table-sm table-borderless small mb-0">
+                  <tbody>
+                    <tr>
+                      <td class="text-muted" style="width: 140px;">Requirement ID:</td>
+                      <td class="fw-bold text-dark">{{ selectedPRForSelection.request_number }}</td>
+                    </tr>
+                    <tr>
+                      <td class="text-muted">Item / Service:</td>
+                      <td class="fw-bold text-dark">{{ selectedPRForSelection.title }}</td>
+                    </tr>
+                    <tr>
+                      <td class="text-muted">Vendor Category:</td>
+                      <td><span class="badge bg-primary">{{ selectedPRForSelection.category }}</span></td>
+                    </tr>
+                    <tr>
+                      <td class="text-muted">Required Quantity:</td>
+                      <td class="fw-semibold">{{ selectedPRForSelection.quantity }} units</td>
+                    </tr>
+                    <tr>
+                      <td class="text-muted">Required Date:</td>
+                      <td class="fw-semibold">{{ selectedPRForSelection.required_date ? (selectedPRForSelection.required_date | date:'mediumDate') : 'Immediate' }}</td>
+                    </tr>
+                    <tr>
+                      <td class="text-muted">Estimated Budget:</td>
+                      <td class="fw-bold text-success">₹{{ selectedPRForSelection.estimated_budget | number:'1.0-0' }}</td>
+                    </tr>
+                    <tr>
+                      <td class="text-muted">Department:</td>
+                      <td>{{ selectedPRForSelection.department }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Right: Selected Vendor Summary -->
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded-3 border h-100" *ngIf="selectedVendorCard">
+                <h6 class="fw-bold text-success mb-3 pb-2 border-bottom">
+                  <i class="bi bi-building-check me-1"></i> Selected Vendor Summary
+                </h6>
+                <table class="table table-sm table-borderless small mb-0">
+                  <tbody>
+                    <tr>
+                      <td class="text-muted" style="width: 140px;">Vendor Name:</td>
+                      <td class="fw-bold text-dark">{{ selectedVendorCard.name }}</td>
+                    </tr>
+                    <tr>
+                      <td class="text-muted">Company:</td>
+                      <td class="fw-semibold text-dark">{{ selectedVendorCard.company }}</td>
+                    </tr>
+                    <tr>
+                      <td class="text-muted">Category:</td>
+                      <td><span class="badge bg-primary-subtle text-primary border border-primary">{{ selectedVendorCard.category }}</span></td>
+                    </tr>
+                    <tr>
+                      <td class="text-muted">Reliability Score:</td>
+                      <td>
+                        <span class="score-badge" [ngClass]="selectedVendorCard.reliability_score >= 90 ? 'score-badge-high' : 'score-badge-mid'">
+                          <i class="bi bi-shield-check"></i> {{ selectedVendorCard.reliability_score }}/100
+                        </span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="text-muted">On-Time Delivery:</td>
+                      <td class="fw-bold text-primary">{{ selectedVendorCard.on_time_delivery_rate }}%</td>
+                    </tr>
+                    <tr>
+                      <td class="text-muted">Risk Level:</td>
+                      <td>
+                        <span class="badge" [ngClass]="getRiskBadgeClass(selectedVendorCard.risk_level)">{{ selectedVendorCard.risk_level }} Risk</span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="text-muted">Transaction History:</td>
+                      <td class="fw-semibold">{{ selectedVendorCard.completed_orders }} completed of {{ selectedVendorCard.total_orders }} orders</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Input Form: Agreed Quotation and Justification -->
+          <div class="p-3 bg-white border rounded-3 mb-3">
+            <div class="row g-3">
+              <div class="col-md-5">
+                <label class="form-label small fw-bold text-dark">Agreed Quotation Amount (₹ INR) *</label>
+                <div class="input-group">
+                  <span class="input-group-text fw-bold">₹</span>
+                  <input [(ngModel)]="selectionForm.quotation_amount" type="number" class="form-control fw-bold" min="1" required>
+                </div>
+                <div class="form-text text-muted small">
+                  Requisition estimated budget: ₹{{ selectedPRForSelection.estimated_budget | number:'1.0-0' }}
+                </div>
+              </div>
+              <div class="col-md-7">
+                <label class="form-label small fw-bold text-dark">Procurement Selection Justification (Immutable Audit Trail) *</label>
+                <textarea [(ngModel)]="selectionForm.justification" rows="3" class="form-control small" placeholder="Explain rationale for choosing this vendor..." required></textarea>
+                <div class="form-text text-muted small">
+                  This justification will be recorded in the audit log and reviewed by Finance.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Buttons -->
+          <div class="d-flex justify-content-between align-items-center mt-3">
+            <button type="button" class="btn btn-outline-secondary" (click)="backToVendorList()">
+              <i class="bi bi-arrow-left me-1"></i> Back to Vendor List
+            </button>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-outline-secondary" (click)="closeSelectVendorModal()">Cancel</button>
+              <button type="button" class="btn btn-success px-4 shadow-sm" [disabled]="isSubmitting" (click)="confirmVendorSelection()">
+                <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-1"></span>
+                <i class="bi bi-check2-circle me-1"></i>
+                <span>Confirm Vendor Selection</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comprehensive Vendor Details Modal -->
+  <div *ngIf="showVendorDetailsModal && selectedVendorFullDetails" class="modal-backdrop-custom">
+    <div class="modal-card-custom shadow-lg modal-card-xl">
+      <div class="modal-header-custom">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-building fs-4 text-primary"></i>
+          <div>
+            <h5 class="fw-bold mb-0 text-dark">{{ selectedVendorFullDetails.profile.name }}</h5>
+            <span class="small text-muted">{{ selectedVendorFullDetails.profile.company }} • {{ selectedVendorFullDetails.profile.category }}</span>
+          </div>
+        </div>
+        <button type="button" class="btn-close" (click)="closeVendorDetailsModal()"></button>
+      </div>
+
+      <div class="modal-body-custom">
+        <!-- Tab Navigation -->
+        <div class="custom-nav-tabs mb-3">
+          <button type="button" [ngClass]="{'active': vendorDetailsActiveTab === 'profile'}" (click)="vendorDetailsActiveTab = 'profile'">
+            <i class="bi bi-person-lines-fill me-1"></i> Full Profile & Compliance
+          </button>
+          <button type="button" [ngClass]="{'active': vendorDetailsActiveTab === 'performance'}" (click)="vendorDetailsActiveTab = 'performance'">
+            <i class="bi bi-graph-up-arrow me-1"></i> Performance Breakdown
+          </button>
+          <button type="button" [ngClass]="{'active': vendorDetailsActiveTab === 'risk'}" (click)="vendorDetailsActiveTab = 'risk'">
+            <i class="bi bi-shield-exclamation me-1"></i> Risk Analysis
+          </button>
+          <button type="button" [ngClass]="{'active': vendorDetailsActiveTab === 'history'}" (click)="vendorDetailsActiveTab = 'history'">
+            <i class="bi bi-receipt me-1"></i> Purchase History ({{ selectedVendorFullDetails.purchase_history.length }})
+          </button>
+        </div>
+
+        <!-- TAB 1: Profile & Compliance -->
+        <div *ngIf="vendorDetailsActiveTab === 'profile'">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded-3 border">
+                <h6 class="fw-bold text-dark mb-3">Company & Contact Information</h6>
+                <div class="small mb-2"><strong>Vendor Name:</strong> {{ selectedVendorFullDetails.profile.name }}</div>
+                <div class="small mb-2"><strong>Registered Legal Entity:</strong> {{ selectedVendorFullDetails.profile.company }}</div>
+                <div class="small mb-2"><strong>Primary Category:</strong> <span class="badge bg-primary">{{ selectedVendorFullDetails.profile.category }}</span></div>
+                <div class="small mb-2"><strong>Contact Email:</strong> {{ selectedVendorFullDetails.profile.email }}</div>
+                <div class="small mb-2"><strong>Phone Number:</strong> {{ selectedVendorFullDetails.profile.phone }}</div>
+                <div class="small mb-2"><strong>Operating Address:</strong> {{ selectedVendorFullDetails.profile.address }}</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded-3 border">
+                <h6 class="fw-bold text-dark mb-3">Compliance & Statutory Details</h6>
+                <div class="small mb-2"><strong>Admin Verification:</strong> <span class="badge bg-success-subtle text-success border border-success"><i class="bi bi-patch-check-fill me-1"></i> {{ selectedVendorFullDetails.profile.verification_status }}</span></div>
+                <div class="small mb-2"><strong>Account Status:</strong> <span class="badge bg-success">{{ selectedVendorFullDetails.profile.status }}</span></div>
+                <div class="small mb-2"><strong>GSTIN / Tax ID:</strong> <code>{{ selectedVendorFullDetails.profile.gst_tax_id || 'N/A' }}</code></div>
+                <div class="small mb-2"><strong>Business Registration:</strong> <code>{{ selectedVendorFullDetails.profile.business_reg_number || 'N/A' }}</code></div>
+                <div class="small mb-2"><strong>Bank Details:</strong> {{ selectedVendorFullDetails.profile.bank_details || 'Verified On File' }}</div>
+                <div class="small mt-3">
+                  <strong>Supplied Products & Catalog:</strong>
+                  <div class="d-flex flex-wrap gap-1 mt-1">
+                    <span *ngFor="let p of selectedVendorFullDetails.profile.products" class="badge bg-white text-dark border">{{ p }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: Performance Breakdown -->
+        <div *ngIf="vendorDetailsActiveTab === 'performance'">
+          <div class="row g-3 mb-3">
+            <div class="col-md-3">
+              <div class="detail-kpi-card">
+                <div class="text-muted small">Reliability Score</div>
+                <div class="detail-kpi-value text-success">{{ selectedVendorFullDetails.performance.reliability_score }}/100</div>
+                <div class="small text-muted mt-1">Transaction weighted</div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="detail-kpi-card">
+                <div class="text-muted small">On-Time Delivery Rate</div>
+                <div class="detail-kpi-value text-primary">{{ selectedVendorFullDetails.performance.on_time_delivery_rate }}%</div>
+                <div class="small text-muted mt-1">Schedule SLA</div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="detail-kpi-card">
+                <div class="text-muted small">Fulfillment Rate</div>
+                <div class="detail-kpi-value text-info">{{ selectedVendorFullDetails.performance.fulfillment_rate }}%</div>
+                <div class="small text-muted mt-1">Quantity accuracy</div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="detail-kpi-card">
+                <div class="text-muted small">Quality Rating</div>
+                <div class="detail-kpi-value text-warning">★ {{ selectedVendorFullDetails.performance.quality_rating }}/5.0</div>
+                <div class="small text-muted mt-1">Acceptance rate</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-3 bg-light rounded-3 border">
+            <h6 class="fw-bold text-dark mb-3">Historical Order Fulfillment Distribution</h6>
+            <div class="row text-center g-2">
+              <div class="col">
+                <div class="p-2 bg-white rounded border">
+                  <div class="text-muted small">Total Orders</div>
+                  <div class="fw-bold fs-5 text-dark">{{ selectedVendorFullDetails.performance.total_orders }}</div>
+                </div>
+              </div>
+              <div class="col">
+                <div class="p-2 bg-white rounded border">
+                  <div class="text-muted small">Completed</div>
+                  <div class="fw-bold fs-5 text-success">{{ selectedVendorFullDetails.performance.completed_orders }}</div>
+                </div>
+              </div>
+              <div class="col">
+                <div class="p-2 bg-white rounded border">
+                  <div class="text-muted small">Delayed</div>
+                  <div class="fw-bold fs-5 text-warning">{{ selectedVendorFullDetails.performance.delayed_orders }}</div>
+                </div>
+              </div>
+              <div class="col">
+                <div class="p-2 bg-white rounded border">
+                  <div class="text-muted small">Partial</div>
+                  <div class="fw-bold fs-5 text-purple">{{ selectedVendorFullDetails.performance.partial_deliveries }}</div>
+                </div>
+              </div>
+              <div class="col">
+                <div class="p-2 bg-white rounded border">
+                  <div class="text-muted small">Cancelled</div>
+                  <div class="fw-bold fs-5 text-danger">{{ selectedVendorFullDetails.performance.cancelled_orders }}</div>
+                </div>
+              </div>
+            </div>
+            <div class="small text-muted mt-3">
+              Average Delivery Delay across past transactions: <strong>{{ selectedVendorFullDetails.performance.average_delay_days }} days</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: Risk Analysis -->
+        <div *ngIf="vendorDetailsActiveTab === 'risk'">
+          <div class="p-3 bg-light rounded-3 border mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <h6 class="fw-bold text-dark mb-0">Operational Risk Profile</h6>
+                <span class="small text-muted">Real-time risk scoring evaluated from delayed shipments, fulfillment gaps, and SLA adherence</span>
+              </div>
+              <span class="badge fs-6 px-3 py-2" [ngClass]="getRiskBadgeClass(selectedVendorFullDetails.risk.current_risk_level)">
+                {{ selectedVendorFullDetails.risk.current_risk_level }} Risk
+              </span>
+            </div>
+
+            <div class="mb-3">
+              <div class="small fw-bold text-dark mb-2">Dynamic Risk Factors & Evaluation Reasons:</div>
+              <ul class="list-group list-group-flush small rounded border">
+                <li *ngFor="let reason of selectedVendorFullDetails.risk.risk_reasons" class="list-group-item d-flex align-items-center gap-2">
+                  <i class="bi bi-shield-check text-success" *ngIf="selectedVendorFullDetails.risk.current_risk_level === 'Low'"></i>
+                  <i class="bi bi-exclamation-triangle text-warning" *ngIf="selectedVendorFullDetails.risk.current_risk_level === 'Medium'"></i>
+                  <i class="bi bi-x-circle text-danger" *ngIf="selectedVendorFullDetails.risk.current_risk_level === 'High'"></i>
+                  <span>{{ reason }}</span>
+                </li>
+              </ul>
+            </div>
+
+            <div class="small text-muted">
+              <strong>Performance Trend:</strong> {{ selectedVendorFullDetails.risk.recent_performance_trend }}
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: Purchase History -->
+        <div *ngIf="vendorDetailsActiveTab === 'history'">
+          <div *ngIf="selectedVendorFullDetails.purchase_history.length === 0" class="text-center py-4 text-muted">
+            <i class="bi bi-inbox fs-3 d-block mb-1"></i>
+            <span>No previous purchase orders found for this vendor.</span>
+          </div>
+
+          <div *ngIf="selectedVendorFullDetails.purchase_history.length > 0" class="table-responsive" style="max-height: 350px;">
+            <table class="table table-hover align-middle mb-0 small">
+              <thead class="table-light text-muted text-uppercase">
+                <tr>
+                  <th>PO Number</th>
+                  <th>Order Amount</th>
+                  <th>Status</th>
+                  <th>Issued Date</th>
+                  <th>Delivery Date</th>
+                  <th>Delay (Days)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let ord of selectedVendorFullDetails.purchase_history">
+                  <td class="fw-bold text-dark">{{ ord.po_number }}</td>
+                  <td class="fw-semibold">₹{{ ord.total_amount | number:'1.0-0' }}</td>
+                  <td>
+                    <span class="badge" [ngClass]="{
+                      'bg-success': ord.status === 'Delivered' || ord.status === 'Completed',
+                      'bg-primary': ord.status === 'In Transit',
+                      'bg-danger': ord.status === 'Cancelled'
+                    }">{{ ord.status }}</span>
+                  </td>
+                  <td class="text-muted">{{ ord.issued_at | date:'mediumDate' }}</td>
+                  <td class="text-muted">{{ ord.delivery_date | date:'mediumDate' }}</td>
+                  <td>
+                    <span *ngIf="ord.delay_days > 0" class="badge bg-warning text-dark">+{{ ord.delay_days }} days</span>
+                    <span *ngIf="ord.delay_days === 0" class="badge bg-success-subtle text-success">On-Time</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-4 pt-2 border-top">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="closeVendorDetailsModal()">Close Details</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vendor Comparison Modal -->
+  <div *ngIf="showCompareModal" class="modal-backdrop-custom">
+    <div class="modal-card-custom shadow-lg modal-card-lg">
+      <div class="modal-header-custom">
+        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-columns-gap text-primary me-2"></i> Side-by-Side Vendor Evaluation Matrix</h5>
+        <button type="button" class="btn-close" (click)="closeCompareModal()"></button>
+      </div>
+      <div class="modal-body-custom">
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle text-center mb-0 small">
+            <thead class="table-light">
+              <tr>
+                <th class="text-start">Metric / Attribute</th>
+                <th *ngFor="let v of comparedVendors" class="fw-bold text-dark">{{ v.name }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="text-start fw-bold">Company</td>
+                <td *ngFor="let v of comparedVendors">{{ v.company }}</td>
+              </tr>
+              <tr>
+                <td class="text-start fw-bold">Category</td>
+                <td *ngFor="let v of comparedVendors"><span class="badge bg-primary-subtle text-primary border">{{ v.category }}</span></td>
+              </tr>
+              <tr>
+                <td class="text-start fw-bold">Reliability Score</td>
+                <td *ngFor="let v of comparedVendors" class="fw-bold text-success">{{ v.reliability_score || v.deliveryRate }}/100</td>
+              </tr>
+              <tr>
+                <td class="text-start fw-bold">On-Time Rate</td>
+                <td *ngFor="let v of comparedVendors" class="fw-bold text-primary">{{ v.on_time_delivery_rate || v.deliveryRate }}%</td>
+              </tr>
+              <tr>
+                <td class="text-start fw-bold">Risk Level</td>
+                <td *ngFor="let v of comparedVendors">
+                  <span class="badge" [ngClass]="getRiskBadgeClass(v.risk_level)">{{ v.risk_level }} Risk</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-start fw-bold">Completed Orders</td>
+                <td *ngFor="let v of comparedVendors">{{ v.completed_orders !== undefined ? (v.completed_orders + '/' + v.total_orders) : 'N/A' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="mt-4 text-end">
+          <button class="btn btn-secondary btn-sm" (click)="closeCompareModal()">Close Matrix</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Procurement Request Modal (9 Official Fields) -->
+  <div *ngIf="showCreatePRModal" class="modal-backdrop-custom">
+    <div class="modal-card-custom shadow-lg" style="max-width: 720px;">
+      <div class="modal-header-custom">
+        <div>
+          <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-file-earmark-plus text-primary me-2"></i> Create Procurement Request</h5>
+          <span class="small text-muted">Identify organizational requirement and define vendor category for sourcing</span>
+        </div>
+        <button type="button" class="btn-close" (click)="closeCreatePRModal()"></button>
+      </div>
+      <div class="modal-body-custom">
+        <form (ngSubmit)="submitPR()">
+          <div class="row g-3">
+            <!-- 1. Requirement ID (Auto-generated preview) -->
+            <div class="col-12">
+              <label class="form-label small fw-bold text-dark">1. Requirement ID (Auto Generated)</label>
+              <input type="text" class="form-control bg-light fw-bold text-primary" [value]="previewRequirementId + ' (System Generated)'" readonly>
+            </div>
+
+            <!-- 2. Item / Product / Service -->
+            <div class="col-md-7">
+              <label class="form-label small fw-bold text-dark">2. Item / Product / Service *</label>
+              <input [(ngModel)]="newPR.product_name" name="product_name" type="text" class="form-control" placeholder="e.g. Laptop, Raw Steel, Precision CNC..." required>
+            </div>
+
+            <!-- 7. Vendor Category (REQUIRED Dropdown) -->
+            <div class="col-md-5">
+              <label class="form-label small fw-bold text-dark">
+                7. Vendor Category * <span class="badge bg-danger ms-1" style="font-size: 0.65rem;">REQUIRED</span>
+              </label>
+              <select [(ngModel)]="newPR.category" name="category" class="form-select border-primary fw-semibold" required>
+                <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
+              </select>
+              <div class="form-text small text-primary" style="font-size: 0.72rem;">
+                <i class="bi bi-funnel-fill me-1"></i> Vendor sourcing strictly filtered to this category.
+              </div>
+            </div>
+
+            <!-- 3. Quantity -->
+            <div class="col-md-4">
+              <label class="form-label small fw-bold text-dark">3. Quantity *</label>
+              <input [(ngModel)]="newPR.quantity" (ngModelChange)="onPRQuantityChange()" name="quantity" type="number" class="form-control" min="1" required>
+            </div>
+
+            <!-- 4. Required Date -->
+            <div class="col-md-4">
+              <label class="form-label small fw-bold text-dark">4. Required Date</label>
+              <input [(ngModel)]="newPR.required_date" name="required_date" type="date" class="form-control">
+            </div>
+
+            <!-- 5. Priority -->
+            <div class="col-md-4">
+              <label class="form-label small fw-bold text-dark">5. Priority *</label>
+              <select [(ngModel)]="newPR.priority" name="priority" class="form-select">
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Urgent">Urgent</option>
+              </select>
+            </div>
+
+            <!-- 6. Budget Assignment (Per-Unit & Total) -->
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-dark">6a. Budget Per Unit (₹ INR / Unit) *</label>
+              <div class="input-group">
+                <span class="input-group-text fw-bold">₹</span>
+                <input [(ngModel)]="newPR.unit_budget" (ngModelChange)="onPRUnitBudgetChange()" name="unit_budget" type="number" class="form-control fw-semibold" min="0" placeholder="e.g. 50000" step="any">
+              </div>
+              <div class="form-text small text-muted">Assign budget per single unit/item</div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-dark">6b. Total Estimated Budget (₹ INR) *</label>
+              <div class="input-group">
+                <span class="input-group-text fw-bold">₹</span>
+                <input [(ngModel)]="newPR.estimated_budget" (ngModelChange)="onPRTotalBudgetChange()" name="estimated_budget" type="number" class="form-control fw-bold text-success" min="0" placeholder="e.g. 2500000" step="any">
+              </div>
+              <div class="form-text small text-muted">Auto-calculated from Quantity &times; Unit Budget</div>
+            </div>
+
+            <!-- Live Calculation Preview -->
+            <div class="col-12">
+              <div class="p-2 bg-light rounded border text-muted small d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-calculator me-1 text-primary"></i> Budget Calculation:</span>
+                <span class="fw-semibold text-dark">
+                  {{ newPR.quantity || 1 }} units &times; ₹{{ (newPR.unit_budget || 0) | number:'1.2-2' }} = <strong class="text-success">₹{{ (newPR.estimated_budget || 0) | number:'1.2-2' }} Total Budget</strong>
+                </span>
+              </div>
+            </div>
+
+            <!-- 8. Description / Reason -->
+            <div class="col-12">
+              <label class="form-label small fw-bold text-dark">8. Description / Business Justification *</label>
+              <textarea [(ngModel)]="newPR.reason" name="reason" rows="3" class="form-control" placeholder="Explain organizational requirement and justification..." required></textarea>
+            </div>
+          </div>
+
+          <!-- 9. Submit Request Button -->
+          <div class="mt-4 d-flex justify-content-end gap-2 border-top pt-3">
+            <button type="button" class="btn btn-outline-secondary" (click)="closeCreatePRModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary px-4 shadow-sm" [disabled]="isSubmittingPR">
+              <span *ngIf="isSubmittingPR" class="spinner-border spinner-border-sm me-1"></span>
+              <i class="bi bi-send me-1"></i>
+              <span>9. Submit Request</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Requisition Detail & Lifecycle Stepper Modal -->
+  <div *ngIf="showTrackingModal && selectedRequisitionForTracking" class="modal-backdrop-custom">
+    <div class="modal-card-custom shadow-lg modal-card-lg">
+      <div class="modal-header-custom">
+        <div>
+          <h5 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-clock-history text-primary me-2"></i>
+            {{ selectedRequisitionForTracking.request_number }}: {{ selectedRequisitionForTracking.title }}
+          </h5>
+          <span class="small text-muted">{{ selectedRequisitionForTracking.department }} | Submitted on {{ selectedRequisitionForTracking.created_at | date:'medium' }}</span>
+        </div>
+        <button type="button" class="btn-close" (click)="closeTrackingModal()"></button>
+      </div>
+      <div class="modal-body-custom">
+        <!-- 7-Step Lifecycle Progress Stepper -->
+        <div class="stepper-wrapper mb-4">
+          <div class="stepper-step" [ngClass]="{'active': getStepProgress(selectedRequisitionForTracking.status) >= 1, 'current': getStepProgress(selectedRequisitionForTracking.status) === 1}">
+            <div class="step-circle"><i class="bi bi-file-earmark-text"></i></div>
+            <div class="step-label">1. PR Submitted</div>
+          </div>
+          <div class="stepper-line" [ngClass]="{'completed': getStepProgress(selectedRequisitionForTracking.status) >= 2}"></div>
+          <div class="stepper-step" [ngClass]="{'active': getStepProgress(selectedRequisitionForTracking.status) >= 2, 'current': getStepProgress(selectedRequisitionForTracking.status) === 2}">
+            <div class="step-circle"><i class="bi bi-building"></i></div>
+            <div class="step-label">2. Vendor Selected</div>
+          </div>
+          <div class="stepper-line" [ngClass]="{'completed': getStepProgress(selectedRequisitionForTracking.status) >= 3}"></div>
+          <div class="stepper-step" [ngClass]="{'active': getStepProgress(selectedRequisitionForTracking.status) >= 3, 'current': getStepProgress(selectedRequisitionForTracking.status) === 3}">
+            <div class="step-circle"><i class="bi bi-cash-stack"></i></div>
+            <div class="step-label">3. Finance Approved</div>
+          </div>
+          <div class="stepper-line" [ngClass]="{'completed': getStepProgress(selectedRequisitionForTracking.status) >= 4}"></div>
+          <div class="stepper-step" [ngClass]="{'active': getStepProgress(selectedRequisitionForTracking.status) >= 4, 'current': getStepProgress(selectedRequisitionForTracking.status) === 4}">
+            <div class="step-circle"><i class="bi bi-receipt"></i></div>
+            <div class="step-label">4. PO Ordered</div>
+          </div>
+          <div class="stepper-line" [ngClass]="{'completed': getStepProgress(selectedRequisitionForTracking.status) >= 5}"></div>
+          <div class="stepper-step" [ngClass]="{'active': getStepProgress(selectedRequisitionForTracking.status) >= 5, 'current': getStepProgress(selectedRequisitionForTracking.status) === 5}">
+            <div class="step-circle"><i class="bi bi-truck"></i></div>
+            <div class="step-label">5. In Transit</div>
+          </div>
+          <div class="stepper-line" [ngClass]="{'completed': getStepProgress(selectedRequisitionForTracking.status) >= 6}"></div>
+          <div class="stepper-step" [ngClass]="{'active': getStepProgress(selectedRequisitionForTracking.status) >= 6, 'current': getStepProgress(selectedRequisitionForTracking.status) === 6}">
+            <div class="step-circle"><i class="bi bi-box-seam"></i></div>
+            <div class="step-label">6. Delivered</div>
+          </div>
+          <div class="stepper-line" [ngClass]="{'completed': getStepProgress(selectedRequisitionForTracking.status) >= 7}"></div>
+          <div class="stepper-step" [ngClass]="{'active': getStepProgress(selectedRequisitionForTracking.status) >= 7, 'current': getStepProgress(selectedRequisitionForTracking.status) === 7}">
+            <div class="step-circle"><i class="bi bi-check-circle"></i></div>
+            <div class="step-label">7. Completed & Paid</div>
+          </div>
+        </div>
+
+        <!-- Details Grid -->
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="p-3 bg-light rounded-3 h-100">
+              <h6 class="fw-bold text-dark mb-2">Requirement Specifications</h6>
+              <div class="small mb-1"><strong>Department:</strong> {{ selectedRequisitionForTracking.department }}</div>
+              <div class="small mb-1"><strong>Item / Service:</strong> {{ selectedRequisitionForTracking.title }}</div>
+              <div class="small mb-1"><strong>Quantity:</strong> {{ selectedRequisitionForTracking.quantity }} units</div>
+              <div class="small mb-1"><strong>Est. Budget:</strong> ${{ selectedRequisitionForTracking.estimated_budget | number:'1.2-2' }}</div>
+              <div class="small mb-1"><strong>Category:</strong> <span class="badge bg-secondary">{{ selectedRequisitionForTracking.category }}</span></div>
+              <div class="small mb-1"><strong>Priority:</strong> {{ selectedRequisitionForTracking.priority }}</div>
+              <div class="small mb-1"><strong>Status:</strong> <span class="badge" [ngClass]="getStatusBadgeClass(selectedRequisitionForTracking.status)">{{ selectedRequisitionForTracking.status }}</span></div>
+              <div class="small mt-2" *ngIf="selectedRequisitionForTracking.description"><strong>Reason:</strong> {{ selectedRequisitionForTracking.description }}</div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="p-3 bg-light rounded-3 h-100">
+              <h6 class="fw-bold text-dark mb-2">Fulfillment Trail</h6>
+              <div *ngIf="selectedRequisitionForTracking.selected_vendor" class="small mb-2 p-2 bg-white rounded border">
+                <strong><i class="bi bi-building me-1"></i> Supplier Partner:</strong> {{ selectedRequisitionForTracking.selected_vendor.name }}
+                <div class="text-muted">Quoted Amount: ${{ selectedRequisitionForTracking.selected_vendor.quotation | number:'1.2-2' }}</div>
+                <div class="text-muted small" *ngIf="selectedRequisitionForTracking.selected_vendor.justification">
+                  <em>Justification: {{ selectedRequisitionForTracking.selected_vendor.justification }}</em>
+                </div>
+              </div>
+              <div *ngIf="!selectedRequisitionForTracking.selected_vendor" class="p-3 bg-white border border-primary border-dashed rounded-3 my-2 text-center">
+                <i class="bi bi-diagram-3 text-primary fs-3 d-block mb-1"></i>
+                <div class="fw-bold text-dark small">Vendor Evaluation Pending</div>
+                <div class="text-muted small mb-2">Evaluate and select the best supplier partner using the Reliability Matrix.</div>
+                <button (click)="openSelectVendorFromTracking()" class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1 shadow-sm">
+                  <i class="bi bi-building-check"></i> Evaluate & Select Vendor via Matrix
+                </button>
+              </div>
+
+              <div *ngIf="selectedRequisitionForTracking.financial_approval" class="small mb-2 p-2 bg-white rounded border">
+                <strong><i class="bi bi-cash-stack me-1"></i> Financial Approval:</strong>
+                <span class="badge bg-success ms-1">{{ selectedRequisitionForTracking.financial_approval.status }}</span>
+                <div class="text-muted" *ngIf="selectedRequisitionForTracking.financial_approval.budget_allocated">
+                  Allocated Budget: ${{ selectedRequisitionForTracking.financial_approval.budget_allocated | number:'1.2-2' }}
+                </div>
+              </div>
+
+              <!-- Purchase Order & Logistics Telemetry -->
+              <div *ngIf="selectedRequisitionForTracking.purchase_order" class="small p-2 bg-white rounded border">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <strong><i class="bi bi-receipt me-1"></i> PO: {{ selectedRequisitionForTracking.purchase_order.po_number }}</strong>
+                  <span class="badge bg-info">{{ selectedRequisitionForTracking.purchase_order.status }}</span>
+                </div>
+                <div class="text-muted" *ngIf="selectedRequisitionForTracking.purchase_order.total_amount">
+                  Total PO Amount: ${{ selectedRequisitionForTracking.purchase_order.total_amount | number:'1.2-2' }}
+                </div>
+
+                <!-- Carrier & Transit Details -->
+                <div *ngIf="selectedRequisitionForTracking.purchase_order.carrier || selectedRequisitionForTracking.purchase_order.tracking_number" class="mt-2 pt-2 border-top">
+                  <div class="fw-semibold text-dark"><i class="bi bi-truck me-1"></i> Logistics Movement:</div>
+                  <div>Carrier: <strong>{{ selectedRequisitionForTracking.purchase_order.carrier || 'Standard Freight' }}</strong></div>
+                  <div *ngIf="selectedRequisitionForTracking.purchase_order.tracking_number">
+                    Tracking #: <span class="font-monospace text-primary fw-bold">{{ selectedRequisitionForTracking.purchase_order.tracking_number }}</span>
+                  </div>
+                  <div *ngIf="selectedRequisitionForTracking.purchase_order.dispatch_date" class="text-muted small">
+                    Dispatched: {{ selectedRequisitionForTracking.purchase_order.dispatch_date }}
+                  </div>
+                </div>
+
+                <!-- Delivery Receipt & Inspection -->
+                <div *ngIf="selectedRequisitionForTracking.purchase_order.delivery_status || selectedRequisitionForTracking.purchase_order.actual_delivery_date" class="mt-2 pt-2 border-top">
+                  <div class="fw-semibold text-dark"><i class="bi bi-box-seam me-1"></i> Receiving & Inspection:</div>
+                  <div>
+                    <span *ngIf="(selectedRequisitionForTracking.purchase_order.delay_days || 0) > 0" class="badge bg-danger ms-1">+{{ selectedRequisitionForTracking.purchase_order.delay_days }}d delay</span>
+                    <span *ngIf="selectedRequisitionForTracking.purchase_order.delay_days === 0" class="badge bg-success ms-1">On-Time</span>
+                  </div>
+                  <div *ngIf="selectedRequisitionForTracking.purchase_order.delivered_quantity !== undefined" class="text-muted small">
+                    Delivered: {{ selectedRequisitionForTracking.purchase_order.delivered_quantity }} / {{ selectedRequisitionForTracking.purchase_order.ordered_quantity || selectedRequisitionForTracking.quantity }} units
+                  </div>
+                </div>
+
+                <!-- Invoice & Settlement -->
+                <div *ngIf="selectedRequisitionForTracking.purchase_order.invoice_number" class="mt-2 pt-2 border-top">
+                  <div class="fw-semibold text-dark"><i class="bi bi-credit-card-2-front me-1"></i> Billing & Settlement:</div>
+                  <div>Invoice: <strong>{{ selectedRequisitionForTracking.purchase_order.invoice_number }}</strong></div>
+                  <div>
+                    Payment: <span class="badge" [ngClass]="selectedRequisitionForTracking.purchase_order.is_paid ? 'bg-success' : 'bg-warning text-dark'">
+                      {{ selectedRequisitionForTracking.purchase_order.invoice_status || (selectedRequisitionForTracking.purchase_order.is_paid ? 'PAID' : 'Pending') }}
+                    </span>
+                    <span *ngIf="selectedRequisitionForTracking.purchase_order.invoice_amount" class="ms-1 text-muted">
+                      (${{ selectedRequisitionForTracking.purchase_order.invoice_amount | number:'1.2-2' }})
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 d-flex justify-content-end gap-2">
+          <button *ngIf="!selectedRequisitionForTracking.selected_vendor" class="btn btn-primary btn-sm shadow-sm" (click)="openSelectVendorFromTracking()">
+            <i class="bi bi-diagram-3-fill me-1"></i> Evaluate & Select Vendor via Matrix
+          </button>
+          <button class="btn btn-secondary btn-sm" (click)="closeTrackingModal()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

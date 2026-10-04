@@ -1,0 +1,537 @@
+<div class="finance-dashboard-container">
+  <!-- Top Role Header Banner matching reference styling (Amber/Gold theme) -->
+  <div class="finance-header-banner p-3 rounded-3 mb-4 shadow-sm text-white d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div class="d-flex align-items-center gap-3">
+      <div class="banner-icon-box bg-white bg-opacity-20 p-2 rounded-3 text-white fs-4 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+        <i class="bi bi-cash-stack"></i>
+      </div>
+      <div>
+        <div class="d-flex align-items-center gap-2">
+          <h4 class="fw-bold mb-0 text-white">Finance Officer Dashboard</h4>
+          <span class="badge bg-white text-dark fw-semibold rounded-pill px-2 py-1">Finance & Treasury</span>
+        </div>
+        <p class="text-white-50 small mb-0">Budget verification, disbursement management, invoice processing & spend control</p>
+      </div>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+      <button (click)="loadData()" class="btn btn-light btn-sm fw-semibold text-dark d-flex align-items-center gap-1 shadow-sm">
+        <i class="bi bi-arrow-clockwise"></i> Refresh Accounts
+      </button>
+    </div>
+  </div>
+
+  <!-- Floating Toast Notification for Instant Visibility Anywhere On Page -->
+  <div *ngIf="actionMessage" class="position-fixed top-0 end-0 p-3" style="z-index: 2000;">
+    <div class="toast show align-items-center text-white bg-success border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body d-flex align-items-center gap-2 py-2 px-3 fw-medium">
+          <i class="bi bi-check-circle-fill fs-5"></i>
+          <span>{{ actionMessage }}</span>
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" (click)="actionMessage = ''"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Alert -->
+  <div *ngIf="actionMessage" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i> {{ actionMessage }}
+    <button type="button" class="btn-close" (click)="actionMessage = ''"></button>
+  </div>
+
+  <!-- TOP 6 KPI CARDS (Section 4) -->
+  <div class="row g-3 mb-4">
+    <!-- 1. Pending Budget Approvals -->
+    <div class="col-xl-2 col-md-4 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card" (click)="scrollToSection('pending-approvals-section')" style="cursor: pointer;">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box bg-warning-subtle text-warning rounded-3 p-2">
+            <i class="bi bi-hourglass-split fs-5"></i>
+          </div>
+          <span class="badge bg-warning-subtle text-dark small fw-semibold">Action Required</span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">Pending Approvals</span>
+        <h3 class="fw-bold my-1 text-warning">{{ financeSummary?.kpis?.pending_budget_approvals || pendingApprovals.length }}</h3>
+        <span class="smaller text-muted">vendor selections awaiting</span>
+      </div>
+    </div>
+
+    <!-- 2. Approved Budgets -->
+    <div class="col-xl-2 col-md-4 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box bg-success-subtle text-success rounded-3 p-2">
+            <i class="bi bi-check2-circle fs-5"></i>
+          </div>
+          <span class="badge bg-success-subtle text-success small fw-semibold">Fiscal Year</span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">Approved Budgets</span>
+        <h3 class="fw-bold my-1 text-dark">₹ {{ ((financeSummary?.kpis?.approved_budgets || 14300000) / 100000) | number:'1.1-1' }}L</h3>
+        <span class="smaller text-muted">across departments</span>
+      </div>
+    </div>
+
+    <!-- 3. Total Procurement Spend -->
+    <div class="col-xl-2 col-md-4 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box bg-primary-subtle text-primary rounded-3 p-2">
+            <i class="bi bi-wallet2 fs-5"></i>
+          </div>
+          <span class="badge bg-primary-subtle text-primary small fw-semibold">Total Spend</span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">Procurement Spend</span>
+        <h3 class="fw-bold my-1 text-primary">₹ {{ ((financeSummary?.kpis?.total_procurement_spend || 6437787) / 100000) | number:'1.1-1' }}L</h3>
+        <span class="smaller text-muted">total committed</span>
+      </div>
+    </div>
+
+    <!-- 4. Pending Invoices -->
+    <div class="col-xl-2 col-md-4 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card" (click)="scrollToSection('invoices-section')" style="cursor: pointer;">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box bg-warning-subtle text-warning rounded-3 p-2">
+            <i class="bi bi-receipt-cutoff fs-5"></i>
+          </div>
+          <span class="badge bg-warning-subtle text-dark small fw-semibold">3-Way Match</span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">Pending Invoices</span>
+        <h3 class="fw-bold my-1 text-warning">{{ financeSummary?.kpis?.pending_invoices || invoices.length }}</h3>
+        <span class="smaller text-muted">in verification queue</span>
+      </div>
+    </div>
+
+    <!-- 5. Paid Invoices -->
+    <div class="col-xl-2 col-md-4 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box bg-success-subtle text-success rounded-3 p-2">
+            <i class="bi bi-check-all fs-5"></i>
+          </div>
+          <span class="badge bg-success-subtle text-success small fw-semibold">Settled</span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">Paid Invoices</span>
+        <h3 class="fw-bold my-1 text-success">{{ financeSummary?.kpis?.paid_invoices || paymentHistory.length }}</h3>
+        <span class="smaller text-muted">remittances processed</span>
+      </div>
+    </div>
+
+    <!-- 6. Outstanding Amount -->
+    <div class="col-xl-2 col-md-4 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box rounded-3 p-2" style="background: rgba(139, 92, 246, 0.15); color: #8b5cf6;">
+            <i class="bi bi-hourglass-bottom fs-5"></i>
+          </div>
+          <span class="badge bg-light text-muted small fw-semibold">Payable</span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">Outstanding Amount</span>
+        <h3 class="fw-bold my-1 text-dark">₹ {{ ((financeSummary?.kpis?.outstanding_amount || 2800000) / 100000) | number:'1.1-1' }}L</h3>
+        <span class="smaller text-muted">balance payable</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- FINANCIAL CHARTS ROW 1 (Monthly Spend, Budget vs Actual, Invoice Status) -->
+  <div class="row g-3 mb-4">
+    <!-- Chart A: Monthly Procurement Spending -->
+    <div class="col-lg-4 col-md-12">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-graph-up-arrow text-warning me-1"></i> Monthly Procurement Spending
+          </h6>
+        </div>
+        <app-chart
+          type="bar"
+          [data]="monthlySpendingChartData"
+          [options]="monthlySpendingChartOptions"
+          [height]="240"
+          [loading]="isLoadingSummary">
+        </app-chart>
+      </div>
+    </div>
+
+    <!-- Chart B: Budget vs Actual Spending -->
+    <div class="col-lg-4 col-md-6">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-bar-chart text-primary me-1"></i> Budget vs Actual Spending
+          </h6>
+        </div>
+        <app-chart
+          type="bar"
+          [data]="budgetVsActualChartData"
+          [options]="budgetVsActualChartOptions"
+          [height]="240"
+          [loading]="isLoadingSummary">
+        </app-chart>
+      </div>
+    </div>
+
+    <!-- Chart C: Invoice Status -->
+    <div class="col-lg-4 col-md-6">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-pie-chart-fill text-success me-1"></i> Invoice Status
+          </h6>
+        </div>
+        <app-chart
+          type="doughnut"
+          [data]="invoiceStatusChartData"
+          [options]="invoiceStatusChartOptions"
+          [height]="240"
+          [centerText]="(invoices.length || 137) + ''"
+          centerSubtext="Invoices"
+          [loading]="isLoadingSummary">
+        </app-chart>
+      </div>
+    </div>
+  </div>
+
+  <!-- FINANCIAL CHARTS ROW 2 (Vendor Payment Distribution, Monthly Payment Trend) -->
+  <div class="row g-3 mb-4">
+    <!-- Chart D: Vendor Payment Distribution -->
+    <div class="col-lg-6 col-md-12">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-distribute-horizontal text-success me-1"></i> Vendor Payment Distribution
+          </h6>
+        </div>
+        <app-chart
+          type="bar"
+          [data]="vendorPaymentDistChartData"
+          [options]="vendorPaymentDistChartOptions"
+          [height]="220"
+          [loading]="isLoadingSummary">
+        </app-chart>
+      </div>
+    </div>
+
+    <!-- Chart E: Monthly Payment Trend -->
+    <div class="col-lg-6 col-md-12">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-cash text-primary me-1"></i> Monthly Payment Trend
+          </h6>
+        </div>
+        <app-chart
+          type="line"
+          [data]="monthlyPaymentTrendChartData"
+          [options]="monthlyPaymentTrendChartOptions"
+          [height]="220"
+          [loading]="isLoadingSummary">
+        </app-chart>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 12, 13, 14: PENDING FINANCIAL APPROVALS -->
+  <div id="pending-approvals-section" class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-cash-coin text-warning fs-5"></i>
+        <h5 class="mb-0 fw-bold">Pending Financial Approvals (Vendor Selections)</h5>
+        <span class="badge bg-warning text-dark ms-2">{{ pendingApprovals.length }}</span>
+      </div>
+    </div>
+    <div class="card-body p-0">
+      <div *ngIf="pendingApprovals.length === 0" class="text-center py-4 text-muted">
+        <i class="bi bi-check-circle text-success fs-3 d-block mb-1"></i>
+        <span>No vendor selections awaiting financial signoff.</span>
+      </div>
+
+      <div *ngIf="pendingApprovals.length > 0" class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light text-muted small text-uppercase">
+            <tr>
+              <th class="ps-3">PR Number</th>
+              <th>Department</th>
+              <th>Requirement</th>
+              <th>Selected Vendor</th>
+              <th>Quotation Amount</th>
+              <th>Justification</th>
+              <th>Selected By</th>
+              <th class="text-end pe-3">Financial Decision</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let a of pendingApprovals">
+              <td class="ps-3 fw-bold text-primary">{{ a.request_number }}</td>
+              <td><span class="badge bg-light text-dark border">{{ a.department }}</span></td>
+              <td class="fw-semibold">{{ a.title }} (Qty: {{ a.quantity }})</td>
+              <td class="fw-bold text-dark">{{ a.vendor_name }}</td>
+              <td class="fw-bold text-success">${{ a.quotation_amount | number:'1.2-2' }}</td>
+              <td class="small text-muted text-truncate" style="max-width: 250px;">{{ a.justification }}</td>
+              <td class="small">{{ a.selected_by }}</td>
+              <td class="text-end pe-3">
+                <div class="btn-group btn-group-sm">
+                  <button (click)="openApproveModal(a)" class="btn btn-success">
+                    <i class="bi bi-check-lg me-1"></i> Approve Budget
+                  </button>
+                  <button (click)="openRejectModal(a)" class="btn btn-outline-danger">
+                    <i class="bi bi-x-lg"></i> Reject
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 26, 27, 28: INVOICES & 3-WAY MATCH VERIFICATION -->
+  <div id="invoices-section" class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-receipt-cutoff text-primary fs-5"></i>
+        <h5 class="mb-0 fw-bold">Invoices & Automated 3-Way Match Verification</h5>
+      </div>
+      <span class="badge bg-primary">PO vs Delivery vs Invoice</span>
+    </div>
+    <div class="card-body p-0">
+      <div *ngIf="invoices.length === 0" class="text-center py-4 text-muted">
+        <span>No invoices available for verification.</span>
+      </div>
+
+      <div *ngIf="invoices.length > 0" class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light text-muted small text-uppercase">
+            <tr>
+              <th class="ps-3">Invoice #</th>
+              <th>PO Reference</th>
+              <th>Vendor</th>
+              <th>Invoice Amount</th>
+              <th>PO Total</th>
+              <th>Delivered Qty</th>
+              <th>3-Way Match</th>
+              <th>Status</th>
+              <th class="text-end pe-3">Payment Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let inv of invoices">
+              <td class="ps-3 fw-bold">{{ inv.invoice_number }}</td>
+              <td><span class="badge bg-light text-dark border">{{ inv.po_number }}</span></td>
+              <td class="fw-semibold">
+                {{ inv.vendor_name || inv.vendor?.name || 'Assigned Vendor' }}
+                <small class="text-muted d-block" *ngIf="inv.vendor_company || inv.vendor?.company">{{ inv.vendor_company || inv.vendor?.company }}</small>
+              </td>
+              <td class="fw-bold text-dark">${{ inv.amount | number:'1.2-2' }}</td>
+              <td class="small text-muted">${{ inv.po_total | number:'1.2-2' }}</td>
+              <td class="small">
+                <span *ngIf="inv.delivery">{{ inv.delivery.delivered_quantity }} / {{ inv.delivery.ordered_quantity }} units</span>
+                <span *ngIf="!inv.delivery" class="text-muted">Awaiting receipt</span>
+              </td>
+              <td>
+                <span class="badge" [ngClass]="{
+                  'bg-success': inv.three_way_match_status === 'MATCHED',
+                  'bg-danger': inv.three_way_match_status === 'DISCREPANCY',
+                  'bg-warning text-dark': inv.three_way_match_status === 'PENDING'
+                }">
+                  {{ inv.three_way_match_status }}
+                </span>
+              </td>
+              <td>
+                <span class="badge" [ngClass]="inv.status === 'PAID' ? 'bg-success' : 'bg-primary'">
+                  {{ inv.status }}
+                </span>
+              </td>
+              <td class="text-end pe-3">
+                <div class="btn-group btn-group-sm" *ngIf="inv.status !== 'PAID'">
+                  <button *ngIf="inv.three_way_match_status !== 'MATCHED'"
+                          (click)="verify3WayMatch(inv)"
+                          class="btn btn-outline-primary"
+                          [disabled]="!inv.delivery">
+                    <i class="bi bi-shield-check me-1"></i> Verify Match
+                  </button>
+                  <button *ngIf="inv.three_way_match_status === 'MATCHED'"
+                          (click)="openPaymentModal(inv)"
+                          class="btn btn-success shadow-sm">
+                    <i class="bi bi-credit-card-2-front-fill me-1"></i> Process Payment
+                  </button>
+                </div>
+                <span *ngIf="inv.status === 'PAID'" class="badge bg-success">
+                  <i class="bi bi-check-all"></i> Remitted
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 28 & 29: PAYMENT REMITTANCE HISTORY -->
+  <div id="payment-history-section" class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-journal-check text-success fs-5"></i>
+        <h5 class="mb-0 fw-bold">Payment Remittance History (Audit Trail)</h5>
+      </div>
+      <span class="badge bg-success">Step 28 & 29 Completed</span>
+    </div>
+    <div class="card-body p-0">
+      <div *ngIf="paymentHistory.length === 0" class="text-center py-4 text-muted">
+        <span>No processed payments yet.</span>
+      </div>
+
+      <div *ngIf="paymentHistory.length > 0" class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light text-muted small text-uppercase">
+            <tr>
+              <th class="ps-3">Tx Reference</th>
+              <th>Invoice #</th>
+              <th>PO #</th>
+              <th>Vendor</th>
+              <th>Disbursed Amount</th>
+              <th>Method</th>
+              <th>Payment Date</th>
+              <th>Processed By</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of paymentHistory">
+              <td class="ps-3 fw-bold font-monospace text-primary">{{ p.transaction_reference }}</td>
+              <td>{{ p.invoice_number }}</td>
+              <td>{{ p.po_number }}</td>
+              <td class="fw-semibold">
+                {{ p.vendor_name || p.vendor?.name || 'Assigned Vendor' }}
+                <small class="text-muted d-block" *ngIf="p.vendor_company || p.vendor?.company">{{ p.vendor_company || p.vendor?.company }}</small>
+              </td>
+              <td class="fw-bold text-success">${{ p.amount | number:'1.2-2' }}</td>
+              <td><span class="badge bg-light text-dark border">{{ p.payment_method }}</span></td>
+              <td class="small text-muted">{{ p.payment_date | date:'mediumDate' }}</td>
+              <td class="small">{{ p.processed_by }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Strict Role Separation Banner -->
+  <div class="card bg-light border-0 p-3 shadow-sm rounded-3">
+    <div class="d-flex align-items-center gap-3">
+      <div class="text-success fs-3"><i class="bi bi-bank2"></i></div>
+      <div>
+        <h6 class="fw-bold mb-1 text-dark">Strict Role Boundary: Financial Approval & Disbursement Only</h6>
+        <p class="small text-muted mb-0">
+          The Finance Officer controls financial validation, budget allocation, 3-way matching, and payment execution. Finance <strong>MUST NOT</strong> select vendors, create POs, issue POs, confirm deliveries, or modify vendor reliability scores.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Financial Approval Modal (Step 14) -->
+  <div *ngIf="showApprovalModal && selectedApproval" class="modal-backdrop-custom">
+    <div class="modal-card-custom shadow-lg">
+      <div class="modal-header-custom">
+        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-check-circle text-success me-2"></i> Approve Financial Budget</h5>
+        <button type="button" class="btn-close" (click)="closeApproveModal()"></button>
+      </div>
+      <div class="modal-body-custom">
+        <div class="p-3 bg-light rounded-3 mb-3">
+          <div class="fw-bold text-dark">{{ selectedApproval.request_number }}: {{ selectedApproval.title }}</div>
+          <div class="small text-muted">Department: {{ selectedApproval.department }} | Vendor: {{ selectedApproval.vendor_name }}</div>
+          <div class="small text-muted">Procurement Quotation: <strong>${{ selectedApproval.quotation_amount | number:'1.2-2' }}</strong></div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Allocated Budget ($ USD) *</label>
+          <div class="input-group">
+            <span class="input-group-text">$</span>
+            <input [(ngModel)]="budgetToAllocate" type="number" class="form-control" min="1" required>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Financial Comments</label>
+          <textarea [(ngModel)]="approvalComments" rows="2" class="form-control" placeholder="Add budget ledger authorization notes..."></textarea>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button type="button" class="btn btn-outline-secondary" (click)="closeApproveModal()">Cancel</button>
+          <button type="button" class="btn btn-success px-4" [disabled]="isSubmitting" (click)="confirmApprove()">
+            <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-1"></span>
+            <span>Authorize & Route to SCM</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Financial Rejection Modal (Step 14 - Reject) -->
+  <div *ngIf="showRejectionModal && selectedApproval" class="modal-backdrop-custom">
+    <div class="modal-card-custom shadow-lg">
+      <div class="modal-header-custom">
+        <h5 class="fw-bold mb-0 text-danger"><i class="bi bi-x-circle text-danger me-2"></i> Reject Financial Request</h5>
+        <button type="button" class="btn-close" (click)="closeRejectModal()"></button>
+      </div>
+      <div class="modal-body-custom">
+        <p class="text-muted small">Return requisition <strong>{{ selectedApproval.request_number }}</strong> to Procurement with a clear rejection reason:</p>
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Mandatory Rejection Reason *</label>
+          <textarea [(ngModel)]="rejectionReason" rows="3" class="form-control" placeholder="Explain why the budget was declined..." required></textarea>
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button type="button" class="btn btn-outline-secondary" (click)="closeRejectModal()">Cancel</button>
+          <button type="button" class="btn btn-danger px-4" [disabled]="isSubmitting" (click)="confirmReject()">
+            Confirm Financial Rejection
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Disbursement Modal (Step 28) -->
+  <div *ngIf="showPaymentModal && selectedInvoiceForPayment" class="modal-backdrop-custom">
+    <div class="modal-card-custom shadow-lg">
+      <div class="modal-header-custom">
+        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-credit-card text-success me-2"></i> Process Payment Disbursement</h5>
+        <button type="button" class="btn-close" (click)="closePaymentModal()"></button>
+      </div>
+      <div class="modal-body-custom">
+        <div class="p-3 bg-light rounded-3 mb-3">
+          <div class="fw-bold">{{ selectedInvoiceForPayment.invoice_number }} | PO: {{ selectedInvoiceForPayment.po_number }}</div>
+          <div class="small text-muted">Vendor Payee: {{ selectedInvoiceForPayment.vendor_name }}</div>
+          <div class="fw-bold text-success fs-5 mt-1">${{ selectedInvoiceForPayment.amount | number:'1.2-2' }}</div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Payment Method *</label>
+            <select [(ngModel)]="paymentForm.payment_method" class="form-select">
+              <option value="Electronic Funds Transfer">Electronic Funds Transfer (EFT)</option>
+              <option value="Wire Transfer">Wire Transfer (SWIFT)</option>
+              <option value="Corporate Purchasing Card">Corporate Purchasing Card</option>
+              <option value="Direct Deposit">Direct Deposit</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Transaction Reference *</label>
+            <input [(ngModel)]="paymentForm.transaction_ref" type="text" class="form-control font-monospace" required>
+          </div>
+          <div class="col-12">
+            <label class="form-label small fw-bold">Payment Remittance Notes</label>
+            <textarea [(ngModel)]="paymentForm.payment_notes" rows="2" class="form-control"></textarea>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button type="button" class="btn btn-outline-secondary" (click)="closePaymentModal()">Cancel</button>
+          <button type="button" class="btn btn-success px-4" [disabled]="isSubmitting" (click)="confirmPayment()">
+            <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-1"></span>
+            <span>Execute & Complete Transaction</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

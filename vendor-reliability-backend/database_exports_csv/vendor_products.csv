@@ -1,0 +1,60 @@
+id,vendor_id,product_name,category,unit_price,lead_time_days,in_stock,description,created_at
+1,1,Heavy Fabrication Steel & Fasteners,Raw Material Suppliers,1200.0,10,1,Standard enterprise catalog item: Heavy Fabrication Steel & Fasteners,2026-09-21 17:45:37.935328
+2,2,Microcontrollers & Embedded Sensors,IT Vendors,1200.0,10,1,Standard enterprise catalog item: Microcontrollers & Embedded Sensors,2026-09-21 17:45:37.940626
+3,3,Cross-Border Multimodal Freight,Logistics Partners,1200.0,10,1,Standard enterprise catalog item: Cross-Border Multimodal Freight,2026-09-21 17:45:37.944597
+4,4,Hydraulic Pumps & Turbine Castings,Equipment Vendors,1200.0,10,1,Standard enterprise catalog item: Hydraulic Pumps & Turbine Castings,2026-09-21 17:45:37.949456
+5,16,Laptop,IT & Electronics,50000.0,7,1,Authorized catalogue item: Laptop,2026-09-22 12:12:01.891787
+6,16,Desktop,IT & Electronics,12000.0,7,1,Authorized catalogue item: Desktop,2026-09-22 12:12:01.891794
+7,16,Monitor,IT & Electronics,12000.0,7,1,Authorized catalogue item: Monitor,2026-09-22 12:12:01.891798
+8,16,Printer,IT & Electronics,12000.0,7,1,Authorized catalogue item: Printer,2026-09-22 12:12:01.891801
+9,17,Laptop,IT & Electronics,50000.0,7,1,Authorized catalogue item: Laptop,2026-09-22 12:12:01.903440
+10,17,Desktop,IT & Electronics,12000.0,7,1,Authorized catalogue item: Desktop,2026-09-22 12:12:01.903444
+11,17,Networking Equipment,IT & Electronics,12000.0,7,1,Authorized catalogue item: Networking Equipment,2026-09-22 12:12:01.903446
+12,18,Laptop,IT & Electronics,50000.0,7,1,Authorized catalogue item: Laptop,2026-09-22 12:12:01.910855
+13,18,Desktop,IT & Electronics,12000.0,7,1,Authorized catalogue item: Desktop,2026-09-22 12:12:01.910859
+14,18,Computer Peripherals,IT & Electronics,12000.0,7,1,Authorized catalogue item: Computer Peripherals,2026-09-22 12:12:01.910860
+15,19,Laptop,IT & Electronics,50000.0,7,1,Authorized catalogue item: Laptop,2026-09-22 12:12:01.917226
+16,19,Tablets,IT & Electronics,12000.0,7,1,Authorized catalogue item: Tablets,2026-09-22 12:12:01.917231
+17,19,Accessories,IT & Electronics,12000.0,7,1,Authorized catalogue item: Accessories,2026-09-22 12:12:01.917234
+18,20,Steel,Raw Materials,12000.0,7,1,Authorized catalogue item: Steel,2026-09-22 12:12:01.925011
+19,20,Cement,Raw Materials,12000.0,7,1,Authorized catalogue item: Cement,2026-09-22 12:12:01.925014
+20,20,Copper,Raw Materials,12000.0,7,1,Authorized catalogue item: Copper,2026-09-22 12:12:01.925016
+21,21,Equipment Maintenance,Services & Maintenance,12000.0,7,1,Authorized catalogue item: Equipment Maintenance,2026-09-22 12:12:01.931422
+22,21,Facility Maintenance,Services & Maintenance,12000.0,7,1,Authorized catalogue item: Facility Maintenance,2026-09-22 12:12:01.931427
+23,21,IT Support,Services & Maintenance,12000.0,7,1,Authorized catalogue item: IT Support,2026-09-22 12:12:01.931430
+24,21,Repair Services,Services & Maintenance,12000.0,7,1,Authorized catalogue item: Repair Services,2026-09-22 12:12:01.931432
+25,22,Truck Transportation,Logistics & Transportation,12000.0,7,1,Authorized catalogue item: Truck Transportation,2026-09-22 12:12:01.937468
+26,22,Freight,Logistics & Transportation,12000.0,7,1,Authorized catalogue item: Freight,2026-09-22 12:12:01.937471
+27,22,Warehousing,Logistics & Transportation,12000.0,7,1,Authorized catalogue item: Warehousing,2026-09-22 12:12:01.937473
+28,22,Delivery Services,Logistics & Transportation,12000.0,7,1,Authorized catalogue item: Delivery Services,2026-09-22 12:12:01.937474
+29,23,Chairs,Office Supplies & Equipment,12000.0,7,1,Authorized catalogue item: Chairs,2026-09-22 12:12:01.943313
+30,23,Tables,Office Supplies & Equipment,12000.0,7,1,Authorized catalogue item: Tables,2026-09-22 12:12:01.943316
+31,23,Stationery,Office Supplies & Equipment,12000.0,7,1,Authorized catalogue item: Stationery,2026-09-22 12:12:01.943318
+32,23,Office Equipment,Office Supplies & Equipment,12000.0,7,1,Authorized catalogue item: Office Equipment,2026-09-22 12:12:01.943319
+33,24,Laptop,IT & Electronics,50000.0,7,1,,2026-09-22 13:57:26.792238
+34,24,Desktop,IT & Electronics,40000.0,7,1,,2026-09-22 13:57:26.792243
+35,17,Laptop,IT & Electronics,50000.0,7,1,Authorized catalogue item: Laptop,2026-09-27 13:04:41.275117
+36,17,Desktop,IT & Electronics,12000.0,7,1,Authorized catalogue item: Desktop,2026-09-27 13:04:41.275121
+37,17,Networking Equipment,IT & Electronics,12000.0,7,1,Authorized catalogue item: Networking Equipment,2026-09-27 13:04:41.275123
+38,18,Laptop,IT & Electronics,50000.0,7,1,Authorized catalogue item: Laptop,2026-09-27 13:04:41.282746
+39,18,Desktop,IT & Electronics,12000.0,7,1,Authorized catalogue item: Desktop,2026-09-27 13:04:41.282749
+40,18,Computer Peripherals,IT & Electronics,12000.0,7,1,Authorized catalogue item: Computer Peripherals,2026-09-27 13:04:41.282751
+41,19,Laptop,IT & Electronics,50000.0,7,1,Authorized catalogue item: Laptop,2026-09-27 13:04:41.288915
+42,19,Tablets,IT & Electronics,12000.0,7,1,Authorized catalogue item: Tablets,2026-09-27 13:04:41.288918
+43,19,Accessories,IT & Electronics,12000.0,7,1,Authorized catalogue item: Accessories,2026-09-27 13:04:41.288920
+44,20,Steel,Raw Materials,12000.0,7,1,Authorized catalogue item: Steel,2026-09-27 13:04:41.295385
+45,20,Cement,Raw Materials,12000.0,7,1,Authorized catalogue item: Cement,2026-09-27 13:04:41.295388
+46,20,Copper,Raw Materials,12000.0,7,1,Authorized catalogue item: Copper,2026-09-27 13:04:41.295390
+47,21,Equipment Maintenance,Services & Maintenance,12000.0,7,1,Authorized catalogue item: Equipment Maintenance,2026-09-27 13:04:41.304458
+48,21,Facility Maintenance,Services & Maintenance,12000.0,7,1,Authorized catalogue item: Facility Maintenance,2026-09-27 13:04:41.304461
+49,21,IT Support,Services & Maintenance,12000.0,7,1,Authorized catalogue item: IT Support,2026-09-27 13:04:41.304463
+50,21,Repair Services,Services & Maintenance,12000.0,7,1,Authorized catalogue item: Repair Services,2026-09-27 13:04:41.304465
+51,4,Hydraulic Pumps & Turbine Castings,Equipment Vendors,12000.0,7,1,Authorized catalogue item: Hydraulic Pumps & Turbine Castings,2026-09-27 13:04:41.311226
+52,22,Truck Transportation,Logistics & Transportation,12000.0,7,1,Authorized catalogue item: Truck Transportation,2026-09-27 13:04:41.317462
+53,22,Freight,Logistics & Transportation,12000.0,7,1,Authorized catalogue item: Freight,2026-09-27 13:04:41.317465
+54,22,Warehousing,Logistics & Transportation,12000.0,7,1,Authorized catalogue item: Warehousing,2026-09-27 13:04:41.317467
+55,22,Delivery Services,Logistics & Transportation,12000.0,7,1,Authorized catalogue item: Delivery Services,2026-09-27 13:04:41.317468
+56,23,Chairs,Office Supplies & Equipment,12000.0,7,1,Authorized catalogue item: Chairs,2026-09-27 13:04:41.323860
+57,23,Tables,Office Supplies & Equipment,12000.0,7,1,Authorized catalogue item: Tables,2026-09-27 13:04:41.323870
+58,23,Stationery,Office Supplies & Equipment,12000.0,7,1,Authorized catalogue item: Stationery,2026-09-27 13:04:41.323872
+59,23,Office Equipment,Office Supplies & Equipment,12000.0,7,1,Authorized catalogue item: Office Equipment,2026-09-27 13:04:41.323873

@@ -1,0 +1,13 @@
+id,name,description,is_active,created_at
+1,Raw Material Suppliers,"Bulk raw materials, metals, chemicals, and foundational resources",1,2026-09-21 17:45:37.898268
+2,Equipment Vendors,"Industrial machinery, hardware, and equipment suppliers",1,2026-09-21 17:45:37.898273
+3,IT Vendors,"Software licenses, cloud infrastructure, and hardware",1,2026-09-21 17:45:37.898276
+4,Service Providers,"Consulting, engineering, and facilities management",1,2026-09-21 17:45:37.898278
+5,Logistics Partners,"Freight shipping, freight forwarding, and warehousing",1,2026-09-21 17:45:37.898280
+6,Maintenance Vendors,"Plant maintenance, facility repair, and HVAC servicing",1,2026-09-21 17:45:37.898282
+7,IT & Electronics,"Computing hardware, laptops, monitors, servers, peripherals, and networking systems",1,2026-09-22 12:12:01.787582
+8,Raw Materials,"Foundational raw materials, structural steel, copper, cement, polymers, and chemicals",1,2026-09-22 12:12:01.787589
+9,Office Supplies & Equipment,"Workstation desks, ergonomic chairs, stationery, and office furnishings",1,2026-09-22 12:12:01.787593
+10,Machinery & Spare Parts,"Industrial machinery, electric motors, hydraulic pumps, bearings, and plant components",1,2026-09-22 12:12:01.787596
+11,Logistics & Transportation,"Intermodal freight, linehaul trucking, express delivery, and warehouse logistics",1,2026-09-22 12:12:01.787598
+12,Services & Maintenance,"Facility maintenance, HVAC repair, electrical servicing, and certified IT support",1,2026-09-22 12:12:01.787601

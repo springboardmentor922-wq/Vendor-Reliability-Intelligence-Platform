@@ -1,0 +1,7 @@
+id,name,code,description,is_active,created_at
+1,IT & Electronics,ITE,"Computing hardware, laptops, monitors, servers, peripherals, and networking systems",1,2026-09-22 12:12:01.781527
+2,Raw Materials,RAW,"Foundational raw materials, structural steel, copper, cement, polymers, and chemicals",1,2026-09-22 12:12:01.781540
+3,Office Supplies & Equipment,OFF,"Workstation desks, ergonomic chairs, stationery, and office furnishings",1,2026-09-22 12:12:01.781544
+4,Machinery & Spare Parts,MSP,"Industrial machinery, electric motors, hydraulic pumps, bearings, and plant components",1,2026-09-22 12:12:01.781548
+5,Logistics & Transportation,LOG,"Intermodal freight, linehaul trucking, express delivery, and warehouse logistics",1,2026-09-22 12:12:01.781551
+6,Services & Maintenance,SRV,"Facility maintenance, HVAC repair, electrical servicing, and certified IT support",1,2026-09-22 12:12:01.781554

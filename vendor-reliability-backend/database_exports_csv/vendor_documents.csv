@@ -1,0 +1,41 @@
+id,vendor_id,document_type,document_name,document_url,status,uploaded_at
+1,1,Business Registration Certificate,Acme_Industrial_Supplies_Certificate_of_Incorporation.pdf,/docs/acme_industrial_supplies_inc.pdf,VERIFIED,2026-09-21 17:45:37.934226
+2,1,Tax Compliance / GST Clearance,Acme_Industrial_Supplies_Tax_Clearance_2026.pdf,/docs/acme_industrial_supplies_tax.pdf,VERIFIED,2026-09-21 17:45:37.934230
+3,2,Business Registration Certificate,Apex_Semiconductor_Tech_Certificate_of_Incorporation.pdf,/docs/apex_semiconductor_tech_inc.pdf,VERIFIED,2026-09-21 17:45:37.940382
+4,2,Tax Compliance / GST Clearance,Apex_Semiconductor_Tech_Tax_Clearance_2026.pdf,/docs/apex_semiconductor_tech_tax.pdf,VERIFIED,2026-09-21 17:45:37.940385
+5,3,Business Registration Certificate,Global_Cargo_Express_Certificate_of_Incorporation.pdf,/docs/global_cargo_express_inc.pdf,VERIFIED,2026-09-21 17:45:37.944295
+6,3,Tax Compliance / GST Clearance,Global_Cargo_Express_Tax_Clearance_2026.pdf,/docs/global_cargo_express_tax.pdf,VERIFIED,2026-09-21 17:45:37.944299
+7,4,Business Registration Certificate,Titan_Heavy_Machining_Certificate_of_Incorporation.pdf,/docs/titan_heavy_machining_inc.pdf,VERIFIED,2026-09-21 17:45:37.949126
+8,4,Tax Compliance / GST Clearance,Titan_Heavy_Machining_Tax_Clearance_2026.pdf,/docs/titan_heavy_machining_tax.pdf,VERIFIED,2026-09-21 17:45:37.949132
+9,16,Business Registration Certificate,ABC_Technologies_Certificate_of_Incorporation.pdf,/docs/abc_technologies_inc.pdf,VERIFIED,2026-09-22 12:12:01.888382
+10,16,Tax Compliance / GST Clearance,ABC_Technologies_Tax_Clearance.pdf,/docs/abc_technologies_tax.pdf,VERIFIED,2026-09-22 12:12:01.888388
+11,17,Business Registration Certificate,Digital_Systems_Inc_Certificate_of_Incorporation.pdf,/docs/digital_systems_inc_inc.pdf,VERIFIED,2026-09-22 12:12:01.902680
+12,17,Tax Compliance / GST Clearance,Digital_Systems_Inc_Tax_Clearance.pdf,/docs/digital_systems_inc_tax.pdf,VERIFIED,2026-09-22 12:12:01.902685
+13,18,Business Registration Certificate,Computer_World_Tech_Certificate_of_Incorporation.pdf,/docs/computer_world_tech_inc.pdf,VERIFIED,2026-09-22 12:12:01.910469
+14,18,Tax Compliance / GST Clearance,Computer_World_Tech_Tax_Clearance.pdf,/docs/computer_world_tech_tax.pdf,VERIFIED,2026-09-22 12:12:01.910473
+15,19,Business Registration Certificate,TechDistro_Global_Certificate_of_Incorporation.pdf,/docs/techdistro_global_inc.pdf,VERIFIED,2026-09-22 12:12:01.916395
+16,19,Tax Compliance / GST Clearance,TechDistro_Global_Tax_Clearance.pdf,/docs/techdistro_global_tax.pdf,VERIFIED,2026-09-22 12:12:01.916400
+17,20,Business Registration Certificate,Sri_Industrial_Materials_Certificate_of_Incorporation.pdf,/docs/sri_industrial_materials_inc.pdf,VERIFIED,2026-09-22 12:12:01.924507
+18,20,Tax Compliance / GST Clearance,Sri_Industrial_Materials_Tax_Clearance.pdf,/docs/sri_industrial_materials_tax.pdf,VERIFIED,2026-09-22 12:12:01.924511
+19,21,Business Registration Certificate,Apex_Facility_&_IT_Maintenance_Certificate_of_Incorporation.pdf,/docs/apex_facility_&_it_maintenance_inc.pdf,VERIFIED,2026-09-22 12:12:01.930870
+20,21,Tax Compliance / GST Clearance,Apex_Facility_&_IT_Maintenance_Tax_Clearance.pdf,/docs/apex_facility_&_it_maintenance_tax.pdf,VERIFIED,2026-09-22 12:12:01.930875
+21,22,Business Registration Certificate,FastMove_Logistics_Freight_Certificate_of_Incorporation.pdf,/docs/fastmove_logistics_freight_inc.pdf,VERIFIED,2026-09-22 12:12:01.937068
+22,22,Tax Compliance / GST Clearance,FastMove_Logistics_Freight_Tax_Clearance.pdf,/docs/fastmove_logistics_freight_tax.pdf,VERIFIED,2026-09-22 12:12:01.937071
+23,23,Business Registration Certificate,Metro_Office_Solutions_Certificate_of_Incorporation.pdf,/docs/metro_office_solutions_inc.pdf,VERIFIED,2026-09-22 12:12:01.942870
+24,23,Tax Compliance / GST Clearance,Metro_Office_Solutions_Tax_Clearance.pdf,/docs/metro_office_solutions_tax.pdf,VERIFIED,2026-09-22 12:12:01.942874
+25,17,Business Registration Certificate,Digital_Systems_Inc_Certificate_of_Incorporation.pdf,/docs/digital_systems_inc_inc.pdf,VERIFIED,2026-09-27 13:04:41.272588
+26,17,Tax Compliance / GST Clearance,Digital_Systems_Inc_Tax_Clearance.pdf,/docs/digital_systems_inc_tax.pdf,VERIFIED,2026-09-27 13:04:41.272592
+27,18,Business Registration Certificate,Computer_World_Tech_Certificate_of_Incorporation.pdf,/docs/computer_world_tech_inc.pdf,VERIFIED,2026-09-27 13:04:41.282363
+28,18,Tax Compliance / GST Clearance,Computer_World_Tech_Tax_Clearance.pdf,/docs/computer_world_tech_tax.pdf,VERIFIED,2026-09-27 13:04:41.282368
+29,19,Business Registration Certificate,TechDistro_Global_Certificate_of_Incorporation.pdf,/docs/techdistro_global_inc.pdf,VERIFIED,2026-09-27 13:04:41.288602
+30,19,Tax Compliance / GST Clearance,TechDistro_Global_Tax_Clearance.pdf,/docs/techdistro_global_tax.pdf,VERIFIED,2026-09-27 13:04:41.288605
+31,20,Business Registration Certificate,Sri_Industrial_Materials_Certificate_of_Incorporation.pdf,/docs/sri_industrial_materials_inc.pdf,VERIFIED,2026-09-27 13:04:41.295060
+32,20,Tax Compliance / GST Clearance,Sri_Industrial_Materials_Tax_Clearance.pdf,/docs/sri_industrial_materials_tax.pdf,VERIFIED,2026-09-27 13:04:41.295063
+33,21,Business Registration Certificate,Apex_Facility_&_IT_Maintenance_Certificate_of_Incorporation.pdf,/docs/apex_facility_&_it_maintenance_inc.pdf,VERIFIED,2026-09-27 13:04:41.304132
+34,21,Tax Compliance / GST Clearance,Apex_Facility_&_IT_Maintenance_Tax_Clearance.pdf,/docs/apex_facility_&_it_maintenance_tax.pdf,VERIFIED,2026-09-27 13:04:41.304136
+35,4,Business Registration Certificate,Titan_Heavy_Machining_Certificate_of_Incorporation.pdf,/docs/titan_heavy_machining_inc.pdf,VERIFIED,2026-09-27 13:04:41.310674
+36,4,Tax Compliance / GST Clearance,Titan_Heavy_Machining_Tax_Clearance.pdf,/docs/titan_heavy_machining_tax.pdf,VERIFIED,2026-09-27 13:04:41.310677
+37,22,Business Registration Certificate,FastMove_Logistics_Freight_Certificate_of_Incorporation.pdf,/docs/fastmove_logistics_freight_inc.pdf,VERIFIED,2026-09-27 13:04:41.317140
+38,22,Tax Compliance / GST Clearance,FastMove_Logistics_Freight_Tax_Clearance.pdf,/docs/fastmove_logistics_freight_tax.pdf,VERIFIED,2026-09-27 13:04:41.317143
+39,23,Business Registration Certificate,Metro_Office_Solutions_Certificate_of_Incorporation.pdf,/docs/metro_office_solutions_inc.pdf,VERIFIED,2026-09-27 13:04:41.323484
+40,23,Tax Compliance / GST Clearance,Metro_Office_Solutions_Tax_Clearance.pdf,/docs/metro_office_solutions_tax.pdf,VERIFIED,2026-09-27 13:04:41.323487

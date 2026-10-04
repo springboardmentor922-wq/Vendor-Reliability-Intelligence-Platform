@@ -1,0 +1,556 @@
+<div class="procurement-page">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+      <h1 class="page-title">Procurement Management Module</h1>
+      <p class="page-subtitle mb-0">
+        Procurement requests, purchase order generation, approval workflows, vendor assignment, order tracking, and invoice management
+      </p>
+    </div>
+    <div class="d-flex gap-2">
+      <button *ngIf="authService.hasRole(['Administrator', 'Procurement Manager', 'Finance Officer'])" class="btn-iq-primary btn-sm" (click)="openNewModal()">
+        <i class="bi bi-file-earmark-plus"></i> New Requisition
+      </button>
+      <button class="btn btn-light btn-sm border" (click)="loadRequests(); loadInvoices()" title="Refresh requests">
+        <i class="bi bi-arrow-clockwise"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Action Alert -->
+  <div *ngIf="actionMessage" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i> {{ actionMessage }}
+    <button type="button" class="btn-close" (click)="actionMessage = ''"></button>
+  </div>
+
+  <!-- Error Alert -->
+  <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+    <i class="bi bi-exclamation-octagon-fill me-2"></i> {{ errorMessage }}
+    <button type="button" class="btn-close" (click)="errorMessage = ''"></button>
+  </div>
+
+  <!-- Sub-Module Tabs -->
+  <div class="iq-card p-0 mb-4">
+    <div class="d-flex border-bottom px-4 pt-2 gap-3 flex-wrap">
+      <button
+        class="btn pb-3 px-2 border-0 fw-semibold"
+        [ngClass]="activeTab === 'requests' ? 'text-primary border-bottom border-primary border-3' : 'text-muted'"
+        (click)="activeTab = 'requests'"
+      >
+        <i class="bi bi-list-check me-1"></i> Requisitions & Approval Workflow ({{ requests.length }})
+      </button>
+      <button
+        class="btn pb-3 px-2 border-0 fw-semibold"
+        [ngClass]="activeTab === 'tracking' ? 'text-primary border-bottom border-primary border-3' : 'text-muted'"
+        (click)="activeTab = 'tracking'"
+      >
+        <i class="bi bi-diagram-3 me-1"></i> Order Tracking Lifecycle
+      </button>
+      <button
+        class="btn pb-3 px-2 border-0 fw-semibold"
+        [ngClass]="activeTab === 'invoices' ? 'text-primary border-bottom border-primary border-3' : 'text-muted'"
+        (click)="activeTab = 'invoices'"
+      >
+        <i class="bi bi-receipt-cutoff me-1"></i> Invoice Management ({{ invoices.length }})
+      </button>
+    </div>
+
+    <!-- TAB 1: REQUISITIONS & APPROVAL WORKFLOW -->
+    <div *ngIf="activeTab === 'requests'" class="p-3">
+      <!-- Filters -->
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <select class="form-select form-select-sm" [(ngModel)]="selectedStatus" (ngModelChange)="loadRequests()">
+            <option value="All">All Procurement Statuses (6 Statuses)</option>
+            <option *ngFor="let s of allStatuses" [value]="s">{{ s }}</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <select class="form-select form-select-sm" [(ngModel)]="selectedPriority" (ngModelChange)="loadRequests()">
+            <option value="All">All Priorities</option>
+            <option value="Critical">Critical</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+        </div>
+      </div>
+
+      <div *ngIf="isLoading" class="text-center py-5">
+        <div class="spinner-border text-primary"></div>
+      </div>
+
+      <div *ngIf="!isLoading && requests.length === 0" class="text-center py-5 text-muted">
+        <i class="bi bi-cart-x fs-2 d-block mb-2"></i> No procurement requests found.
+      </div>
+
+      <div *ngIf="!isLoading && requests.length > 0" class="iq-table-container">
+        <table class="iq-table">
+          <thead>
+            <tr>
+              <th>Request # & Title</th>
+              <th>Department</th>
+              <th>Category</th>
+              <th>Estimated Budget & Unit</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Assigned Supplier</th>
+              <th class="text-end" *ngIf="authService.hasRole(['Administrator', 'Procurement Manager'])">Workflow Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of requests">
+              <td>
+                <div class="fw-bold text-dark">{{ r.request_number || ('PR-' + r.id) }}</div>
+                <div class="small text-muted">{{ r.title }}</div>
+              </td>
+              <td><span class="badge bg-light text-secondary border fw-medium"><i class="bi bi-building me-1"></i>{{ r.department || 'Procurement' }}</span></td>
+              <td><span class="badge bg-light text-dark border">{{ r.category }}</span></td>
+              <td>
+                <div class="fw-bold text-dark">{{ r.estimated_budget | currency }}</div>
+                <div class="small text-muted" *ngIf="r.quantity" style="font-size: 0.76rem;">
+                  {{ (r.unit_budget || (r.estimated_budget / r.quantity)) | currency }} / unit ({{ r.quantity }} units)
+                </div>
+              </td>
+              <td>
+                <span class="badge" [ngClass]="r.priority === 'Critical' ? 'bg-danger' : (r.priority === 'High' ? 'bg-warning text-dark' : 'bg-info text-dark')">
+                  {{ r.priority }}
+                </span>
+              </td>
+              <td>
+                <span class="iq-badge" [ngClass]="getStatusBadge(r.status)">
+                  <i class="bi bi-dot"></i> {{ r.status }}
+                </span>
+              </td>
+              <td>
+                <div *ngIf="r.assigned_vendor_id || r.vendor_name || r.vendor" class="d-flex flex-column gap-1">
+                  <span class="fw-semibold text-dark small">
+                    <i class="bi bi-building me-1 text-primary"></i>{{ r.vendor_name || r.vendor?.name || getVendorName(r.assigned_vendor_id) }}
+                  </span>
+                  <span class="text-muted" style="font-size: 0.75rem;" *ngIf="r.vendor_company || r.vendor?.company || getVendorCompany(r.assigned_vendor_id)">
+                    {{ r.vendor_company || r.vendor?.company || getVendorCompany(r.assigned_vendor_id) }}
+                  </span>
+                  <button class="btn btn-outline-secondary py-0 px-2 text-nowrap mt-1" style="font-size: 0.75rem; width: fit-content;" (click)="openAssignModal(r)" title="Change Supplier">
+                    <i class="bi bi-arrow-repeat me-1"></i>Change Supplier
+                  </button>
+                </div>
+                <button *ngIf="!r.assigned_vendor_id && !r.vendor_name && !r.vendor" class="btn btn-outline-secondary btn-sm py-0 px-2 small" (click)="openAssignModal(r)" title="Assign Supplier">
+                  <i class="bi bi-person-plus me-1"></i> Assign Supplier
+                </button>
+              </td>
+              <td class="text-end" *ngIf="authService.hasRole(['Administrator', 'Procurement Manager', 'Supply Chain Manager'])">
+                <div class="btn-group btn-group-sm">
+                  <!-- Pending -> Approved or Cancelled -->
+                  <button *ngIf="r.status === 'Pending' && authService.hasRole(['Administrator', 'Procurement Manager'])" class="btn btn-success btn-sm" (click)="advanceStatus(r.id, 'Approved')">
+                    Approve
+                  </button>
+                  <button *ngIf="r.status === 'Pending' && authService.hasRole(['Administrator', 'Procurement Manager'])" class="btn btn-outline-danger btn-sm" (click)="advanceStatus(r.id, 'Cancelled')">
+                    Cancel
+                  </button>
+
+                  <!-- Approved -> Generate PO (Restricted: Supply Chain Manager & Administrator Only) -->
+                  <button *ngIf="r.status === 'Approved' && authService.hasRole(['Administrator', 'Supply Chain Manager'])" class="btn btn-primary btn-sm fw-semibold" (click)="openPOModal(r)">
+                    <i class="bi bi-receipt"></i> Generate PO
+                  </button>
+
+                  <!-- Ordered -> Delivered -->
+                  <button *ngIf="r.status === 'Ordered' && authService.hasRole(['Administrator', 'Supply Chain Manager'])" class="btn btn-info btn-sm text-dark" (click)="advanceStatus(r.id, 'Delivered')">
+                    Mark Delivered
+                  </button>
+
+                  <!-- Delivered -> Completed -->
+                  <button *ngIf="r.status === 'Delivered' && authService.hasRole(['Administrator', 'Supply Chain Manager'])" class="btn btn-outline-success btn-sm" (click)="advanceStatus(r.id, 'Completed')">
+                    Complete
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 2: ORDER TRACKING LIFECYCLE -->
+    <div *ngIf="activeTab === 'tracking'" class="p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h2 class="fs-6 fw-bold m-0 text-dark">Procurement Order Lifecycle Tracking</h2>
+          <span class="text-muted small">Real-time live telemetry across all stages of order fulfillment</span>
+        </div>
+        <button class="btn btn-sm btn-outline-secondary" (click)="loadRequests()">
+          <i class="bi bi-arrow-clockwise me-1"></i> Refresh Tracking
+        </button>
+      </div>
+
+      <div *ngIf="requests.length === 0" class="p-5 text-center text-muted bg-light rounded border">
+        <i class="bi bi-truck fs-2 d-block mb-2"></i>
+        No procurement requests found.
+      </div>
+
+      <div class="d-flex flex-column gap-3" *ngIf="requests.length > 0">
+        <div *ngFor="let r of requests" class="p-3 bg-white rounded border shadow-sm">
+          <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+            <div>
+              <span class="fw-bold text-dark fs-6">{{ r.title }}</span>
+              <span class="badge bg-dark ms-2">{{ r.request_number || ('PR-' + r.id) }}</span>
+              <span class="badge bg-light text-dark border ms-1">{{ r.category }}</span>
+              <span class="badge ms-1" [ngClass]="getStatusBadgeClass(r.status)">{{ r.status }}</span>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+              <span class="text-muted small">Qty: <strong>{{ r.quantity || 1 }}</strong></span>
+              <div class="fw-bold text-primary fs-6">{{ r.estimated_budget | currency }}</div>
+            </div>
+          </div>
+
+          <!-- 6-Stage Stepper Visualization -->
+          <div class="d-flex justify-content-between align-items-center position-relative my-3 px-2">
+            <div
+              *ngFor="let step of lifecycleSteps; let i = index"
+              class="d-flex flex-column align-items-center text-center flex-grow-1"
+            >
+              <div
+                class="rounded-circle d-flex align-items-center justify-content-center fw-bold small mb-1"
+                style="width: 32px; height: 32px; z-index: 2;"
+                [ngClass]="{
+                  'bg-success text-white shadow-sm': isStepActive(r.status, i) && !isCurrentStep(r.status, i),
+                  'bg-primary text-white shadow': isCurrentStep(r.status, i),
+                  'bg-light text-muted border': !isStepActive(r.status, i) && r.status !== 'Cancelled',
+                  'bg-danger text-white': r.status === 'Cancelled'
+                }"
+              >
+                <i *ngIf="isStepActive(r.status, i) && !isCurrentStep(r.status, i)" class="bi bi-check-lg"></i>
+                <i *ngIf="isCurrentStep(r.status, i)" class="bi bi-arrow-repeat"></i>
+                <span *ngIf="!isStepActive(r.status, i) && r.status !== 'Cancelled'">{{ i + 1 }}</span>
+                <i *ngIf="r.status === 'Cancelled'" class="bi bi-x"></i>
+              </div>
+              <span class="small fw-semibold" [ngClass]="isCurrentStep(r.status, i) ? 'text-primary' : (isStepActive(r.status, i) ? 'text-success' : 'text-muted')" style="font-size: 0.75rem;">
+                {{ step }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Live Fulfillment & Order Moving Details -->
+          <div class="row g-2 mt-2 pt-2 border-top small">
+            <!-- Vendor Info -->
+            <div class="col-md-3">
+              <div class="text-muted fw-semibold mb-1"><i class="bi bi-building me-1"></i> Supplier Partner</div>
+              <div *ngIf="r.selected_vendor || r.vendor_name || r.vendor" class="text-dark fw-bold">
+                {{ r.vendor_name || r.selected_vendor?.name || r.vendor?.name }}
+                <div class="text-muted fw-normal" *ngIf="r.vendor_company || r.selected_vendor?.company || r.vendor?.company">
+                  {{ r.vendor_company || r.selected_vendor?.company || r.vendor?.company }}
+                </div>
+                <div class="text-muted fw-normal" *ngIf="r.selected_vendor?.quotation">
+                  Quoted: {{ r.selected_vendor?.quotation | currency }}
+                </div>
+              </div>
+              <div *ngIf="!r.selected_vendor && !r.vendor_name && !r.vendor" class="text-muted fst-italic">
+                Vendor selection pending
+              </div>
+            </div>
+
+            <!-- Purchase Order Info -->
+            <div class="col-md-3">
+              <div class="text-muted fw-semibold mb-1"><i class="bi bi-receipt me-1"></i> Purchase Order</div>
+              <div *ngIf="r.purchase_order">
+                <span class="fw-bold text-dark">{{ r.purchase_order.po_number }}</span>
+                <span class="badge bg-secondary ms-1">{{ r.purchase_order.status }}</span>
+                <div class="text-muted" *ngIf="r.purchase_order.total_amount">
+                  Total: {{ r.purchase_order.total_amount | currency }}
+                </div>
+              </div>
+              <div *ngIf="!r.purchase_order" class="text-muted fst-italic">
+                Awaiting PO Generation (SCM)
+              </div>
+            </div>
+
+            <!-- Logistics & Shipment Movement -->
+            <div class="col-md-3">
+              <div class="text-muted fw-semibold mb-1"><i class="bi bi-truck me-1"></i> Transit & Dispatch</div>
+              <div *ngIf="r.purchase_order?.carrier || r.purchase_order?.tracking_number">
+                <div class="fw-bold text-dark">
+                  {{ r.purchase_order?.carrier || 'Carrier Assigned' }}
+                </div>
+                <div class="text-primary font-monospace" *ngIf="r.purchase_order?.tracking_number">
+                  <i class="bi bi-upc-scan me-1"></i>{{ r.purchase_order?.tracking_number }}
+                </div>
+                <div class="text-muted small" *ngIf="r.purchase_order?.dispatch_date">
+                  Dispatched: {{ r.purchase_order?.dispatch_date }}
+                </div>
+              </div>
+              <div *ngIf="!r.purchase_order?.carrier && !r.purchase_order?.tracking_number" class="text-muted fst-italic">
+                <span *ngIf="r.status === 'Ordered'">Preparing for dispatch...</span>
+                <span *ngIf="r.status !== 'Ordered'">No shipment dispatched yet</span>
+              </div>
+            </div>
+
+            <!-- Delivery & Invoice Settlement -->
+            <div class="col-md-3">
+              <div class="text-muted fw-semibold mb-1"><i class="bi bi-check2-circle me-1"></i> Delivery & Invoice</div>
+              <div *ngIf="r.purchase_order?.delivery_status || r.purchase_order?.actual_delivery_date">
+                <span class="badge" [ngClass]="r.purchase_order?.delivery_status === 'Delivered' ? 'bg-success' : 'bg-warning text-dark'">
+                  {{ r.purchase_order?.delivery_status || 'Delivered' }}
+                </span>
+                <span *ngIf="(r.purchase_order?.delay_days || 0) > 0" class="badge bg-danger ms-1">
+                  +{{ r.purchase_order?.delay_days }}d delay
+                </span>
+                <span *ngIf="r.purchase_order?.delay_days === 0" class="badge bg-success ms-1">
+                  On-Time
+                </span>
+              </div>
+              <div *ngIf="r.purchase_order?.invoice_number" class="mt-1">
+                <span class="text-muted">Invoice:</span> <strong>{{ r.purchase_order?.invoice_number }}</strong>
+                <span class="badge ms-1" [ngClass]="r.purchase_order?.is_paid ? 'bg-success' : 'bg-info'">
+                  {{ r.purchase_order?.invoice_status || (r.purchase_order?.is_paid ? 'PAID' : 'Issued') }}
+                </span>
+              </div>
+              <div *ngIf="!r.purchase_order?.delivery_status && !r.purchase_order?.invoice_number" class="text-muted fst-italic">
+                Pending receipt inspection
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: INVOICE MANAGEMENT -->
+    <div *ngIf="activeTab === 'invoices'" class="p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+          <h2 class="fs-6 fw-bold m-0 text-dark">Invoice Reconciliation & Settlements</h2>
+          <span class="text-muted small">Match supplier invoices against purchase orders, verify delivery inspects, and execute payouts</span>
+        </div>
+        <button *ngIf="authService.hasRole(['Administrator', 'Finance Officer', 'Procurement Manager'])" class="btn btn-sm btn-primary" (click)="openNewInvoiceModal()">
+          <i class="bi bi-receipt"></i> Register Invoice
+        </button>
+      </div>
+
+      <div *ngIf="invoices.length === 0" class="p-5 text-center text-muted bg-light rounded border">
+        <i class="bi bi-receipt fs-2 d-block mb-2"></i>
+        No registered invoices in the current ledger.
+      </div>
+
+      <div *ngIf="invoices.length > 0" class="iq-table-container">
+        <table class="iq-table">
+          <thead>
+            <tr>
+              <th>Invoice #</th>
+              <th>Vendor</th>
+              <th>Amount</th>
+              <th>Issue Date</th>
+              <th>Due Date</th>
+              <th>Status</th>
+              <th class="text-end" *ngIf="authService.hasRole(['Administrator', 'Finance Officer'])">Settlement Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let inv of invoices">
+              <td class="fw-bold text-dark">{{ inv.invoice_number }}</td>
+              <td class="fw-semibold">
+                {{ inv.vendor_name || inv.vendor?.name || getVendorName(inv.vendor_id) }}
+                <small class="text-muted d-block" *ngIf="inv.vendor_company || inv.vendor?.company || getVendorCompany(inv.vendor_id)">
+                  {{ inv.vendor_company || inv.vendor?.company || getVendorCompany(inv.vendor_id) }}
+                </small>
+              </td>
+              <td class="fw-bold text-primary">{{ inv.amount | currency }}</td>
+              <td class="small">{{ inv.issue_date | date:'mediumDate' }}</td>
+              <td class="small text-muted">{{ inv.due_date | date:'mediumDate' }}</td>
+              <td>
+                <span class="badge" [ngClass]="inv.status === 'Paid' ? 'bg-success' : (inv.status === 'Approved' ? 'bg-primary' : 'bg-warning text-dark')">
+                  {{ inv.status }}
+                </span>
+              </td>
+              <td class="text-end" *ngIf="authService.hasRole(['Administrator', 'Finance Officer'])">
+                <div class="btn-group btn-group-sm">
+                  <button *ngIf="inv.status === 'Submitted'" class="btn btn-outline-primary btn-sm" (click)="approveInvoice(inv.id)">
+                    Approve
+                  </button>
+                  <button *ngIf="inv.status === 'Approved'" class="btn btn-success btn-sm" (click)="payInvoice(inv.id)">
+                    Mark Paid
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Request Modal -->
+  <div *ngIf="showModal" class="iq-modal-backdrop" (click)="closeModal()">
+    <div class="iq-modal" (click)="$event.stopPropagation()">
+      <h3 class="fs-5 fw-bold mb-3 border-bottom pb-2">New Procurement Request</h3>
+      <form (ngSubmit)="submitRequest()">
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Title / Description of Requisition *</label>
+          <input type="text" class="form-control form-control-sm" [(ngModel)]="newRequest.title" name="rtitle" placeholder="e.g. Structural Steel Beams for Plant Expansion" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold small"><i class="bi bi-tag me-1 text-primary"></i>Procurement Category *</label>
+          <select class="form-select form-select-sm" [(ngModel)]="newRequest.category" name="rcat" required>
+            <option *ngFor="let c of categories" [value]="c.name">{{ c.name }}</option>
+          </select>
+        </div>
+
+        <!-- Budget & Quantity Assignment (Per-Unit & Total) -->
+        <div class="row g-2 mb-2">
+          <div class="col-4">
+            <label class="form-label fw-semibold small">Quantity *</label>
+            <input type="number" class="form-control form-control-sm" [(ngModel)]="newRequest.quantity" (ngModelChange)="onProcurementQuantityChange()" name="rqty" min="1" required>
+          </div>
+          <div class="col-4">
+            <label class="form-label fw-semibold small">Budget Per Unit ($) *</label>
+            <input type="number" class="form-control form-control-sm" [(ngModel)]="newRequest.unit_budget" (ngModelChange)="onProcurementUnitBudgetChange()" name="runitb" placeholder="0.00" min="0" step="any" required>
+          </div>
+          <div class="col-4">
+            <label class="form-label fw-semibold small">Total Budget ($) *</label>
+            <input type="number" class="form-control form-control-sm fw-bold text-success" [(ngModel)]="newRequest.estimated_budget" (ngModelChange)="onProcurementTotalBudgetChange()" name="rbudget" placeholder="0.00" min="0" step="any" required>
+          </div>
+        </div>
+
+        <!-- Live Calculation Preview -->
+        <div class="p-2 mb-3 bg-light rounded border text-muted small d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-calculator me-1 text-primary"></i> Calculation:</span>
+          <span class="fw-semibold text-dark">
+            {{ newRequest.quantity || 1 }} units &times; {{ (newRequest.unit_budget || 0) | currency }} = <strong class="text-success">{{ (newRequest.estimated_budget || 0) | currency }} Total</strong>
+          </span>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Priority Level</label>
+          <select class="form-select form-select-sm" [(ngModel)]="newRequest.priority" name="rprio">
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+            <option value="Critical">Critical</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Requisition Scope & Justification</label>
+          <textarea class="form-control form-control-sm" rows="3" [(ngModel)]="newRequest.description" name="rdesc" placeholder="Specify technical specs, delivery location, and required dates..."></textarea>
+        </div>
+        <div class="d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm fw-bold">Submit Requisition</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Vendor Assignment Modal -->
+  <div *ngIf="showAssignModal && selectedPRForAssign" class="iq-modal-backdrop" (click)="showAssignModal = false">
+    <div class="iq-modal" (click)="$event.stopPropagation()">
+      <h3 class="fs-5 fw-bold mb-3 border-bottom pb-2">Assign Supplier to Requisition</h3>
+      <p class="text-muted small mb-3">
+        Assign a qualified vendor to fulfill <strong>{{ selectedPRForAssign.title }}</strong> (Category: {{ selectedPRForAssign.category }}).
+      </p>
+      <form (ngSubmit)="confirmVendorAssignment()">
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Select Supplier *</label>
+          <select class="form-select form-select-sm" [(ngModel)]="selectedVendorId" name="assignVendor" required>
+            <option *ngFor="let v of vendors" [value]="v.id">
+              {{ v.name }} ({{ v.company }}) &bull; Reliability: {{ v.deliveryRate }}% &bull; {{ v.category }}
+            </option>
+          </select>
+        </div>
+
+        <div class="p-3 bg-light rounded border mb-3 small">
+          <div class="fw-semibold text-dark mb-1"><i class="bi bi-shield-check text-success"></i> Intelligent Vendor Scoring</div>
+          <div class="text-muted">
+            The platform recommends vendors with &ge; 90% on-time delivery rate and verified ISO certifications.
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="showAssignModal = false">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm fw-bold">Confirm Supplier Assignment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- PO Generation Modal -->
+  <div *ngIf="showPOModal && targetPRForPO" class="iq-modal-backdrop" (click)="showPOModal = false">
+    <div class="iq-modal" (click)="$event.stopPropagation()">
+      <h3 class="fs-5 fw-bold mb-3 border-bottom pb-2">
+        <i class="bi bi-receipt text-primary"></i> Generate Purchase Order from PR
+      </h3>
+      <p class="text-muted small mb-3">
+        Create an official Purchase Order for approved request <strong>{{ targetPRForPO.title }}</strong>.
+      </p>
+      <form (ngSubmit)="submitPOCreation()">
+        <div class="mb-2">
+          <label class="form-label small fw-semibold">Supplier *</label>
+          <select class="form-select form-select-sm" [(ngModel)]="selectedVendorId" name="poVendor" required>
+            <option *ngFor="let v of vendors" [value]="v.id">{{ v.name }} ({{ v.company }})</option>
+          </select>
+        </div>
+        <div class="mb-2">
+          <label class="form-label small fw-semibold">Shipping Destination</label>
+          <input type="text" class="form-control form-control-sm" [(ngModel)]="poCreationForm.shipping_address" name="poship">
+        </div>
+        <div class="row g-2 mb-2">
+          <div class="col-8">
+            <label class="form-label small fw-semibold">Item Package Name *</label>
+            <input type="text" class="form-control form-control-sm" [(ngModel)]="poCreationForm.item_name" name="poitem" required>
+          </div>
+          <div class="col-4">
+            <label class="form-label small fw-semibold">Quantity</label>
+            <input type="number" class="form-control form-control-sm" [(ngModel)]="poCreationForm.quantity" name="poqty">
+          </div>
+        </div>
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label small fw-semibold">Unit Price ($)</label>
+            <input type="number" class="form-control form-control-sm" [(ngModel)]="poCreationForm.unit_price" name="poprice">
+          </div>
+          <div class="col-6">
+            <label class="form-label small fw-semibold">Payment Terms</label>
+            <input type="text" class="form-control form-control-sm" [(ngModel)]="poCreationForm.terms_and_conditions" name="poterms">
+          </div>
+        </div>
+        <div class="d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="showPOModal = false">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm fw-bold">Issue Purchase Order</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Create Invoice Modal -->
+  <div *ngIf="showInvoiceModal" class="iq-modal-backdrop" (click)="showInvoiceModal = false">
+    <div class="iq-modal" (click)="$event.stopPropagation()">
+      <h3 class="fs-5 fw-bold mb-3 border-bottom pb-2">Register Vendor Invoice</h3>
+      <form (ngSubmit)="submitNewInvoice()">
+        <div class="mb-2">
+          <label class="form-label small fw-semibold">Invoice Number *</label>
+          <input type="text" class="form-control form-control-sm" [(ngModel)]="newInvoice.invoice_number" name="invnum" required>
+        </div>
+        <div class="row g-2 mb-2">
+          <div class="col-6">
+            <label class="form-label small fw-semibold">Supplier *</label>
+            <select class="form-select form-select-sm" [(ngModel)]="newInvoice.vendor_id" name="invven" required>
+              <option *ngFor="let v of vendors" [value]="v.id">{{ v.name }}</option>
+            </select>
+          </div>
+          <div class="col-6">
+            <label class="form-label small fw-semibold">Invoiced Amount ($) *</label>
+            <input type="number" class="form-control form-control-sm" [(ngModel)]="newInvoice.amount" name="invamt" required>
+          </div>
+        </div>
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label small fw-semibold">Issue Date</label>
+            <input type="date" class="form-control form-control-sm" [(ngModel)]="newInvoice.issue_date" name="invdate">
+          </div>
+          <div class="col-6">
+            <label class="form-label small fw-semibold">Due Date</label>
+            <input type="date" class="form-control form-control-sm" [(ngModel)]="newInvoice.due_date" name="invdue">
+          </div>
+        </div>
+        <div class="d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="showInvoiceModal = false">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm fw-bold">Register Invoice</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

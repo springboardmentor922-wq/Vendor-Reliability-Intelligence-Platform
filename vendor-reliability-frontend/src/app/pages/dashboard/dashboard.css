@@ -1,0 +1,138 @@
+.header-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px 24px;
+  border: 1px solid var(--border-color);
+}
+
+.role-tabs-container {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+}
+
+.btn-role-tab {
+  background: transparent;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-role-tab:hover {
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.btn-role-tab.active {
+  background: white;
+  color: #0284c7;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.border-start-primary {
+  border-left: 4px solid #0284c7 !important;
+}
+
+.border-start-success {
+  border-left: 4px solid #10b981 !important;
+}
+
+.border-start-warning {
+  border-left: 4px solid #f59e0b !important;
+}
+
+.border-start-danger {
+  border-left: 4px solid #ef4444 !important;
+}
+
+.border-start-purple {
+  border-left: 4px solid #8b5cf6 !important;
+}
+
+.btn-xs {
+  font-size: 0.75rem;
+  border-radius: 4px;
+}
+
+.extra-small {
+  font-size: 0.72rem;
+}
+
+.quick-nav-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 10px;
+  background: #f8fafc;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  text-decoration: none;
+  color: #334155;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.quick-nav-card i {
+  font-size: 1.5rem;
+}
+
+.quick-nav-card:hover {
+  background: white;
+  border-color: #0284c7;
+  color: #0284c7;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.activity-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.activity-item {
+  border-left: 2px solid #e2e8f0;
+  padding-left: 12px;
+}
+
+.activity-details {
+  font-size: 0.84rem;
+  color: #475569;
+  margin-top: 4px;
+  line-height: 1.35;
+}
+
+.table-danger-subtle {
+  background-color: #fff5f5 !important;
+}
+
+.table-warning-subtle {
+  background-color: #fffbf0 !important;
+}
+
+.bg-danger-subtle {
+  background-color: #fee2e2 !important;
+}
+
+.bg-success-subtle {
+  background-color: #dcfce7 !important;
+}
+
+.bg-warning-subtle {
+  background-color: #fef3c7 !important;
+}
+
+.border-danger-subtle {
+  border-color: #fca5a5 !important;
+}

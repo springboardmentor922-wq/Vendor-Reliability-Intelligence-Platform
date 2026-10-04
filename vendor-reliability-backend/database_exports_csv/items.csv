@@ -1,0 +1,27 @@
+id,category_id,category_name,name,sku,unit,estimated_unit_price,description,is_active,created_at
+1,1,IT & Electronics,Laptop,SKU-IT -9155,Units,50000.0,"High-performance enterprise business laptop 16-inch Core i7/i9, 32GB RAM",1,2026-09-22 12:12:01.847121
+2,1,IT & Electronics,Desktop,SKU-IT -3237,Units,40000.0,"Corporate compact desktop workstation, 16GB RAM, 512GB SSD",1,2026-09-22 12:12:01.847128
+3,1,IT & Electronics,Monitor,SKU-IT -9318,Units,18000.0,27-inch 4K IPS Ultra-HD Professional Display,1,2026-09-22 12:12:01.847132
+4,1,IT & Electronics,Printer,SKU-IT -8405,Units,35000.0,Heavy-duty departmental laser multi-function network printer,1,2026-09-22 12:12:01.847135
+5,1,IT & Electronics,Networking Equipment,SKU-IT -5489,Units,45000.0,Enterprise 48-port Gigabit PoE+ Managed Switch,1,2026-09-22 12:12:01.847138
+6,2,Raw Materials,Steel,SKU-RAW-8820,Tons,65000.0,High-tensile structural carbon steel beams and plates,1,2026-09-22 12:12:01.847141
+7,2,Raw Materials,Cement,SKU-RAW-5926,Bags,420.0,Grade 53 Portland Cement for plant infrastructure,1,2026-09-22 12:12:01.847144
+8,2,Raw Materials,Copper,SKU-RAW-9077,Kg,850.0,Electrolytic high-purity copper rods and grounding cables,1,2026-09-22 12:12:01.847148
+9,2,Raw Materials,Plastic,SKU-RAW-5227,Kg,160.0,Engineering grade polymer granules and resin,1,2026-09-22 12:12:01.847150
+10,2,Raw Materials,Chemicals,SKU-RAW-2041,Liters,320.0,Industrial solvents and certified degreasing agents,1,2026-09-22 12:12:01.847153
+11,3,Office Supplies & Equipment,Chairs,SKU-OFF-7225,Units,8500.0,Ergonomic mesh task chair with lumbar support,1,2026-09-22 12:12:01.847156
+12,3,Office Supplies & Equipment,Tables,SKU-OFF-3234,Units,22000.0,Modular height-adjustable collaborative meeting table,1,2026-09-22 12:12:01.847159
+13,3,Office Supplies & Equipment,Stationery,SKU-OFF-0706,Kits,1500.0,"Corporate executive paper, pen, and document organizers kit",1,2026-09-22 12:12:01.847162
+14,3,Office Supplies & Equipment,Office Equipment,SKU-OFF-4205,Units,12000.0,Heavy duty cross-cut document shredder,1,2026-09-22 12:12:01.847165
+15,4,Machinery & Spare Parts,Motors,SKU-MAC-5741,Units,38000.0,Three-phase 15kW Industrial Electric Motor,1,2026-09-22 12:12:01.847168
+16,4,Machinery & Spare Parts,Pumps,SKU-MAC-7258,Units,55000.0,Centrifugal heavy slurry water transfer pump,1,2026-09-22 12:12:01.847171
+17,4,Machinery & Spare Parts,Bearings,SKU-MAC-1865,Sets,4500.0,High-precision deep groove ball bearing assemblies,1,2026-09-22 12:12:01.847174
+18,4,Machinery & Spare Parts,Machine Components,SKU-MAC-8420,Units,14000.0,Precision CNC machined gear shafts and couplers,1,2026-09-22 12:12:01.847177
+19,5,Logistics & Transportation,Truck Transportation,SKU-LOG-8540,Trips,45000.0,Dedicated 20-ton closed container linehaul transportation,1,2026-09-22 12:12:01.847180
+20,5,Logistics & Transportation,Freight,SKU-LOG-0148,Shipments,28000.0,Express multi-modal air and rail freight forwarding,1,2026-09-22 12:12:01.847183
+21,5,Logistics & Transportation,Warehousing,SKU-LOG-9023,Pallets,2500.0,Climate-controlled cross-dock warehouse pallet storage (Monthly),1,2026-09-22 12:12:01.847186
+22,5,Logistics & Transportation,Delivery Services,SKU-LOG-1970,Calls,1200.0,Same-day inter-plant courier and critical dispatch service,1,2026-09-22 12:12:01.847189
+23,6,Services & Maintenance,Equipment Maintenance,SKU-SER-6576,Contracts,125000.0,Comprehensive preventive maintenance SLA for manufacturing plant,1,2026-09-22 12:12:01.847192
+24,6,Services & Maintenance,Facility Maintenance,SKU-SER-6053,Contracts,95000.0,Corporate campus facility and HVAC quarterly maintenance,1,2026-09-22 12:12:01.847195
+25,6,Services & Maintenance,IT Support,SKU-SER-7095,Month,80000.0,Tier-2/3 24x7 Enterprise infrastructure & server support,1,2026-09-22 12:12:01.847197
+26,6,Services & Maintenance,Repair Services,SKU-SER-1257,Service,35000.0,Emergency electrical and hydraulic breakdown repair service,1,2026-09-22 12:12:01.847200
