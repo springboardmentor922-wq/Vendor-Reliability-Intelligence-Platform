@@ -16,7 +16,7 @@ import Reports from './pages/Reports'
 import Invoices from './pages/Invoices'
 import Issues from './pages/Issues'
 import Certifications from './pages/Certifications'
-
+import VendorPortal from './pages/VendorPortal'
 function App() {
   return (
     <Routes>
@@ -35,9 +35,9 @@ function App() {
       <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
       <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
       <Route path="/invoices" element={<ProtectedRoute><Invoices /></ProtectedRoute>} />
-<Route path="/issues" element={<ProtectedRoute><Issues /></ProtectedRoute>} />
-<Route path="/certifications" element={<ProtectedRoute><Certifications /></ProtectedRoute>} />
-
+      <Route path="/issues" element={<ProtectedRoute><Issues /></ProtectedRoute>} />
+      <Route path="/certifications" element={<ProtectedRoute><Certifications /></ProtectedRoute>} />
+      <Route path="/vendor-portal" element={<ProtectedRoute><VendorPortal /></ProtectedRoute>} />
       <Route path="/" element={<Navigate to="/login" replace />} />
     </Routes>
   )

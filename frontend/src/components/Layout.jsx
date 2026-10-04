@@ -14,6 +14,7 @@ const navItems = [
   { path: '/issues', label: 'Issues' },
   { path: '/certifications', label: 'Certifications' }, 
   { path: '/communication', label: 'Communication' },
+  { path: '/vendor-portal', label: 'Vendor Portal' },
   { path: '/reports', label: 'Reports & Export' },
   { path: '/notifications', label: 'Notifications' },
 ]

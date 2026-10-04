@@ -65,12 +65,18 @@ function Communication() {
           <div className="font-semibold text-sm mb-4" style={{ fontFamily: 'Sora, sans-serif' }}>
             {selectedVendorObj?.company_name || 'Select a vendor'}
           </div>
-          <div className="flex-1 overflow-y-auto pr-1.5">
+                    <div className="flex-1 overflow-y-auto pr-1.5">
             {notifications.map((n) => (
-              <div key={n.id} className="mb-4">
-                <div className="text-xs text-gray-500 mb-1">{new Date(n.created_at).toLocaleString()}</div>
-                <div className="bg-gray-100 px-3.5 py-2.5 rounded-lg text-sm inline-block max-w-[70%]">
-                  {n.message}
+              <div key={n.id} className={`mb-4 flex ${n.sender === 'vendor' ? 'justify-end' : 'justify-start'}`}>
+                <div>
+                  <div className={`text-xs text-gray-500 mb-1 ${n.sender === 'vendor' ? 'text-right' : ''}`}>
+                    {n.sender === 'vendor' ? 'Vendor' : 'You'} · {new Date(n.created_at).toLocaleString()}
+                  </div>
+                  <div className={`px-3.5 py-2.5 rounded-lg text-sm inline-block max-w-[70%] ${
+                    n.sender === 'vendor' ? 'bg-[#14213D] text-white' : 'bg-gray-100'
+                  }`}>
+                    {n.message}
+                  </div>
                 </div>
               </div>
             ))}
