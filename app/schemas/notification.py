@@ -12,6 +12,10 @@ class NotificationCreate(BaseModel):
     message: str
 
 
+class VendorReplyCreate(BaseModel):
+    message: str
+
+
 class NotificationOut(BaseModel):
     id: int
     user_id: Optional[int]
@@ -20,6 +24,7 @@ class NotificationOut(BaseModel):
     title: str
     message: str
     is_read: bool
+    sender: str
     created_at: datetime
 
     class Config:

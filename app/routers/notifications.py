@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.deps import get_current_user, require_roles
 from app.models.user import User, UserRole
-from app.models.notification import Notification
-from app.schemas.notification import NotificationCreate, NotificationOut
+from app.models.notification import Notification, NotificationType
+from app.schemas.notification import NotificationCreate, NotificationOut, VendorReplyCreate
 
 router = APIRouter(prefix="/notifications", tags=["Notifications"])
 
@@ -19,7 +19,29 @@ def create_notification(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_roles(*MANAGE_ROLES)),
 ):
-    notification = Notification(**payload.model_dump())
+    notification = Notification(**payload.model_dump(), sender="staff")
+    db.add(notification)
+    db.commit()
+    db.refresh(notification)
+    return notification
+
+
+@router.post("/vendor-reply", response_model=NotificationOut, status_code=status.HTTP_201_CREATED)
+def vendor_reply(
+    payload: VendorReplyCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.role != UserRole.VENDOR or not current_user.vendor_id:
+        raise HTTPException(status_code=403, detail="Only a vendor account linked to a vendor profile can reply")
+
+    notification = Notification(
+        vendor_id=current_user.vendor_id,
+        type=NotificationType.PROCUREMENT_ALERT,
+        title="Message from vendor",
+        message=payload.message,
+        sender="vendor",
+    )
     db.add(notification)
     db.commit()
     db.refresh(notification)
@@ -32,9 +54,12 @@ def list_my_notifications(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    query = db.query(Notification).filter(
-        (Notification.user_id == current_user.id) | (Notification.user_id.is_(None))
-    )
+    if current_user.role == UserRole.VENDOR:
+        query = db.query(Notification).filter(Notification.vendor_id == current_user.vendor_id)
+    else:
+        query = db.query(Notification).filter(
+            (Notification.user_id == current_user.id) | (Notification.user_id.is_(None))
+        )
     if unread_only:
         query = query.filter(Notification.is_read == False)
     return query.order_by(Notification.created_at.desc()).all()

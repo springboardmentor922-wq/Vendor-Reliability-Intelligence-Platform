@@ -23,5 +23,6 @@ class Notification(Base):
     title = Column(String(200), nullable=False)
     message = Column(Text, nullable=False)
     is_read = Column(Boolean, default=False)
+    sender = Column(String(20), default="staff")  # 'staff' or 'vendor'
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())

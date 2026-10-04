@@ -1,5 +1,5 @@
 import enum
-from sqlalchemy import Column, Integer, String, Enum, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Enum, DateTime, ForeignKey, Boolean
 from sqlalchemy.sql import func
 from app.core.database import Base
 
@@ -21,5 +21,6 @@ class Certification(Base):
     issue_date = Column(DateTime(timezone=True), nullable=True)
     expiry_date = Column(DateTime(timezone=True), nullable=False)
     compliance_status = Column(Enum(ComplianceStatus), default=ComplianceStatus.PENDING_REVIEW)
+    notified_expiry = Column(Boolean, default=False)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())

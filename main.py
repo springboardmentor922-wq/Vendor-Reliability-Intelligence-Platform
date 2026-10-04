@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import Base, engine
 from app.core.config import settings
+from app.core.scheduler import start_scheduler
 import app.models
 from app.routers import (
     auth,
@@ -29,7 +30,7 @@ app.add_middleware(
 )
 
 Base.metadata.create_all(bind=engine)
-
+start_scheduler()
 app.include_router(auth.router)
 app.include_router(vendors.router)
 app.include_router(procurement_requests.router)
