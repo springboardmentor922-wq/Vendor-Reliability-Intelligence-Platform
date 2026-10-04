@@ -1,0 +1,302 @@
+<div class="vendor-categories-page">
+  <!-- Page Header -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+      <h1 class="page-title">Vendor Categories & Category Sourcing</h1>
+      <p class="page-subtitle mb-0">
+        Enterprise supplier classification across the 6 verified categories. Select a category to isolate eligible suppliers and initiate vendor comparison.
+      </p>
+    </div>
+    <div class="d-flex gap-2">
+      <a routerLink="/vendor-selection" class="btn-iq-primary btn-sm">
+        <i class="bi bi-ui-checks-grid"></i> Vendor Selection Matrix
+      </a>
+      <a routerLink="/add-vendors" class="btn-iq-secondary btn-sm" *ngIf="authService.hasRole(['Administrator'])">
+        <i class="bi bi-plus-lg"></i> Register Vendor
+      </a>
+    </div>
+  </div>
+
+  <!-- The 6 Official Categories Grid -->
+  <div class="row g-3 mb-4">
+    <div class="col-lg-4 col-md-6" *ngFor="let cat of officialCategories">
+      <div
+        class="category-card"
+        [class.selected-category]="selectedCategory === cat.name"
+        (click)="selectCategory(cat.name)"
+      >
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div class="category-icon-box" [style.background-color]="cat.color + '18'" [style.color]="cat.color">
+            <i class="bi {{ cat.icon }}"></i>
+          </div>
+          <div class="d-flex align-items-center gap-1">
+            <span class="badge category-code-badge">{{ cat.code }}</span>
+            <span class="badge bg-light text-dark border">
+              {{ cat.vendorCount }} Suppliers
+            </span>
+          </div>
+        </div>
+
+        <h3 class="category-name">{{ cat.name }}</h3>
+        <p class="category-description">{{ cat.description }}</p>
+
+        <!-- Typical Procured Items -->
+        <div class="category-items-wrap mb-3">
+          <span class="typical-item-tag" *ngFor="let item of cat.typicalItems">{{ item }}</span>
+        </div>
+
+        <div class="category-metrics-footer">
+          <div class="metric-item">
+            <span class="metric-label">Avg Reliability</span>
+            <span class="metric-val text-success">{{ cat.avgReliability }}%</span>
+          </div>
+          <div class="metric-item">
+            <span class="metric-label">Delivery SLA</span>
+            <span class="metric-val text-primary">{{ cat.avgDelivery }}%</span>
+          </div>
+          <button
+            type="button"
+            class="btn btn-sm btn-category-action"
+            [class.btn-primary]="selectedCategory === cat.name"
+            [class.btn-outline-secondary]="selectedCategory !== cat.name"
+          >
+            {{ selectedCategory === cat.name ? 'Active Category' : 'Select Category' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Category Detail & Filtered Vendors Section -->
+  <div class="iq-card p-0 mb-4" *ngIf="getSelectedCategoryInfo() as activeCat">
+    <!-- Active Banner -->
+    <div class="active-category-banner p-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="banner-icon-circle" [style.background-color]="activeCat.color" style="color: #ffffff;">
+          <i class="bi {{ activeCat.icon }} fs-4"></i>
+        </div>
+        <div>
+          <div class="d-flex align-items-center gap-2">
+            <h2 class="fs-5 fw-bold mb-0 text-dark">{{ activeCat.name }}</h2>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+              {{ filteredVendors.length }} Suppliers Available
+            </span>
+          </div>
+          <p class="text-muted small mb-0">
+            Showing only verified vendors authorized for <strong>{{ activeCat.name }}</strong> contracts
+          </p>
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+        <button
+          type="button"
+          class="btn btn-primary btn-sm fw-semibold d-flex align-items-center gap-1 shadow-sm"
+          (click)="goToVendorSelection(activeCat.name)"
+        >
+          <i class="bi bi-columns-gap"></i> Compare Suppliers in {{ activeCat.name }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Filter & Search Bar for Selected Category -->
+    <div class="p-3 border-bottom bg-light">
+      <div class="row g-2 align-items-center">
+        <div class="col-md-5">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+            <input
+              type="text"
+              class="form-control border-start-0"
+              placeholder="Search {{ activeCat.name }} suppliers by name, line items, city..."
+              [(ngModel)]="searchQuery"
+              (ngModelChange)="applyFilter()"
+            />
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="d-flex align-items-center gap-2">
+            <label class="form-label small m-0 text-muted text-nowrap">Risk Filter:</label>
+            <select class="form-select form-select-sm" [(ngModel)]="selectedRiskFilter" (ngModelChange)="applyFilter()">
+              <option value="All">All Risk Levels</option>
+              <option value="Low">Low Risk</option>
+              <option value="Medium">Medium Risk</option>
+              <option value="High">High Risk</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="d-flex align-items-center gap-2">
+            <label class="form-label small m-0 text-muted text-nowrap">Sort By:</label>
+            <select class="form-select form-select-sm" [(ngModel)]="selectedSort" (ngModelChange)="applyFilter()">
+              <option value="reliability">Reliability Score (High to Low)</option>
+              <option value="quality">Quality Rating (High to Low)</option>
+              <option value="name">Supplier Name (A-Z)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Suppliers Table (ONLY Belonging to Selected Category) -->
+    <div *ngIf="isLoading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status"></div>
+      <div class="text-muted small mt-2">Loading suppliers...</div>
+    </div>
+
+    <div *ngIf="!isLoading && filteredVendors.length === 0" class="text-center py-5 text-muted">
+      <i class="bi bi-inbox fs-2 d-block mb-2 opacity-50"></i>
+      No suppliers currently found matching your filter criteria in <strong>{{ activeCat.name }}</strong>.
+    </div>
+
+    <div *ngIf="!isLoading && filteredVendors.length > 0" class="iq-table-container border-0">
+      <table class="iq-table">
+        <thead>
+          <tr>
+            <th>Vendor ID & Name</th>
+            <th>Category & Products</th>
+            <th>Location / Reg #</th>
+            <th>Reliability Score</th>
+            <th>Delivery Rate</th>
+            <th>Quality Score</th>
+            <th>Risk Level</th>
+            <th>Status</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let v of filteredVendors">
+            <td>
+              <div class="fw-bold text-dark">{{ v.name }}</div>
+              <div class="small text-muted font-monospace">{{ formatVendorId(v.id) }} &bull; {{ v.company }}</div>
+            </td>
+            <td>
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle d-inline-block mb-1">
+                {{ v.category }}
+              </span>
+              <div class="small text-muted text-truncate" style="max-width: 200px;">
+                {{ v.product }}
+              </div>
+            </td>
+            <td>
+              <div class="small text-dark text-truncate" style="max-width: 180px;">
+                <i class="bi bi-geo-alt text-muted me-1"></i>{{ v.address || 'Corporate Headquarters' }}
+              </div>
+              <div class="small text-muted font-monospace" *ngIf="v.business_reg_number">
+                {{ v.business_reg_number }}
+              </div>
+            </td>
+            <td>
+              <span class="score-pill" [ngClass]="getScorePill(v.deliveryRate)">
+                <i class="bi bi-shield-check"></i> {{ v.deliveryRate }}%
+              </span>
+            </td>
+            <td>
+              <div class="fw-semibold text-dark small">{{ v.deliveryRate }}%</div>
+              <div class="progress" style="height: 5px; width: 80px;">
+                <div class="progress-bar bg-success" [style.width.%]="v.deliveryRate"></div>
+              </div>
+            </td>
+            <td>
+              <div class="fw-semibold text-warning small">
+                ★ {{ v.quality_rating || 4.5 }}/5.0
+              </div>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="getRiskBadgeClass(v.risk_level)">
+                {{ v.risk_level || 'Low' }}
+              </span>
+            </td>
+            <td>
+              <span class="iq-badge" [ngClass]="getStatusClass(v.status)">
+                <i class="bi bi-dot"></i> {{ v.status }}
+              </span>
+            </td>
+            <td class="text-end">
+              <div class="btn-group btn-group-sm">
+                <button type="button" class="btn btn-outline-secondary" (click)="openQuickView(v)" title="Quick View">
+                  <i class="bi bi-eye"></i>
+                </button>
+                <a [routerLink]="['/vendor-details', v.id]" class="btn btn-outline-primary" title="Full Supplier Profile">
+                  <i class="bi bi-box-arrow-up-right"></i>
+                </a>
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  (click)="goToVendorSelection(activeCat.name)"
+                  title="Select for Sourcing"
+                >
+                  <i class="bi bi-check2-circle"></i> Sourcing
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Quick View Modal -->
+  <div *ngIf="selectedVendorForQuickView as qv" class="iq-modal-backdrop" (click)="closeQuickView()">
+    <div class="iq-modal" (click)="$event.stopPropagation()">
+      <div class="d-flex justify-content-between align-items-start border-bottom pb-3 mb-3">
+        <div>
+          <div class="d-flex align-items-center gap-2">
+            <h3 class="fs-5 fw-bold m-0 text-dark">{{ qv.name }}</h3>
+            <span class="badge bg-primary-subtle text-primary">{{ qv.category }}</span>
+          </div>
+          <span class="text-muted small">{{ qv.company }} &bull; {{ formatVendorId(qv.id) }}</span>
+        </div>
+        <button type="button" class="btn-close" (click)="closeQuickView()"></button>
+      </div>
+
+      <div class="row g-3 mb-4 small">
+        <div class="col-md-6">
+          <div class="p-2 bg-light rounded border">
+            <span class="text-muted d-block smaller">Reliability Score</span>
+            <span class="fs-5 fw-bold text-success">{{ qv.deliveryRate }}%</span>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="p-2 bg-light rounded border">
+            <span class="text-muted d-block smaller">Risk Classification</span>
+            <span class="badge fs-6 mt-1" [ngClass]="getRiskBadgeClass(qv.risk_level)">{{ qv.risk_level || 'Low' }} Risk</span>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <span class="text-muted d-block">Authorized Products:</span>
+          <strong>{{ qv.product }}</strong>
+        </div>
+        <div class="col-md-6">
+          <span class="text-muted d-block">Quality Score:</span>
+          <strong class="text-warning">★ {{ qv.quality_rating || 4.5 }} / 5.0</strong>
+        </div>
+        <div class="col-md-6">
+          <span class="text-muted d-block">Email:</span>
+          <span>{{ qv.email }}</span>
+        </div>
+        <div class="col-md-6">
+          <span class="text-muted d-block">Phone:</span>
+          <span>{{ qv.phone }}</span>
+        </div>
+        <div class="col-12" *ngIf="qv.address">
+          <span class="text-muted d-block">Location / Plant Address:</span>
+          <span>{{ qv.address }}</span>
+        </div>
+        <div class="col-12" *ngIf="qv.notes">
+          <span class="text-muted d-block">Operational Notes:</span>
+          <p class="p-2 bg-light rounded mb-0">{{ qv.notes }}</p>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-end gap-2 border-top pt-3">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="closeQuickView()">Close</button>
+        <a [routerLink]="['/vendor-details', qv.id]" (click)="closeQuickView()" class="btn btn-primary btn-sm">
+          Open Full Vendor Profile
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

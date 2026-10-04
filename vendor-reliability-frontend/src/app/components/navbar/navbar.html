@@ -1,0 +1,176 @@
+<nav *ngIf="currentUser$ | async as user" class="navbar-iq shadow-sm">
+  <div class="nav-container-iq">
+    <!-- Brand Logo -->
+    <div class="nav-left">
+      <a [routerLink]="getDashboardLink(user.role)" class="brand-link-iq">
+        <div class="brand-badge-iq">
+          <i class="bi bi-shield-check"></i>
+        </div>
+        <div class="brand-text-iq">
+          <span class="brand-title">VendorIQ</span>
+          <span class="brand-sub">Platform</span>
+        </div>
+      </a>
+
+      <!-- Primary Navigation Links (Role Filtered) -->
+      <div class="nav-links-iq">
+        <!-- Dashboard Link (Adapts to Role) -->
+        <a [routerLink]="getDashboardLink(user.role)" routerLinkActive="active" class="nav-btn-link">
+          <i class="bi bi-grid-fill"></i>
+          <span>{{ user.role === 'Vendor' ? 'Vendor Portal' : 'Dashboard' }}</span>
+        </a>
+
+        <!-- Vendor Directory (All Roles & Vendor) -->
+        <a *ngIf="canAccess(['Procurement Manager', 'Supply Chain Manager', 'Finance Officer', 'Auditor', 'Administrator', 'Vendor'])"
+           routerLink="/vendors" routerLinkActive="active" class="nav-btn-link">
+          <i class="bi bi-building"></i>
+          <span>Vendors</span>
+        </a>
+
+        <!-- Procurement Management (Buyer & Finance & Auditor) -->
+        <a *ngIf="canAccess(['Procurement Manager', 'Finance Officer', 'Auditor'])"
+           routerLink="/procurement" routerLinkActive="active" class="nav-btn-link">
+          <i class="bi bi-cart-check"></i>
+          <span>Procurement</span>
+        </a>
+
+        <!-- Purchase Orders / Shipments (Only Allowed Operational Roles) -->
+        <a *ngIf="canAccess(['Procurement Manager', 'Supply Chain Manager', 'Finance Officer', 'Auditor', 'Vendor'])"
+           routerLink="/purchase-orders" routerLinkActive="active" class="nav-btn-link">
+          <i class="bi" [ngClass]="user.role === 'Supply Chain Manager' ? 'bi-truck' : 'bi-receipt'"></i>
+          <span>{{ user.role === 'Vendor' ? 'Orders' : (user.role === 'Supply Chain Manager' ? 'Shipments & POs' : 'Purchase Orders') }}</span>
+        </a>
+
+        <!-- Contracts -->
+        <a *ngIf="canAccess(['Procurement Manager', 'Supply Chain Manager', 'Finance Officer', 'Auditor', 'Vendor'])"
+           routerLink="/contracts" routerLinkActive="active" class="nav-btn-link">
+          <i class="bi bi-file-earmark-text"></i>
+          <span>{{ user.role === 'Vendor' ? 'My Contracts' : 'Contracts' }}</span>
+        </a>
+
+        <!-- Communications (Internal Team & Admin) -->
+        <a *ngIf="canAccess(['Procurement Manager', 'Supply Chain Manager', 'Finance Officer', 'Auditor', 'Administrator'])"
+           routerLink="/communications" routerLinkActive="active" class="nav-btn-link">
+          <i class="bi bi-chat-dots"></i>
+          <span>Comms</span>
+        </a>
+
+        <!-- Analytics & Reports Dropdown -->
+        <div class="dropdown-iq" *ngIf="canAccess(['Procurement Manager', 'Supply Chain Manager', 'Finance Officer', 'Auditor'])">
+          <button class="nav-btn-link dropdown-toggle-iq">
+            <i class="bi bi-bar-chart-line"></i>
+            <span>Analytics</span>
+          </button>
+          <div class="dropdown-menu-iq">
+            <a *ngIf="canAccess(['Procurement Manager', 'Supply Chain Manager', 'Auditor'])"
+               routerLink="/vendor-performance" class="dropdown-item-iq">
+              <i class="bi bi-speedometer2 text-primary"></i> Vendor Performance
+            </a>
+            <a *ngIf="canAccess(['Procurement Manager', 'Supply Chain Manager', 'Auditor'])"
+               routerLink="/vendor-reliability" class="dropdown-item-iq">
+              <i class="bi bi-shield-check text-info"></i> Vendor Reliability
+            </a>
+            <a *ngIf="canAccess(['Procurement Manager', 'Finance Officer', 'Auditor'])"
+               routerLink="/analytics" class="dropdown-item-iq">
+              <i class="bi bi-pie-chart text-success"></i> Spend & Risk Analytics
+            </a>
+            <a routerLink="/reports" class="dropdown-item-iq">
+              <i class="bi bi-file-earmark-bar-graph text-warning"></i> Reports & Export
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Controls: Quick Role Switcher, Notification & User Profile -->
+    <div class="nav-right">
+      <!-- Quick Demo Role Switcher (6 Roles) -->
+      <div class="user-menu-wrapper" (mouseleave)="closeRoleMenu()">
+        <button class="nav-btn-link demo-switch-btn border-0 rounded-pill px-3 py-1 d-flex align-items-center gap-1"
+                (click)="toggleRoleMenu()"
+                style="background: rgba(255, 193, 7, 0.18); color: #855d00; font-weight: 600; cursor: pointer;"
+                title="Quickly switch between the 6 authorized roles">
+          <i class="bi bi-arrow-repeat" [ngClass]="{'spin-anim': isSwitchingRole}"></i>
+          <span class="d-none d-lg-inline">Switch Role</span>
+        </button>
+
+        <div *ngIf="roleMenuOpen" class="user-dropdown-card shadow-lg" style="min-width: 290px; right: 0;">
+          <div class="user-dropdown-header bg-light">
+            <div class="fw-bold text-dark small text-uppercase">Role Switcher (6 Roles)</div>
+            <div class="small text-muted">Test role boundaries & approval gates</div>
+          </div>
+          <div class="user-dropdown-body p-1">
+            <button *ngFor="let acc of demoAccounts"
+                    (click)="quickSwitchRole(acc.role)"
+                    class="dropdown-action border-0 w-100 text-start d-flex justify-content-between align-items-center py-2 px-3 rounded"
+                    [ngClass]="{'bg-primary text-white': user.role === acc.role}">
+              <div>
+                <div class="fw-bold small" [ngClass]="user.role === acc.role ? 'text-white' : 'text-dark'">{{ acc.role }}</div>
+                <div class="small" [ngClass]="user.role === acc.role ? 'text-white-50' : 'text-muted'" style="font-size: 0.75rem;">{{ acc.name }} &bull; {{ acc.badge }}</div>
+              </div>
+              <i *ngIf="user.role === acc.role" class="bi bi-check-circle-fill text-white fs-5"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notifications -->
+      <a routerLink="/notifications" class="notif-btn-iq position-relative" title="Notifications">
+        <i class="bi bi-bell-fill"></i>
+        <span *ngIf="(unreadCount$ | async) as count" class="notif-badge-iq">
+          {{ count }}
+        </span>
+      </a>
+
+      <!-- User Menu -->
+      <div class="user-menu-wrapper" (mouseleave)="closeUserMenu()">
+        <div class="user-pill-iq" (click)="toggleUserMenu()">
+          <div class="user-avatar-iq">
+            {{ user.full_name ? user.full_name.charAt(0).toUpperCase() : 'U' }}
+          </div>
+          <div class="user-details-iq d-none d-md-flex flex-column text-start">
+            <span class="user-name-iq">{{ user.full_name }}</span>
+            <span class="iq-badge py-0 px-2" [ngClass]="getRoleBadgeClass(user.role)">
+              {{ user.role }}
+            </span>
+          </div>
+          <i class="bi bi-chevron-down text-muted ms-1 small"></i>
+        </div>
+
+        <div *ngIf="userMenuOpen" class="user-dropdown-card shadow-lg">
+          <div class="user-dropdown-header">
+            <div class="fw-bold text-dark">{{ user.full_name }}</div>
+            <div class="small text-muted">{{ user.email }}</div>
+            <div class="mt-2">
+              <span class="iq-badge" [ngClass]="getRoleBadgeClass(user.role)">
+                <i class="bi bi-person-badge"></i> {{ user.role }}
+              </span>
+            </div>
+          </div>
+          <div class="user-dropdown-body">
+            <a routerLink="/profile" (click)="closeUserMenu()" class="dropdown-action">
+              <i class="bi bi-person-gear"></i> Profile & Settings
+            </a>
+            <a *ngIf="canAccess(['Administrator'])" routerLink="/add-vendors" (click)="closeUserMenu()" class="dropdown-action">
+              <i class="bi bi-plus-circle"></i> Register New Vendor
+            </a>
+            <a *ngIf="canAccess(['Procurement Manager', 'Finance Officer'])" routerLink="/procurement" (click)="closeUserMenu()" class="dropdown-action">
+              <i class="bi bi-file-earmark-plus"></i> New Procurement Request
+            </a>
+          </div>
+          <div class="user-dropdown-footer">
+            <button (click)="logout()" class="btn-signout">
+              <i class="bi bi-box-arrow-right"></i> Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Direct Logout Button beside Profile -->
+      <button (click)="logout()" class="nav-logout-btn" title="Sign Out">
+        <i class="bi bi-box-arrow-right"></i>
+        <span class="d-none d-sm-inline">Logout</span>
+      </button>
+    </div>
+  </div>
+</nav>

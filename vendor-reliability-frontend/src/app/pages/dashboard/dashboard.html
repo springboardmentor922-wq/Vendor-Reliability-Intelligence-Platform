@@ -1,0 +1,1958 @@
+<div class="dashboard-page">
+  <!-- Flash Action Toast -->
+  <div *ngIf="actionMessage" class="alert alert-success alert-dismissible fade show shadow-sm mb-3 d-flex align-items-center gap-2" role="alert">
+    <i class="bi bi-check-circle-fill text-success fs-5"></i>
+    <div>{{ actionMessage }}</div>
+  </div>
+
+  <!-- Access Denied Alert Banner (from RoleGuard) -->
+  <div *ngIf="accessDeniedMessage" class="alert alert-warning alert-dismissible fade show shadow-sm mb-3 d-flex align-items-center gap-2" role="alert">
+    <i class="bi bi-shield-lock-fill text-warning fs-5"></i>
+    <div>{{ accessDeniedMessage }}</div>
+  </div>
+
+  <!-- Welcome & Perspective Switcher Header -->
+  <div class="header-card mb-4 shadow-sm">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <span class="iq-badge badge-role fs-6">{{ currentUser?.role }}</span>
+          <span *ngIf="currentUser?.role === 'Administrator'" class="badge bg-primary text-white">Full Enterprise Access</span>
+          <span *ngIf="currentUser?.role === 'Vendor'" class="badge bg-success text-white">External Supplier Portal</span>
+        </div>
+        <h1 class="page-title mb-1">
+          {{ activeRoleView === 'Vendor' ? 'Vendor Partner Intelligence Portal' : 'Vendor Reliability Intelligence Platform' }}
+        </h1>
+        <p class="page-subtitle mb-0">
+          Welcome, <strong>{{ currentUser?.full_name }}</strong> &bull; Company: <em>{{ currentUser?.company || 'VendorIQ Operations' }}</em>
+        </p>
+      </div>
+
+      <!-- Dedicated Role Protection Indicator -->
+      <div class="d-flex flex-wrap gap-2 align-items-center">
+        <div class="p-2 px-3 rounded-3 bg-light border d-flex align-items-center gap-2 shadow-xs">
+          <i class="bi bi-shield-lock-fill text-primary fs-5"></i>
+          <div>
+            <div class="small fw-bold text-dark">Role-Isolated Workspace</div>
+            <div class="extra-small text-muted"><span class="badge bg-success py-0 me-1">Active</span>Access Restricted to {{ currentUser?.role }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- 1. ADMINISTRATOR DASHBOARD VIEW (Module 8: Admin Dashboard)                 -->
+  <!-- ========================================================================= -->
+  <div *ngIf="activeDashboardTab === 'Admin'" class="role-dashboard-view">
+    <!-- Admin Dashboard Section 5: System Statistics & Health Grid -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="fs-5 fw-bold text-dark m-0"><i class="bi bi-cpu text-primary me-2"></i>System Statistics & Platform Health</h2>
+      <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+        <i class="bi bi-check-circle me-1"></i>System Status: {{ stats?.admin_dashboard?.system_statistics?.system_status || 'Operational' }}
+      </span>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card border-start-primary">
+          <div class="stat-icon blue"><i class="bi bi-cpu"></i></div>
+          <div>
+            <div class="stat-value text-primary">{{ stats?.admin_dashboard?.system_statistics?.system_uptime || stats?.system_uptime || '99.98%' }}</div>
+            <div class="stat-label">Platform Uptime &bull; Latency {{ stats?.api_response_avg_ms || 38 }}ms</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card border-start-success">
+          <div class="stat-icon green"><i class="bi bi-people"></i></div>
+          <div>
+            <div class="stat-value">{{ stats?.admin_dashboard?.user_management?.total_users || stats?.total_users || 8 }} Users</div>
+            <div class="stat-label">{{ stats?.admin_dashboard?.user_management?.active_users || 7 }} Active &bull; {{ stats?.admin_dashboard?.user_management?.pending_approvals || 0 }} Pending</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card border-start-warning">
+          <div class="stat-icon amber"><i class="bi bi-database-check"></i></div>
+          <div>
+            <div class="stat-value">{{ stats?.admin_dashboard?.system_statistics?.total_transactions || stats?.total_db_records || 105 }} Transactions</div>
+            <div class="stat-label">{{ stats?.admin_dashboard?.system_statistics?.total_contracts || stats?.active_contracts || 4 }} Contracts Monitored</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card border-start-purple">
+          <div class="stat-icon purple"><i class="bi bi-shield-check"></i></div>
+          <div>
+            <div class="stat-value text-success">{{ stats?.admin_dashboard?.compliance_monitoring?.compliance_rate || stats?.contract_compliance_rate || 96.5 }}%</div>
+            <div class="stat-label">Enterprise Compliance Rate</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Dashboard Section 1 & 2: User Management & Vendor Analytics -->
+    <div class="row g-4 mb-4">
+      <!-- Section 1: User Management -->
+      <div class="col-lg-6">
+        <div class="iq-card h-100 shadow-sm">
+          <div class="iq-card-header d-flex justify-content-between align-items-center">
+            <h2 class="iq-card-title m-0"><i class="bi bi-person-badge text-primary me-2"></i>1. User Management</h2>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">RBAC Active</span>
+          </div>
+
+          <div class="d-flex justify-content-between text-muted small mb-3">
+            <span>Total: <strong>{{ stats?.admin_dashboard?.user_management?.total_users || 8 }}</strong></span>
+            <span>Active: <strong class="text-success">{{ stats?.admin_dashboard?.user_management?.active_users || 7 }}</strong></span>
+            <span>Inactive: <strong class="text-secondary">{{ stats?.admin_dashboard?.user_management?.inactive_users || 1 }}</strong></span>
+            <span>Pending Approvals: <strong class="text-warning">{{ stats?.admin_dashboard?.user_management?.pending_approvals || 0 }}</strong></span>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-4" *ngFor="let item of getUsersByRoleList()">
+              <div class="p-2 border rounded text-center bg-light h-100">
+                <div class="extra-small fw-bold text-truncate text-dark" [title]="item.role">{{ item.role }}</div>
+                <div class="fs-5 fw-bold text-primary">{{ item.count }}</div>
+              </div>
+            </div>
+          </div>
+
+          <h3 class="fs-6 fw-bold mt-3 mb-2">Platform Administration Shortcuts</h3>
+          <div class="d-flex flex-wrap gap-2">
+            <a routerLink="/vendors" class="btn btn-sm btn-outline-primary"><i class="bi bi-building"></i> Vendor Directory</a>
+            <a routerLink="/procurement" class="btn btn-sm btn-outline-success"><i class="bi bi-cart"></i> Procurement Requests</a>
+            <a routerLink="/purchase-orders" class="btn btn-sm btn-outline-info"><i class="bi bi-receipt"></i> Purchase Orders</a>
+            <a routerLink="/contracts" class="btn btn-sm btn-outline-warning"><i class="bi bi-file-earmark-text"></i> Contracts</a>
+            <a routerLink="/reports" class="btn btn-sm btn-outline-dark"><i class="bi bi-file-earmark-bar-graph"></i> Reports & Export</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Vendor Analytics -->
+      <div class="col-lg-6">
+        <div class="iq-card h-100 shadow-sm">
+          <div class="iq-card-header d-flex justify-content-between align-items-center">
+            <h2 class="iq-card-title m-0"><i class="bi bi-pie-chart text-success me-2"></i>2. Vendor Analytics</h2>
+            <span class="badge bg-success">{{ stats?.admin_dashboard?.vendor_analytics?.total_vendors || stats?.total_vendors || 8 }} Vendors Registered</span>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-4 text-center p-2 border rounded bg-light">
+              <div class="extra-small text-muted">Active Suppliers</div>
+              <div class="fs-5 fw-bold text-success">{{ stats?.admin_dashboard?.vendor_analytics?.active_vendors || stats?.approved_vendors || 7 }}</div>
+            </div>
+            <div class="col-4 text-center p-2 border rounded bg-light">
+              <div class="extra-small text-muted">Avg Reliability</div>
+              <div class="fs-5 fw-bold text-primary">{{ stats?.admin_dashboard?.vendor_analytics?.avg_reliability || stats?.avg_reliability_score || 88.5 }}%</div>
+            </div>
+            <div class="col-4 text-center p-2 border rounded bg-light">
+              <div class="extra-small text-muted">High Risk Flagged</div>
+              <div class="fs-5 fw-bold text-danger">{{ stats?.admin_dashboard?.vendor_analytics?.high_risk_vendors || stats?.high_risk_vendors || 1 }}</div>
+            </div>
+          </div>
+
+          <div class="mb-2">
+            <span class="small fw-semibold text-dark">Distribution by Mandatory Vendor Categories:</span>
+          </div>
+          <div class="p-2 border rounded bg-light mb-3">
+            <div *ngFor="let cat of getVendorsByCategoryList()" class="mb-2">
+              <div class="d-flex justify-content-between align-items-center extra-small mb-1">
+                <span class="fw-medium text-dark">{{ cat.category }}</span>
+                <span class="text-muted">{{ cat.count }} supplier{{ cat.count > 1 ? 's' : '' }} ({{ cat.percentage }}%)</span>
+              </div>
+              <div class="progress" style="height: 5px;">
+                <div class="progress-bar bg-primary" [style.width.%]="cat.percentage"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between text-muted extra-small">
+            <span>6 Mandatory Categories Active</span>
+            <a routerLink="/vendors" class="text-primary fw-medium text-decoration-none">Manage Categories &rarr;</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Dashboard Section 3 & 4: Procurement Reports & Compliance Monitoring -->
+    <div class="row g-4 mb-4">
+      <!-- Section 3: Procurement Reports -->
+      <div class="col-lg-6">
+        <div class="iq-card h-100 shadow-sm">
+          <div class="iq-card-header d-flex justify-content-between align-items-center">
+            <h2 class="iq-card-title m-0"><i class="bi bi-file-earmark-bar-graph text-primary me-2"></i>3. Procurement Reports</h2>
+            <a routerLink="/reports" class="btn btn-xs btn-outline-primary">Open Reports Engine</a>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <div class="p-3 border rounded bg-light text-center">
+                <div class="extra-small text-muted text-uppercase fw-semibold">Total Requests</div>
+                <div class="fs-4 fw-bold text-primary">{{ stats?.admin_dashboard?.procurement_reports?.total_requests || stats?.total_procurement_requests || 5 }}</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-3 border rounded bg-light text-center">
+                <div class="extra-small text-muted text-uppercase fw-semibold">Purchase Orders</div>
+                <div class="fs-4 fw-bold text-success">{{ stats?.admin_dashboard?.procurement_reports?.total_pos || stats?.active_purchase_orders || 4 }}</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-3 border rounded bg-light text-center">
+                <div class="extra-small text-muted text-uppercase fw-semibold">Procurement Value</div>
+                <div class="fs-5 fw-bold text-dark">${{ (stats?.admin_dashboard?.procurement_reports?.procurement_value || stats?.total_pr_budget || 328000) | number }}</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-3 border rounded bg-light text-center">
+                <div class="extra-small text-muted text-uppercase fw-semibold">Completion Rate</div>
+                <div class="fs-4 fw-bold text-info">{{ stats?.admin_dashboard?.procurement_reports?.completion_rate || 80 }}%</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="alert alert-light border small d-flex justify-content-between align-items-center mb-0">
+            <div>
+              <i class="bi bi-info-circle text-primary me-1"></i>
+              <strong>Pending Approvals:</strong> {{ stats?.admin_dashboard?.procurement_reports?.pending_approvals || 1 }} requests awaiting sign-off
+            </div>
+            <a routerLink="/procurement" class="btn btn-xs btn-primary">Review PRs</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 4: Compliance Monitoring -->
+      <div class="col-lg-6">
+        <div class="iq-card h-100 shadow-sm">
+          <div class="iq-card-header d-flex justify-content-between align-items-center">
+            <h2 class="iq-card-title m-0"><i class="bi bi-shield-check text-success me-2"></i>4. Compliance Monitoring</h2>
+            <span class="badge bg-success-subtle text-success border border-success-subtle">
+              {{ stats?.admin_dashboard?.compliance_monitoring?.compliance_rate || 96.5 }}% Compliant
+            </span>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <div class="p-3 border rounded bg-light text-center">
+                <div class="extra-small text-muted text-uppercase fw-semibold">Compliant Vendors</div>
+                <div class="fs-4 fw-bold text-success">{{ stats?.admin_dashboard?.compliance_monitoring?.compliant_vendors || 7 }}</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-3 border rounded bg-light text-center">
+                <div class="extra-small text-muted text-uppercase fw-semibold">Non-Compliant</div>
+                <div class="fs-4 fw-bold text-danger">{{ stats?.admin_dashboard?.compliance_monitoring?.non_compliant_vendors || 1 }}</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-3 border rounded bg-light text-center">
+                <div class="extra-small text-muted text-uppercase fw-semibold">Expiring Certifications</div>
+                <div class="fs-5 fw-bold text-warning">{{ stats?.admin_dashboard?.compliance_monitoring?.expiring_certifications || 1 }}</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-3 border rounded bg-light text-center">
+                <div class="extra-small text-muted text-uppercase fw-semibold">Expired Certifications</div>
+                <div class="fs-5 fw-bold text-secondary">{{ stats?.admin_dashboard?.compliance_monitoring?.expired_certifications || 0 }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="alert alert-warning py-2 px-3 small d-flex justify-content-between align-items-center mb-0">
+            <div><i class="bi bi-bell me-1"></i> Renewal window alerts configured at 30, 60, and 90 days.</div>
+            <a routerLink="/contracts" class="btn btn-xs btn-outline-dark">Contracts & Certs</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Dashboard Section 5: Live System Audit Trail Feed -->
+    <div class="iq-card shadow-sm mb-4">
+      <div class="iq-card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <h2 class="iq-card-title m-0"><i class="bi bi-clock-history text-muted me-2"></i>5. System Statistics & Live Audit Trail</h2>
+        <div class="btn-group btn-group-sm">
+          <button type="button" class="btn btn-outline-secondary" [class.active]="auditFilter === 'ALL'" (click)="auditFilter = 'ALL'; applyAuditFilter()">All</button>
+          <button type="button" class="btn btn-outline-secondary" [class.active]="auditFilter === 'LOGIN'" (click)="auditFilter = 'LOGIN'; applyAuditFilter()">Logins</button>
+          <button type="button" class="btn btn-outline-secondary" [class.active]="auditFilter === 'PO'" (click)="auditFilter = 'PO'; applyAuditFilter()">Orders</button>
+          <button type="button" class="btn btn-outline-secondary" [class.active]="auditFilter === 'CONTRACT'" (click)="auditFilter = 'CONTRACT'; applyAuditFilter()">Contracts</button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light">
+            <tr>
+              <th>Timestamp</th>
+              <th>Action</th>
+              <th>Entity</th>
+              <th>Details</th>
+              <th>User ID</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let act of filteredActivities.slice(0, 8)">
+              <td class="text-muted text-nowrap">{{ act.created_at | date:'short' }}</td>
+              <td><span class="iq-badge py-0 px-2" [ngClass]="getActionBadge(act.action)">{{ act.action }}</span></td>
+              <td><span class="fw-semibold">{{ act.entity_type }}</span></td>
+              <td class="text-truncate" style="max-width: 320px;">{{ act.details }}</td>
+              <td><code>User #{{ act.user_id || 'System' }}</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- 2. PROCUREMENT DASHBOARD VIEW (Module 8: Procurement Dashboard)           -->
+  <!-- ========================================================================= -->
+  <div *ngIf="activeDashboardTab === 'Procurement'" class="role-dashboard-view">
+    <!-- Procurement Dashboard Section 1: Procurement Overview -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="fs-5 fw-bold text-dark m-0"><i class="bi bi-cart-check text-primary me-2"></i>1. Procurement Overview</h2>
+      <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">
+        Completion Rate: {{ (stats?.procurement_dashboard?.overview?.completion_rate || 80) | number:'1.1-1' }}%
+      </span>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-sm-6 col-xl-2">
+        <div class="stat-card border-start-primary h-100">
+          <div class="stat-icon blue"><i class="bi bi-cart4"></i></div>
+          <div>
+            <div class="stat-value text-primary">{{ stats?.procurement_dashboard?.overview?.total_requests || stats?.total_procurement_requests || 5 }}</div>
+            <div class="stat-label">Total Requests</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-2">
+        <div class="stat-card border-start-warning h-100">
+          <div class="stat-icon amber"><i class="bi bi-hourglass-split"></i></div>
+          <div>
+            <div class="stat-value text-warning">{{ stats?.procurement_dashboard?.overview?.pending_requests || stats?.pending_procurement_requests || 0 }}</div>
+            <div class="stat-label">Pending Approval</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-2">
+        <div class="stat-card border-start-success h-100">
+          <div class="stat-icon green"><i class="bi bi-check-circle"></i></div>
+          <div>
+            <div class="stat-value text-success">{{ stats?.procurement_dashboard?.overview?.approved_requests || stats?.approved_procurement_requests || 2 }}</div>
+            <div class="stat-label">Approved PRs</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-2">
+        <div class="stat-card border-start-purple h-100">
+          <div class="stat-icon purple"><i class="bi bi-check2-all"></i></div>
+          <div>
+            <div class="stat-value text-purple">{{ stats?.procurement_dashboard?.overview?.completed_requests || 2 }}</div>
+            <div class="stat-label">Completed Orders</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-4">
+        <div class="stat-card border-start-primary h-100">
+          <div class="stat-icon blue"><i class="bi bi-cash-coin"></i></div>
+          <div>
+            <div class="stat-value">${{ (stats?.procurement_dashboard?.overview?.procurement_value || stats?.total_pr_budget || 328000) | number }}</div>
+            <div class="stat-label">Procurement Pipeline Value &bull; {{ (stats?.procurement_dashboard?.overview?.completion_rate || 80) | number:'1.1-1' }}% Rate</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Procurement Dashboard Section 2 & 5: Active Purchase Orders & Delivery Status -->
+    <div class="row g-4 mb-4">
+      <!-- Section 2: Active Purchase Orders -->
+      <div class="col-lg-7">
+        <div class="iq-card h-100 shadow-sm">
+          <div class="iq-card-header d-flex justify-content-between align-items-center">
+            <div>
+              <h2 class="iq-card-title m-0"><i class="bi bi-receipt text-primary me-2"></i>2. Active Purchase Orders</h2>
+              <span class="small text-muted">Committed PO Value: <strong>${{ (stats?.procurement_dashboard?.active_purchase_orders?.po_value || stats?.total_po_amount || 195000) | number }}</strong></span>
+            </div>
+            <a routerLink="/purchase-orders" class="btn btn-xs btn-outline-primary">Manage All POs</a>
+          </div>
+
+          <div class="row g-2 p-3 pb-0">
+            <div class="col-3 text-center p-2 border rounded bg-light">
+              <div class="extra-small text-muted">Total Active</div>
+              <div class="fs-5 fw-bold text-primary">{{ stats?.procurement_dashboard?.active_purchase_orders?.active_pos || stats?.active_purchase_orders || 4 }}</div>
+            </div>
+            <div class="col-3 text-center p-2 border rounded bg-light">
+              <div class="extra-small text-muted">Pending Dispatch</div>
+              <div class="fs-5 fw-bold text-warning">{{ stats?.procurement_dashboard?.active_purchase_orders?.pending_orders || 1 }}</div>
+            </div>
+            <div class="col-3 text-center p-2 border rounded bg-light">
+              <div class="extra-small text-muted">In-Transit</div>
+              <div class="fs-5 fw-bold text-info">{{ stats?.procurement_dashboard?.active_purchase_orders?.in_transit_orders || 1 }}</div>
+            </div>
+            <div class="col-3 text-center p-2 border rounded bg-light">
+              <div class="extra-small text-muted">Overdue</div>
+              <div class="fs-5 fw-bold" [ngClass]="(stats?.procurement_dashboard?.active_purchase_orders?.overdue_pos || 0) > 0 ? 'text-danger' : 'text-success'">
+                {{ stats?.procurement_dashboard?.active_purchase_orders?.overdue_pos || 0 }}
+              </div>
+            </div>
+          </div>
+
+          <div class="p-3">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0 small">
+                <thead class="table-light">
+                  <tr>
+                    <th>PO Number</th>
+                    <th>Vendor</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Delivery Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let po of purchaseOrders.slice(0, 4)">
+                    <td class="fw-bold text-primary">{{ po.po_number }}</td>
+                    <td><span class="fw-semibold">{{ po.vendor?.name || 'Assigned Vendor' }}</span></td>
+                    <td>{{ po.total_amount | currency }}</td>
+                    <td><span class="iq-badge badge-approved">{{ po.status }}</span></td>
+                    <td>{{ po.expected_delivery_date | date:'mediumDate' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 5: Delivery Status -->
+      <div class="col-lg-5">
+        <div class="iq-card h-100 shadow-sm">
+          <div class="iq-card-header d-flex justify-content-between align-items-center">
+            <h2 class="iq-card-title m-0"><i class="bi bi-truck text-success me-2"></i>5. Delivery Status</h2>
+            <span class="badge bg-success-subtle text-success border border-success-subtle">
+              {{ stats?.procurement_dashboard?.delivery_status?.delivery_rate || 86.2 }}% On-Time
+            </span>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <div class="p-3 border rounded bg-light text-center">
+                <div class="extra-small text-muted text-uppercase fw-semibold">Total Shipments</div>
+                <div class="fs-4 fw-bold text-dark">{{ stats?.procurement_dashboard?.delivery_status?.total_deliveries || 4 }}</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-3 border rounded bg-light text-center">
+                <div class="extra-small text-muted text-uppercase fw-semibold">On-Time Deliveries</div>
+                <div class="fs-4 fw-bold text-success">{{ stats?.procurement_dashboard?.delivery_status?.on_time_deliveries || 3 }}</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-3 border rounded bg-light text-center">
+                <div class="extra-small text-muted text-uppercase fw-semibold">Delayed Deliveries</div>
+                <div class="fs-4 fw-bold text-danger">{{ stats?.procurement_dashboard?.delivery_status?.delayed_deliveries || 1 }}</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-3 border rounded bg-light text-center">
+                <div class="extra-small text-muted text-uppercase fw-semibold">Pending Deliveries</div>
+                <div class="fs-4 fw-bold text-warning">{{ stats?.procurement_dashboard?.delivery_status?.pending_deliveries || 1 }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="alert alert-info py-2 px-3 small d-flex align-items-center gap-2 mb-0">
+            <i class="bi bi-shield-check fs-5 text-info"></i>
+            <div><strong>SLA Monitoring:</strong> On-time delivery benchmark is target &gt;= 90%. Real-time tracking integrated with Supply Chain flow.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Procurement Dashboard Section 4: Procurement Cost Analysis -->
+    <div class="row g-4 mb-4">
+      <div class="col-lg-7">
+        <div class="iq-card h-100 shadow-sm">
+          <div class="iq-card-header d-flex justify-content-between align-items-center">
+            <h2 class="iq-card-title m-0"><i class="bi bi-pie-chart text-primary me-2"></i>4. Procurement Cost Analysis & Category Spend</h2>
+            <span class="badge bg-primary">{{ (stats?.procurement_dashboard?.procurement_cost_analysis?.total_cost || stats?.total_po_amount || 195000) | currency }} Total Spend</span>
+          </div>
+
+          <p class="text-muted small mb-2">Committed spend categorized across mandatory vendor supply categories:</p>
+          <div class="p-3 bg-light rounded-3 border mb-3">
+            <div *ngFor="let cat of getCostByCategoryList()" class="mb-3">
+              <div class="d-flex justify-content-between small fw-bold mb-1">
+                <span>{{ cat.category }}</span>
+                <span class="text-primary">{{ cat.amount | currency }} ({{ cat.percentage }}%)</span>
+              </div>
+              <div class="progress" style="height: 6px;">
+                <div class="progress-bar bg-primary" [style.width.%]="cat.percentage"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between text-muted extra-small">
+            <span>Spend Analysis Engine Active</span>
+            <a routerLink="/analytics" class="text-primary fw-medium text-decoration-none">Open Advanced Cost Analytics &rarr;</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="iq-card h-100 shadow-sm">
+          <div class="iq-card-header">
+            <h2 class="iq-card-title m-0"><i class="bi bi-graph-up text-success me-2"></i>Budget vs Actual Spend</h2>
+          </div>
+
+          <div class="p-3 bg-light rounded-3 border mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <div class="extra-small text-muted text-uppercase">Requisition Budget</div>
+                <div class="fs-5 fw-bold text-dark">${{ (stats?.procurement_dashboard?.procurement_cost_analysis?.budget || stats?.total_pr_budget || 328000) | number }}</div>
+              </div>
+              <div>
+                <div class="extra-small text-muted text-uppercase text-end">Actual PO Spend</div>
+                <div class="fs-5 fw-bold text-success text-end">${{ (stats?.procurement_dashboard?.procurement_cost_analysis?.actual_spend || stats?.total_po_amount || 195000) | number }}</div>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center p-2 rounded bg-white border">
+              <span class="small fw-semibold">Cost Savings / Variance:</span>
+              <span class="badge bg-success fs-6">
+                +${{ (stats?.procurement_dashboard?.procurement_cost_analysis?.cost_variance || 133000) | number }}
+                ({{ stats?.procurement_dashboard?.procurement_cost_analysis?.cost_variance_pct || 40.5 }}%)
+              </span>
+            </div>
+          </div>
+
+          <div class="d-grid gap-2">
+            <a routerLink="/procurement" class="btn btn-primary btn-sm"><i class="bi bi-cart-plus"></i> Open Full Procurement Pipeline</a>
+            <a routerLink="/purchase-orders" class="btn btn-outline-secondary btn-sm"><i class="bi bi-receipt"></i> View Purchase Orders</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUPPLY CHAIN RE-SOURCING & ESCALATION IN-TRAY -->
+    <div class="iq-card shadow-sm mb-4 border-start border-4 border-danger" *ngIf="getOpenAlerts().length > 0">
+      <div class="iq-card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 py-3" style="background-color: #fef2f2;">
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge bg-danger p-2"><i class="bi bi-bell-fill fs-6 text-white"></i></span>
+          <div>
+            <h2 class="iq-card-title text-danger m-0 fs-6">
+              Supply Chain Re-Sourcing In-Tray ({{ getOpenAlerts().length }} Active Escalation{{ getOpenAlerts().length > 1 ? 's' : '' }})
+            </h2>
+            <span class="text-muted extra-small">The Supply Chain Manager has flagged unreliable vendor performance or product flow delays requiring alternative supplier selection.</span>
+          </div>
+        </div>
+        <span class="badge bg-danger-subtle text-danger border border-danger px-3 py-1">Cross-Department Coordination Active</span>
+      </div>
+
+      <div class="p-3">
+        <div *ngFor="let alert of getOpenAlerts()" class="border border-danger-subtle rounded-3 p-3 mb-2 bg-light shadow-xs">
+          <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+            <div class="flex-grow-1">
+              <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                <span class="badge" [ngClass]="alert.severity === 'Critical' ? 'bg-danger text-white' : 'bg-warning text-dark'">
+                  {{ alert.severity }} Escalation
+                </span>
+                <span class="badge bg-light text-dark border">{{ alert.category }}</span>
+                <span class="text-danger fw-bold"><i class="bi bi-exclamation-triangle-fill me-1"></i>Unreliable Vendor: {{ alert.vendor_name }} ({{ alert.delivery_rate }}% On-Time)</span>
+                <span class="text-muted extra-small">&bull; Reported by {{ alert.reported_by }} &bull; {{ alert.reported_at | date:'shortTime' }}</span>
+              </div>
+              <div class="fw-bold text-dark fs-6">{{ alert.product }}</div>
+              <p class="mb-2 text-muted small">{{ alert.issue_summary }}</p>
+              <div class="extra-small text-dark fw-semibold bg-white p-2 rounded border">
+                <i class="bi bi-arrow-right-circle text-primary me-1"></i>Supply Chain Request: {{ alert.recommended_action }}
+                <span *ngIf="alert.preventive_action_taken" class="text-success ms-2">| Preventive Taken: {{ alert.preventive_action_taken }}</span>
+              </div>
+            </div>
+            <div class="d-flex flex-row flex-lg-column gap-2 flex-shrink-0">
+              <button type="button" class="btn btn-sm btn-primary d-flex align-items-center justify-content-center gap-2 text-nowrap" (click)="findAlternativeForAlert(alert)">
+                <i class="bi bi-search"></i> Find Alternative Vendor
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center gap-1 text-nowrap" (click)="resolveAlertDirectly(alert)">
+                <i class="bi bi-check2-circle"></i> Mark Resolved
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Re-Sourcing Target Banner (When searching for replacement) -->
+    <div *ngIf="activeSourcingHighlightBanner" class="alert alert-info border-info shadow-sm d-flex justify-content-between align-items-center mb-3">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-info-circle-fill text-info fs-5"></i>
+        <div>
+          <strong>Re-Sourcing Focus:</strong> {{ activeSourcingHighlightBanner }}
+        </div>
+      </div>
+      <button type="button" class="btn btn-xs btn-outline-secondary" (click)="clearActiveReSourcing()">
+        <i class="bi bi-x"></i> Clear Focus
+      </button>
+    </div>
+
+    <!-- Procurement Dashboard Section 3: Vendor Performance Summary & Evaluation Matrix -->
+    <div class="iq-card shadow-sm mb-4" id="vendor-eval-matrix">
+      <div class="iq-card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div>
+          <h2 class="iq-card-title m-0">
+            <i class="bi bi-speedometer2 text-primary me-2"></i>3. Vendor Performance Summary & Purchasing Decision Matrix
+          </h2>
+          <span class="text-muted small">Compare delivery performance and reliability scores side-by-side to select suitable suppliers for procurement.</span>
+        </div>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+          <div class="input-group input-group-sm" style="max-width: 240px;">
+            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+            <input type="text" class="form-control border-start-0" placeholder="Search suppliers or product..." [(ngModel)]="evalSearchQuery">
+          </div>
+          <select class="form-select form-select-sm" style="max-width: 210px;" [(ngModel)]="evalCategoryFilter">
+            <option value="All">All Categories</option>
+            <option value="Raw Material Suppliers">Raw Material Suppliers</option>
+            <option value="Equipment Vendors">Equipment Vendors</option>
+            <option value="IT Vendors">IT Vendors</option>
+            <option value="Logistics Partners">Logistics Partners</option>
+            <option value="Maintenance Vendors">Maintenance Vendors</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Performance Summary Metrics Row -->
+      <div class="row g-2 p-3 pb-0">
+        <div class="col-sm-6 col-md-3">
+          <div class="p-2 border rounded bg-light text-center">
+            <div class="extra-small text-muted">Avg Performance Score</div>
+            <div class="fs-5 fw-bold text-success">{{ stats?.procurement_dashboard?.vendor_performance_summary?.performance_score || stats?.avg_reliability_score || 91.5 }}%</div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+          <div class="p-2 border rounded bg-light text-center">
+            <div class="extra-small text-muted">Avg Quality Rating</div>
+            <div class="fs-5 fw-bold text-primary">{{ stats?.procurement_dashboard?.vendor_performance_summary?.quality_rating || stats?.avg_quality_score || 4.3 }} / 5.0</div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+          <div class="p-2 border rounded bg-light text-center">
+            <div class="extra-small text-muted">On-Time Delivery Rate</div>
+            <div class="fs-5 fw-bold text-info">{{ stats?.procurement_dashboard?.vendor_performance_summary?.on_time_delivery_rate || 88.5 }}%</div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+          <div class="p-2 border rounded bg-light text-center">
+            <div class="extra-small text-muted">Issue Resolution Rate</div>
+            <div class="fs-5 fw-bold text-purple">{{ stats?.procurement_dashboard?.vendor_performance_summary?.issue_resolution_rate || 96.2 }}%</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-responsive p-3">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light">
+            <tr>
+              <th>Supplier & Category</th>
+              <th>On-Time Delivery Rate</th>
+              <th>Quality Score</th>
+              <th>Response SLA</th>
+              <th>Risk Rating</th>
+              <th>Purchasing Suitability</th>
+              <th class="text-end">Procurement Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let v of getEvaluatedVendors()">
+              <td>
+                <div class="fw-bold text-dark">{{ v.name }}</div>
+                <div class="extra-small text-muted">{{ v.company }} &bull; <span class="badge bg-light text-dark border">{{ v.category }}</span></div>
+              </td>
+              <td style="min-width: 170px;">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <span class="fw-bold" [ngClass]="v.deliveryRate >= 90 ? 'text-success' : (v.deliveryRate >= 80 ? 'text-warning' : 'text-danger')">
+                    {{ v.deliveryRate }}%
+                  </span>
+                  <span class="extra-small text-muted" *ngIf="v.deliveryRate >= 90">Excellent</span>
+                  <span class="extra-small text-muted" *ngIf="v.deliveryRate >= 80 && v.deliveryRate < 90">Acceptable</span>
+                  <span class="extra-small text-muted" *ngIf="v.deliveryRate < 80">Sub-par</span>
+                </div>
+                <div class="progress" style="height: 6px;">
+                  <div class="progress-bar"
+                       [ngClass]="v.deliveryRate >= 90 ? 'bg-success' : (v.deliveryRate >= 80 ? 'bg-warning' : 'bg-danger')"
+                       [style.width.%]="v.deliveryRate"></div>
+                </div>
+              </td>
+              <td>
+                <div class="d-flex align-items-center gap-1">
+                  <i class="bi bi-star-fill text-warning"></i>
+                  <strong class="text-dark">{{ v.quality_rating || 4.0 }}</strong>
+                  <span class="text-muted extra-small">/ 5.0</span>
+                </div>
+              </td>
+              <td>
+                <span class="text-muted"><i class="bi bi-clock me-1"></i>{{ v.response_time_hours || 12 }} hrs</span>
+              </td>
+              <td>
+                <span class="badge" [ngClass]="v.risk_level === 'High' ? 'bg-danger' : (v.risk_level === 'Medium' ? 'bg-warning text-dark' : 'bg-success')">
+                  {{ v.risk_level || 'Low' }} Risk
+                </span>
+              </td>
+              <td>
+                <span class="badge py-1 px-2 d-inline-flex align-items-center gap-1" [ngClass]="getSuitabilityTag(v).badgeClass">
+                  <i class="bi" [ngClass]="getSuitabilityTag(v).icon"></i>
+                  {{ getSuitabilityTag(v).label }}
+                </span>
+              </td>
+              <td class="text-end text-nowrap">
+                <button type="button" class="btn btn-xs btn-outline-secondary me-1" (click)="openVendorQuickView(v)">
+                  <i class="bi bi-eye"></i> Details
+                </button>
+                <button *ngIf="v.status === 'Approved' && v.risk_level !== 'High'"
+                        type="button" class="btn btn-xs btn-success" (click)="openProcurementModal(v)">
+                  <i class="bi bi-cart-plus"></i> Select for Purchase
+                </button>
+                <button *ngIf="v.status !== 'Approved' || v.risk_level === 'High'"
+                        type="button" class="btn btn-xs btn-outline-danger" (click)="openVendorQuickView(v)">
+                  <i class="bi bi-exclamation-triangle"></i> Review Risk
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- RISK IDENTIFICATION & DECISION SUPPORT HUB -->
+    <div class="row g-4 mb-4">
+      <!-- High-Risk Vendor Identification Callout -->
+      <div class="col-lg-7">
+        <div class="iq-card h-100 shadow-sm border-top border-4 border-danger">
+          <div class="iq-card-header d-flex justify-content-between align-items-center">
+            <h2 class="iq-card-title m-0 text-danger">
+              <i class="bi bi-shield-slash text-danger me-2"></i>Risk Identification & Warning Center
+            </h2>
+            <span class="badge bg-danger text-white">Action Required</span>
+          </div>
+
+          <p class="text-muted small mb-3">
+            Suppliers flagged below have high risk profiles or low delivery performance. Review carefully to prevent delivery failures and financial exposure:
+          </p>
+
+          <div class="d-flex flex-column gap-2 mb-3">
+            <div *ngFor="let rv of getRiskyVendors()" class="p-3 border rounded-3 bg-light d-flex justify-content-between align-items-center gap-2">
+              <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <strong class="text-dark">{{ rv.name }}</strong>
+                  <span class="badge bg-danger" *ngIf="rv.risk_level === 'High'">High Risk</span>
+                  <span class="badge bg-warning text-dark" *ngIf="rv.status === 'Pending'">Pending Verification</span>
+                  <span class="badge bg-danger" *ngIf="rv.deliveryRate < 80">Delivery: {{ rv.deliveryRate }}%</span>
+                </div>
+                <div class="extra-small text-muted">{{ rv.notes || 'Flagged for sub-par reliability or unverified compliance credentials.' }}</div>
+              </div>
+              <button type="button" class="btn btn-xs btn-outline-primary text-nowrap" (click)="openVendorQuickView(rv)">
+                Inspect Dossier
+              </button>
+            </div>
+          </div>
+
+          <div class="alert alert-warning py-2 px-3 small d-flex align-items-center gap-2 mb-0">
+            <i class="bi bi-shield-exclamation fs-5 text-warning"></i>
+            <div><strong>Purchasing Policy:</strong> New purchase commitments are locked for High-Risk suppliers until corrective SLAs are approved.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Pipeline Actions -->
+      <div class="col-lg-5">
+        <div class="iq-card h-100 shadow-sm">
+          <div class="iq-card-header">
+            <h2 class="iq-card-title m-0"><i class="bi bi-arrow-repeat text-primary me-2"></i>Procurement Actions & Direct Links</h2>
+          </div>
+          <div class="p-3">
+            <div class="d-flex flex-column gap-3">
+              <a routerLink="/procurement" class="btn btn-primary d-flex align-items-center justify-content-between p-3">
+                <div class="d-flex align-items-center gap-2">
+                  <i class="bi bi-cart-plus fs-5"></i>
+                  <div class="text-start">
+                    <div class="fw-bold">Create Procurement Requisition</div>
+                    <div class="extra-small text-white-50">Initiate new request for goods or services</div>
+                  </div>
+                </div>
+                <i class="bi bi-chevron-right"></i>
+              </a>
+
+              <a routerLink="/purchase-orders" class="btn btn-outline-primary d-flex align-items-center justify-content-between p-3">
+                <div class="d-flex align-items-center gap-2">
+                  <i class="bi bi-receipt fs-5"></i>
+                  <div class="text-start">
+                    <div class="fw-bold">Purchase Order Management</div>
+                    <div class="extra-small text-muted">Track issuance, line items, and fulfillment</div>
+                  </div>
+                </div>
+                <i class="bi bi-chevron-right"></i>
+              </a>
+
+              <a routerLink="/vendors" class="btn btn-outline-secondary d-flex align-items-center justify-content-between p-3">
+                <div class="d-flex align-items-center gap-2">
+                  <i class="bi bi-building fs-5"></i>
+                  <div class="text-start">
+                    <div class="fw-bold">Vendor Directory & Status Monitoring</div>
+                    <div class="extra-small text-muted">Inspect profiles, approvals, and contacts</div>
+                  </div>
+                </div>
+                <i class="bi bi-chevron-right"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 3. SUPPLY CHAIN MANAGER DASHBOARD VIEW                                    -->
+  <!-- ========================================================================= -->
+  <div *ngIf="activeDashboardTab === 'SupplyChain'" class="role-dashboard-view">
+    <!-- Top KPI Metric Cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card border-start-primary">
+          <div class="stat-icon blue"><i class="bi bi-truck"></i></div>
+          <div>
+            <div class="stat-value text-primary">{{ stats?.on_time_delivery_rate || 86.2 }}%</div>
+            <div class="stat-label">On-Time Delivery Rate Benchmark</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card border-start-danger">
+          <div class="stat-icon red"><i class="bi bi-exclamation-octagon"></i></div>
+          <div>
+            <div class="stat-value text-danger">{{ getDelayedFlowsCount() }} Overdue</div>
+            <div class="stat-label">Shipment Delays & Bottlenecks</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card border-start-warning">
+          <div class="stat-icon amber"><i class="bi bi-box-seam"></i></div>
+          <div>
+            <div class="stat-value text-warning">{{ getStockoutRiskCount() }} Stockout Risk</div>
+            <div class="stat-label">Product Availability & Buffer Depleted</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card border-start-purple">
+          <div class="stat-icon purple"><i class="bi bi-shield-slash"></i></div>
+          <div>
+            <div class="stat-value text-dark">{{ getUnreliableVendors().length }} Flagged</div>
+            <div class="stat-label">Unreliable Suppliers (&lt; 80% On-Time)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Disruption & Cross-Department Coordination Banner -->
+    <div class="alert alert-danger border-danger shadow-sm mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3" *ngIf="getOpenAlerts().length > 0">
+      <div class="d-flex align-items-center gap-3">
+        <span class="badge bg-danger p-2 fs-5"><i class="bi bi-exclamation-triangle-fill text-white"></i></span>
+        <div>
+          <div class="fw-bold fs-6 text-danger">Active Supply Chain Disruption & Alternative Sourcing In Progress</div>
+          <div class="small text-dark">
+            {{ getOpenAlerts().length }} critical supply problem(s) detected. Sourcing requests have been dispatched to the Procurement Manager to evaluate and select suitable alternative suppliers.
+          </div>
+        </div>
+      </div>
+      <button type="button" class="btn btn-sm btn-danger text-nowrap" (click)="openCoordinationModal()">
+        <i class="bi bi-plus-circle me-1"></i> Request Alternative Vendor
+      </button>
+    </div>
+
+    <!-- SECTION 1: PRODUCT FLOW & SHIPMENT DELIVERY TRACKER -->
+    <div class="iq-card shadow-sm mb-4">
+      <div class="iq-card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+        <div>
+          <h2 class="iq-card-title m-0">
+            <i class="bi bi-diagram-3 text-primary me-2"></i>Product Flow & Delivery Tracking
+          </h2>
+          <span class="text-muted small">Monitor real-time product flow, shipping timelines, delivery delays, and warehouse buffer availability.</span>
+        </div>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-sm btn-outline-danger" (click)="openCoordinationModal()">
+            <i class="bi bi-shuffle me-1"></i> Coordinate Re-Sourcing
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light">
+            <tr>
+              <th>Consignment / PO</th>
+              <th>Product & Quantity</th>
+              <th>Supplier & Carrier</th>
+              <th>Destination Depot</th>
+              <th>Delivery Timeline</th>
+              <th>Stock Availability</th>
+              <th>Flow Status</th>
+              <th class="text-end">Preventive Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let flow of shipmentFlows" [ngClass]="{'table-danger-subtle': flow.status === 'Critical Delay', 'table-warning-subtle': flow.status === 'Delayed'}">
+              <td class="fw-bold">
+                <span class="text-dark">{{ flow.po_number }}</span>
+                <div class="extra-small text-muted">{{ flow.id }}</div>
+              </td>
+              <td>
+                <div class="fw-semibold text-dark">{{ flow.product_name }}</div>
+                <div class="extra-small text-muted">{{ flow.quantity | number }} units &bull; <span class="badge bg-light text-dark border">{{ flow.category }}</span></div>
+              </td>
+              <td>
+                <div class="fw-bold text-dark">{{ flow.vendor_name }}</div>
+                <div class="extra-small text-muted"><i class="bi bi-truck me-1"></i>{{ flow.tracking_carrier || 'Regional Freight' }}</div>
+              </td>
+              <td>
+                <span class="text-muted"><i class="bi bi-geo-alt me-1"></i>{{ flow.destination_hub }}</span>
+              </td>
+              <td>
+                <div class="text-nowrap">{{ flow.expected_date | date:'mediumDate' }}</div>
+                <div *ngIf="flow.delay_days > 0" class="badge bg-danger extra-small">
+                  <i class="bi bi-clock-history me-1"></i>{{ flow.delay_days }} Day(s) Overdue
+                </div>
+                <div *ngIf="flow.delay_days === 0" class="badge bg-success-subtle text-success extra-small">
+                  On Schedule
+                </div>
+              </td>
+              <td>
+                <span class="badge" [ngClass]="{
+                  'bg-danger text-white': flow.availability_status === 'Stockout Risk',
+                  'bg-warning text-dark': flow.availability_status === 'Buffer Low',
+                  'bg-success text-white': flow.availability_status === 'Adequate Stock'
+                }">
+                  {{ flow.availability_status }}
+                </span>
+              </td>
+              <td>
+                <span class="badge" [ngClass]="{
+                  'bg-danger text-white': flow.status === 'Critical Delay',
+                  'bg-warning text-dark': flow.status === 'Delayed',
+                  'bg-primary text-white': flow.status === 'In Transit',
+                  'bg-success text-white': flow.status === 'On Schedule'
+                }">
+                  {{ flow.status }}
+                </span>
+              </td>
+              <td class="text-end text-nowrap">
+                <div class="btn-group btn-group-sm">
+                  <button type="button" class="btn btn-outline-primary btn-xs py-1 px-2" (click)="openPreventiveActionModal(flow)" title="Take Preventive Action">
+                    <i class="bi bi-shield-check me-1"></i>Preventive Action
+                  </button>
+                  <button *ngIf="flow.status === 'Critical Delay' || flow.status === 'Delayed'"
+                          type="button" class="btn btn-outline-danger btn-xs py-1 px-2" (click)="openCoordinationModal(undefined, flow)" title="Request Alternative Vendor">
+                    <i class="bi bi-arrow-repeat me-1"></i>Replace Vendor
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SECTION 2: VENDOR SUPPLY PERFORMANCE & RELIABILITY MATRIX -->
+    <div class="iq-card shadow-sm mb-4">
+      <div class="iq-card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+        <div>
+          <h2 class="iq-card-title m-0">
+            <i class="bi bi-speedometer text-success me-2"></i>Vendor Supply Performance & Reliability Monitor
+          </h2>
+          <span class="text-muted small">Continuously monitor vendor delivery compliance, identify deteriorating performance, and trigger re-sourcing before bottlenecks stop operations.</span>
+        </div>
+        <span class="badge bg-light text-dark border"><i class="bi bi-eye me-1"></i>Active Supplier Fleet: {{ vendors.length }}</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light">
+            <tr>
+              <th>Supplier & Supplied Product</th>
+              <th>Category</th>
+              <th>On-Time Delivery Rate</th>
+              <th>Quality Score</th>
+              <th>Response SLA</th>
+              <th>Supply Risk Status</th>
+              <th class="text-end">Supply Chain Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let v of vendors" [ngClass]="{'table-danger-subtle': v.deliveryRate < 75 || v.risk_level === 'High'}">
+              <td>
+                <div class="fw-bold text-dark">{{ v.name }}</div>
+                <div class="extra-small text-muted">{{ v.company }} &bull; Product: <strong class="text-dark">{{ v.product }}</strong></div>
+              </td>
+              <td><span class="badge bg-light text-dark border">{{ v.category }}</span></td>
+              <td style="min-width: 170px;">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <span class="fw-bold" [ngClass]="v.deliveryRate >= 90 ? 'text-success' : (v.deliveryRate >= 80 ? 'text-warning' : 'text-danger')">
+                    {{ v.deliveryRate }}%
+                  </span>
+                  <span class="extra-small text-muted" *ngIf="v.deliveryRate >= 90">Fulfilling SLA</span>
+                  <span class="extra-small text-warning" *ngIf="v.deliveryRate >= 80 && v.deliveryRate < 90">At Risk</span>
+                  <span class="extra-small text-danger fw-bold" *ngIf="v.deliveryRate < 80">Severe Delay</span>
+                </div>
+                <div class="progress" style="height: 6px;">
+                  <div class="progress-bar"
+                       [ngClass]="v.deliveryRate >= 90 ? 'bg-success' : (v.deliveryRate >= 80 ? 'bg-warning' : 'bg-danger')"
+                       [style.width.%]="v.deliveryRate"></div>
+                </div>
+              </td>
+              <td>
+                <div class="d-flex align-items-center gap-1">
+                  <i class="bi bi-star-fill text-warning"></i>
+                  <strong class="text-dark">{{ v.quality_rating || 4.0 }}</strong>
+                  <span class="text-muted extra-small">/ 5.0</span>
+                </div>
+              </td>
+              <td>
+                <span class="text-muted"><i class="bi bi-clock me-1"></i>{{ v.response_time_hours || 12 }} hrs</span>
+              </td>
+              <td>
+                <span class="badge" [ngClass]="{
+                  'bg-danger text-white': v.risk_level === 'High' || v.deliveryRate < 75,
+                  'bg-warning text-dark': v.risk_level === 'Medium' || (v.deliveryRate >= 75 && v.deliveryRate < 85),
+                  'bg-success text-white': v.deliveryRate >= 85
+                }">
+                  {{ v.deliveryRate < 75 || v.risk_level === 'High' ? 'Unreliable / Delay Risk' : (v.deliveryRate < 85 ? 'Moderate Risk' : 'Reliable Supply') }}
+                </span>
+              </td>
+              <td class="text-end">
+                <button *ngIf="v.deliveryRate < 80 || v.risk_level === 'High'"
+                        type="button" class="btn btn-xs btn-danger text-nowrap py-1 px-2" (click)="openCoordinationModal(v)">
+                  <i class="bi bi-exclamation-octagon-fill me-1"></i> Coordinate Alternative
+                </button>
+                <span *ngIf="v.deliveryRate >= 80 && v.risk_level !== 'High'" class="text-success extra-small fw-semibold">
+                  <i class="bi bi-check-circle-fill me-1"></i>SLA Met
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SECTION 3: RE-SOURCING COORDINATION TICKETS & PREVENTIVE ACTION LOG -->
+    <div class="row g-4 mb-4">
+      <!-- Re-sourcing Coordination with Procurement -->
+      <div class="col-lg-7">
+        <div class="iq-card h-100 shadow-sm">
+          <div class="iq-card-header d-flex justify-content-between align-items-center">
+            <div>
+              <h2 class="iq-card-title m-0">
+                <i class="bi bi-arrow-left-right text-primary me-2"></i>Procurement Re-Sourcing Coordination Log
+              </h2>
+              <span class="text-muted extra-small">Tickets dispatched to Procurement Manager to select alternative suppliers.</span>
+            </div>
+            <button type="button" class="btn btn-xs btn-outline-primary" (click)="openCoordinationModal()">
+              <i class="bi bi-plus-lg"></i> New Request
+            </button>
+          </div>
+
+          <div class="p-3">
+            <div *ngIf="supplyAlerts.length === 0" class="text-center text-muted py-4">
+              <i class="bi bi-check-circle fs-2 text-success mb-2 d-block"></i>
+              No active supply disruption tickets. All product flows stable.
+            </div>
+
+            <div *ngFor="let alert of supplyAlerts" class="border rounded-3 p-3 mb-2 bg-light shadow-xs">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                  <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                    <span class="badge" [ngClass]="alert.severity === 'Critical' ? 'bg-danger text-white' : 'bg-warning text-dark'">
+                      {{ alert.severity }}
+                    </span>
+                    <span class="badge bg-white text-dark border">{{ alert.id }}</span>
+                    <span class="fw-bold text-dark">{{ alert.product }}</span>
+                  </div>
+                  <div class="extra-small text-muted">
+                    Failing Vendor: <strong class="text-danger">{{ alert.vendor_name }}</strong> (Delivery: {{ alert.delivery_rate }}%) &bull; {{ alert.reported_at | date:'short' }}
+                  </div>
+                </div>
+                <span class="badge" [ngClass]="{
+                  'bg-danger text-white': alert.status === 'Open',
+                  'bg-primary text-white': alert.status === 'Re-sourcing In Progress',
+                  'bg-success text-white': alert.status === 'Resolved'
+                }">
+                  {{ alert.status }}
+                </span>
+              </div>
+
+              <p class="small text-muted mb-2">{{ alert.issue_summary }}</p>
+
+              <div *ngIf="alert.status === 'Resolved' && alert.alternative_vendor_name" class="p-2 bg-success-subtle border border-success rounded text-success extra-small fw-bold">
+                <i class="bi bi-check-circle-fill me-1"></i>Procurement Manager selected alternative supplier: {{ alert.alternative_vendor_name }} (Resolved {{ alert.resolved_at | date:'short' }})
+              </div>
+              <div *ngIf="alert.status !== 'Resolved'" class="p-2 bg-warning-subtle border border-warning rounded text-dark extra-small">
+                <i class="bi bi-clock-history me-1"></i>Awaiting Procurement Manager alternative vendor selection in "{{ alert.category }}".
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preventive Actions Audit Log -->
+      <div class="col-lg-5">
+        <div class="iq-card h-100 shadow-sm">
+          <div class="iq-card-header">
+            <h2 class="iq-card-title m-0"><i class="bi bi-shield-check text-success me-2"></i>Preventive Action Audit Log</h2>
+          </div>
+
+          <div class="p-3">
+            <div *ngIf="preventiveActions.length === 0" class="text-muted text-center py-4 small">
+              No preventive actions recorded yet.
+            </div>
+
+            <div *ngFor="let act of preventiveActions" class="p-2 border rounded-3 bg-light mb-2 shadow-xs">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="badge bg-primary py-0 px-2">{{ act.action_type }}</span>
+                <span class="extra-small text-muted">{{ act.timestamp | date:'shortTime' }}</span>
+              </div>
+              <div class="small fw-bold text-dark">{{ act.vendor_name }} <span *ngIf="act.po_number" class="text-muted extra-small">({{ act.po_number }})</span></div>
+              <div class="extra-small text-muted">{{ act.notes }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 4. VENDOR DASHBOARD VIEW (Module 8: Vendor Dashboard)                      -->
+  <!-- ========================================================================= -->
+  <div *ngIf="activeDashboardTab === 'Vendor'" class="role-dashboard-view">
+    <!-- Vendor Hero Banner -->
+    <div class="p-4 bg-white rounded-3 shadow-sm border mb-4">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div>
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <h2 class="fs-4 fw-bold text-dark mb-0">{{ stats?.vendor_dashboard?.vendor_name || stats?.vendor_portal?.vendor_name || currentUser?.company || currentUser?.full_name || 'Vendor Organization' }}</h2>
+            <span class="badge bg-success"><i class="bi bi-check-circle"></i> Verified Supplier</span>
+            <span class="badge bg-primary">{{ stats?.vendor_portal?.tier || 'Tier-1 Preferred' }}</span>
+          </div>
+          <p class="text-muted small mb-0">Category: <strong>{{ stats?.vendor_dashboard?.category || stats?.vendor_portal?.category || 'Raw Material Suppliers' }}</strong> &bull; Portal User: {{ currentUser?.email }}</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge bg-light text-dark border p-2"><i class="bi bi-shield-check text-success"></i> Authenticated Supplier Account</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vendor Dashboard Section 1: Vendor Performance -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="fs-5 fw-bold text-dark m-0"><i class="bi bi-speedometer text-primary me-2"></i>1. Vendor Performance Metrics</h2>
+      <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+        Performance Score: {{ stats?.vendor_dashboard?.performance?.performance_score || stats?.vendor_portal?.delivery_rate || 94.5 }}%
+      </span>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card border-start-success">
+          <div class="stat-icon green"><i class="bi bi-award"></i></div>
+          <div>
+            <div class="stat-value text-success">{{ stats?.vendor_dashboard?.performance?.delivery_rate || stats?.vendor_portal?.delivery_rate || 94.5 }}%</div>
+            <div class="stat-label">On-Time Delivery Rate</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card border-start-primary">
+          <div class="stat-icon blue"><i class="bi bi-star"></i></div>
+          <div>
+            <div class="stat-value text-primary">{{ stats?.vendor_dashboard?.performance?.quality_rating || stats?.vendor_portal?.quality_rating || 4.8 }} / 5.0</div>
+            <div class="stat-label">Product Quality Rating</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card border-start-warning">
+          <div class="stat-icon amber"><i class="bi bi-clock-history"></i></div>
+          <div>
+            <div class="stat-value">{{ stats?.vendor_dashboard?.performance?.response_time_hours || stats?.vendor_portal?.response_time_hours || 12.0 }} hrs</div>
+            <div class="stat-label">Response Time SLA</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card border-start-purple">
+          <div class="stat-icon purple"><i class="bi bi-tools"></i></div>
+          <div>
+            <div class="stat-value text-purple">{{ stats?.vendor_dashboard?.performance?.issue_resolution_time_hours || 18.0 }} hrs</div>
+            <div class="stat-label">Issue Resolution Time</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vendor Dashboard Section 2: Reliability Score Breakdown -->
+    <div class="iq-card shadow-sm mb-4">
+      <div class="iq-card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+          <h2 class="iq-card-title m-0"><i class="bi bi-shield-check text-primary me-2"></i>2. Reliability Score Breakdown (6-Factor Weighting)</h2>
+          <span class="text-muted extra-small">Balanced algorithm according to Module 5 specification (100% total weight).</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <span class="fs-5 fw-bold text-success">{{ stats?.vendor_dashboard?.reliability_score?.overall_reliability || stats?.vendor_portal?.reliability_score || 94.5 }} / 100</span>
+          <span class="badge" [ngClass]="(stats?.vendor_portal?.risk_level || 'Low') === 'High' ? 'bg-danger' : ((stats?.vendor_portal?.risk_level || 'Low') === 'Medium' ? 'bg-warning text-dark' : 'bg-success')">
+            {{ stats?.vendor_portal?.risk_level || 'Low' }} Risk
+          </span>
+        </div>
+      </div>
+
+      <div class="p-3">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <div class="p-3 border rounded-3 bg-light h-100">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="fw-bold small text-dark">Delivery History</span>
+                <span class="badge bg-primary">25% Weight</span>
+              </div>
+              <div class="fs-5 fw-bold text-success mb-1">{{ stats?.vendor_dashboard?.reliability_score?.delivery_score || 95 }}%</div>
+              <div class="progress" style="height: 5px;">
+                <div class="progress-bar bg-success" [style.width.%]="stats?.vendor_dashboard?.reliability_score?.delivery_score || 95"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="p-3 border rounded-3 bg-light h-100">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="fw-bold small text-dark">Product Quality</span>
+                <span class="badge bg-primary">25% Weight</span>
+              </div>
+              <div class="fs-5 fw-bold text-primary mb-1">{{ stats?.vendor_dashboard?.reliability_score?.quality_score || 96 }}%</div>
+              <div class="progress" style="height: 5px;">
+                <div class="progress-bar bg-primary" [style.width.%]="stats?.vendor_dashboard?.reliability_score?.quality_score || 96"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="p-3 border rounded-3 bg-light h-100">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="fw-bold small text-dark">Communication SLA</span>
+                <span class="badge bg-primary">15% Weight</span>
+              </div>
+              <div class="fs-5 fw-bold text-warning mb-1">{{ stats?.vendor_dashboard?.reliability_score?.communication_score || 85 }}%</div>
+              <div class="progress" style="height: 5px;">
+                <div class="progress-bar bg-warning" [style.width.%]="stats?.vendor_dashboard?.reliability_score?.communication_score || 85"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="p-3 border rounded-3 bg-light h-100">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="fw-bold small text-dark">Compliance & Certification</span>
+                <span class="badge bg-primary">15% Weight</span>
+              </div>
+              <div class="fs-5 fw-bold text-success mb-1">{{ stats?.vendor_dashboard?.reliability_score?.compliance_score || 96 }}%</div>
+              <div class="progress" style="height: 5px;">
+                <div class="progress-bar bg-success" [style.width.%]="stats?.vendor_dashboard?.reliability_score?.compliance_score || 96"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="p-3 border rounded-3 bg-light h-100">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="fw-bold small text-dark">Purchase History</span>
+                <span class="badge bg-secondary">10% Weight</span>
+              </div>
+              <div class="fs-5 fw-bold text-info mb-1">92%</div>
+              <div class="progress" style="height: 5px;">
+                <div class="progress-bar bg-info" style="width: 92%"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="p-3 border rounded-3 bg-light h-100">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="fw-bold small text-dark">Issue Resolution</span>
+                <span class="badge bg-secondary">10% Weight</span>
+              </div>
+              <div class="fs-5 fw-bold text-purple mb-1">95%</div>
+              <div class="progress" style="height: 5px;">
+                <div class="progress-bar bg-purple" style="width: 95%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vendor Dashboard Section 3 & 4: Contract Status & Order History -->
+    <div class="row g-4 mb-4">
+      <!-- Section 4: Order History -->
+      <div class="col-lg-7">
+        <div class="iq-card h-100 shadow-sm">
+          <div class="iq-card-header d-flex justify-content-between align-items-center">
+            <div>
+              <h2 class="iq-card-title m-0"><i class="bi bi-bag-check text-primary me-2"></i>4. Order History & Fulfillment</h2>
+              <span class="small text-muted">Total Value: <strong>{{ (stats?.vendor_dashboard?.order_history?.order_value || 125000) | currency }}</strong></span>
+            </div>
+            <a routerLink="/purchase-orders" class="small text-decoration-none">Manage Orders</a>
+          </div>
+
+          <div class="row g-2 p-3 pb-0">
+            <div class="col-3 text-center p-2 border rounded bg-light">
+              <div class="extra-small text-muted">Total Orders</div>
+              <div class="fs-5 fw-bold text-primary">{{ stats?.vendor_dashboard?.order_history?.total_orders || purchaseOrders.length || 2 }}</div>
+            </div>
+            <div class="col-3 text-center p-2 border rounded bg-light">
+              <div class="extra-small text-muted">Completed</div>
+              <div class="fs-5 fw-bold text-success">{{ stats?.vendor_dashboard?.order_history?.completed_orders || 1 }}</div>
+            </div>
+            <div class="col-3 text-center p-2 border rounded bg-light">
+              <div class="extra-small text-muted">In Progress</div>
+              <div class="fs-5 fw-bold text-warning">{{ stats?.vendor_dashboard?.order_history?.pending_orders || 1 }}</div>
+            </div>
+            <div class="col-3 text-center p-2 border rounded bg-light">
+              <div class="extra-small text-muted">Delayed</div>
+              <div class="fs-5 fw-bold text-danger">{{ stats?.vendor_dashboard?.order_history?.delayed_orders || 0 }}</div>
+            </div>
+          </div>
+
+          <div class="p-3">
+            <div *ngIf="purchaseOrders.length === 0" class="text-center py-4 text-muted small">
+              <i class="bi bi-receipt fs-3 d-block mb-1"></i> No purchase orders assigned to you yet.
+            </div>
+
+            <div class="table-responsive" *ngIf="purchaseOrders.length > 0">
+              <table class="table table-hover align-middle mb-0 small">
+                <thead class="table-light">
+                  <tr>
+                    <th>PO Number</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Delivery Date</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let po of purchaseOrders">
+                    <td class="fw-bold">{{ po.po_number }}</td>
+                    <td>{{ po.total_amount | currency }}</td>
+                    <td>
+                      <span class="badge" [ngClass]="{
+                        'bg-warning text-dark': po.status === 'Issued' || po.status === 'Pending Approval',
+                        'bg-primary': po.status === 'Accepted',
+                        'bg-info text-dark': po.status === 'In Transit',
+                        'bg-success': po.status === 'Delivered' || po.status === 'Completed' || po.status === 'Approved',
+                        'bg-danger': po.status === 'Rejected' || po.status === 'Cancelled'
+                      }">{{ po.status }}</span>
+                    </td>
+                    <td>{{ po.expected_delivery_date | date:'mediumDate' }}</td>
+                    <td>
+                      <!-- Issued -> Accept / Reject -->
+                      <div *ngIf="po.status === 'Issued'" class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-sm btn-success py-1 px-2" (click)="acceptOrder(po)" title="Accept Order">
+                          <i class="bi bi-check2"></i> Accept
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2" (click)="rejectOrder(po)" title="Reject Order">
+                          <i class="bi bi-x"></i> Reject
+                        </button>
+                      </div>
+
+                      <!-- Accepted or In Transit -> Mark Delivered -->
+                      <button *ngIf="po.status === 'Accepted' || po.status === 'In Transit'" type="button" class="btn btn-sm btn-info text-dark py-1 px-2" (click)="confirmDelivery(po)">
+                        <i class="bi bi-truck"></i> Mark Delivered
+                      </button>
+
+                      <span *ngIf="po.status !== 'Issued' && po.status !== 'Accepted' && po.status !== 'In Transit'" class="text-muted small">
+                        {{ po.status }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Contract Status -->
+      <div class="col-lg-5">
+        <div class="iq-card h-100 shadow-sm">
+          <div class="iq-card-header d-flex justify-content-between align-items-center">
+            <h2 class="iq-card-title m-0"><i class="bi bi-file-earmark-check text-success me-2"></i>3. Contract Status</h2>
+            <span class="badge" [ngClass]="(stats?.vendor_dashboard?.contract_status?.compliance_status || 'Compliant') === 'Compliant' ? 'bg-success' : 'bg-warning text-dark'">
+              {{ stats?.vendor_dashboard?.contract_status?.compliance_status || 'Compliant' }}
+            </span>
+          </div>
+
+          <div class="row g-2 p-3 pb-0">
+            <div class="col-6 text-center p-2 border rounded bg-light">
+              <div class="extra-small text-muted">Active Contracts</div>
+              <div class="fs-5 fw-bold text-success">{{ stats?.vendor_dashboard?.contract_status?.active_contracts || stats?.vendor_portal?.active_contracts_count || 1 }}</div>
+            </div>
+            <div class="col-6 text-center p-2 border rounded bg-light">
+              <div class="extra-small text-muted">Expiring Soon</div>
+              <div class="fs-5 fw-bold text-warning">{{ stats?.vendor_dashboard?.contract_status?.expiring_contracts || 0 }}</div>
+            </div>
+          </div>
+
+          <div class="p-3">
+            <div *ngIf="contracts.length === 0" class="text-center text-muted small py-3">
+              <i class="bi bi-file-earmark-text fs-3 d-block mb-2"></i> No active contracts found for your account.
+            </div>
+
+            <div *ngFor="let c of contracts.slice(0, 2)" class="p-3 border rounded-3 bg-light mb-3">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-bold text-dark">{{ c.contract_number }}</span>
+                <span class="iq-badge" [ngClass]="c.compliance_status === 'Compliant' ? 'badge-compliant' : 'badge-rejected'">
+                  {{ c.compliance_status }}
+                </span>
+              </div>
+              <p class="small text-muted mb-2">{{ c.title }} (Value: {{ c.contract_value | currency }})</p>
+              <div class="small text-secondary mb-2">
+                <i class="bi bi-calendar-event"></i> Expiry: <strong>{{ c.expiry_date | date:'mediumDate' }}</strong>
+              </div>
+              <div class="small text-muted">{{ c.renewal_terms || 'Auto-renew annually upon mutual written agreement.' }}</div>
+            </div>
+            <a routerLink="/contracts" class="btn btn-outline-primary btn-sm w-100"><i class="bi bi-file-earmark-text"></i> View Full Contract Agreement</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vendor Dashboard Section 5: Communication Activity -->
+    <div class="iq-card shadow-sm mb-4">
+      <div class="iq-card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <h2 class="iq-card-title m-0"><i class="bi bi-chat-dots text-primary me-2"></i>5. Communication Activity & SLA Logs</h2>
+        <a routerLink="/communication" class="btn btn-sm btn-outline-primary"><i class="bi bi-chat-left-text me-1"></i>Open Communication Hub</a>
+      </div>
+
+      <div class="row g-3 p-3">
+        <div class="col-sm-6 col-md-3">
+          <div class="p-3 border rounded-3 bg-light text-center">
+            <div class="extra-small text-muted">Total Messages</div>
+            <div class="fs-4 fw-bold text-primary">{{ stats?.vendor_dashboard?.communication_activity?.total_messages || 4 }}</div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+          <div class="p-3 border rounded-3 bg-light text-center">
+            <div class="extra-small text-muted">Open Inquiries</div>
+            <div class="fs-4 fw-bold text-warning">{{ stats?.vendor_dashboard?.communication_activity?.open_queries || 0 }}</div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+          <div class="p-3 border rounded-3 bg-light text-center">
+            <div class="extra-small text-muted">Resolved Inquiries</div>
+            <div class="fs-4 fw-bold text-success">{{ stats?.vendor_dashboard?.communication_activity?.resolved_queries || 4 }}</div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+          <div class="p-3 border rounded-3 bg-light text-center">
+            <div class="extra-small text-muted">Avg Response SLA</div>
+            <div class="fs-4 fw-bold text-dark">{{ stats?.vendor_dashboard?.communication_activity?.response_time_hours || 12.0 }} hrs</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-3 pb-3">
+        <div class="alert alert-light border small d-flex justify-content-between align-items-center mb-0">
+          <div><i class="bi bi-shield-check text-success me-1"></i> Real-time dispatch enabled: Vendor communications, procurement discussions, and email audit logs are synchronized.</div>
+          <a routerLink="/communication" class="btn btn-xs btn-primary">Start New Discussion</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 5. FINANCE OFFICER DASHBOARD VIEW                                         -->
+  <!-- ========================================================================= -->
+  <div *ngIf="activeDashboardTab === 'Finance'" class="role-dashboard-view">
+    <div class="row g-3 mb-4">
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card border-start-primary">
+          <div class="stat-icon blue"><i class="bi bi-cash-stack"></i></div>
+          <div>
+            <div class="stat-value text-primary">${{ (stats?.total_po_amount || 195000) | number }}</div>
+            <div class="stat-label">Committed PO Spend</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card border-start-warning">
+          <div class="stat-icon amber"><i class="bi bi-receipt-cutoff"></i></div>
+          <div>
+            <div class="stat-value text-warning">${{ (stats?.total_invoiced_amount || 70000) | number }}</div>
+            <div class="stat-label">Total Invoiced Amount</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card border-start-danger">
+          <div class="stat-icon red"><i class="bi bi-clock-history"></i></div>
+          <div>
+            <div class="stat-value text-danger">${{ (stats?.pending_payout_amount || 70000) | number }}</div>
+            <div class="stat-label">Pending Payout Disbursements</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card border-start-success">
+          <div class="stat-icon green"><i class="bi bi-shield-check"></i></div>
+          <div>
+            <div class="stat-value text-success">${{ (stats?.total_contract_value || 1000000) | number }}</div>
+            <div class="stat-label">Contract Liabilities Monitored</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Invoice Ledger & PO 3-Way Match Verification -->
+    <div class="iq-card shadow-sm mb-4">
+      <div class="iq-card-header d-flex justify-content-between align-items-center">
+        <div>
+          <h2 class="iq-card-title m-0"><i class="bi bi-receipt text-primary me-2"></i>Invoice Management & 3-Way Match Ledger</h2>
+          <span class="small text-muted">Verify PO, Amount, and approve payments</span>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-success" (click)="exportAuditReport('excel')">
+          <i class="bi bi-file-earmark-excel"></i> Export Ledger
+        </button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light">
+            <tr>
+              <th>Invoice #</th>
+              <th>Matched PO</th>
+              <th>Vendor</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Issue Date</th>
+              <th>Payment Terms</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let inv of invoices">
+              <td class="fw-bold">{{ inv.invoice_number }}</td>
+              <td><span class="badge bg-light text-dark border">PO-2026-000{{ inv.purchase_order_id || 1 }}</span></td>
+              <td class="fw-semibold">
+                {{ inv.vendor_name || inv.vendor?.name || 'Assigned Vendor' }}
+                <small class="text-muted d-block" *ngIf="inv.vendor_company || inv.vendor?.company">{{ inv.vendor_company || inv.vendor?.company }}</small>
+              </td>
+              <td class="fw-bold">{{ inv.amount | currency }}</td>
+              <td>
+                <span class="iq-badge" [ngClass]="inv.status === 'Paid' ? 'badge-approved' : (inv.status === 'Approved' ? 'badge-active' : 'badge-pending')">
+                  {{ inv.status }}
+                </span>
+              </td>
+              <td>{{ inv.issue_date | date:'mediumDate' }}</td>
+              <td>Net 30 Verified</td>
+              <td>
+                <div class="d-flex gap-1">
+                  <button *ngIf="inv.status === 'Submitted'" type="button" class="btn btn-xs btn-outline-primary py-1 px-2" (click)="approveInvoice(inv)">
+                    Approve
+                  </button>
+                  <button *ngIf="inv.status !== 'Paid'" type="button" class="btn btn-xs btn-success py-1 px-2" (click)="markInvoicePaid(inv)">
+                    Mark Paid
+                  </button>
+                  <span *ngIf="inv.status === 'Paid'" class="text-success fw-bold small"><i class="bi bi-check-all"></i> Disbursed</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 6. AUDITOR DASHBOARD VIEW                                                 -->
+  <!-- ========================================================================= -->
+  <div *ngIf="activeDashboardTab === 'Auditor'" class="role-dashboard-view">
+    <div class="row g-3 mb-4">
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card border-start-success">
+          <div class="stat-icon green"><i class="bi bi-shield-check"></i></div>
+          <div>
+            <div class="stat-value text-success">{{ stats?.contract_compliance_rate || 100 }}%</div>
+            <div class="stat-label">Contract Compliance Rate</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card border-start-primary">
+          <div class="stat-icon blue"><i class="bi bi-patch-check"></i></div>
+          <div>
+            <div class="stat-value text-primary">{{ stats?.certification_compliance_rate || 96.5 }}%</div>
+            <div class="stat-label">ISO / OSHA Certification Adherence</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card border-start-warning">
+          <div class="stat-icon amber"><i class="bi bi-shield-exclamation"></i></div>
+          <div>
+            <div class="stat-value text-warning">{{ stats?.high_risk_vendors || 1 }} High Risk</div>
+            <div class="stat-label">{{ stats?.medium_risk_vendors || 1 }} Medium &bull; {{ stats?.low_risk_vendors || 8 }} Low</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card border-start-purple">
+          <div class="stat-icon purple"><i class="bi bi-file-earmark-lock"></i></div>
+          <div>
+            <div class="stat-value">{{ stats?.total_audit_logs || 81 }} Events</div>
+            <div class="stat-label">Immutable Audit Trail Count</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Regulatory Audit Trail & Export -->
+    <div class="iq-card shadow-sm mb-4">
+      <div class="iq-card-header d-flex justify-content-between align-items-center">
+        <div>
+          <h2 class="iq-card-title m-0"><i class="bi bi-journal-check text-primary me-2"></i>Regulatory Audit Trail & Compliance Integrity</h2>
+          <span class="small text-muted">Complete audit log of user logins, approvals, and contract modifications</span>
+        </div>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-sm btn-outline-danger" (click)="exportAuditReport('pdf')" title="Download Dossier (.PDF)">
+            <i class="bi bi-file-earmark-pdf"></i> Export Audit Dossier (PDF)
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-success" (click)="exportAuditReport('excel')" title="Download Ledger (.XLSX)">
+            <i class="bi bi-file-earmark-excel"></i> Export Excel
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="printAuditDossier()" title="Print Dossier Preview">
+            <i class="bi bi-printer"></i> Print
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light">
+            <tr>
+              <th>Audit Log ID</th>
+              <th>Timestamp</th>
+              <th>Action Category</th>
+              <th>Entity</th>
+              <th>Event Summary</th>
+              <th>Integrity Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let act of recentActivities">
+              <td><code>#LOG-{{ act.id }}</code></td>
+              <td>{{ act.created_at | date:'medium' }}</td>
+              <td><span class="iq-badge py-0 px-2" [ngClass]="getActionBadge(act.action)">{{ act.action }}</span></td>
+              <td><span class="fw-semibold">{{ act.entity_type }}</span></td>
+              <td>{{ act.details }}</td>
+              <td><span class="badge bg-success"><i class="bi bi-check-circle"></i> Tamper Verified</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <!-- Vendor Quick View Modal (For Procurement Evaluation) -->
+  <div *ngIf="quickViewVendor" class="iq-modal-backdrop" (click)="closeVendorQuickView()">
+    <div class="iq-modal shadow-lg" style="max-width: 680px;" (click)="$event.stopPropagation()">
+      <div class="d-flex justify-content-between align-items-start border-bottom pb-3 mb-3">
+        <div>
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <h3 class="fw-bold fs-5 m-0 text-dark">{{ quickViewVendor.name }}</h3>
+            <span class="badge" [ngClass]="quickViewVendor.status === 'Approved' ? 'bg-success' : 'bg-warning text-dark'">
+              {{ quickViewVendor.status }}
+            </span>
+            <span class="badge" [ngClass]="quickViewVendor.risk_level === 'High' ? 'bg-danger' : (quickViewVendor.risk_level === 'Medium' ? 'bg-warning text-dark' : 'bg-success')">
+              {{ quickViewVendor.risk_level || 'Low' }} Risk
+            </span>
+          </div>
+          <span class="text-muted small">{{ quickViewVendor.company }} &bull; Category: <strong>{{ quickViewVendor.category }}</strong></span>
+        </div>
+        <button type="button" class="btn-close" (click)="closeVendorQuickView()"></button>
+      </div>
+
+      <!-- Quick Metrics Grid -->
+      <div class="row g-2 mb-3">
+        <div class="col-4">
+          <div class="p-2 border rounded text-center bg-light">
+            <div class="extra-small text-muted text-uppercase fw-bold">On-Time Delivery</div>
+            <div class="fs-5 fw-bold" [ngClass]="quickViewVendor.deliveryRate >= 90 ? 'text-success' : (quickViewVendor.deliveryRate >= 80 ? 'text-warning' : 'text-danger')">
+              {{ quickViewVendor.deliveryRate }}%
+            </div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="p-2 border rounded text-center bg-light">
+            <div class="extra-small text-muted text-uppercase fw-bold">Quality Rating</div>
+            <div class="fs-5 fw-bold text-primary">{{ quickViewVendor.quality_rating || 4.0 }} / 5.0</div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="p-2 border rounded text-center bg-light">
+            <div class="extra-small text-muted text-uppercase fw-bold">Response SLA</div>
+            <div class="fs-5 fw-bold text-secondary">{{ quickViewVendor.response_time_hours || 12 }} hrs</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Supplier Details -->
+      <div class="mb-3 p-3 bg-light rounded border">
+        <div class="row g-2 small">
+          <div class="col-6">
+            <span class="text-muted d-block">Supplied Product / Line:</span>
+            <strong class="text-dark">{{ quickViewVendor.product }}</strong>
+          </div>
+          <div class="col-6">
+            <span class="text-muted d-block">Primary Contact Email:</span>
+            <strong class="text-dark">{{ quickViewVendor.email }}</strong>
+          </div>
+          <div class="col-6 mt-2">
+            <span class="text-muted d-block">Phone:</span>
+            <span>{{ quickViewVendor.phone }}</span>
+          </div>
+          <div class="col-6 mt-2">
+            <span class="text-muted d-block">Address:</span>
+            <span>{{ quickViewVendor.address || 'Address on file' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Performance Evaluation Notes -->
+      <div class="mb-4">
+        <div class="small fw-bold text-dark mb-1"><i class="bi bi-card-text me-1 text-primary"></i>Evaluation & Reliability Notes:</div>
+        <div class="p-2 border rounded bg-white small text-muted">
+          {{ quickViewVendor.notes || 'Vendor in good standing. Certified according to enterprise quality and delivery standards.' }}
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center border-top pt-3">
+        <a [routerLink]="['/vendor-details', quickViewVendor.id]" (click)="closeVendorQuickView()" class="btn btn-outline-primary btn-sm">
+          <i class="bi bi-box-arrow-up-right"></i> Full Vendor Dossier
+        </a>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="closeVendorQuickView()">Close</button>
+          <button *ngIf="quickViewVendor.status === 'Approved' && quickViewVendor.risk_level !== 'High'"
+                  type="button" class="btn btn-success btn-sm" (click)="closeVendorQuickView(); openProcurementModal(quickViewVendor)">
+            <i class="bi bi-cart-plus"></i> Select for Purchase
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Procurement Requisition Modal -->
+  <div *ngIf="showProcureModal && selectedVendorForPR" class="iq-modal-backdrop" (click)="closeProcureModal()">
+    <div class="iq-modal shadow-lg" style="max-width: 620px;" (click)="$event.stopPropagation()">
+      <div class="d-flex justify-content-between align-items-start border-bottom pb-2 mb-3">
+        <div>
+          <h3 class="fw-bold fs-5 m-0 text-dark">Issue Procurement Requisition</h3>
+          <span class="text-muted small">Selected Supplier: <strong class="text-primary">{{ selectedVendorForPR.name }}</strong> (Delivery: {{ selectedVendorForPR.deliveryRate }}%)</span>
+        </div>
+        <button type="button" class="btn-close" (click)="closeProcureModal()"></button>
+      </div>
+
+      <form (ngSubmit)="submitQuickProcurement()">
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Requisition Title *</label>
+          <input type="text" class="form-control form-control-sm" [(ngModel)]="newPR.title" name="prtitle" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold small"><i class="bi bi-tag me-1 text-primary"></i>Category</label>
+          <input type="text" class="form-control form-control-sm bg-light" [(ngModel)]="newPR.category" name="prcat" readonly>
+        </div>
+
+        <!-- Budget & Quantity Assignment (Per-Unit & Total) -->
+        <div class="row g-2 mb-2">
+          <div class="col-4">
+            <label class="form-label fw-semibold small">Quantity *</label>
+            <input type="number" class="form-control form-control-sm" [(ngModel)]="newPR.quantity" (ngModelChange)="onQuickPRQuantityChange()" name="prqty" min="1" required>
+          </div>
+          <div class="col-4">
+            <label class="form-label fw-semibold small">Budget Per Unit ($) *</label>
+            <input type="number" class="form-control form-control-sm" [(ngModel)]="newPR.unit_budget" (ngModelChange)="onQuickPRUnitBudgetChange()" name="prunitb" placeholder="0.00" min="0" step="any" required>
+          </div>
+          <div class="col-4">
+            <label class="form-label fw-semibold small">Total Budget ($) *</label>
+            <input type="number" class="form-control form-control-sm fw-bold text-success" [(ngModel)]="newPR.estimated_budget" (ngModelChange)="onQuickPRTotalBudgetChange()" name="prbudget" placeholder="0.00" min="0" step="any" required>
+          </div>
+        </div>
+
+        <!-- Live Calculation Preview -->
+        <div class="p-2 mb-3 bg-light rounded border text-muted small d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-calculator me-1 text-primary"></i> Budget Calculation:</span>
+          <span class="fw-semibold text-dark">
+            {{ newPR.quantity || 1 }} units &times; {{ (newPR.unit_budget || 0) | currency }} = <strong class="text-success">{{ (newPR.estimated_budget || 0) | currency }} Total</strong>
+          </span>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Procurement Priority</label>
+          <select class="form-select form-select-sm" [(ngModel)]="newPR.priority" name="prpriority">
+            <option value="Low">Low Priority</option>
+            <option value="Medium">Medium Priority</option>
+            <option value="High">High Priority</option>
+            <option value="Urgent">Urgent Requisition</option>
+          </select>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label fw-semibold small">Purchasing Justification & Specifications</label>
+          <textarea class="form-control form-control-sm" rows="3" [(ngModel)]="newPR.description" name="prdesc"></textarea>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 border-top pt-3">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="closeProcureModal()">Cancel</button>
+          <button type="submit" class="btn btn-success btn-sm"><i class="bi bi-check2-circle"></i> Confirm Purchase Requisition</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Preventive Action Modal (Supply Chain Manager) -->
+  <div *ngIf="showPreventiveActionModal && selectedShipmentForAction" class="iq-modal-backdrop" (click)="closePreventiveActionModal()">
+    <div class="iq-modal shadow-lg" style="max-width: 580px;" (click)="$event.stopPropagation()">
+      <div class="d-flex justify-content-between align-items-start border-bottom pb-2 mb-3">
+        <div>
+          <h3 class="fw-bold fs-5 m-0 text-dark"><i class="bi bi-shield-check text-primary me-2"></i>Take Preventive Supply Action</h3>
+          <span class="text-muted small">Consignment: <strong>{{ selectedShipmentForAction.po_number }}</strong> &bull; {{ selectedShipmentForAction.product_name }}</span>
+        </div>
+        <button type="button" class="btn-close" (click)="closePreventiveActionModal()"></button>
+      </div>
+
+      <form (ngSubmit)="submitPreventiveAction()">
+        <div class="p-3 bg-light rounded-3 border mb-3 small">
+          <div class="d-flex justify-content-between mb-1">
+            <span>Supplier:</span>
+            <strong class="text-dark">{{ selectedShipmentForAction.vendor_name }}</strong>
+          </div>
+          <div class="d-flex justify-content-between mb-1">
+            <span>Current Flow Status:</span>
+            <span class="badge" [ngClass]="selectedShipmentForAction.status === 'Critical Delay' ? 'bg-danger' : 'bg-warning text-dark'">
+              {{ selectedShipmentForAction.status }}
+            </span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span>Inventory Availability:</span>
+            <span class="badge" [ngClass]="selectedShipmentForAction.availability_status === 'Stockout Risk' ? 'bg-danger' : 'bg-warning text-dark'">
+              {{ selectedShipmentForAction.availability_status }}
+            </span>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Preventive Action Measure *</label>
+          <select class="form-select form-select-sm" [(ngModel)]="preventiveActionForm.action_type" name="patype" required>
+            <option value="Expedite Express Freight">Expedite Express Freight (Carrier Priority Upgrade)</option>
+            <option value="Allocate Buffer Stock">Allocate Emergency Safety Buffer Stock</option>
+            <option value="Quality Inspection Quarantine">Quality Inspection & Quarantine Hold</option>
+            <option value="Formal Supplier SLA Warning">Issue Formal Supplier SLA Default Warning</option>
+          </select>
+          <div class="form-text extra-small">Choosing "Allocate Buffer Stock" or "Expedite Express Freight" will update logistics health immediately.</div>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label fw-semibold small">Operational Action Notes & Logistics Directives *</label>
+          <textarea class="form-control form-control-sm" rows="3" [(ngModel)]="preventiveActionForm.notes" name="panotes" required placeholder="Specify freight instructions, depot bay allocation, or carrier details..."></textarea>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 border-top pt-3">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="closePreventiveActionModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check2-circle"></i> Execute Preventive Action</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Re-Sourcing Coordination Modal (Supply Chain -> Procurement) -->
+  <div *ngIf="showCoordinationModal" class="iq-modal-backdrop" (click)="closeCoordinationModal()">
+    <div class="iq-modal shadow-lg" style="max-width: 640px;" (click)="$event.stopPropagation()">
+      <div class="d-flex justify-content-between align-items-start border-bottom pb-2 mb-3">
+        <div>
+          <h3 class="fw-bold fs-5 m-0 text-danger"><i class="bi bi-arrow-repeat text-danger me-2"></i>Coordinate Alternative Vendor</h3>
+          <span class="text-muted small">Dispatch an urgent re-sourcing request to the Procurement Manager to replace an unreliable supplier.</span>
+        </div>
+        <button type="button" class="btn-close" (click)="closeCoordinationModal()"></button>
+      </div>
+
+      <form (ngSubmit)="submitCoordinationRequest()">
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label fw-semibold small">Failing / Unreliable Vendor *</label>
+            <input type="text" class="form-control form-control-sm" [(ngModel)]="coordinationForm.vendor_name" name="cname" required placeholder="e.g. Nova Bio-Polymers">
+          </div>
+          <div class="col-6">
+            <label class="form-label fw-semibold small">Category *</label>
+            <select class="form-select form-select-sm" [(ngModel)]="coordinationForm.category" name="ccat" required>
+              <option value="Raw Material Suppliers">Raw Material Suppliers</option>
+              <option value="Equipment Vendors">Equipment Vendors</option>
+              <option value="IT Vendors">IT Vendors</option>
+              <option value="Logistics Partners">Logistics Partners</option>
+              <option value="Maintenance Vendors">Maintenance Vendors</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-8">
+            <label class="form-label fw-semibold small">Affected Product / Component Flow *</label>
+            <input type="text" class="form-control form-control-sm" [(ngModel)]="coordinationForm.product" name="cprod" required placeholder="e.g. Bio-Polymer Resins (Grade A)">
+          </div>
+          <div class="col-4">
+            <label class="form-label fw-semibold small">Urgency Severity *</label>
+            <select class="form-select form-select-sm" [(ngModel)]="coordinationForm.severity" name="csev" required>
+              <option value="Critical">Critical (Immediate Line Risk)</option>
+              <option value="High">High Priority</option>
+              <option value="Medium">Medium Priority</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Supply Disruption / Performance Failure Details *</label>
+          <textarea class="form-control form-control-sm" rows="3" [(ngModel)]="coordinationForm.issue_summary" name="cissue" required placeholder="Describe delivery delays, sub-par reliability rate, stockout risk, or missed fulfillment SLA..."></textarea>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label fw-semibold small">Recommended Action for Procurement Manager *</label>
+          <textarea class="form-control form-control-sm" rows="2" [(ngModel)]="coordinationForm.recommended_action" name="crecom" required placeholder="Specify criteria (e.g. minimum 90% delivery rate, ready stock buffer)..."></textarea>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 border-top pt-3">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="closeCoordinationModal()">Cancel</button>
+          <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-send-fill me-1"></i> Send Re-Sourcing Request to Procurement</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

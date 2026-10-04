@@ -1,0 +1,13 @@
+.reliability-page {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.table-primary {
+  background-color: rgba(37, 99, 235, 0.08) !important;
+  border-left: 4px solid #2563eb !important;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}

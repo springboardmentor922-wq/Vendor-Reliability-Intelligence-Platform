@@ -1,0 +1,118 @@
+<div *ngIf="currentUser$ | async as user" class="profile-page">
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+      <h1 class="page-title">User Profile & Account Settings</h1>
+      <p class="page-subtitle">Manage personal information, role authorization, and security credentials</p>
+    </div>
+    <button (click)="logout()" class="btn btn-outline-danger d-flex align-items-center gap-2 px-3 py-2 fw-semibold">
+      <i class="bi bi-box-arrow-right"></i>
+      <span>Logout</span>
+    </button>
+  </div>
+
+  <div class="row g-4">
+    <!-- User Overview Card -->
+    <div class="col-lg-4">
+      <div class="iq-card text-center">
+        <div class="user-avatar-large mx-auto mb-3">
+          {{ user.full_name ? user.full_name.charAt(0).toUpperCase() : 'U' }}
+        </div>
+        <h3 class="fw-bold fs-5 mb-1">{{ user.full_name }}</h3>
+        <p class="text-muted small mb-3">{{ user.email }}</p>
+
+        <div class="mb-3">
+          <span class="iq-badge py-1 px-3 fs-6" [ngClass]="'role-' + user.role.toLowerCase().replace(' ', '')">
+            <i class="bi bi-shield-lock-fill"></i> {{ user.role }}
+          </span>
+        </div>
+
+        <hr class="my-3">
+
+        <div class="text-start small">
+          <div class="d-flex justify-content-between py-2 border-bottom">
+            <span class="text-muted">Account Status</span>
+            <span class="badge bg-success">Active</span>
+          </div>
+          <div class="d-flex justify-content-between py-2 border-bottom">
+            <span class="text-muted">Company</span>
+            <span class="fw-semibold">{{ user.company || 'Not Specified' }}</span>
+          </div>
+          <div class="d-flex justify-content-between py-2">
+            <span class="text-muted">Role Permissions</span>
+            <span class="fw-semibold text-primary">Authorized</span>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-2 border-top">
+          <button (click)="logout()" class="btn btn-outline-danger btn-sm w-100 d-flex align-items-center justify-content-center gap-2 py-2">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Log Out of Account</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Profile Form -->
+    <div class="col-lg-8">
+      <div class="iq-card">
+        <div class="iq-card-header">
+          <h2 class="iq-card-title">Edit Personal & Security Information</h2>
+        </div>
+
+        <div *ngIf="errorMessage" class="alert alert-danger py-2 d-flex align-items-center gap-2 small">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <span>{{ errorMessage }}</span>
+        </div>
+
+        <div *ngIf="successMessage" class="alert alert-success py-2 d-flex align-items-center gap-2 small">
+          <i class="bi bi-check-circle-fill"></i>
+          <span>{{ successMessage }}</span>
+        </div>
+
+        <form (ngSubmit)="saveProfile()">
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Full Name</label>
+              <input type="text" class="form-control iq-input-simple" [(ngModel)]="full_name" name="full_name" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Email Address (Read-only)</label>
+              <input type="email" class="form-control iq-input-simple bg-light" [value]="user.email" disabled>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Phone Number</label>
+              <input type="tel" class="form-control iq-input-simple" [(ngModel)]="phone" name="phone">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Company / Department</label>
+              <input type="text" class="form-control iq-input-simple" [(ngModel)]="company" name="company">
+            </div>
+          </div>
+
+          <h5 class="fw-bold fs-6 mb-3 text-dark border-top pt-3">Change Account Password</h5>
+          <div class="row g-3 mb-4">
+            <div class="col-md-4">
+              <label class="form-label fw-semibold small">Current Password</label>
+              <input type="password" class="form-control iq-input-simple" [(ngModel)]="currentPassword" name="currentPassword" placeholder="••••••••">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold small">New Password</label>
+              <input type="password" class="form-control iq-input-simple" [(ngModel)]="newPassword" name="newPassword" placeholder="••••••••">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold small">Confirm New Password</label>
+              <input type="password" class="form-control iq-input-simple" [(ngModel)]="confirmPassword" name="confirmPassword" placeholder="••••••••">
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end">
+            <button type="submit" class="btn-iq-primary" [disabled]="isLoading">
+              <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+              <i *ngIf="!isLoading" class="bi bi-save"></i> Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

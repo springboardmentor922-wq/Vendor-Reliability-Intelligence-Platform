@@ -1,0 +1,171 @@
+:host {
+  display: block;
+}
+
+.vendors-page {
+  padding-bottom: 2rem;
+}
+
+/* Green header banner matching existing Vendor Dashboard theme */
+.vendor-header-banner {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.vendor-card {
+  transition: all 0.2s ease-in-out;
+  border: 1px solid #e2e8f0;
+}
+
+.vendor-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06) !important;
+}
+
+.vendor-orders-tray {
+  background-color: #f8fafc !important;
+}
+
+.smaller {
+  font-size: 0.75rem;
+}
+
+/* Custom Modals */
+.modal-backdrop-custom {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1055;
+  padding: 1rem;
+}
+
+.modal-card-custom {
+  background: #ffffff;
+  border-radius: 0.75rem;
+  width: 100%;
+  max-width: 540px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 1.5rem;
+  animation: modalEnter 0.2s ease-out;
+}
+
+.modal-card-custom.modal-wide {
+  max-width: 780px;
+}
+
+.modal-header-custom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Tracking Stepper */
+.tracking-stepper {
+  display: flex;
+  flex-direction: column;
+}
+
+.step-line {
+  flex-grow: 1;
+  height: 2px;
+  background-color: #cbd5e1;
+  align-self: center;
+  margin: 0 0.5rem;
+  margin-top: -16px;
+}
+
+.step-line.active {
+  background-color: #10b981;
+}
+
+.step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  z-index: 2;
+}
+
+/* Animate Tray Expand */
+.animate-fade-in {
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ======================================================== */
+/* FLOATING TOP COMPLETE MESSAGE NOTIFICATION ("display on up") */
+/* ======================================================== */
+.top-floating-alert-container {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100050;
+  width: calc(100% - 32px);
+  max-width: 680px;
+  pointer-events: auto;
+  animation: slideDownToast 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.top-floating-alert {
+  border-radius: 12px;
+  padding: 1rem 1.35rem;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-left-width: 6px !important;
+  box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.18), 0 4px 12px -2px rgba(15, 23, 42, 0.08) !important;
+  background-color: #ffffff !important;
+}
+
+.top-floating-alert.alert-success {
+  border-left-color: #059669 !important;
+  background-color: #f0fdf4 !important;
+}
+
+.top-floating-alert.alert-danger {
+  border-left-color: #dc2626 !important;
+  background-color: #fef2f2 !important;
+}
+
+.top-floating-alert.alert-info {
+  border-left-color: #2563eb !important;
+  background-color: #eff6ff !important;
+}
+
+@keyframes slideDownToast {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -30px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}

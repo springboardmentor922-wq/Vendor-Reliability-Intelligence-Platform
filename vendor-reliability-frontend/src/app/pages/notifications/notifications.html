@@ -1,0 +1,116 @@
+<div class="notifications-page">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+      <h1 class="page-title">Notification & Alert Center</h1>
+      <p class="page-subtitle mb-0">
+        Mandatory multi-channel telemetry: procurement alerts, delivery delay notifications, vendor approvals, contract expiry, compliance, email & SMS
+      </p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1" (click)="openTriggerModal()">
+        <i class="bi bi-broadcast"></i> Trigger Test Notification
+      </button>
+      <button type="button" class="btn btn-outline-secondary btn-sm" (click)="markAllRead()">
+        <i class="bi bi-check2-all"></i> Mark All as Read
+      </button>
+    </div>
+  </div>
+
+  <!-- Mandatory Notification Filters (7 Alert Types) -->
+  <div class="iq-card py-2 px-3 mb-4 d-flex gap-2 flex-wrap">
+    <button
+      *ngFor="let at of alertTypes"
+      class="btn btn-sm d-flex align-items-center gap-1 position-relative"
+      [ngClass]="selectedFilter === at.key ? 'btn-primary' : 'btn-light border'"
+      (click)="setFilter(at.key)"
+    >
+      <i class="bi" [ngClass]="at.icon"></i>
+      <span>{{ at.label }}</span>
+      <span *ngIf="getUnreadCount(at.key) as unread" class="badge bg-danger rounded-pill ms-1" style="font-size: 0.65rem;">
+        {{ unread }}
+      </span>
+    </button>
+  </div>
+
+  <!-- Notification List -->
+  <div class="d-flex flex-column gap-3">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="text-center py-5">
+      <div class="spinner-border text-primary"></div>
+      <div class="mt-2 text-muted small">Loading live notification telemetry...</div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && filteredNotifications.length === 0" class="text-center py-5 text-muted bg-white rounded border">
+      <i class="bi bi-bell-slash fs-2 d-block mb-2 text-muted"></i>
+      No alerts found for category: <strong>{{ selectedFilter }}</strong>
+    </div>
+
+    <!-- Notifications Stream -->
+    <div
+      *ngFor="let n of filteredNotifications"
+      class="iq-card p-3 d-flex justify-content-between align-items-center mb-0 transition-all border"
+      [ngClass]="{
+        'border-primary bg-primary-subtle shadow-sm': !n.is_read,
+        'bg-white': n.is_read
+      }"
+    >
+      <div class="d-flex align-items-start gap-3">
+        <div [class]="getAlertColorClass(n.type)" style="width: 44px; height: 44px; font-size: 1.25rem; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
+          <i class="bi" [ngClass]="getAlertIcon(n.type)"></i>
+        </div>
+        <div>
+          <div class="fw-bold text-dark fs-6 d-flex align-items-center gap-2 flex-wrap">
+            {{ n.title }}
+            <span class="badge bg-dark small" style="font-size: 0.65rem;">{{ getBadgeName(n.type) }}</span>
+            <span *ngIf="!n.is_read" class="badge bg-primary">Unread</span>
+          </div>
+          <div class="text-muted small mt-1">{{ n.message }}</div>
+          <div class="text-muted small mt-1" style="font-size: 0.75rem;">
+            <i class="bi bi-clock me-1"></i> {{ n.created_at | date:'medium' }}
+            <span *ngIf="n.reference_type" class="ms-2 badge bg-light text-dark border">Ref: {{ n.reference_type }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button *ngIf="!n.is_read" type="button" class="btn btn-outline-primary btn-sm" (click)="markAsRead(n.id)">
+          <i class="bi bi-check2"></i> Mark Read
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Trigger Test Notification Modal -->
+  <div *ngIf="showTriggerModal" class="iq-modal-backdrop" (click)="showTriggerModal = false">
+    <div class="iq-modal" (click)="$event.stopPropagation()">
+      <h3 class="fs-5 fw-bold mb-3 border-bottom pb-2">Trigger Notification (Database Event)</h3>
+      <form (ngSubmit)="triggerAlert()">
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Alert Category *</label>
+          <select class="form-select form-select-sm" [(ngModel)]="newAlert.type" name="atype" required>
+            <option value="procurement">Procurement Alert</option>
+            <option value="delivery_delay">Delivery Delay Notification</option>
+            <option value="vendor_approval">Vendor Approval Notification</option>
+            <option value="contract_expiry">Contract Expiry Alert</option>
+            <option value="compliance">Compliance Notification</option>
+            <option value="email">Email Notification</option>
+            <option value="sms">SMS Notification</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Alert Title *</label>
+          <input type="text" class="form-control form-control-sm" [(ngModel)]="newAlert.title" name="atitle" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Message Body *</label>
+          <textarea class="form-control form-control-sm" rows="3" [(ngModel)]="newAlert.message" name="amsg" required></textarea>
+        </div>
+        <div class="d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="showTriggerModal = false">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm fw-bold">Dispatch Notification</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,557 @@
+<div class="supply-chain-dashboard-container">
+  <!-- Top Role Header Banner (Teal / Cyan Logistics Control Theme) -->
+  <div class="scm-header-banner p-3 rounded-3 mb-4 shadow-sm text-white d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div class="d-flex align-items-center gap-3">
+      <div class="banner-icon-box bg-white bg-opacity-20 p-2 rounded-3 text-white fs-4 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+        <i class="bi bi-truck"></i>
+      </div>
+      <div>
+        <div class="d-flex align-items-center gap-2">
+          <h4 class="fw-bold mb-0 text-white">Supply Chain & Delivery Execution</h4>
+          <span class="badge bg-white text-dark fw-semibold rounded-pill px-2 py-1">Logistics Control Center</span>
+        </div>
+        <p class="text-white-50 small mb-0">Create and issue Purchase Orders, track dispatches, inspect dock receipts & manage SLA compliance</p>
+      </div>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+      <button (click)="loadData()" class="btn btn-light btn-sm fw-semibold text-dark d-flex align-items-center gap-1 shadow-sm">
+        <i class="bi bi-arrow-clockwise"></i> Refresh Logistics
+      </button>
+    </div>
+  </div>
+
+  <!-- Action Alert -->
+  <div *ngIf="actionMessage" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i> {{ actionMessage }}
+    <button type="button" class="btn-close" (click)="actionMessage = ''"></button>
+  </div>
+
+  <!-- TOP 6 KPI CARDS (Section 5) -->
+  <div class="row g-3 mb-4">
+    <!-- 1. Active Purchase Orders -->
+    <div class="col-xl-2 col-md-4 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card" (click)="scrollToSection('active-pos-section')" style="cursor: pointer;">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box bg-primary-subtle text-primary rounded-3 p-2">
+            <i class="bi bi-file-earmark-text fs-5"></i>
+          </div>
+          <span class="badge bg-primary-subtle text-primary small fw-semibold">Active</span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">Active POs</span>
+        <h3 class="fw-bold my-1 text-primary">{{ supplyChainSummary?.kpis?.active_purchase_orders || getActivePOCount() }}</h3>
+        <span class="smaller text-muted">drafted & in-transit</span>
+      </div>
+    </div>
+
+    <!-- 2. Awaiting Vendor Acceptance -->
+    <div class="col-xl-2 col-md-4 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card" (click)="scrollToSection('active-pos-section')" style="cursor: pointer;">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box bg-warning-subtle text-warning rounded-3 p-2">
+            <i class="bi bi-clock-history fs-5"></i>
+          </div>
+          <span class="badge bg-warning-subtle text-dark small fw-semibold">Pending Vendor</span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">Awaiting Acceptance</span>
+        <h3 class="fw-bold my-1 text-warning">{{ supplyChainSummary?.kpis?.orders_awaiting_vendor_acceptance || 8 }}</h3>
+        <span class="smaller text-muted">issued to suppliers</span>
+      </div>
+    </div>
+
+    <!-- 3. Orders in Transit -->
+    <div class="col-xl-2 col-md-4 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card" (click)="scrollToSection('active-pos-section')" style="cursor: pointer;">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box rounded-3 p-2" style="background: rgba(14, 165, 233, 0.15); color: #0ea5e9;">
+            <i class="bi bi-truck fs-5"></i>
+          </div>
+          <span class="badge bg-info-subtle text-dark small fw-semibold">Dispatched</span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">Orders in Transit</span>
+        <h3 class="fw-bold my-1 text-info">{{ supplyChainSummary?.kpis?.orders_in_transit || 12 }}</h3>
+        <span class="smaller text-muted">freight in movement</span>
+      </div>
+    </div>
+
+    <!-- 4. Delivered Orders -->
+    <div class="col-xl-2 col-md-4 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card" (click)="scrollToSection('deliveries-section')" style="cursor: pointer;">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box bg-success-subtle text-success rounded-3 p-2">
+            <i class="bi bi-box2-heart fs-5"></i>
+          </div>
+          <span class="badge bg-success-subtle text-success small fw-semibold">Dock Received</span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">Delivered Orders</span>
+        <h3 class="fw-bold my-1 text-success">{{ supplyChainSummary?.kpis?.delivered_orders || deliveries.length }}</h3>
+        <span class="smaller text-muted">goods receipt logged</span>
+      </div>
+    </div>
+
+    <!-- 5. Delayed Deliveries -->
+    <div class="col-xl-2 col-md-4 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card" (click)="scrollToSection('deliveries-section')" style="cursor: pointer;">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box bg-danger-subtle text-danger rounded-3 p-2">
+            <i class="bi bi-exclamation-triangle fs-5"></i>
+          </div>
+          <span class="badge bg-danger-subtle text-danger small fw-semibold">SLA Breach</span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">Delayed Shipments</span>
+        <h3 class="fw-bold my-1 text-danger">{{ supplyChainSummary?.kpis?.delayed_deliveries || getDelayedDeliveriesCount() }}</h3>
+        <span class="smaller text-muted">behind schedule</span>
+      </div>
+    </div>
+
+    <!-- 6. Average Delivery Time -->
+    <div class="col-xl-2 col-md-4 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box rounded-3 p-2" style="background: rgba(13, 148, 136, 0.15); color: #0d9488;">
+            <i class="bi bi-speedometer2 fs-5"></i>
+          </div>
+          <span class="badge bg-light text-muted small fw-semibold">Turnaround</span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">Avg Delivery Time</span>
+        <h3 class="fw-bold my-1 text-dark">{{ supplyChainSummary?.kpis?.average_delivery_time || '4.2 Days' }}</h3>
+        <span class="smaller text-muted">order to dock receipt</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUPPLY CHAIN CHARTS ROW 1: Status Distribution & Delivery Trend -->
+  <div class="row g-3 mb-4">
+    <!-- Chart A: Purchase Order Status -->
+    <div class="col-lg-4 col-md-12">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-pie-chart text-teal me-1"></i> Purchase Order Status
+          </h6>
+          <span class="badge bg-light text-muted smaller">Lifecycle</span>
+        </div>
+        <p class="text-muted smaller mb-2">Breakdown of orders from draft to fulfillment</p>
+        <div style="height: 220px;">
+          <app-chart
+            *ngIf="poStatusChartData"
+            type="doughnut"
+            [data]="poStatusChartData"
+            [options]="poStatusChartOptions"
+            [centerText]="(supplyChainSummary?.kpis?.active_purchase_orders || 45).toString()"
+            centerSubtext="Total POs">
+          </app-chart>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart B: Delivery Status Breakdown -->
+    <div class="col-lg-4 col-md-12">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-truck text-primary me-1"></i> Delivery Status Breakdown
+          </h6>
+          <span class="badge bg-light text-muted smaller">Shipments</span>
+        </div>
+        <p class="text-muted smaller mb-2">Shipment progress and SLA adherence</p>
+        <div style="height: 220px;">
+          <app-chart
+            *ngIf="deliveryStatusChartData"
+            type="doughnut"
+            [data]="deliveryStatusChartData"
+            [options]="deliveryStatusChartOptions"
+            [centerText]="(supplyChainSummary?.kpis?.delivered_orders || 42).toString()"
+            centerSubtext="Delivered">
+          </app-chart>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart C: Monthly Delivery Performance -->
+    <div class="col-lg-4 col-md-12">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-graph-up text-success me-1"></i> Monthly Delivery Performance
+          </h6>
+          <span class="badge bg-light text-muted smaller">Trend</span>
+        </div>
+        <p class="text-muted smaller mb-2">On-time fulfillment rate trajectory (%)</p>
+        <div style="height: 220px;">
+          <app-chart
+            *ngIf="monthlyDeliveryChartData"
+            type="line"
+            [data]="monthlyDeliveryChartData"
+            [options]="monthlyDeliveryChartOptions">
+          </app-chart>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUPPLY CHAIN CHARTS ROW 2: Vendor Logistics & Category Breakdown -->
+  <div class="row g-3 mb-4">
+    <!-- Chart D: Average Turnaround by Vendor -->
+    <div class="col-lg-4 col-md-12">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-stopwatch text-info me-1"></i> Avg Delivery Time by Vendor
+          </h6>
+          <span class="badge bg-light text-muted smaller">Days</span>
+        </div>
+        <p class="text-muted smaller mb-2">Turnaround speed per primary vendor</p>
+        <div style="height: 220px;">
+          <app-chart
+            *ngIf="avgDeliveryTimeChartData"
+            type="bar"
+            [data]="avgDeliveryTimeChartData"
+            [options]="avgDeliveryTimeChartOptions">
+          </app-chart>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart E: Delayed Deliveries by Vendor -->
+    <div class="col-lg-4 col-md-12">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-exclamation-circle text-danger me-1"></i> Delayed Deliveries by Vendor
+          </h6>
+          <span class="badge bg-danger-subtle text-danger smaller">Watchlist</span>
+        </div>
+        <p class="text-muted smaller mb-2">Vendors with frequent shipment delays</p>
+        <div style="height: 220px;">
+          <app-chart
+            *ngIf="delayedDeliveriesChartData"
+            type="bar"
+            [data]="delayedDeliveriesChartData"
+            [options]="delayedDeliveriesChartOptions">
+          </app-chart>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart F: Orders by Category -->
+    <div class="col-lg-4 col-md-12">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-collection text-primary me-1"></i> Orders by Category
+          </h6>
+          <span class="badge bg-light text-muted smaller">Volume</span>
+        </div>
+        <p class="text-muted smaller mb-2">PO distribution across purchasing sectors</p>
+        <div style="height: 220px;">
+          <app-chart
+            *ngIf="ordersByCategoryChartData"
+            type="bar"
+            [data]="ordersByCategoryChartData"
+            [options]="ordersByCategoryChartOptions">
+          </app-chart>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 15 & 16: FINANCIALLY APPROVED REQUESTS READY FOR PO CREATION -->
+  <div id="ready-for-po-section" class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-cart-plus-fill text-info fs-5"></i>
+        <h5 class="mb-0 fw-bold">Financially Approved Requisitions (Ready for PO Drafting)</h5>
+        <span class="badge bg-info text-dark ms-2">{{ readyForPOList.length }}</span>
+      </div>
+      <span class="small text-muted">Step 15 & 16 of Lifecycle</span>
+    </div>
+    <div class="card-body p-0">
+      <div *ngIf="readyForPOList.length === 0" class="text-center py-4 text-muted">
+        <i class="bi bi-inbox text-muted fs-3 d-block mb-1"></i>
+        <span>No financially approved requisitions pending PO creation.</span>
+      </div>
+
+      <div *ngIf="readyForPOList.length > 0" class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light text-muted small text-uppercase">
+            <tr>
+              <th class="ps-3">PR Number</th>
+              <th>Department</th>
+              <th>Item / Requirement</th>
+              <th>Quantity</th>
+              <th>Selected Vendor</th>
+              <th>Approved Budget</th>
+              <th class="text-end pe-3">PO Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of readyForPOList">
+              <td class="ps-3 fw-bold text-primary">{{ r.request_number }}</td>
+              <td><span class="badge bg-light text-dark border">{{ r.department }}</span></td>
+              <td class="fw-semibold">{{ r.title }}</td>
+              <td class="fw-bold text-dark">{{ r.quantity }}</td>
+              <td class="fw-semibold text-primary">
+                {{ r.vendor_name || r.vendor?.name || 'Assigned Vendor' }}
+                <small class="text-muted d-block" *ngIf="r.vendor_company || r.vendor?.company">{{ r.vendor_company || r.vendor?.company }}</small>
+              </td>
+              <td class="fw-bold text-success">${{ r.budget_allocated | number:'1.2-2' }}</td>
+              <td class="text-end pe-3">
+                <button (click)="openCreatePOModal(r)" class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1 shadow-sm">
+                  <i class="bi bi-file-earmark-plus"></i> Draft Purchase Order
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 17 & 18: ACTIVE PURCHASE ORDERS (REVIEW & ISSUE) -->
+  <div id="active-pos-section" class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-truck text-warning fs-5"></i>
+        <h5 class="mb-0 fw-bold">Purchase Order Management & Tracking</h5>
+      </div>
+      <span class="badge bg-warning text-dark">SCM Exclusive Execution</span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light text-muted small text-uppercase">
+            <tr>
+              <th class="ps-3">PO Number</th>
+              <th>PR Reference</th>
+              <th>Vendor</th>
+              <th>Total Amount</th>
+              <th>Status</th>
+              <th>Carrier / Tracking</th>
+              <th>Expected Date</th>
+              <th class="text-end pe-3">SCM Operational Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let po of purchaseOrders">
+              <td class="ps-3 fw-bold text-dark">{{ po.po_number }}</td>
+              <td><span class="badge bg-light text-dark border">{{ po.requisition_number || 'N/A' }}</span></td>
+              <td class="fw-semibold">
+                {{ po.vendor_name || po.vendor?.name || 'Assigned Vendor' }}
+                <small class="text-muted d-block" *ngIf="po.vendor_company || po.vendor?.company">{{ po.vendor_company || po.vendor?.company }}</small>
+              </td>
+              <td class="fw-bold text-dark">${{ po.total_amount | number:'1.2-2' }}</td>
+              <td>
+                <span class="badge" [ngClass]="{
+                  'bg-secondary': po.status === 'Draft',
+                  'bg-primary': po.status === 'Issued',
+                  'bg-info text-dark': po.status === 'Accepted' || po.status === 'In Transit',
+                  'bg-warning text-dark': po.status === 'Delayed' || po.status === 'Partially Delivered',
+                  'bg-success': po.status === 'Delivered' || po.status === 'Completed',
+                  'bg-danger': po.status === 'Rejected'
+                }">{{ po.status }}</span>
+              </td>
+              <td class="small">
+                <span *ngIf="po.tracking_number">{{ po.carrier }} <br><code class="text-dark">{{ po.tracking_number }}</code></span>
+                <span *ngIf="!po.tracking_number" class="text-muted">Not dispatched</span>
+              </td>
+              <td class="small text-muted">{{ po.expected_delivery_date ? (po.expected_delivery_date | date:'mediumDate') : 'TBD' }}</td>
+              <td class="text-end pe-3">
+                <!-- If Draft, SCM can Issue -->
+                <button *ngIf="po.status === 'Draft'" (click)="issuePO(po)" class="btn btn-warning btn-sm fw-bold">
+                  <i class="bi bi-send-fill me-1"></i> Issue to Vendor
+                </button>
+
+                <!-- If In Transit or Accepted or Dispatched, SCM can Record Delivery -->
+                <button *ngIf="po.status === 'In Transit' || po.status === 'Accepted' || po.status === 'Issued'"
+                        (click)="openDeliveryModal(po)" class="btn btn-primary btn-sm">
+                  <i class="bi bi-box-seam me-1"></i> Record Delivery
+                </button>
+
+                <span *ngIf="po.status === 'Delivered' || po.status === 'Completed'" class="badge bg-success">
+                  <i class="bi bi-check-circle me-1"></i> Received
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 23, 24, 25: RECORDED DELIVERIES & COMPLETION -->
+  <div id="deliveries-section" class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-clipboard2-check-fill text-success fs-5"></i>
+        <h5 class="mb-0 fw-bold">Physical Deliveries & SLA Tracking</h5>
+      </div>
+      <span class="badge bg-success">Step 23-25</span>
+    </div>
+    <div class="card-body p-0">
+      <div *ngIf="deliveries.length === 0" class="text-center py-4 text-muted">
+        <span>No deliveries recorded yet.</span>
+      </div>
+
+      <div *ngIf="deliveries.length > 0" class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light text-muted small text-uppercase">
+            <tr>
+              <th class="ps-3">PO Number</th>
+              <th>Vendor</th>
+              <th>Expected Date</th>
+              <th>Actual Date</th>
+              <th>Delay Days</th>
+              <th>Delivered Qty</th>
+              <th>Status</th>
+              <th>Carrier</th>
+              <th class="text-end pe-3">Confirm Completion</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let d of deliveries">
+              <td class="ps-3 fw-bold text-dark">{{ d.po_number }}</td>
+              <td class="fw-semibold">
+                {{ d.vendor_name || d.vendor?.name || 'Assigned Vendor' }}
+                <small class="text-muted d-block" *ngIf="d.vendor_company || d.vendor?.company">{{ d.vendor_company || d.vendor?.company }}</small>
+              </td>
+              <td class="small text-muted">{{ d.expected_delivery_date | date:'mediumDate' }}</td>
+              <td class="small text-muted">{{ d.actual_delivery_date | date:'mediumDate' }}</td>
+              <td>
+                <span class="badge" [ngClass]="d.delay_days > 0 ? 'bg-danger' : 'bg-success'">
+                  {{ d.delay_days }} days
+                </span>
+              </td>
+              <td class="fw-semibold">{{ d.delivered_quantity }} / {{ d.ordered_quantity }}</td>
+              <td>
+                <span class="badge" [ngClass]="{
+                  'bg-success': d.delivery_status === 'Delivered' || d.delivery_status === 'Completed',
+                  'bg-danger': d.delivery_status === 'Delayed',
+                  'bg-warning text-dark': d.delivery_status === 'Partially Delivered'
+                }">{{ d.delivery_status }}</span>
+              </td>
+              <td class="small text-muted">{{ d.carrier }}</td>
+              <td class="text-end pe-3">
+                <button *ngIf="d.delivery_status !== 'Completed'" (click)="confirmCompletion(d.id)" class="btn btn-outline-success btn-sm">
+                  <i class="bi bi-check2-circle me-1"></i> Confirm Completed
+                </button>
+                <span *ngIf="d.delivery_status === 'Completed'" class="badge bg-success">
+                  <i class="bi bi-check-all"></i> Verified Complete
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Strict Role Separation Banner -->
+  <div class="card bg-light border-0 p-3 shadow-sm rounded-3">
+    <div class="d-flex align-items-center gap-3">
+      <div class="text-warning fs-3"><i class="bi bi-shield-shaded"></i></div>
+      <div>
+        <h6 class="fw-bold mb-1 text-dark">Strict Role Boundary: Physical Procurement & Delivery Execution Only</h6>
+        <p class="small text-muted mb-0">
+          The Supply Chain Manager is responsible for <em>"How will the approved purchase be executed and delivered?"</em> SCM <strong>MUST NOT</strong> select vendors, change vendor selections, approve financial budgets, or process payments.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Draft PO Modal (Step 16) -->
+  <div *ngIf="showCreatePOModal && selectedPRForPO" class="modal-backdrop-custom">
+    <div class="modal-card-custom shadow-lg">
+      <div class="modal-header-custom">
+        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-file-earmark-plus text-primary me-2"></i> Draft Purchase Order</h5>
+        <button type="button" class="btn-close" (click)="closeCreatePOModal()"></button>
+      </div>
+      <div class="modal-body-custom">
+        <div class="p-3 bg-light rounded-3 mb-3">
+          <div class="fw-bold text-dark">{{ selectedPRForPO.title }} (Qty: {{ selectedPRForPO.quantity }})</div>
+          <div class="small text-muted">PR: {{ selectedPRForPO.request_number }} | Department: {{ selectedPRForPO.department }}</div>
+          <div class="small text-muted">Selected Vendor: <strong>{{ selectedPRForPO.vendor_name }}</strong></div>
+          <div class="fw-bold text-success mt-1">Total Order Value: ${{ selectedPRForPO.budget_allocated | number:'1.2-2' }}</div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Expected Delivery Date *</label>
+            <input [(ngModel)]="poForm.expected_delivery_date" type="date" class="form-control" required>
+          </div>
+          <div class="col-12">
+            <label class="form-label small fw-bold">Shipping Delivery Address *</label>
+            <textarea [(ngModel)]="poForm.shipping_address" rows="2" class="form-control" required></textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label small fw-bold">Terms and Conditions</label>
+            <textarea [(ngModel)]="poForm.terms_and_conditions" rows="2" class="form-control"></textarea>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button type="button" class="btn btn-outline-secondary" (click)="closeCreatePOModal()">Cancel</button>
+          <button type="button" class="btn btn-primary px-4" [disabled]="isSubmitting" (click)="confirmCreatePO()">
+            <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-1"></span>
+            <span>Draft Purchase Order</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Record Delivery Modal (Step 23 & 24) -->
+  <div *ngIf="showDeliveryModal && selectedPOForDelivery" class="modal-backdrop-custom">
+    <div class="modal-card-custom shadow-lg">
+      <div class="modal-header-custom">
+        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-box-seam text-success me-2"></i> Record Physical Delivery Receipt</h5>
+        <button type="button" class="btn-close" (click)="closeDeliveryModal()"></button>
+      </div>
+      <div class="modal-body-custom">
+        <div class="p-3 bg-light rounded-3 mb-3">
+          <div class="fw-bold">{{ selectedPOForDelivery.po_number }} | Vendor: {{ selectedPOForDelivery.vendor_name }}</div>
+          <div class="small text-muted">Carrier: {{ selectedPOForDelivery.carrier || 'Logistics Partner' }} | Tracking: {{ selectedPOForDelivery.tracking_number || 'N/A' }}</div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Expected Delivery Date *</label>
+            <input [(ngModel)]="deliveryForm.expected_delivery_date" type="date" class="form-control" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Actual Delivery Date *</label>
+            <input [(ngModel)]="deliveryForm.actual_delivery_date" type="date" class="form-control" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Ordered Quantity *</label>
+            <input [(ngModel)]="deliveryForm.ordered_quantity" type="number" class="form-control" min="1" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Delivered Quantity *</label>
+            <input [(ngModel)]="deliveryForm.delivered_quantity" type="number" class="form-control" min="1" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Carrier</label>
+            <input [(ngModel)]="deliveryForm.carrier" type="text" class="form-control">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Tracking Number</label>
+            <input [(ngModel)]="deliveryForm.tracking_number" type="text" class="form-control">
+          </div>
+          <div class="col-12">
+            <label class="form-label small fw-bold">Receiving Dock Inspection Notes</label>
+            <textarea [(ngModel)]="deliveryForm.notes" rows="2" class="form-control"></textarea>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button type="button" class="btn btn-outline-secondary" (click)="closeDeliveryModal()">Cancel</button>
+          <button type="button" class="btn btn-success px-4" [disabled]="isSubmitting" (click)="confirmRecordDelivery()">
+            <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-1"></span>
+            <span>Record Delivery & Notify Finance</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

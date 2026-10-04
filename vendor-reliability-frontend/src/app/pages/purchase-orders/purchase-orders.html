@@ -1,0 +1,386 @@
+<div class="purchase-orders-page">
+  <!-- Page Header -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+      <h1 class="page-title">{{ authService.currentUserValue?.role === 'Vendor' ? 'Orders (All Vendors)' : 'Purchase Order Management' }}</h1>
+      <p class="page-subtitle mb-0">
+        {{ authService.currentUserValue?.role === 'Vendor' ? 'Complete directory of orders across all registered vendors and suppliers' : 'Issue purchase orders, track line items, and trace supplier fulfillment milestones' }}
+      </p>
+    </div>
+    <button *ngIf="authService.hasRole(['Administrator', 'Procurement Manager', 'Supply Chain Manager'])" class="btn-iq-primary" (click)="openNewModal()">
+      <i class="bi bi-file-earmark-plus"></i> Issue New Purchase Order
+    </button>
+  </div>
+
+  <!-- Action Alert -->
+  <div *ngIf="actionMessage" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i> {{ actionMessage }}
+    <button type="button" class="btn-close" (click)="actionMessage = ''"></button>
+  </div>
+
+  <!-- Error Alert -->
+  <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+    <i class="bi bi-exclamation-octagon-fill me-2"></i> {{ errorMessage }}
+    <button type="button" class="btn-close" (click)="errorMessage = ''"></button>
+  </div>
+
+  <!-- Top Metric Cards Row -->
+  <div class="row g-3 mb-4">
+    <div class="col-xl-3 col-sm-6">
+      <div class="iq-card p-3 d-flex align-items-center gap-3">
+        <div class="iq-icon-tile bg-primary-subtle text-primary">
+          <i class="bi bi-receipt"></i>
+        </div>
+        <div>
+          <span class="text-muted small fw-semibold text-uppercase tracking-wider">Total Orders</span>
+          <div class="fs-4 fw-bold text-dark">{{ orders.length }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-sm-6">
+      <div class="iq-card p-3 d-flex align-items-center gap-3">
+        <div class="iq-icon-tile bg-warning-subtle text-warning">
+          <i class="bi bi-hourglass-split"></i>
+        </div>
+        <div>
+          <span class="text-muted small fw-semibold text-uppercase tracking-wider">Pending Approval</span>
+          <div class="fs-4 fw-bold text-dark">{{ pendingCount }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-sm-6">
+      <div class="iq-card p-3 d-flex align-items-center gap-3">
+        <div class="iq-icon-tile bg-info-subtle text-info">
+          <i class="bi bi-send-check"></i>
+        </div>
+        <div>
+          <span class="text-muted small fw-semibold text-uppercase tracking-wider">Active / In Execution</span>
+          <div class="fs-4 fw-bold text-dark">{{ activeCount }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-sm-6">
+      <div class="iq-card p-3 d-flex align-items-center gap-3">
+        <div class="iq-icon-tile bg-success-subtle text-success">
+          <i class="bi bi-check2-circle"></i>
+        </div>
+        <div>
+          <span class="text-muted small fw-semibold text-uppercase tracking-wider">Completed / Delivered</span>
+          <div class="fs-4 fw-bold text-dark">{{ completedCount }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters & Search Toolbar -->
+  <div class="iq-card py-3 mb-4">
+    <div class="row g-3 align-items-center">
+      <div class="col-md-4">
+        <div class="input-group">
+          <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+          <input
+            type="text"
+            class="form-control border-start-0"
+            placeholder="Search by PO, vendor, or company..."
+            [(ngModel)]="searchQuery"
+          />
+        </div>
+      </div>
+      <div class="col-md-3">
+        <select class="form-select" [(ngModel)]="selectedVendorFilter">
+          <option value="All">All Vendors (Everyone)</option>
+          <option *ngFor="let v of vendors" [value]="v.id">{{ v.name }} ({{ v.company }})</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <select class="form-select" [(ngModel)]="selectedStatus" (ngModelChange)="loadOrders()">
+          <option value="All">All PO Statuses</option>
+          <option value="Draft">Draft</option>
+          <option value="Pending Approval">Pending Approval</option>
+          <option value="Approved">Approved</option>
+          <option value="Issued">Issued</option>
+          <option value="Accepted">Accepted</option>
+          <option value="Delivered">Delivered</option>
+          <option value="Completed">Completed</option>
+          <option value="Rejected">Rejected</option>
+        </select>
+      </div>
+      <div class="col-md-2 text-md-end text-muted small">
+        <span>Showing <strong>{{ filteredOrders.length }}</strong> orders</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Orders Table -->
+  <div class="iq-card p-0">
+    <div *ngIf="isLoading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+
+    <div *ngIf="!isLoading && filteredOrders.length === 0" class="text-center py-5 text-muted">
+      <i class="bi bi-receipt fs-1 d-block mb-2 text-slate-400"></i>
+      <p class="mb-0">No purchase orders found matching your search.</p>
+    </div>
+
+    <div *ngIf="!isLoading && filteredOrders.length > 0" class="iq-table-container">
+      <table class="iq-table">
+        <thead>
+          <tr>
+            <th>PO Number</th>
+            <th>Vendor</th>
+            <th>Items Count</th>
+            <th>Total Amount</th>
+            <th>Status</th>
+            <th>Issue Date</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let po of filteredOrders">
+            <td class="fw-bold text-dark font-monospace">{{ po.po_number }}</td>
+            <td>
+              <div class="d-flex align-items-center gap-1 flex-wrap">
+                <span class="fw-semibold text-primary">{{ po.vendor_name || po.vendor?.name || 'Assigned Vendor' }}</span>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 0.68rem;" *ngIf="authService.currentUserValue?.role === 'Vendor' && isMyPO(po)">
+                  Your Org
+                </span>
+              </div>
+              <small class="text-muted d-block" *ngIf="po.vendor_company || po.vendor?.company">{{ po.vendor_company || po.vendor?.company }}</small>
+            </td>
+            <td>
+              <span class="badge bg-light text-dark border">{{ po.items ? po.items.length : 0 }} Line Items</span>
+            </td>
+            <td class="fw-bold fs-6 text-dark">{{ po.total_amount | currency:(po.currency || 'USD') }}</td>
+            <td>
+              <span class="iq-badge" [ngClass]="getStatusBadge(po.status)">{{ po.status }}</span>
+            </td>
+            <td class="small text-muted">{{ po.created_at | date:'mediumDate' }}</td>
+            <td class="text-end">
+              <div class="d-inline-flex align-items-center gap-1">
+                <!-- Management Approval Actions on Pending Approval -->
+                <button *ngIf="authService.hasRole(['Administrator', 'Procurement Manager', 'Finance Officer']) && po.status === 'Pending Approval'"
+                        type="button" class="btn btn-sm btn-success py-1 px-2" (click)="approvePO(po)" title="Approve PO">
+                  <i class="bi bi-check-circle me-1"></i> Approve
+                </button>
+                <button *ngIf="authService.hasRole(['Administrator', 'Procurement Manager', 'Finance Officer']) && po.status === 'Pending Approval'"
+                        type="button" class="btn btn-sm btn-danger py-1 px-2" (click)="rejectPO(po)" title="Reject PO">
+                  <i class="bi bi-x-circle me-1"></i> Reject
+                </button>
+
+                <!-- Issue to Vendor when Approved -->
+                <button *ngIf="authService.hasRole(['Administrator', 'Procurement Manager']) && po.status === 'Approved'"
+                        type="button" class="btn btn-sm btn-primary py-1 px-2" (click)="advancePOStatus(po, 'Issued')" title="Issue to Vendor">
+                  <i class="bi bi-send me-1"></i> Issue
+                </button>
+
+                <!-- Vendor Accept / Reject Actions on Issued or Draft PO -->
+                <button *ngIf="authService.currentUserValue?.role === 'Vendor' && (po.status === 'Issued' || po.status === 'Draft')"
+                        type="button" class="btn btn-sm btn-success py-1 px-2" (click)="acceptOrder(po)" title="Accept Order">
+                  <i class="bi bi-check-lg me-1"></i> Accept
+                </button>
+                <button *ngIf="authService.currentUserValue?.role === 'Vendor' && (po.status === 'Issued' || po.status === 'Draft')"
+                        type="button" class="btn btn-sm btn-danger py-1 px-2" (click)="rejectPO(po)" title="Reject Order">
+                  <i class="bi bi-x-lg me-1"></i> Reject
+                </button>
+
+                <!-- Vendor Mark Delivered on Accepted PO -->
+                <button *ngIf="authService.currentUserValue?.role === 'Vendor' && (po.status === 'Accepted' || po.status === 'Issued')"
+                        type="button" class="btn btn-sm btn-info text-white py-1 px-2" (click)="advancePOStatus(po, 'Delivered')" title="Mark Delivered">
+                  <i class="bi bi-truck me-1"></i> Delivered
+                </button>
+
+                <!-- Details Button -->
+                <button type="button" class="btn btn-outline-primary btn-sm py-1 px-2" (click)="viewDetail(po)" title="View Details">
+                  <i class="bi bi-eye"></i> Details
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Detail Modal -->
+  <div *ngIf="selectedPO" class="iq-modal-backdrop" (click)="closeDetail()">
+    <div class="iq-modal shadow-lg" style="max-width: 740px;" (click)="$event.stopPropagation()">
+      <div class="d-flex justify-content-between align-items-start border-bottom pb-3 mb-3">
+        <div>
+          <div class="d-flex align-items-center gap-2">
+            <h3 class="fw-bold fs-5 m-0 text-dark">PO: {{ selectedPO.po_number }}</h3>
+            <span class="iq-badge" [ngClass]="getStatusBadge(selectedPO.status)">{{ selectedPO.status }}</span>
+          </div>
+          <span class="text-muted small">
+            Vendor: <strong class="text-primary">{{ selectedPO.vendor_name || selectedPO.vendor?.name || 'Assigned Vendor' }}</strong>
+            <span *ngIf="selectedPO.vendor_company || selectedPO.vendor?.company"> ({{ selectedPO.vendor_company || selectedPO.vendor?.company }})</span>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-1" style="font-size: 0.68rem;" *ngIf="authService.currentUserValue?.role === 'Vendor' && isMyPO(selectedPO)">
+              Your Org
+            </span>
+          </span>
+        </div>
+        <button type="button" class="btn-close" (click)="closeDetail()"></button>
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-md-4">
+          <div class="p-3 bg-light rounded border">
+            <span class="text-muted small d-block">Total Commitment:</span>
+            <strong class="fs-5 text-dark">{{ selectedPO.total_amount | currency:(selectedPO.currency || 'USD') }}</strong>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="p-3 bg-light rounded border">
+            <span class="text-muted small d-block">Expected Delivery:</span>
+            <strong class="text-dark">{{ (selectedPO.expected_delivery_date | date:'mediumDate') || 'Standard 14 Days' }}</strong>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="p-3 bg-light rounded border">
+            <span class="text-muted small d-block">Payment Terms:</span>
+            <span class="small fw-semibold text-dark">{{ selectedPO.terms_and_conditions || 'Net 30 Days' }}</span>
+          </div>
+        </div>
+        <div class="col-12" *ngIf="selectedPO.shipping_address">
+          <div class="p-2 bg-light rounded border small">
+            <span class="text-muted">Delivery Destination: </span>
+            <span class="fw-semibold text-dark">{{ selectedPO.shipping_address }}</span>
+          </div>
+        </div>
+      </div>
+
+      <h5 class="fs-6 fw-bold mb-2 text-dark">Contracted Line Items</h5>
+      <div class="table-responsive mb-3 border rounded">
+        <table class="table table-sm table-striped m-0 small">
+          <thead class="table-light">
+            <tr>
+              <th>Item Name</th>
+              <th>SKU</th>
+              <th class="text-center">Qty</th>
+              <th class="text-end">Unit Price</th>
+              <th class="text-end">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of selectedPO.items">
+              <td class="fw-semibold text-dark">{{ item.item_name }}</td>
+              <td class="text-muted font-monospace">{{ item.sku || 'SKU-GEN' }}</td>
+              <td class="text-center">{{ item.quantity }}</td>
+              <td class="text-end">{{ item.unit_price | currency:(selectedPO.currency || 'USD') }}</td>
+              <td class="text-end fw-bold text-dark">{{ item.total_price | currency:(selectedPO.currency || 'USD') }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center border-top pt-3 flex-wrap gap-2">
+        <div class="btn-group btn-group-sm" *ngIf="authService.hasRole(['Administrator', 'Procurement Manager', 'Finance Officer'])">
+          <button *ngIf="selectedPO.status === 'Pending Approval'" class="btn btn-success" (click)="approvePO(selectedPO)">
+            <i class="bi bi-check-circle me-1"></i> Approve PO
+          </button>
+          <button *ngIf="selectedPO.status === 'Pending Approval'" class="btn btn-danger" (click)="rejectPO(selectedPO)">
+            <i class="bi bi-x-circle me-1"></i> Reject PO
+          </button>
+          <button *ngIf="selectedPO.status === 'Approved'" class="btn btn-primary" (click)="advancePOStatus(selectedPO, 'Issued')">
+            <i class="bi bi-send me-1"></i> Mark Issued
+          </button>
+          <button *ngIf="selectedPO.status === 'Issued'" class="btn btn-info text-white" (click)="advancePOStatus(selectedPO, 'Delivered')">
+            <i class="bi bi-truck me-1"></i> Mark Delivered
+          </button>
+          <button *ngIf="selectedPO.status === 'Delivered'" class="btn btn-success" (click)="advancePOStatus(selectedPO, 'Completed')">
+            <i class="bi bi-check2-all me-1"></i> Mark Completed
+          </button>
+        </div>
+        <div class="btn-group btn-group-sm" *ngIf="authService.currentUserValue?.role === 'Vendor'">
+          <button *ngIf="selectedPO.status === 'Issued' || selectedPO.status === 'Draft'" class="btn btn-success" (click)="acceptOrder(selectedPO)">
+            <i class="bi bi-check-lg me-1"></i> Accept Order
+          </button>
+          <button *ngIf="selectedPO.status === 'Issued' || selectedPO.status === 'Draft'" class="btn btn-danger" (click)="rejectPO(selectedPO)">
+            <i class="bi bi-x-lg me-1"></i> Reject Order
+          </button>
+          <button *ngIf="selectedPO.status === 'Accepted' || selectedPO.status === 'Issued' || selectedPO.status === 'Draft'" class="btn btn-info text-white" (click)="advancePOStatus(selectedPO, 'Delivered')">
+            <i class="bi bi-truck me-1"></i> Mark Delivered
+          </button>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="closeDetail()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create New PO Modal -->
+  <div *ngIf="showModal" class="iq-modal-backdrop" (click)="closeModal()">
+    <div class="iq-modal shadow-lg" style="max-width: 820px;" (click)="$event.stopPropagation()">
+      <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+        <h3 class="fs-5 fw-bold m-0 text-dark">Issue New Purchase Order</h3>
+        <button type="button" class="btn-close" (click)="closeModal()"></button>
+      </div>
+
+      <form (ngSubmit)="submitPO()">
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Supplier / Vendor *</label>
+            <select class="form-select form-select-sm" [(ngModel)]="newPO.vendor_id" name="povendor" required>
+              <option *ngFor="let v of vendors" [value]="v.id">{{ v.name }} ({{ v.company }})</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Currency</label>
+            <input type="text" class="form-control form-control-sm" [(ngModel)]="newPO.currency" name="pocurrency">
+          </div>
+          <div class="col-md-12">
+            <label class="form-label fw-semibold small">Destination Shipping Address</label>
+            <input type="text" class="form-control form-control-sm" [(ngModel)]="newPO.shipping_address" name="poship">
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h5 class="fs-6 fw-bold m-0 text-dark">Itemized Procurement Lines</h5>
+          <button type="button" class="btn btn-outline-primary btn-sm" (click)="addItemRow()">
+            <i class="bi bi-plus-lg me-1"></i> Add Item Line
+          </button>
+        </div>
+
+        <div class="table-responsive border rounded mb-3 p-2 bg-light">
+          <table class="table table-sm m-0 small">
+            <thead>
+              <tr>
+                <th style="width: 35%;">Item Name *</th>
+                <th style="width: 20%;">SKU</th>
+                <th style="width: 15%;">Qty</th>
+                <th style="width: 20%;">Unit Price ($)</th>
+                <th style="width: 10%;"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let it of newItems; let i = index">
+                <td><input type="text" class="form-control form-control-sm" [(ngModel)]="it.item_name" name="item_name_{{i}}" placeholder="Item description" required></td>
+                <td><input type="text" class="form-control form-control-sm" [(ngModel)]="it.sku" name="item_sku_{{i}}" placeholder="e.g. SKU-102"></td>
+                <td><input type="number" min="1" class="form-control form-control-sm" [(ngModel)]="it.quantity" name="item_qty_{{i}}" required></td>
+                <td><input type="number" min="0" step="0.01" class="form-control form-control-sm" [(ngModel)]="it.unit_price" name="item_price_{{i}}" required></td>
+                <td class="text-center">
+                  <button type="button" class="btn btn-outline-danger btn-sm py-0" (click)="removeItemRow(i)" title="Remove item">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-light rounded border">
+          <span class="fw-semibold text-dark">Calculated Total Order Commitment:</span>
+          <span class="fs-5 fw-bold text-primary">{{ calculateTotal() | currency }}</span>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm" [disabled]="isSubmitting">
+            <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-1"></span>
+            {{ isSubmitting ? 'Issuing...' : 'Issue Purchase Order' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
