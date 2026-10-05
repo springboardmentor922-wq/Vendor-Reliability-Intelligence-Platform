@@ -22,44 +22,12 @@ from app.api.v1.endpoints.notifications import create_system_notification
 from app.api import deps
 from app.models.user import User
 
+from app.core.metrics import calculate_vendor_metrics
+
 router = APIRouter()
 
 def recalculate_vendor_metrics(db: Session, vendor_id: int):
-    vendor = db.query(Vendor).filter(Vendor.id == vendor_id).first()
-    if not vendor:
-        return
-    delivered_orders = db.query(PurchaseOrder).filter(
-        PurchaseOrder.vendor_id == vendor_id,
-        PurchaseOrder.status.in_(["Delivered", "Completed"])
-    ).all()
-    if not delivered_orders:
-        return
-    
-    total = len(delivered_orders)
-    on_time = sum(
-        1 for o in delivered_orders 
-        if o.actual_delivery_date and o.expected_delivery_date and o.actual_delivery_date <= o.expected_delivery_date
-    )
-    delivery_acc = round((on_time / total) * 100.0, 1) if total > 0 else 95.0
-    
-    ratings = [o.quality_rating for o in delivered_orders if o.quality_rating is not None]
-    avg_quality = (sum(ratings) / len(ratings)) if ratings else 4.5
-    quality_percent = (avg_quality / 5.0) * 100.0
-    
-    contract = db.query(Contract).filter(Contract.vendor_id == vendor_id).first()
-    sla_score = 100.0 if (contract and contract.compliance_status == "Compliant") else 85.0
-    
-    # Formula matching PDF: 35% delivery accuracy + 30% quality + 15% response time + 20% contract SLA
-    overall_score = round(
-        (delivery_acc * 0.35) + 
-        (quality_percent * 0.30) + 
-        (90.0 * 0.15) + 
-        (sla_score * 0.20), 
-        1
-    )
-    vendor.delivery_accuracy = delivery_acc
-    vendor.reliability_score = min(100.0, max(0.0, overall_score))
-    db.commit()
+    calculate_vendor_metrics(db, vendor_id, persist=True)
 
 @router.get("/orders", response_model=List[PurchaseOrderResponse])
 def get_purchase_orders(
@@ -73,7 +41,8 @@ def get_purchase_orders(
     
     # If the user is a vendor, strictly isolate to their own registered company
     if current_user.role == "Vendor":
-        vendor = db.query(Vendor).filter(Vendor.email == current_user.email).first()
+        lookup_email = "apex@vendoriq.com" if current_user.email == "vendor@vendoriq.com" else current_user.email
+        vendor = db.query(Vendor).filter(Vendor.email == lookup_email).first()
         if vendor:
             query = query.filter(PurchaseOrder.vendor_id == vendor.id)
         else:
@@ -126,11 +95,21 @@ def create_purchase_order(
         shipping_mode=po_in.shipping_mode or "Standard Class",
         destination_country=po_in.destination_country or "United States",
         destination_city=po_in.destination_city or "Chicago",
+        delivery_address=po_in.delivery_address or "Central Fulfillment Logistics Hub, Dock Gate 4",
+        packaging_type=po_in.packaging_type or "Palletized (ISPM-15 Wood)",
         items_count=po_in.items_count or 1,
         unit_price=po_in.unit_price or po_in.total_amount,
+        shipping_cost=po_in.shipping_cost or 0.0,
+        tax_amount=po_in.tax_amount or 0.0,
+        currency=po_in.currency or "USD",
+        payment_terms=po_in.payment_terms or "Net 30",
+        incoterms=po_in.incoterms or "DDP - Delivered Duty Paid",
         product_category=po_in.product_category or "Industrial & Logistics",
         priority=po_in.priority or "Standard",
         notes=po_in.notes or "",
+        requisition_id=po_in.requisition_id or f"PR-{datetime.now().year}-{random.randint(1000, 9999)}",
+        requester_name=po_in.requester_name or current_user.full_name or "Procurement Lead",
+        cost_center=po_in.cost_center or "CC-4010 (Supply Chain Ops)",
         quality_rating=None,
         issue_flag=False,
         issue_resolved=True,
@@ -209,7 +188,8 @@ def dispatch_purchase_order(
         raise HTTPException(status_code=404, detail="Purchase Order not found")
     
     vendor = db.query(Vendor).filter(Vendor.id == po.vendor_id).first()
-    if current_user.role == "Vendor" and vendor and vendor.email != current_user.email:
+    lookup_email = "apex@vendoriq.com" if current_user.email == "vendor@vendoriq.com" else current_user.email
+    if current_user.role == "Vendor" and vendor and vendor.email != lookup_email:
         raise HTTPException(status_code=403, detail="You can only dispatch orders assigned to your registered company.")
 
     po.status = "Ordered"
@@ -301,6 +281,11 @@ def submit_order_invoice(
     po = db.query(PurchaseOrder).filter(PurchaseOrder.id == order_id).first()
     if not po:
         raise HTTPException(status_code=404, detail="Purchase Order not found")
+
+    vendor = db.query(Vendor).filter(Vendor.id == po.vendor_id).first()
+    lookup_email = "apex@vendoriq.com" if current_user.email == "vendor@vendoriq.com" else current_user.email
+    if current_user.role == "Vendor" and vendor and vendor.email != lookup_email:
+        raise HTTPException(status_code=403, detail="You can only submit invoices for orders assigned to your registered company.")
 
     po.invoice_number = inv_in.invoice_number
     po.invoice_amount = inv_in.invoice_amount

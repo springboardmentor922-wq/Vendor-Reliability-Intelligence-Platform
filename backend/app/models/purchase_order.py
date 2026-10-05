@@ -18,11 +18,23 @@ class PurchaseOrder(Base):
     shipping_mode = Column(String, default="Standard Class", nullable=True)  # Standard Class, First Class, Second Class, Same Day
     destination_country = Column(String, default="United States", nullable=True)
     destination_city = Column(String, nullable=True)
+    delivery_address = Column(String, nullable=True)  # Facility dock address / warehouse hub
+    packaging_type = Column(String, default="Palletized (ISPM-15 Wood)", nullable=True)
     items_count = Column(Integer, default=1, nullable=True)
     unit_price = Column(Float, nullable=True)
+    shipping_cost = Column(Float, default=0.0, nullable=True)
+    tax_amount = Column(Float, default=0.0, nullable=True)
+    currency = Column(String, default="USD", nullable=True)
+    payment_terms = Column(String, default="Net 30", nullable=True)  # Net 30, Net 45, Net 60, Due Upon Receipt
+    incoterms = Column(String, default="DDP - Delivered Duty Paid", nullable=True)  # DDP, FOB, CIF, EXW
     product_category = Column(String, nullable=True)
     priority = Column(String, default="Standard", nullable=True)  # Standard, High, Urgent
     notes = Column(String, nullable=True)  # Dock handling & special instructions
+    
+    # Internal Accounting & Governance
+    requisition_id = Column(String, nullable=True)  # e.g. PR-2026-8819
+    requester_name = Column(String, default="David Miller", nullable=True)
+    cost_center = Column(String, default="CC-4010 (Supply Chain Ops)", nullable=True)
     
     # Dates for metrics
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

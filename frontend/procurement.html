@@ -88,10 +88,28 @@
                 </div>
                 <form id="createPOForm">
                     <div class="modal-body p-4">
+                        <!-- Internal Governance Header -->
+                        <div class="p-2 px-3 rounded-3 mb-3" style="background-color: #faeee4; border: 1px solid #ebdcd0;">
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold text-muted mb-1">Requisition PR Ref</label>
+                                    <input type="text" class="form-control form-control-sm" id="poRequisitionId" value="PR-2026-8841" required placeholder="e.g. PR-2026-8841">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold text-muted mb-1">Internal Requester</label>
+                                    <input type="text" class="form-control form-control-sm" id="poRequesterName" value="David Miller" required placeholder="Employee name">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold text-muted mb-1">Cost Center Code</label>
+                                    <input type="text" class="form-control form-control-sm" id="poCostCenter" value="CC-4010 (Supply Chain Ops)" required placeholder="e.g. CC-4010">
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="row g-3 mb-3">
                             <div class="col-md-7">
                                 <label class="form-label small fw-semibold">Order Title / Material Scope</label>
-                                <input type="text" class="form-control" id="poTitle" required placeholder="e.g. Microelectronic Components - Priority Batch">
+                                <input type="text" class="form-control" id="poTitle" required placeholder="e.g. Precision Industrial Actuators & Relay Assemblies">
                             </div>
                             <div class="col-md-5">
                                 <label class="form-label small fw-semibold">Assign Certified Supplier</label>
@@ -120,7 +138,7 @@
                                 <select class="form-select" id="poShippingMode" required>
                                     <option value="Standard Class" selected>Standard Class (3-5 Days)</option>
                                     <option value="First Class">First Class (1-2 Days Express)</option>
-                                    <option value="Second Class">Second Class (Ground)</option>
+                                    <option value="Second Class">Second Class (Ground Freight)</option>
                                     <option value="Same Day">Same Day Dedicated Transit</option>
                                 </select>
                             </div>
@@ -134,46 +152,108 @@
                             </div>
                         </div>
 
+                        <!-- Commercial & Trade Terms -->
                         <div class="row g-3 mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Commercial Incoterms</label>
+                                <select class="form-select" id="poIncoterms" required>
+                                    <option value="DDP - Delivered Duty Paid" selected>DDP - Delivered Duty Paid (Recommended)</option>
+                                    <option value="FOB - Free On Board">FOB - Free On Board</option>
+                                    <option value="CIF - Cost, Insurance & Freight">CIF - Cost, Insurance & Freight</option>
+                                    <option value="EXW - Ex Works">EXW - Ex Works</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Payment Terms</label>
+                                <select class="form-select" id="poPaymentTerms" required>
+                                    <option value="Net 30" selected>Net 30 Days</option>
+                                    <option value="Net 45">Net 45 Days</option>
+                                    <option value="Net 60">Net 60 Days</option>
+                                    <option value="Due Upon Receipt">Due Upon Receipt</option>
+                                    <option value="2/10 Net 30">2/10 Net 30 (2% Early Discount)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Currency</label>
+                                <select class="form-select" id="poCurrency" required>
+                                    <option value="USD" selected>USD ($) - US Dollar</option>
+                                    <option value="EUR">EUR (€) - Euro</option>
+                                    <option value="GBP">GBP (£) - British Pound</option>
+                                    <option value="INR">INR (₹) - Indian Rupee</option>
+                                    <option value="CAD">CAD ($) - Canadian Dollar</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Destination & Packaging -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-3">
                                 <label class="form-label small fw-semibold">Destination Country</label>
-                                <input type="text" class="form-control" id="poCountry" value="United States" placeholder="e.g. United States, Germany, Japan">
+                                <input type="text" class="form-control" id="poCountry" value="United States" placeholder="e.g. United States">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Destination City / Port</label>
+                                <input type="text" class="form-control" id="poCity" value="Chicago" required placeholder="e.g. Chicago">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Destination City / Facility Port</label>
-                                <input type="text" class="form-control" id="poCity" required placeholder="e.g. Chicago, San Jose, Pittsburgh, Dallas">
+                                <label class="form-label small fw-semibold">Receiving Dock / Facility Address</label>
+                                <input type="text" class="form-control" id="poDeliveryAddress" value="Central Logistics Depot, Gate 4B, 100 Logistics Blvd" placeholder="Dock address">
                             </div>
                         </div>
 
                         <div class="row g-3 mb-3">
-                            <div class="col-md-4">
-                                <label class="form-label small fw-semibold">Units / Quantity</label>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Packaging & Handling Specification</label>
+                                <select class="form-select" id="poPackagingType">
+                                    <option value="Palletized (ISPM-15 Wood)" selected>Palletized (ISPM-15 Wood Certified)</option>
+                                    <option value="Insulated Thermal Container">Insulated Thermal Container (Cold Chain)</option>
+                                    <option value="Reinforced Master Carton">Reinforced Master Carton</option>
+                                    <option value="Heavy Duty Crated">Heavy Duty Steel Crated</option>
+                                    <option value="Hazmat Compliant Drum">Hazmat Sealed Drum</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Product Category</label>
+                                <input type="text" class="form-control" id="poCategory" value="Industrial Electronics" placeholder="e.g. Industrial Electronics">
+                            </div>
+                        </div>
+
+                        <!-- Financial Line-Item Calculation -->
+                        <div class="row g-3 mb-3 p-3 rounded-3" style="background-color: #fcf9f6; border: 1px solid #ebdcd0;">
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Units / Qty</label>
                                 <input type="number" min="1" class="form-control" id="poQuantity" value="50" required oninput="calculatePOTotal()">
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label small fw-semibold">Unit Price ($)</label>
                                 <input type="number" step="0.01" min="0.01" class="form-control" id="poUnitPrice" value="250.00" required oninput="calculatePOTotal()">
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label small fw-semibold">Total Requisition Value ($)</label>
-                                <input type="number" step="0.01" class="form-control fw-bold text-primary" id="poAmount" value="12500.00" required readonly style="background-color: #f5ede4;">
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Freight Cost ($)</label>
+                                <input type="number" step="0.01" min="0" class="form-control" id="poShippingCost" value="150.00" oninput="calculatePOTotal()">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Sales / VAT Tax ($)</label>
+                                <input type="number" step="0.01" min="0" class="form-control" id="poTaxAmount" value="250.00" oninput="calculatePOTotal()">
+                            </div>
+                            <div class="col-12 mt-2">
+                                <div class="d-flex justify-content-between align-items-center p-2 rounded-2" style="background-color: #faeee4; border: 1px solid #ebdcd0;">
+                                    <span class="small fw-semibold text-muted">Total Calculated Commitment (Qty × Price + Freight + Tax):</span>
+                                    <span class="fs-5 fw-bold text-primary" id="poDisplayTotal">$12,900.00</span>
+                                    <input type="hidden" id="poAmount" value="12900.00">
+                                </div>
                             </div>
                         </div>
 
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Product Category</label>
-                                <input type="text" class="form-control" id="poCategory" placeholder="e.g. Industrial Electronics, Heavy Metallurgy">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Expected Delivery Date</label>
+                                <label class="form-label small fw-semibold">Expected Delivery Milestone Date</label>
                                 <input type="date" class="form-control" id="poDeliveryDate" required>
                             </div>
-                        </div>
-
-                        <div class="mb-2">
-                            <label class="form-label small fw-semibold">Special Receiving Instructions / Handling Notes</label>
-                            <textarea class="form-control" id="poNotes" rows="2" placeholder="e.g. Palletized manifest match required. Direct dock gate 4 delivery."></textarea>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Dock Gate & Manifest Instructions</label>
+                                <textarea class="form-control" id="poNotes" rows="2" placeholder="e.g. Palletized manifest match required. Direct dock gate 4 delivery."></textarea>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -329,6 +409,25 @@
                     </div>
                 </form>
             </div>
+    <!-- Modal 6: Purchase Order Detailed Spec Sheet / Manifest Modal -->
+    <div class="modal fade" id="poDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content" style="border: 1px solid #ebdcd0;">
+                <div class="modal-header" style="background-color: #faeee4; border-bottom: 1px solid #ebdcd0;">
+                    <div>
+                        <h5 class="modal-title fw-bold text-dark mb-0"><i class="bi bi-file-earmark-text text-primary me-2"></i>Enterprise Purchase Order Manifest</h5>
+                        <small class="text-muted" id="modalPODateHeader">Procurement Requisition Record</small>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4" id="poDetailModalBody">
+                    <!-- Loaded dynamically via showPODetailModal() -->
+                </div>
+                <div class="modal-footer" style="background-color: #faf6f2; border-top: 1px solid #ebdcd0;">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-outline-primary" onclick="window.print()"><i class="bi bi-printer me-1"></i>Print Manifest</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -383,10 +482,13 @@
             }
         });
 
+        let allOrdersCache = [];
+
         async function loadOrders() {
             try {
                 const orders = await API.getOrders(currentStatus);
-                renderOrdersTable(orders || []);
+                allOrdersCache = orders || [];
+                renderOrdersTable(allOrdersCache);
             } catch (err) {
                 console.error("Error loading orders:", err);
             }
@@ -402,8 +504,12 @@
             tbody.innerHTML = orders.map(o => `
                 <tr>
                     <td>
-                        <strong class="text-primary">${o.order_number}</strong>
+                        <div class="d-flex align-items-center gap-1">
+                            <a href="javascript:void(0)" onclick="showPODetailModal(${o.id})" class="fw-bold text-primary text-decoration-none" title="View PO Manifest">${o.order_number}</a>
+                            <button class="btn btn-sm btn-link p-0 text-muted" onclick="showPODetailModal(${o.id})" title="View PO Manifest"><i class="bi bi-file-earmark-ruled"></i></button>
+                        </div>
                         <div class="mt-1">${getWorkflowStageBadge(o.status)}</div>
+                        ${o.incoterms ? `<div style="font-size: 0.68rem; color: #7c4a2d;"><i class="bi bi-globe me-1"></i>${o.incoterms.split(' - ')[0]} • ${o.payment_terms || 'Net 30'}</div>` : ''}
                     </td>
                     <td class="fw-semibold text-dark">
                         <div>${o.title}</div>
@@ -716,11 +822,14 @@
         function calculatePOTotal() {
             const qty = parseFloat(document.getElementById('poQuantity')?.value) || 0;
             const unitPrice = parseFloat(document.getElementById('poUnitPrice')?.value) || 0;
-            const total = qty * unitPrice;
+            const freight = parseFloat(document.getElementById('poShippingCost')?.value) || 0;
+            const tax = parseFloat(document.getElementById('poTaxAmount')?.value) || 0;
+            const total = (qty * unitPrice) + freight + tax;
+
             const amountInput = document.getElementById('poAmount');
-            if (amountInput) {
-                amountInput.value = total.toFixed(2);
-            }
+            const displaySpan = document.getElementById('poDisplayTotal');
+            if (amountInput) amountInput.value = total.toFixed(2);
+            if (displaySpan) displaySpan.textContent = '$' + total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
         }
 
         document.getElementById('createPOForm').addEventListener('submit', async (e) => {
@@ -739,10 +848,20 @@
                 priority: document.getElementById('poPriority')?.value || 'Standard',
                 destination_country: document.getElementById('poCountry')?.value || 'United States',
                 destination_city: document.getElementById('poCity')?.value || '',
+                delivery_address: document.getElementById('poDeliveryAddress')?.value || '',
+                packaging_type: document.getElementById('poPackagingType')?.value || 'Palletized (ISPM-15 Wood)',
                 items_count: parseInt(document.getElementById('poQuantity')?.value) || 1,
                 unit_price: parseFloat(document.getElementById('poUnitPrice')?.value) || 0,
+                shipping_cost: parseFloat(document.getElementById('poShippingCost')?.value) || 0.0,
+                tax_amount: parseFloat(document.getElementById('poTaxAmount')?.value) || 0.0,
+                currency: document.getElementById('poCurrency')?.value || 'USD',
+                payment_terms: document.getElementById('poPaymentTerms')?.value || 'Net 30',
+                incoterms: document.getElementById('poIncoterms')?.value || 'DDP - Delivered Duty Paid',
                 product_category: document.getElementById('poCategory')?.value || '',
-                notes: document.getElementById('poNotes')?.value || ''
+                notes: document.getElementById('poNotes')?.value || '',
+                requisition_id: document.getElementById('poRequisitionId')?.value || '',
+                requester_name: document.getElementById('poRequesterName')?.value || 'David Miller',
+                cost_center: document.getElementById('poCostCenter')?.value || 'CC-4010 (Supply Chain Ops)'
             };
 
             try {
@@ -757,6 +876,99 @@
                 btn.textContent = 'Issue Purchase Order';
             }
         });
+
+        function showPODetailModal(orderId) {
+            const o = allOrdersCache.find(x => x.id === orderId);
+            if (!o) return;
+
+            document.getElementById('modalPODateHeader').textContent = `${o.order_number} • Issued: ${o.created_at ? o.created_at.split('T')[0] : '2026-09-10'}`;
+            const body = document.getElementById('poDetailModalBody');
+
+            body.innerHTML = `
+                <div class="card p-3 mb-3 border-0" style="background-color: #faeee4; border: 1px solid #ebdcd0 !important;">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="badge mb-2" style="background-color: #ffedd5; color: #7c2d12; border: 1px solid #fed7aa; font-size: 0.72rem;">${o.order_number}</span>
+                            <h5 class="fw-bold text-dark mb-1">${o.title}</h5>
+                            <div class="small text-muted"><i class="bi bi-person-badge me-1"></i>Requester: <strong>${o.requester_name || 'David Miller'}</strong> • Ref: <strong>${o.requisition_id || 'PR-2026-8841'}</strong> • Cost Center: <strong>${o.cost_center || 'CC-4010'}</strong></div>
+                        </div>
+                        <div class="text-end">
+                            <div class="status-chip ${getStatusClass(o.status)} mb-1">${o.status}</div>
+                            <div class="fw-bold fs-5 text-primary">$${Number(o.total_amount).toLocaleString(undefined, {minimumFractionDigits: 2})} ${o.currency || 'USD'}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3 h-100" style="background: #fff; border: 1px solid #ebdcd0;">
+                            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-building me-1 text-primary"></i> Supplier & Department</h6>
+                            <div class="small mb-1"><span class="text-muted">Supplier:</span> <strong>${o.vendor_name || 'Assigned Supplier'}</strong></div>
+                            <div class="small mb-1"><span class="text-muted">Requisition Dept:</span> <strong>${o.department || 'Supply Chain & Logistics'}</strong></div>
+                            <div class="small mb-1"><span class="text-muted">Category:</span> <strong>${o.product_category || 'Industrial Logistics'}</strong></div>
+                            <div class="small"><span class="text-muted">Priority:</span> <span class="badge ${o.priority === 'Urgent' ? 'bg-danger' : 'bg-secondary'}">${o.priority || 'Standard'}</span></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3 h-100" style="background: #fff; border: 1px solid #ebdcd0;">
+                            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-file-earmark-check me-1 text-primary"></i> Commercial & Trade Terms</h6>
+                            <div class="small mb-1"><span class="text-muted">Incoterms:</span> <strong>${o.incoterms || 'DDP - Delivered Duty Paid'}</strong></div>
+                            <div class="small mb-1"><span class="text-muted">Payment Terms:</span> <strong>${o.payment_terms || 'Net 30'}</strong></div>
+                            <div class="small mb-1"><span class="text-muted">Currency:</span> <strong>${o.currency || 'USD'}</strong></div>
+                            <div class="small"><span class="text-muted">Shipping Mode:</span> <strong>${o.shipping_mode || 'Standard Class'}</strong></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3 h-100" style="background: #fff; border: 1px solid #ebdcd0;">
+                            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-geo-alt me-1 text-primary"></i> Delivery Logistics</h6>
+                            <div class="small mb-1"><span class="text-muted">Destination:</span> <strong>${o.destination_city || 'Chicago'}, ${o.destination_country || 'United States'}</strong></div>
+                            <div class="small mb-1"><span class="text-muted">Facility Address:</span> <strong>${o.delivery_address || 'Central Logistics Hub, Dock Bay 4'}</strong></div>
+                            <div class="small mb-1"><span class="text-muted">Packaging Spec:</span> <strong>${o.packaging_type || 'Palletized (ISPM-15 Wood)'}</strong></div>
+                            <div class="small"><span class="text-muted">Expected Delivery:</span> <strong>${o.expected_delivery_date}</strong></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3 h-100" style="background: #fff; border: 1px solid #ebdcd0;">
+                            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-calculator me-1 text-primary"></i> Commercial Line Items</h6>
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="text-muted">${o.items_count || 1} units @ $${Number(o.unit_price || o.total_amount).toLocaleString()}</span>
+                                <strong>$${(Number(o.items_count || 1) * Number(o.unit_price || o.total_amount)).toLocaleString(undefined, {minimumFractionDigits: 2})}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="text-muted">Freight & Transit Charges:</span>
+                                <strong>$${Number(o.shipping_cost || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="text-muted">Sales / VAT Tax:</span>
+                                <strong>$${Number(o.tax_amount || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</strong>
+                            </div>
+                            <hr class="my-1" style="border-color: #ebdcd0;">
+                            <div class="d-flex justify-content-between small fw-bold">
+                                <span>Grand Total Requisition Value:</span>
+                                <span class="text-primary">$${Number(o.total_amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                ${o.tracking_number || o.quality_rating || o.invoice_number ? `
+                <div class="p-3 rounded-3 mt-3" style="background: #faeee4; border: 1px solid #ebdcd0;">
+                    <h6 class="fw-bold text-dark mb-2"><i class="bi bi-clock-history me-1 text-primary"></i> Lifecycle Telemetry</h6>
+                    <div class="row g-2 small">
+                        ${o.tracking_number ? `<div class="col-md-4"><span class="text-muted">Carrier Tracking:</span> <strong>${o.carrier_name || 'Carrier'}: ${o.tracking_number}</strong></div>` : ''}
+                        ${o.quality_rating ? `<div class="col-md-4"><span class="text-muted">Dock QA Score:</span> <strong style="color: #ea580c;">${o.quality_rating} / 5.0</strong></div>` : ''}
+                        ${o.invoice_number ? `<div class="col-md-4"><span class="text-muted">Invoice Settlement:</span> <strong>${o.invoice_number} (${o.invoice_status})</strong></div>` : ''}
+                    </div>
+                    ${o.notes ? `<div class="small mt-2 text-muted"><i class="bi bi-chat-left-text me-1"></i>Notes: ${o.notes}</div>` : ''}
+                </div>
+                ` : ''}
+            `;
+
+            new bootstrap.Modal(document.getElementById('poDetailModal')).show();
+        }
     </script>
 </body>
 </html>

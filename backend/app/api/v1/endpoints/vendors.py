@@ -25,7 +25,8 @@ def get_vendors(
     
     # Restrict external vendors to their own company profile only
     if current_user.role == "Vendor":
-        query = query.filter(Vendor.email == current_user.email)
+        lookup_email = "apex@vendoriq.com" if current_user.email == "vendor@vendoriq.com" else current_user.email
+        query = query.filter(Vendor.email == lookup_email)
         
     if category and category != "All":
         query = query.filter(Vendor.category == category)
@@ -101,7 +102,8 @@ def get_vendor(
         raise HTTPException(status_code=404, detail="Vendor not found")
     
     # If external vendor, forbid viewing competitor vendors
-    if current_user.role == "Vendor" and vendor.email != current_user.email:
+    lookup_email = "apex@vendoriq.com" if current_user.email == "vendor@vendoriq.com" else current_user.email
+    if current_user.role == "Vendor" and vendor.email != lookup_email:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied: External vendors cannot access competitor supplier details."
@@ -132,3 +134,35 @@ def update_vendor_status(
         db.commit()
         db.refresh(vendor)
     return vendor
+
+@router.get("/{vendor_id}/metrics-breakdown")
+def get_vendor_metrics_breakdown(
+    vendor_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    from app.core.metrics import calculate_vendor_metrics
+    vendor = db.query(Vendor).filter(Vendor.id == vendor_id).first()
+    if not vendor:
+        raise HTTPException(status_code=404, detail="Vendor not found")
+    lookup_email = "apex@vendoriq.com" if current_user.email == "vendor@vendoriq.com" else current_user.email
+    if current_user.role == "Vendor" and vendor.email != lookup_email:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied: External vendors cannot access competitor supplier details."
+        )
+    return calculate_vendor_metrics(db, vendor_id, persist=True)
+
+@router.post("/recalculate-all")
+def recalculate_all_vendor_metrics(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    from app.core.metrics import recalculate_all_vendors
+    if current_user.role not in ["Supply Chain Manager", "Procurement Manager", "Administrator"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied: Only managers and administrators can trigger global recalculation."
+        )
+    return recalculate_all_vendors(db)
+

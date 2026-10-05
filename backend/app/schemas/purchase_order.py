@@ -13,11 +13,21 @@ class PurchaseOrderBase(BaseModel):
     shipping_mode: Optional[str] = "Standard Class"
     destination_country: Optional[str] = "United States"
     destination_city: Optional[str] = None
+    delivery_address: Optional[str] = None
+    packaging_type: Optional[str] = "Palletized (ISPM-15 Wood)"
     items_count: Optional[int] = 1
     unit_price: Optional[float] = None
+    shipping_cost: Optional[float] = 0.0
+    tax_amount: Optional[float] = 0.0
+    currency: Optional[str] = "USD"
+    payment_terms: Optional[str] = "Net 30"
+    incoterms: Optional[str] = "DDP - Delivered Duty Paid"
     product_category: Optional[str] = None
     priority: Optional[str] = "Standard"
     notes: Optional[str] = None
+    requisition_id: Optional[str] = None
+    requester_name: Optional[str] = "David Miller"
+    cost_center: Optional[str] = "CC-4010 (Supply Chain Ops)"
 
 class PurchaseOrderCreate(BaseModel):
     vendor_id: int
@@ -29,11 +39,21 @@ class PurchaseOrderCreate(BaseModel):
     shipping_mode: Optional[str] = "Standard Class"
     destination_country: Optional[str] = "United States"
     destination_city: Optional[str] = None
+    delivery_address: Optional[str] = None
+    packaging_type: Optional[str] = "Palletized (ISPM-15 Wood)"
     items_count: Optional[int] = 1
     unit_price: Optional[float] = None
+    shipping_cost: Optional[float] = 0.0
+    tax_amount: Optional[float] = 0.0
+    currency: Optional[str] = "USD"
+    payment_terms: Optional[str] = "Net 30"
+    incoterms: Optional[str] = "DDP - Delivered Duty Paid"
     product_category: Optional[str] = None
     priority: Optional[str] = "Standard"
     notes: Optional[str] = None
+    requisition_id: Optional[str] = None
+    requester_name: Optional[str] = "David Miller"
+    cost_center: Optional[str] = "CC-4010 (Supply Chain Ops)"
 
 class PurchaseOrderStatusUpdate(BaseModel):
     status: str
