@@ -11,11 +11,13 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 Days
 
     # Database Settings
-    # PostgreSQL by default, falling back to local SQLite file with absolute path
-    DATABASE_URL: str = os.getenv(
-        "DATABASE_URL", 
-        f"sqlite:///{os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'vendoriq.db')}"
+    # On Vercel serverless environment, use /tmp/vendoriq.db since the app root is read-only
+    _default_sqlite = (
+        "sqlite:////tmp/vendoriq.db" 
+        if os.getenv("VERCEL") 
+        else f"sqlite:///{os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'vendoriq.db')}"
     )
+    DATABASE_URL: str = os.getenv("DATABASE_URL", _default_sqlite)
 
     class Config:
         case_sensitive = True
