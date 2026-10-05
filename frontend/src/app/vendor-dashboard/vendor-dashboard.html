@@ -1,0 +1,133 @@
+<div class="dashboard-container vendor-theme">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <span class="icon">🏢</span> Vendor Portal
+    </div>
+    <nav class="nav-links">
+      <a routerLink="/dashboard/vendor" class="active">🏠 Performance & Reliability</a>
+      <a routerLink="/dashboard/procurement">🛒 Procurement View</a>
+      <a routerLink="/dashboard/admin">⚙️ Admin Console</a>
+    </nav>
+    <div class="sidebar-footer">
+      <a routerLink="/login" class="btn-signout">Sign Out</a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="top-action-bar">
+      <h2>Vendor Intelligence & Reliability Engine</h2>
+      <button class="btn btn-emerald" (click)="exportReliabilityReport()">📥 Export Reliability Audit CSV</button>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-row">
+      <div class="kpi-card" *ngFor="let kpi of kpis">
+        <span class="kpi-icon">{{ kpi.icon }}</span>
+        <div class="kpi-info">
+          <span class="kpi-title">{{ kpi.title }}</span>
+          <span class="kpi-value">{{ kpi.value }}</span>
+          <span class="kpi-trend">{{ kpi.trend }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Grid -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>Vendor Metric Comparisons</h3>
+        <canvas #performanceBarChart></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Reliability Index Trend</h3>
+        <canvas #reliabilityTrendChart></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Contract Validity Status</h3>
+        <canvas #contractStatusChart></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Order Fulfillment History</h3>
+        <canvas #orderHistoryChart></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Communication Activity</h3>
+        <canvas #communicationChart></canvas>
+      </div>
+    </div>
+
+    <!-- 6-Factor Reliability Matrix Table -->
+    <div class="data-table-card">
+      <div class="table-header">
+        <h3>Live Calculated 6-Factor Reliability Matrix</h3>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Vendor Name</th>
+            <th>Category</th>
+            <th>Delivery (25%)</th>
+            <th>Quality (25%)</th>
+            <th>Compliance (15%)</th>
+            <th>Calculated Score</th>
+            <th>Risk Level</th>
+            <th>Recommendation</th>
+            <th>Score Audit</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let v of vendorsReliability">
+            <td><strong>{{ v.vendorName }}</strong></td>
+            <td><span class="badge category">{{ v.category }}</span></td>
+            <td>{{ v.deliveryScore }}%</td>
+            <td>{{ v.qualityScore }}%</td>
+            <td>{{ v.complianceScore }}%</td>
+            <td><span class="score-badge">{{ calculateCompositeScore(v) }}</span></td>
+            <td><span class="badge risk" [ngClass]="v.riskLevel.toLowerCase()">{{ v.riskLevel }} Risk</span></td>
+            <td><small>{{ v.recommendation }}</small></td>
+            <td>
+              <button class="btn-sm btn-inspect" (click)="openScoreBreakdown(v)">🔍 Inspect 6 Factors</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- Score Breakdown Modal -->
+  <div class="modal-backdrop" *ngIf="showBreakdownModal && selectedVendorForScore">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Reliability Score Breakdown: {{ selectedVendorForScore.vendorName }}</h3>
+        <button class="close-btn" (click)="showBreakdownModal = false">✕</button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Category:</strong> {{ selectedVendorForScore.category }}</p>
+        <p><strong>Composite Reliability Score:</strong> <span class="score-badge">{{ calculateCompositeScore(selectedVendorForScore) }} / 100</span></p>
+
+        <table class="factor-table">
+          <thead>
+            <tr>
+              <th>Reliability Factor</th>
+              <th>Weight</th>
+              <th>Sub-Score</th>
+              <th>Weighted Points</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Delivery History</td><td>25%</td><td>{{ selectedVendorForScore.deliveryScore }}</td><td>{{ selectedVendorForScore.deliveryScore * 0.25 }}</td></tr>
+            <tr><td>Product Quality</td><td>25%</td><td>{{ selectedVendorForScore.qualityScore }}</td><td>{{ selectedVendorForScore.qualityScore * 0.25 }}</td></tr>
+            <tr><td>Communication Efficiency</td><td>10%</td><td>{{ selectedVendorForScore.communicationScore }}</td><td>{{ selectedVendorForScore.communicationScore * 0.10 }}</td></tr>
+            <tr><td>Contract Compliance</td><td>15%</td><td>{{ selectedVendorForScore.complianceScore }}</td><td>{{ selectedVendorForScore.complianceScore * 0.15 }}</td></tr>
+            <tr><td>Purchase History</td><td>10%</td><td>{{ selectedVendorForScore.purchaseScore }}</td><td>{{ selectedVendorForScore.purchaseScore * 0.10 }}</td></tr>
+            <tr><td>Issue Resolution</td><td>15%</td><td>{{ selectedVendorForScore.issueScore }}</td><td>{{ selectedVendorForScore.issueScore * 0.15 }}</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="showBreakdownModal = false">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

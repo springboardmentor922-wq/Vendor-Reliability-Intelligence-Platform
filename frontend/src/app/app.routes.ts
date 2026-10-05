@@ -1,9 +1,16 @@
 import { Routes } from '@angular/router';
-import { Login } from './login/login';
-import { Register } from './register/register';
+import { LandingComponent } from './landing/landing';
+import { LoginComponent } from './login/login';
+import { ProcurementDashboardComponent } from './procurement-dashboard/procurement-dashboard';
+import { VendorDashboardComponent } from './vendor-dashboard/vendor-dashboard';
+import 
+{ AdminDashboardComponent } from './admin-dashboard/admin-dashboard';
 
 export const routes: Routes = [
-  { path: 'login', component: Login },
-  { path: 'register', component: Register },
-  { path: '', redirectTo: '/login', pathMatch: 'full' }
+  { path: '', component: LandingComponent },
+  { path: 'login', component: LoginComponent },
+  { path: 'dashboard/procurement', component: ProcurementDashboardComponent },
+  { path: 'dashboard/vendor', component: VendorDashboardComponent },
+  { path: 'dashboard/admin', component: AdminDashboardComponent },
+  { path: '**', redirectTo: '' }
 ];

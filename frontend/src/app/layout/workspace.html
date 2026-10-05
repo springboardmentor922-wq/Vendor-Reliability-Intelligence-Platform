@@ -1,0 +1,282 @@
+<div class="workspace-container" [class.collapsed]="isSidebarCollapsed">
+  
+  <aside class="app-sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <span class="shield-icon">🛡️️</span>
+        <span class="brand-text" *ngIf="!isSidebarCollapsed">VendorIQ <small>v2.4</small></span>
+      </div>
+      <button class="collapse-btn" (click)="toggleSidebar()" title="Toggle Sidebar">
+        {{ isSidebarCollapsed ? '➔' : '◀' }}
+      </button>
+    </div>
+
+    <div class="role-selector" *ngIf="!isSidebarCollapsed">
+      <label>Active User Context</label>
+      <select [(ngModel)]="selectedRole">
+        <option value="Procurement Manager">Procurement Manager</option>
+        <option value="Admin">System Administrator</option>
+        <option value="Vendor">Vendor Portal View</option>
+        <option value="Auditor">Compliance Auditor</option>
+      </select>
+    </div>
+
+    <nav class="sidebar-nav">
+      
+      <div class="nav-section-title" *ngIf="!isSidebarCollapsed">Procurement Engine</div>
+      <a [class.active]="currentView === 'procurement_overview'" (click)="switchView('procurement_overview')">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed">1. Procurement Overview</span>
+      </a>
+      <a [class.active]="currentView === 'purchase_requests'" (click)="switchView('purchase_requests')">
+        <span class="nav-icon">📝</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed">2. Purchase Requests</span>
+        <span class="badge" *ngIf="!isSidebarCollapsed">3</span>
+      </a>
+      <a [class.active]="currentView === 'purchase_orders'" (click)="switchView('purchase_orders')">
+        <span class="nav-icon">📦</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed">3. Purchase Orders</span>
+      </a>
+      <a [class.active]="currentView === 'procurement_spend'" (click)="switchView('procurement_spend')">
+        <span class="nav-icon">💰</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed">4. Spend Analysis</span>
+      </a>
+      <a [class.active]="currentView === 'procurement_analytics'" (click)="switchView('procurement_analytics')">
+        <span class="nav-icon">📈</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed">5. Cycle Analytics</span>
+      </a>
+
+      <div class="nav-section-title" *ngIf="!isSidebarCollapsed">Vendor Intelligence & Risk</div>
+      <a [class.active]="currentView === 'vendor_management'" (click)="switchView('vendor_management')">
+        <span class="nav-icon">🏢</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed">6. Vendor Roster</span>
+      </a>
+      <a [class.active]="currentView === 'vendor_details'" (click)="switchView('vendor_details')">
+        <span class="nav-icon">🔍</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed">7. Vendor Inspector</span>
+      </a>
+      <a [class.active]="currentView === 'vendor_approval'" (click)="switchView('vendor_approval')">
+        <span class="nav-icon">📥</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed">8. Approval Queue</span>
+        <span class="badge warning" *ngIf="!isSidebarCollapsed">1</span>
+      </a>
+      <a [class.active]="currentView === 'vendor_performance'" (click)="switchView('vendor_performance')">
+        <span class="nav-icon">⚡</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed">9. Performance Center</span>
+      </a>
+      <a [class.active]="currentView === 'vendor_risk'" (click)="switchView('vendor_risk')">
+        <span class="nav-icon">🎯</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed">10. 6-Factor Risk Matrix</span>
+      </a>
+
+      <div class="nav-section-title" *ngIf="!isSidebarCollapsed">System Governance</div>
+      <a [class.active]="currentView === 'admin_dashboard'" (click)="switchView('admin_dashboard')">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed">11. Admin & Audit Logs</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer" *ngIf="!isSidebarCollapsed">
+      <div class="user-info">
+        <span class="user-avatar">👤</span>
+        <div class="user-details">
+          <span class="user-name">Ashmit B.</span>
+          <span class="user-role">{{ selectedRole }}</span>
+        </div>
+      </div>
+      <button class="btn-logout" (click)="logout()" title="Sign Out">🚪</button>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    
+    <header class="top-header">
+      <div class="header-title">
+        <h1>Predictive Vendor Intelligence & Risk Engine</h1>
+        <p>Enterprise Procurement Management Portal • Active Role: <strong>{{ selectedRole }}</strong></p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-outline" (click)="exportCSV(currentView)">📥 Export View CSV</button>
+        <button class="btn btn-primary" (click)="switchView('purchase_requests')">+ New Requisition</button>
+      </div>
+    </header>
+
+    <section *ngIf="currentView === 'procurement_overview'" class="view-panel">
+      <h2>1. Procurement Management Hub</h2>
+      <div class="kpi-grid">
+        <div class="kpi-card"><span>Total Purchase Orders</span><h3>124</h3><small>↑ 12% vs last month</small></div>
+        <div class="kpi-card"><span>Total Spend Value</span><h3>$8.6M</h3><small>↑ 5% budget variance</small></div>
+        <div class="kpi-card"><span>Active Verified Vendors</span><h3>42</h3><small>↑ 8% active roster</small></div>
+        <div class="kpi-card"><span>Fulfillment SLA</span><h3>94.2%</h3><small>On-time delivery index</small></div>
+      </div>
+      <div class="content-box">
+        <h3>Active Orders Summary</h3>
+        <p>Showing live transaction state pulled directly from PostgreSQL backend entities.</p>
+      </div>
+    </section>
+
+    <section *ngIf="currentView === 'purchase_requests'" class="view-panel">
+      <h2>2. Purchase Requisitions & Approvals</h2>
+      <table class="data-table">
+        <thead>
+          <tr><th>Req ID</th><th>Department</th><th>Item Description</th><th>Estimated Budget</th><th>Priority</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let pr of purchaseRequests">
+            <td><strong>{{ pr.id }}</strong></td>
+            <td>{{ pr.department }}</td>
+            <td>{{ pr.item }}</td>
+            <td>{{ pr.budget }}</td>
+            <td><span class="badge" [class.danger]="pr.priority === 'Urgent'">{{ pr.priority }}</span></td>
+            <td><span class="badge warning">{{ pr.status }}</span></td>
+            <td><button class="btn btn-sm btn-primary">Convert to PO</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section *ngIf="currentView === 'purchase_orders'" class="view-panel">
+      <h2>3. Purchase Order (PO) Lifecycle Manager</h2>
+      <table class="data-table">
+        <thead>
+          <tr><th>PO Number</th><th>Assigned Vendor</th><th>Category</th><th>Amount</th><th>Expected Delivery</th><th>Status</th><th>Reliability</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let po of purchaseOrders">
+            <td><strong>{{ po.id }}</strong></td>
+            <td>{{ po.vendor }}</td>
+            <td>{{ po.category }}</td>
+            <td>{{ po.amount }}</td>
+            <td>{{ po.expected }}</td>
+            <td><span class="badge success">{{ po.status }}</span></td>
+            <td><span class="score-chip">{{ po.reliability }}</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section *ngIf="currentView === 'procurement_spend'" class="view-panel">
+      <h2>4. Procurement Spend Analytics</h2>
+      <div class="kpi-grid">
+        <div class="kpi-card"><span>Raw Materials Spend</span><h3>$3.8M</h3><small>44% of total budget</small></div>
+        <div class="kpi-card"><span>IT & Software Spend</span><h3>$2.1M</h3><small>24% of total budget</small></div>
+        <div class="kpi-card"><span>Logistics Spend</span><h3>$1.4M</h3><small>16% of total budget</small></div>
+        <div class="kpi-card"><span>Services & Equipment</span><h3>$1.3M</h3><small>16% of total budget</small></div>
+      </div>
+    </section>
+
+    <section *ngIf="currentView === 'procurement_analytics'" class="view-panel">
+      <h2>5. Procurement Cycle Time & SLA Metrics</h2>
+      <div class="content-box">
+        <h3>Cycle Efficiency Ratings</h3>
+        <ul>
+          <li>Average PO Approval Cycle: <strong>1.4 Days</strong></li>
+          <li>Vendor Acceptance Time: <strong>4.2 Hours</strong></li>
+          <li>Invoice Matching Velocity: <strong>98.1% First-Time Match Rate</strong></li>
+        </ul>
+      </div>
+    </section>
+
+    <section *ngIf="currentView === 'vendor_management'" class="view-panel">
+      <h2>6. Master Vendor Roster</h2>
+      <table class="data-table">
+        <thead>
+          <tr><th>Vendor ID</th><th>Business Name</th><th>Category</th><th>Status</th><th>Reliability Score</th><th>Risk Rating</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let v of vendors">
+            <td><strong>{{ v.id }}</strong></td>
+            <td>{{ v.name }}</td>
+            <td>{{ v.category }}</td>
+            <td><span class="badge" [class.success]="v.status === 'Active'" [class.warning]="v.status === 'Pending Approval'" [class.danger]="v.status === 'Suspended'">{{ v.status }}</span></td>
+            <td><strong class="score-text">{{ v.score }}%</strong></td>
+            <td><span class="badge" [class.success]="v.risk === 'Low Risk'" [class.warning]="v.risk === 'Medium Risk'" [class.danger]="v.risk === 'High Risk' || v.risk === 'Critical Risk'">{{ v.risk }}</span></td>
+            <td><button class="btn btn-sm btn-outline" (click)="openVendorDetails(v)">Inspect 🔍</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section *ngIf="currentView === 'vendor_details'" class="view-panel">
+      <h2>7. Vendor Profile & Document Vault Inspector</h2>
+      <p>Select a vendor from the Roster view or click the quick inspection button below to review profiles.</p>
+      <div class="content-box" *ngIf="selectedVendorDetail">
+        <h3>Selected: {{ selectedVendorDetail.name }} ({{ selectedVendorDetail.id }})</h3>
+        <p>Category: {{ selectedVendorDetail.category }} | Contract Expiry: {{ selectedVendorDetail.expiry }}</p>
+        <p>Delivery Score: {{ selectedVendorDetail.delivery }} | Quality Score: {{ selectedVendorDetail.quality }} | Compliance Score: {{ selectedVendorDetail.compliance }}</p>
+      </div>
+    </section>
+
+    <section *ngIf="currentView === 'vendor_approval'" class="view-panel">
+      <h2>8. Vendor Registration Approval Workflow</h2>
+      <table class="data-table">
+        <thead>
+          <tr><th>Vendor ID</th><th>Business Name</th><th>Category</th><th>Current Status</th><th>Score Evaluation</th><th>Decision Action</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let v of vendors">
+            <td><strong>{{ v.id }}</strong></td>
+            <td>{{ v.name }}</td>
+            <td>{{ v.category }}</td>
+            <td><span class="badge warning">{{ v.status }}</span></td>
+            <td>{{ v.score }}%</td>
+            <td>
+              <button class="btn btn-sm btn-success" (click)="approveVendor(v.id)">Approve</button>
+              <button class="btn btn-sm btn-danger" (click)="rejectVendor(v.id)">Reject</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section *ngIf="currentView === 'vendor_performance'" class="view-panel">
+      <h2>9. Vendor Performance & Quality Dashboard</h2>
+      <div class="kpi-grid">
+        <div class="kpi-card"><span>Average Delivery SLA</span><h3>88%</h3></div>
+        <div class="kpi-card"><span>Average Quality Rating</span><h3>85.5%</h3></div>
+        <div class="kpi-card"><span>Active Contracts</span><h3>42</h3></div>
+        <div class="kpi-card"><span>Fulfillments (YTD)</span><h3>320 Orders</h3></div>
+      </div>
+    </section>
+
+    <section *ngIf="currentView === 'vendor_risk'" class="view-panel">
+      <h2>10. Dynamic 6-Factor Reliability & Risk Analysis Matrix</h2>
+      <table class="data-table">
+        <thead>
+          <tr><th>Vendor Name</th><th>Category</th><th>Delivery (25%)</th><th>Quality (25%)</th><th>Compliance (15%)</th><th>Calculated Score</th><th>Risk Classification</th><th>Assignment Rule</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let v of vendors">
+            <td><strong>{{ v.name }}</strong></td>
+            <td>{{ v.category }}</td>
+            <td>{{ v.delivery }}</td>
+            <td>{{ v.quality }}</td>
+            <td>{{ v.compliance }}</td>
+            <td><span class="score-chip">{{ v.score }}%</span></td>
+            <td><span class="badge" [class.success]="v.risk === 'Low Risk'" [class.warning]="v.risk === 'Medium Risk'" [class.danger]="v.risk === 'High Risk' || v.risk === 'Critical Risk'">{{ v.risk }}</span></td>
+            <td>{{ v.score >= 80 ? 'Preferred Vendor' : v.score >= 60 ? 'Conditional Assignment' : 'Restricted' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section *ngIf="currentView === 'admin_dashboard'" class="view-panel">
+      <h2>11. System Administration & Immutable Audit Trail</h2>
+      <table class="data-table">
+        <thead>
+          <tr><th>Log ID</th><th>User Context</th><th>Action Executed</th><th>System Module</th><th>Timestamp</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let log of auditLogs">
+            <td><strong>{{ log.id }}</strong></td>
+            <td>{{ log.user }}</td>
+            <td>{{ log.action }}</td>
+            <td><span class="badge">{{ log.module }}</span></td>
+            <td>{{ log.timestamp }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+  </main>
+</div>

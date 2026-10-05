@@ -1,47 +1,40 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { AuthService } from '../auth.service';
+import { Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule
-  ],
+  imports: [CommonModule, FormsModule], // Removed RouterLink
   templateUrl: './login.html',
   styleUrl: './login.scss'
 })
-export class Login {
-  loginForm: FormGroup;
+export class LoginComponent {
+  activeTab: 'signin' | 'signup' = 'signin';
 
-  constructor(private fb: FormBuilder, private authService: AuthService) {
-    this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required]]
-    });
+  signInData = {
+    email: 'admin.procurement@infosys.com',
+    password: '•••••••'
+  };
+
+  signUpData = {
+    fullName: 'Alex Rivera',
+    email: 'a.rivera@infosys.com',
+    role: 'Procurement Lead'
+  };
+
+  constructor(private router: Router) {}
+
+  setTab(tab: 'signin' | 'signup'): void {
+    this.activeTab = tab;
   }
 
-  onSubmit() {
-    if (this.loginForm.valid) {
-      const formData = this.loginForm.value;
-      this.authService.login(formData.email, formData.password).subscribe({
-        next: (response: any) => {
-          console.log('Login Success!', response);
-        },
-        error: (err: any) => {
-          console.error('Login Error:', err);
-        }
-      });
-    }
+  onSignIn(): void {
+    this.router.navigate(['/dashboard/procurement']);
+  }
+
+  onSignUp(): void {
+    this.router.navigate(['/dashboard/procurement']);
   }
 }
