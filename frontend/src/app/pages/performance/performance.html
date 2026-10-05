@@ -1,0 +1,135 @@
+
+<!-- Vendor Selection and Selected Vendor Details -->
+
+<div class="selection-layout">
+
+  <!-- LEFT: Vendor List -->
+  <section class="vendor-selector panel">
+
+    <div class="section-heading">
+      <div>
+        <h2>Vendor Performance</h2>
+        <p>Select a vendor to view detailed performance.</p>
+      </div>
+
+      <span class="vendor-count">
+        {{ summaries.length }} Vendors
+      </span>
+    </div>
+
+    <div class="vendor-list">
+      @for (vendor of summaries; track vendor.vendor_id) {
+        <button
+          type="button"
+          class="vendor-option"
+          [class.active]="selectedVendor?.vendor_id === vendor.vendor_id"
+          (click)="selectVendor(vendor)"
+        >
+          <div class="vendor-option-main">
+            <strong>{{ vendor.vendor_name }}</strong>
+            <span>{{ vendor.category }}</span>
+          </div>
+
+          <div
+            class="score-badge"
+            [class]="getScoreClass(vendor.performance_score)"
+          >
+            {{ formatNumber(vendor.performance_score, 0) }}
+          </div>
+        </button>
+      }
+    </div>
+
+  </section>
+
+  <!-- RIGHT: Selected Vendor Details -->
+  <div class="vendor-details">
+
+    @if (selectedVendor) {
+
+      <section class="selected-vendor panel">
+
+        <div class="selected-vendor-info">
+          <span class="eyebrow">SELECTED VENDOR</span>
+
+          <h2>{{ selectedVendor.vendor_name }}</h2>
+
+          <p>
+            {{ selectedVendor.category }}
+            · {{ selectedVendor.vendor_status }}
+          </p>
+        </div>
+
+        <div class="overall-score">
+          <span>Performance Score</span>
+
+          <strong>
+            {{ formatNumber(selectedVendor.performance_score, 0) }}
+          </strong>
+
+          <small
+            [class]="getScoreClass(selectedVendor.performance_score)"
+          >
+            {{ selectedVendor.performance_status }}
+          </small>
+        </div>
+
+      </section>
+
+      <!-- Selected Vendor Metrics -->
+      <section class="metric-grid">
+
+        <div class="metric-card">
+          <span>On-Time Deliveries</span>
+          <strong>{{ selectedVendor.on_time_deliveries }}</strong>
+          <small>{{ selectedVendor.total_orders }} total orders</small>
+        </div>
+
+        <div class="metric-card">
+          <span>Delayed Deliveries</span>
+          <strong>{{ selectedVendor.delayed_deliveries }}</strong>
+          <small>Based on evaluated deliveries</small>
+        </div>
+
+        <div class="metric-card">
+          <span>Quality Rating</span>
+          <strong>
+            {{ formatNumber(selectedVendor.quality_rating) }}
+            <em>/ 5</em>
+          </strong>
+          <small>Product quality</small>
+        </div>
+
+        <div class="metric-card">
+          <span>Response Time</span>
+          <strong>
+            {{ formatNumber(selectedVendor.response_time_hours) }}
+            <em>hrs</em>
+          </strong>
+          <small>Average communication response</small>
+        </div>
+
+        <div class="metric-card">
+          <span>Issue Resolution Time</span>
+          <strong>
+            {{ formatNumber(selectedVendor.issue_resolution_time_hours) }}
+            <em>hrs</em>
+          </strong>
+          <small>Average issue resolution</small>
+        </div>
+
+        <div class="metric-card">
+          <span>Order Completion Rate</span>
+          <strong>
+            {{ formatNumber(selectedVendor.order_completion_rate, 0) }}%
+          </strong>
+          <small>Completed orders</small>
+        </div>
+
+      </section>
+
+    }
+
+  </div>
+
+</div>

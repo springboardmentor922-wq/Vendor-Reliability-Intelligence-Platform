@@ -1,0 +1,573 @@
+<div class="communication-page">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+
+    <div>
+      <div class="breadcrumb">
+        Communication
+      </div>
+
+      <h1>Communication Management</h1>
+
+      <p>
+        Manage vendor messaging, procurement discussions,
+        communication history, notifications, file sharing
+        and activity logs.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="refresh-btn"
+      (click)="loadCommunications()"
+      [disabled]="loading"
+    >
+      <span>↻</span>
+      Refresh
+    </button>
+
+  </div>
+
+
+  <!-- ALERTS -->
+  <div
+    class="alert success"
+    *ngIf="successMessage"
+  >
+    {{ successMessage }}
+  </div>
+
+  <div
+    class="alert error"
+    *ngIf="errorMessage"
+  >
+    {{ errorMessage }}
+  </div>
+
+
+  <!-- SUMMARY -->
+  <div class="summary-grid">
+
+    <div class="summary-card">
+      <div class="summary-icon">💬</div>
+
+      <div>
+        <span>Total Communications</span>
+        <strong>{{ totalCommunications }}</strong>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-icon">👤</div>
+
+      <div>
+        <span>Vendor Messages</span>
+        <strong>{{ vendorMessagingCount }}</strong>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-icon">📦</div>
+
+      <div>
+        <span>Procurement Discussions</span>
+        <strong>{{ procurementDiscussionCount }}</strong>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-icon">✉️</div>
+
+      <div>
+        <span>Email Notifications</span>
+        <strong>{{ emailNotificationCount }}</strong>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-icon">📎</div>
+
+      <div>
+        <span>File Sharing</span>
+        <strong>{{ fileSharingCount }}</strong>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-icon">📝</div>
+
+      <div>
+        <span>Activity Logs</span>
+        <strong>{{ activityLogCount }}</strong>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- CREATE COMMUNICATION -->
+  <section class="content-card">
+
+    <div class="section-header">
+
+      <div>
+        <h2>Create Communication</h2>
+
+        <p>
+          Record a new vendor or procurement communication.
+        </p>
+      </div>
+
+    </div>
+
+
+    <form
+      [formGroup]="communicationForm"
+      (ngSubmit)="submitCommunication()"
+      class="communication-form"
+    >
+
+      <div class="form-grid">
+
+        <!-- Vendor -->
+        <div class="form-field">
+
+          <label for="vendor">
+            Vendor
+          </label>
+
+          <select
+            id="vendor"
+            formControlName="vendor_id"
+          >
+            <option [ngValue]="null">
+              Select Vendor
+            </option>
+
+            <option
+              *ngFor="let vendor of vendors"
+              [ngValue]="vendor.id"
+            >
+              {{ vendor.name }}
+            </option>
+          </select>
+
+        </div>
+
+
+        <!-- Communication Type -->
+        <div class="form-field">
+
+          <label for="communicationType">
+            Communication Type
+            <span>*</span>
+          </label>
+
+          <select
+            id="communicationType"
+            formControlName="communication_type"
+            [class.invalid]="
+              isInvalid('communication_type')
+            "
+          >
+            <option
+              *ngFor="
+                let type of communicationTypes
+              "
+              [value]="type"
+            >
+              {{ type }}
+            </option>
+          </select>
+
+        </div>
+
+
+        <!-- Subject -->
+        <div class="form-field form-field-wide">
+
+          <label for="subject">
+            Subject
+            <span>*</span>
+          </label>
+
+          <input
+            id="subject"
+            type="text"
+            formControlName="subject"
+            placeholder="Enter communication subject"
+            [class.invalid]="isInvalid('subject')"
+          />
+
+        </div>
+
+
+        <!-- Recipient -->
+        <div class="form-field">
+
+          <label for="recipient">
+            Recipient
+          </label>
+
+          <input
+            id="recipient"
+            type="text"
+            formControlName="recipient"
+            placeholder="Email or recipient name"
+          />
+
+        </div>
+
+
+        <!-- Status -->
+        <div class="form-field">
+
+          <label for="status">
+            Status
+            <span>*</span>
+          </label>
+
+          <select
+            id="status"
+            formControlName="status"
+          >
+            <option
+              *ngFor="let status of statuses"
+              [value]="status"
+            >
+              {{ status.replace('_', ' ') }}
+            </option>
+          </select>
+
+        </div>
+
+
+        <!-- Message -->
+        <div class="form-field form-field-full">
+
+          <label for="message">
+            Message
+            <span>*</span>
+          </label>
+
+          <textarea
+            id="message"
+            rows="5"
+            formControlName="message"
+            placeholder="Enter communication details..."
+            [class.invalid]="isInvalid('message')"
+          ></textarea>
+
+        </div>
+
+
+        <!-- Attachment -->
+        <div class="form-field form-field-wide">
+
+          <label for="attachment">
+            File Sharing / Attachment Name
+          </label>
+
+          <input
+            id="attachment"
+            type="text"
+            formControlName="attachment_name"
+            placeholder="Example: PO-2026-014.pdf"
+          />
+
+          <small>
+            Record the shared file name when applicable.
+          </small>
+
+        </div>
+
+      </div>
+
+
+      <!-- ACTIONS -->
+      <div class="form-actions">
+
+        <button
+          type="button"
+          class="secondary-btn"
+          (click)="resetForm()"
+        >
+          Clear
+        </button>
+
+        <button
+          type="submit"
+          class="primary-btn"
+          [disabled]="saving"
+        >
+          {{ saving ? 'Saving...' : 'Create Communication' }}
+        </button>
+
+      </div>
+
+    </form>
+
+  </section>
+
+
+  <!-- COMMUNICATION HISTORY -->
+  <section class="content-card">
+
+    <div class="section-header">
+
+      <div>
+        <h2>Communication History</h2>
+
+        <p>
+          View and manage communication records stored in
+          the system.
+        </p>
+      </div>
+
+      <div class="record-count">
+        {{ filteredCommunications.length }} records
+      </div>
+
+    </div>
+
+
+    <!-- FILTERS -->
+    <div class="filters">
+
+      <button
+        type="button"
+        [class.active]="selectedFilter === 'ALL'"
+        (click)="setFilter('ALL')"
+      >
+        All
+      </button>
+
+      <button
+        *ngFor="
+          let type of communicationTypes
+        "
+        type="button"
+        [class.active]="
+          selectedFilter === type
+        "
+        (click)="setFilter(type)"
+      >
+        {{ type }}
+      </button>
+
+    </div>
+
+
+    <!-- LOADING -->
+    <div
+      class="empty-state"
+      *ngIf="loading"
+    >
+      <div class="loading-spinner"></div>
+      <p>Loading communication records...</p>
+    </div>
+
+
+    <!-- EMPTY -->
+    <div
+      class="empty-state"
+      *ngIf="
+        !loading &&
+        filteredCommunications.length === 0
+      "
+    >
+      <div class="empty-icon">💬</div>
+
+      <h3>No communication records</h3>
+
+      <p>
+        Create your first communication record using
+        the form above.
+      </p>
+    </div>
+
+
+    <!-- TABLE -->
+    <div
+      class="table-wrapper"
+      *ngIf="
+        !loading &&
+        filteredCommunications.length > 0
+      "
+    >
+
+      <table>
+
+        <thead>
+
+          <tr>
+            <th>Vendor</th>
+            <th>Type</th>
+            <th>Subject</th>
+            <th>Recipient</th>
+            <th>Message</th>
+            <th>Attachment</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Action</th>
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          <tr
+            *ngFor="
+              let communication
+              of filteredCommunications
+            "
+          >
+
+            <td>
+              <strong>
+                {{
+                  getVendorName(
+                    communication.vendor_id
+                  )
+                }}
+              </strong>
+            </td>
+
+
+            <td>
+
+              <span
+                class="type-badge"
+                [ngClass]="
+                  getTypeClass(
+                    communication.communication_type
+                  )
+                "
+              >
+                {{
+                  communication.communication_type
+                }}
+              </span>
+
+            </td>
+
+
+            <td>
+              <div class="subject-cell">
+                {{
+                  communication.subject
+                }}
+              </div>
+            </td>
+
+
+            <td>
+              {{
+                communication.recipient || '—'
+              }}
+            </td>
+
+
+            <td>
+
+              <div class="message-cell">
+                {{
+                  communication.message
+                }}
+              </div>
+
+            </td>
+
+
+            <td>
+
+              <span
+                *ngIf="
+                  communication.attachment_name
+                "
+                class="attachment"
+              >
+                📎
+                {{
+                  communication.attachment_name
+                }}
+              </span>
+
+              <span
+                *ngIf="
+                  !communication.attachment_name
+                "
+                class="muted"
+              >
+                —
+              </span>
+
+            </td>
+
+
+            <td>
+
+              <select
+                class="status-select"
+                [value]="communication.status"
+                (change)="
+                  updateStatus(
+                    communication,
+                    $event
+                  )
+                "
+              >
+
+                <option
+                  *ngFor="
+                    let status of statuses
+                  "
+                  [value]="status"
+                >
+                  {{
+                    status.replace('_', ' ')
+                  }}
+                </option>
+
+              </select>
+
+            </td>
+
+
+            <td>
+              {{
+                communication.created_at
+                  | date:'dd MMM yyyy, hh:mm a'
+              }}
+            </td>
+
+
+            <td>
+
+              <button
+                type="button"
+                class="delete-btn"
+                (click)="
+                  deleteCommunication(
+                    communication
+                  )
+                "
+                title="Delete"
+              >
+                🗑
+              </button>
+
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </section>
+
+</div>

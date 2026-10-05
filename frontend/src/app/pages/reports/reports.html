@@ -1,0 +1,557 @@
+<div class="reports-page">
+
+  <div class="page-header">
+
+    <div>
+      <div class="eyebrow">REPORTING & EXPORT</div>
+
+      <h1>Reports</h1>
+
+      <p>
+        Analyze procurement, vendor performance,
+        purchase orders, compliance and contracts.
+      </p>
+    </div>
+
+    <div class="export-actions">
+
+      <button
+        class="secondary-button"
+        (click)="downloadPdf()">
+
+        Export PDF
+
+      </button>
+
+      <button
+        class="primary-button"
+        (click)="downloadExcel()">
+
+        Export Excel
+
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <div
+    *ngIf="errorMessage"
+    class="error-message">
+
+    {{ errorMessage }}
+
+  </div>
+
+
+  <div class="report-tabs">
+
+    <button
+      [class.active]="activeReport === 'vendor-performance'"
+      (click)="setReport('vendor-performance')">
+
+      Vendor Performance
+
+    </button>
+
+    <button
+      [class.active]="activeReport === 'procurement'"
+      (click)="setReport('procurement')">
+
+      Procurement
+
+    </button>
+
+    <button
+      [class.active]="activeReport === 'purchase-orders'"
+      (click)="setReport('purchase-orders')">
+
+      Purchase Orders
+
+    </button>
+
+    <button
+      [class.active]="activeReport === 'compliance'"
+      (click)="setReport('compliance')">
+
+      Compliance
+
+    </button>
+
+    <button
+      [class.active]="activeReport === 'contracts'"
+      (click)="setReport('contracts')">
+
+      Contracts
+
+    </button>
+
+  </div>
+
+
+  <div
+    *ngIf="loading"
+    class="loading-card">
+
+    <div class="spinner"></div>
+
+    Loading report...
+
+  </div>
+
+
+  <ng-container *ngIf="!loading">
+
+
+    <!-- VENDOR PERFORMANCE -->
+
+    <section
+      *ngIf="activeReport === 'vendor-performance'"
+      class="report-panel">
+
+      <div class="panel-title">
+        <div>
+          <h2>Vendor Performance Report</h2>
+          <p>
+            Current vendor reliability and performance metrics.
+          </p>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+
+        <table>
+
+          <thead>
+
+            <tr>
+              <th>Vendor</th>
+              <th>Category</th>
+              <th>Status</th>
+              <th>Orders</th>
+              <th>On Time</th>
+              <th>Delayed</th>
+              <th>Quality</th>
+              <th>Service</th>
+              <th>Completion</th>
+              <th>Score</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            <tr *ngFor="let item of vendorPerformance">
+
+              <td class="strong">
+                {{ item.vendor_name }}
+              </td>
+
+              <td>{{ item.category }}</td>
+
+              <td>
+                <span class="badge">
+                  {{ item.status }}
+                </span>
+              </td>
+
+              <td>{{ item.total_orders }}</td>
+
+              <td>{{ item.on_time_deliveries }}</td>
+
+              <td>{{ item.delayed_deliveries }}</td>
+
+              <td>
+                {{ item.quality_rating ?? '—' }}
+              </td>
+
+              <td>
+                {{ item.service_rating ?? '—' }}
+              </td>
+
+              <td>
+                {{ item.order_completion_rate }}%
+              </td>
+
+              <td class="score">
+                {{ item.performance_score }}
+              </td>
+
+            </tr>
+
+            <tr *ngIf="vendorPerformance.length === 0">
+
+              <td
+                colspan="10"
+                class="empty">
+
+                No vendor performance data available.
+
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+
+    <!-- PROCUREMENT -->
+
+    <section
+      *ngIf="activeReport === 'procurement'"
+      class="report-panel">
+
+      <div class="panel-title">
+        <div>
+          <h2>Procurement Report</h2>
+          <p>
+            Procurement order volume and cost analysis.
+          </p>
+        </div>
+      </div>
+
+      <div
+        *ngIf="procurement"
+        class="metric-grid">
+
+        <div class="metric-card">
+          <span>Total Purchase Orders</span>
+          <strong>
+            {{ procurement.total_purchase_orders }}
+          </strong>
+        </div>
+
+        <div class="metric-card">
+          <span>Pending</span>
+          <strong>
+            {{ procurement.pending_orders }}
+          </strong>
+        </div>
+
+        <div class="metric-card">
+          <span>Approved</span>
+          <strong>
+            {{ procurement.approved_orders }}
+          </strong>
+        </div>
+
+        <div class="metric-card">
+          <span>Ordered</span>
+          <strong>
+            {{ procurement.ordered_orders }}
+          </strong>
+        </div>
+
+        <div class="metric-card">
+          <span>Delivered</span>
+          <strong>
+            {{ procurement.delivered_orders }}
+          </strong>
+        </div>
+
+        <div class="metric-card">
+          <span>Completed</span>
+          <strong>
+            {{ procurement.completed_orders }}
+          </strong>
+        </div>
+
+        <div class="metric-card">
+          <span>Cancelled</span>
+          <strong>
+            {{ procurement.cancelled_orders }}
+          </strong>
+        </div>
+
+        <div class="metric-card large">
+          <span>Total Procurement Cost</span>
+          <strong>
+            ₹{{ procurement.total_procurement_cost | number:'1.2-2' }}
+          </strong>
+        </div>
+
+        <div class="metric-card large">
+          <span>Average Order Value</span>
+          <strong>
+            ₹{{ procurement.average_order_value | number:'1.2-2' }}
+          </strong>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- PURCHASE ORDERS -->
+
+    <section
+      *ngIf="activeReport === 'purchase-orders'"
+      class="report-panel">
+
+      <div class="panel-title">
+        <div>
+          <h2>Purchase Order Report</h2>
+          <p>
+            Purchase order tracking and financial details.
+          </p>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+
+        <table>
+
+          <thead>
+
+            <tr>
+              <th>PO Number</th>
+              <th>Order Date</th>
+              <th>Expected Delivery</th>
+              <th>Vendor</th>
+              <th>Department</th>
+              <th>Status</th>
+              <th>Total</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            <tr *ngFor="let item of purchaseOrders">
+
+              <td class="strong">
+                {{ item.po_number }}
+              </td>
+
+              <td>{{ item.order_date }}</td>
+
+              <td>
+                {{ item.expected_delivery_date }}
+              </td>
+
+              <td>{{ item.vendor_name }}</td>
+
+              <td>{{ item.department }}</td>
+
+              <td>
+                <span class="badge">
+                  {{ item.status }}
+                </span>
+              </td>
+
+              <td class="amount">
+                ₹{{ item.total_amount | number:'1.2-2' }}
+              </td>
+
+            </tr>
+
+            <tr *ngIf="purchaseOrders.length === 0">
+
+              <td
+                colspan="7"
+                class="empty">
+
+                No purchase orders available.
+
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+
+    <!-- COMPLIANCE -->
+
+    <section
+      *ngIf="activeReport === 'compliance'"
+      class="report-panel">
+
+      <div class="panel-title">
+        <div>
+          <h2>Compliance Report</h2>
+          <p>
+            Contract compliance monitoring.
+          </p>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+
+        <table>
+
+          <thead>
+
+            <tr>
+              <th>Contract</th>
+              <th>Title</th>
+              <th>Vendor</th>
+              <th>Start</th>
+              <th>End</th>
+              <th>Status</th>
+              <th>Compliance</th>
+              <th>Value</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            <tr *ngFor="let item of compliance">
+
+              <td class="strong">
+                {{ item.contract_number }}
+              </td>
+
+              <td>{{ item.contract_title }}</td>
+
+              <td>{{ item.vendor_name }}</td>
+
+              <td>{{ item.start_date }}</td>
+
+              <td>{{ item.end_date }}</td>
+
+              <td>
+                <span class="badge">
+                  {{ item.contract_status }}
+                </span>
+              </td>
+
+              <td>
+                <span class="compliance-badge">
+                  {{ item.compliance_status }}
+                </span>
+              </td>
+
+              <td class="amount">
+                ₹{{ item.contract_value | number:'1.2-2' }}
+              </td>
+
+            </tr>
+
+            <tr *ngIf="compliance.length === 0">
+
+              <td
+                colspan="8"
+                class="empty">
+
+                No compliance records available.
+
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+
+    <!-- CONTRACTS -->
+
+    <section
+      *ngIf="activeReport === 'contracts'"
+      class="report-panel">
+
+      <div class="panel-title">
+        <div>
+          <h2>Contract Report</h2>
+          <p>
+            Contract repository and lifecycle information.
+          </p>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+
+        <table>
+
+          <thead>
+
+            <tr>
+              <th>Contract</th>
+              <th>Title</th>
+              <th>Type</th>
+              <th>Vendor</th>
+              <th>Start</th>
+              <th>End</th>
+              <th>Status</th>
+              <th>Compliance</th>
+              <th>Value</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            <tr *ngFor="let item of contracts">
+
+              <td class="strong">
+                {{ item.contract_number }}
+              </td>
+
+              <td>{{ item.title }}</td>
+
+              <td>{{ item.contract_type }}</td>
+
+              <td>{{ item.vendor_name }}</td>
+
+              <td>{{ item.start_date }}</td>
+
+              <td>{{ item.end_date }}</td>
+
+              <td>
+                <span class="badge">
+                  {{ item.status }}
+                </span>
+              </td>
+
+              <td>
+                <span class="compliance-badge">
+                  {{ item.compliance_status }}
+                </span>
+              </td>
+
+              <td class="amount">
+                ₹{{ item.contract_value | number:'1.2-2' }}
+              </td>
+
+            </tr>
+
+            <tr *ngIf="contracts.length === 0">
+
+              <td
+                colspan="9"
+                class="empty">
+
+                No contracts available.
+
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+  </ng-container>
+
+</div>

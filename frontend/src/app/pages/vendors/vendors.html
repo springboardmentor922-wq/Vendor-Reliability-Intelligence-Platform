@@ -1,0 +1,375 @@
+
+<div class="vendors-page">
+
+  <div class="page-header">
+    <div>
+      <div class="eyebrow">VENDOR MANAGEMENT</div>
+      <h1>Vendor Management</h1>
+      <p>
+        Manage vendor profiles, categories, approval status,
+        contact information, contracts and reliability details.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="primary-button"
+      (click)="openCreateForm()"
+    >
+      + Add Vendor
+    </button>
+  </div>
+
+  <div *ngIf="successMessage" class="message success-message">
+    {{ successMessage }}
+  </div>
+
+  <div *ngIf="errorMessage" class="message error-message">
+    {{ errorMessage }}
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="summary-label">TOTAL VENDORS</div>
+      <div class="summary-value">{{ totalCount }}</div>
+      <div class="summary-description">Vendors currently displayed</div>
+    </div>
+
+    <div class="summary-card pending">
+      <div class="summary-label">PENDING</div>
+      <div class="summary-value">{{ pendingCount }}</div>
+      <div class="summary-description">Awaiting approval</div>
+    </div>
+
+    <div class="summary-card approved">
+      <div class="summary-label">APPROVED</div>
+      <div class="summary-value">{{ approvedCount }}</div>
+      <div class="summary-description">Approved vendors</div>
+    </div>
+
+    <div class="summary-card rejected">
+      <div class="summary-label">REJECTED</div>
+      <div class="summary-value">{{ rejectedCount }}</div>
+      <div class="summary-description">Rejected vendors</div>
+    </div>
+  </div>
+
+  <!-- SEARCH AND FILTERS -->
+  <section class="panel filter-panel">
+    <div class="panel-heading">
+      <div>
+        <h2>Vendor Filters</h2>
+        <p>Search vendors and filter by category and approval status.</p>
+      </div>
+    </div>
+
+    <div class="filter-grid">
+      <div class="field">
+        <label for="vendorSearch">Search Vendors</label>
+        <input
+          id="vendorSearch"
+          type="search"
+          [(ngModel)]="searchTerm"
+          placeholder="Search by name, ID, email, contact or location..."
+        />
+      </div>
+
+      <div class="field">
+        <label for="categoryFilter">Category</label>
+        <select id="categoryFilter" [(ngModel)]="selectedCategory">
+          <option value="">All Categories</option>
+          <option *ngFor="let category of categories" [value]="category">
+            {{ category }}
+          </option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="statusFilter">Status</label>
+        <select id="statusFilter" [(ngModel)]="selectedStatus">
+          <option value="">All Statuses</option>
+          <option *ngFor="let status of statuses" [value]="status">
+            {{ status }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button
+          type="button"
+          class="primary-button"
+          (click)="applyFilters()"
+        >
+          Apply Filters
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          (click)="clearFilters()"
+        >
+          Clear
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- DIRECTORY -->
+  <section class="panel">
+    <div class="panel-heading">
+      <div>
+        <h2>Vendor Directory</h2>
+        <p>Complete vendor profile and reliability information.</p>
+      </div>
+
+      <span *ngIf="loading">Loading...</span>
+    </div>
+
+    <div
+      class="table-wrapper"
+      *ngIf="!loading && filteredVendors.length > 0"
+    >
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Vendor</th>
+            <th>Category</th>
+            <th>Contact Person</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Location</th>
+            <th>Contract Details</th>
+            <th>Performance</th>
+            <th>Reliability</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let vendor of filteredVendors">
+            <td>#{{ vendor.id }}</td>
+            <td><strong>{{ vendor.name }}</strong></td>
+            <td>{{ vendor.category }}</td>
+            <td>{{ vendor.contact_person }}</td>
+            <td>{{ vendor.email }}</td>
+            <td>{{ vendor.phone }}</td>
+            <td>{{ vendor.location || '—' }}</td>
+            <td class="contract-cell">
+              {{ vendor.contract_details || '—' }}
+            </td>
+            <td>{{ formatScore(vendor.performance_score) }}</td>
+            <td>{{ formatScore(vendor.reliability_score) }}</td>
+
+            <td>
+              <span
+                class="status-badge"
+                [class.pending]="vendor.status === 'Pending'"
+                [class.approved]="vendor.status === 'Approved'"
+                [class.rejected]="vendor.status === 'Rejected'"
+              >
+                {{ vendor.status }}
+              </span>
+            </td>
+
+            <td>
+              <div class="action-buttons">
+                <button
+                  type="button"
+                  class="action edit"
+                  (click)="openEditForm(vendor)"
+                >
+                  Edit
+                </button>
+
+                <button
+                  *ngIf="vendor.status !== 'Approved'"
+                  type="button"
+                  class="action approve"
+                  (click)="approveVendor(vendor)"
+                >
+                  Approve
+                </button>
+
+                <button
+                  *ngIf="vendor.status !== 'Rejected'"
+                  type="button"
+                  class="action reject"
+                  (click)="rejectVendor(vendor)"
+                >
+                  Reject
+                </button>
+
+                <button
+                  type="button"
+                  class="action delete"
+                  (click)="deleteVendor(vendor)"
+                >
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div
+      class="empty-state"
+      *ngIf="!loading && filteredVendors.length === 0"
+    >
+      <h3>No vendors found</h3>
+
+      <p *ngIf="searchTerm">
+        No vendors match "{{ searchTerm }}".
+        Try another search or clear the filters.
+      </p>
+
+      <p *ngIf="!searchTerm">
+        Try changing the filters or add a new vendor.
+      </p>
+    </div>
+  </section>
+
+  <!-- ADD / EDIT FORM -->
+  <div *ngIf="showForm" class="modal-backdrop">
+    <div class="vendor-modal">
+      <div class="modal-header">
+        <div>
+          <div class="eyebrow">
+            {{ editingVendorId === null ? 'NEW VENDOR' : 'EDIT VENDOR' }}
+          </div>
+
+          <h2>
+            {{ editingVendorId === null ? 'Add Vendor' : 'Edit Vendor' }}
+          </h2>
+        </div>
+
+        <button
+          type="button"
+          class="close-button"
+          (click)="closeForm()"
+        >
+          ×
+        </button>
+      </div>
+
+      <form [formGroup]="vendorForm" (ngSubmit)="saveVendor()">
+        <div class="form-grid">
+          <div class="field full">
+            <label for="vendorName">Vendor Name</label>
+            <input
+              id="vendorName"
+              type="text"
+              formControlName="name"
+              placeholder="Enter vendor name"
+            />
+          </div>
+
+          <div class="field">
+            <label for="vendorCategory">Category</label>
+            <select id="vendorCategory" formControlName="category">
+              <option value="">Select Category</option>
+              <option *ngFor="let category of categories" [value]="category">
+                {{ category }}
+              </option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="contactPerson">Contact Person</label>
+            <input
+              id="contactPerson"
+              type="text"
+              formControlName="contact_person"
+              placeholder="Contact person"
+            />
+          </div>
+
+          <div class="field">
+            <label for="vendorEmail">Email</label>
+            <input
+              id="vendorEmail"
+              type="email"
+              formControlName="email"
+              placeholder="vendor@example.com"
+            />
+          </div>
+
+          <div class="field">
+            <label for="vendorPhone">Phone</label>
+            <input
+              id="vendorPhone"
+              type="text"
+              formControlName="phone"
+              placeholder="+91-90000-00000"
+            />
+          </div>
+
+          <div class="field full">
+            <label for="vendorLocation">Location</label>
+            <input
+              id="vendorLocation"
+              type="text"
+              formControlName="location"
+              placeholder="City, State"
+            />
+          </div>
+
+          <div class="field full">
+            <label for="contractDetails">Contract Details</label>
+            <textarea
+              id="contractDetails"
+              formControlName="contract_details"
+              rows="3"
+              placeholder="Contract number, type, term and renewal information"
+            ></textarea>
+          </div>
+
+          <div
+            class="profile-note full"
+            *ngIf="editingVendorId !== null"
+          >
+            <div>
+              <strong>Performance Score:</strong>
+              {{ formatScore(editingVendor?.performance_score) }}
+            </div>
+
+            <div>
+              <strong>Reliability Score:</strong>
+              {{ formatScore(editingVendor?.reliability_score) }}
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="secondary-button"
+            (click)="closeForm()"
+            [disabled]="saving"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            class="primary-button"
+            [disabled]="saving"
+          >
+            {{
+              saving
+                ? 'Saving...'
+                : editingVendorId === null
+                  ? 'Create Vendor'
+                  : 'Save Changes'
+            }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,133 @@
+
+@use '@angular/material' as mat;
+
+html {
+  min-height: 100%;
+  @include mat.theme((
+    color: (
+      primary: mat.$azure-palette,
+      tertiary: mat.$blue-palette
+    ),
+    typography: Roboto,
+    density: 0
+  ));
+}
+
+:root {
+  color-scheme: dark;
+
+  --navy-bg: #071426;
+  --navy-surface: #0c1b31;
+  --navy-card: #10233d;
+  --navy-card-hover: #152b49;
+  --navy-border: #203957;
+  --navy-primary: #3b82f6;
+  --navy-primary-hover: #2563eb;
+  --navy-text: #eaf1fb;
+  --navy-muted: #9aadc6;
+  --navy-subtle: #7187a5;
+}
+
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  background: var(--navy-bg);
+  color: var(--navy-text);
+  font-family: Inter, Roboto, "Segoe UI", Arial, Helvetica, sans-serif;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+app-root {
+  display: block;
+  min-height: 100vh;
+  background: var(--navy-bg);
+  color: var(--navy-text);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+input,
+select,
+textarea {
+  color: var(--navy-text);
+  background: #09182b;
+  border-color: #2a4261;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--navy-subtle);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--navy-primary);
+}
+
+button {
+  cursor: pointer;
+}
+
+/* Shared Angular Material surfaces */
+.mat-mdc-card,
+.mat-mdc-dialog-surface,
+.mat-mdc-menu-panel,
+.mat-mdc-select-panel {
+  color: var(--navy-text);
+  background: var(--navy-surface);
+  border: 1px solid var(--navy-border);
+}
+
+.mat-mdc-option,
+.mat-mdc-menu-item,
+.mat-mdc-select-value,
+.mat-mdc-form-field,
+.mat-mdc-floating-label {
+  color: var(--navy-text);
+}
+
+.mat-mdc-option:hover,
+.mat-mdc-menu-item:hover {
+  background: var(--navy-card-hover);
+}
+
+/* Scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #385477 var(--navy-bg);
+}
+
+*::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--navy-bg);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #385477;
+  border: 2px solid var(--navy-bg);
+  border-radius: 10px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #52749d;
+}

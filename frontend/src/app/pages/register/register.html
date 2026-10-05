@@ -1,0 +1,155 @@
+<div class="auth-page">
+
+  <div class="auth-panel">
+
+    <div class="brand">
+
+      <div class="brand-icon">
+        V
+      </div>
+
+      <div>
+        <h1>VendorIQ</h1>
+        <span>
+          Vendor Reliability Intelligence
+        </span>
+      </div>
+
+    </div>
+
+
+    <div class="auth-content">
+
+      <h2>Create account</h2>
+
+      <p class="subtitle">
+        Register for the VendorIQ platform.
+      </p>
+
+
+      @if (errorMessage) {
+
+        <div class="error-message">
+          {{ errorMessage }}
+        </div>
+
+      }
+
+
+      @if (successMessage) {
+
+        <div class="success-message">
+          {{ successMessage }}
+        </div>
+
+      }
+
+
+      <form
+        [formGroup]="registerForm"
+        (ngSubmit)="submit()"
+      >
+
+        <label for="full_name">
+          Full name
+        </label>
+
+        <input
+          id="full_name"
+          type="text"
+          formControlName="full_name"
+          placeholder="Enter your full name"
+          autocomplete="name"
+        />
+
+        @if (
+          registerForm.controls.full_name.touched &&
+          registerForm.controls.full_name.invalid
+        ) {
+
+          <span class="field-error">
+            Full name must contain at least 2 characters.
+          </span>
+
+        }
+
+
+        <label for="email">
+          Email address
+        </label>
+
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          placeholder="Enter your email"
+          autocomplete="email"
+        />
+
+        @if (
+          registerForm.controls.email.touched &&
+          registerForm.controls.email.invalid
+        ) {
+
+          <span class="field-error">
+            Enter a valid email address.
+          </span>
+
+        }
+
+
+        <label for="password">
+          Password
+        </label>
+
+        <input
+          id="password"
+          type="password"
+          formControlName="password"
+          placeholder="Minimum 8 characters"
+          autocomplete="new-password"
+        />
+
+        @if (
+          registerForm.controls.password.touched &&
+          registerForm.controls.password.invalid
+        ) {
+
+          <span class="field-error">
+            Password must contain at least 8 characters.
+          </span>
+
+        }
+
+
+        <button
+          type="submit"
+          [disabled]="loading"
+        >
+
+          @if (loading) {
+            Creating account...
+          } @else {
+            Create Account
+          }
+
+        </button>
+
+      </form>
+
+
+      <p class="register-text">
+
+        Already have an account?
+
+        <a routerLink="/login">
+          Sign in
+        </a>
+
+      </p>
+
+    </div>
+
+  </div>
+
+</div>

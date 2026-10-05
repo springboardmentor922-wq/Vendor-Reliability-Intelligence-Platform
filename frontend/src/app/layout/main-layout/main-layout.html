@@ -1,0 +1,184 @@
+<div class="app-shell">
+
+  <!-- ========================= SIDEBAR ========================= -->
+  <aside class="sidebar">
+
+    <!-- BRAND -->
+    <div class="sidebar-brand">
+
+      <div class="brand-logo">
+        V
+      </div>
+
+      <div class="brand-text">
+        <div class="brand-name">
+          VendorIQ
+        </div>
+
+        <div class="brand-subtitle">
+          PROCUREMENT INTELLIGENCE
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- NAVIGATION -->
+    <div class="sidebar-section">
+
+      <div class="section-label">
+        WORKSPACE
+      </div>
+
+      <nav class="navigation">
+
+        @for (item of visibleNavigationItems; track item.route) {
+
+          <a
+            class="nav-item"
+            [attr.data-icon]="item.icon"
+            [routerLink]="item.route"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{
+              exact: item.route === '/dashboard'
+            }"
+          >
+
+            <span class="nav-icon">
+              {{ item.icon }}
+            </span>
+
+            <span class="nav-label">
+              {{ item.label }}
+            </span>
+
+          </a>
+
+        }
+
+      </nav>
+
+    </div>
+
+
+    <!-- SIDEBAR FOOTER -->
+    <div class="sidebar-bottom">
+
+      <!-- SYSTEM STATUS -->
+      <div class="system-status">
+
+        <span class="status-dot"></span>
+
+        <div class="status-content">
+
+          <span class="status-title">
+            System connected
+          </span>
+
+          <span class="status-subtitle">
+            VendorIQ API
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <!-- CURRENT USER -->
+      <div class="user-card">
+
+        <div class="user-avatar">
+          {{ currentUserName.charAt(0).toUpperCase() }}
+        </div>
+
+        <div class="user-details">
+
+          <div class="user-name">
+            {{ currentUserName }}
+          </div>
+
+          <div class="user-role">
+            {{ currentRole }}
+          </div>
+
+        </div>
+
+        <button
+          type="button"
+          class="logout-button"
+          title="Sign out"
+          (click)="logout()"
+        >
+          <span class="logout-icon">↪</span>
+        </button>
+
+      </div>
+
+    </div>
+
+  </aside>
+
+
+  <!-- ========================= MAIN AREA ========================= -->
+  <main class="main-area">
+
+    <!-- TOP HEADER -->
+    <header class="top-header">
+
+      <div class="header-left">
+
+        <div class="page-context">
+
+          <span class="context-dot"></span>
+
+          <span>
+            Vendor Reliability Intelligence
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <div class="header-right">
+
+        <!-- ROLE -->
+        <div class="role-indicator">
+
+          <span class="role-icon">
+            ✓
+          </span>
+
+          <span>
+            {{ currentRole }}
+          </span>
+
+        </div>
+
+
+        <!-- NOTIFICATIONS -->
+        <a
+          class="notification-button"
+          routerLink="/notifications"
+          title="Notifications"
+        >
+          <span class="notification-icon">
+            ♢
+          </span>
+        </a>
+
+      </div>
+
+    </header>
+
+
+    <!-- PAGE CONTENT -->
+    <section class="content-area">
+
+      <router-outlet></router-outlet>
+
+    </section>
+
+  </main>
+
+</div>

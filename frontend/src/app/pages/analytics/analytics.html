@@ -1,0 +1,745 @@
+<div class="analytics-page">
+  <div class="page-header">
+    <div>
+      <div class="eyebrow">PROCUREMENT INTELLIGENCE</div>
+      <h1>Analytics</h1>
+      <p>
+        Real-time procurement, vendor performance,
+        reliability and operational insights.
+      </p>
+    </div>
+    <button
+      class="refresh-button"
+      (click)="refresh()"
+      [disabled]="loading || datasetLoading">
+      {{
+        loading || datasetLoading
+          ? 'Refreshing...'
+          : 'Refresh Data'
+      }}
+    </button>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+  <!-- EXISTING VENDORIQ DATABASE ANALYTICS -->
+  <div *ngIf="loading" class="loading-card">
+    <div class="spinner"></div>
+    <span>Loading platform analytics...</span>
+  </div>
+
+  <ng-container *ngIf="!loading && analytics">
+    <!-- PROCUREMENT OVERVIEW -->
+    <section class="section">
+      <div class="section-heading">
+        <div>
+          <h2>Procurement Overview</h2>
+          <p>Current procurement activity from the database.</p>
+        </div>
+      </div>
+
+      <div class="metric-grid">
+        <div class="metric-card">
+          <span>Total Purchase Orders</span>
+          <strong>{{ analytics.procurement.total_purchase_orders }}</strong>
+        </div>
+
+        <div class="metric-card">
+          <span>Active Purchase Orders</span>
+          <strong>{{ analytics.procurement.active_purchase_orders }}</strong>
+        </div>
+
+        <div class="metric-card">
+          <span>Vendor Count</span>
+          <strong>{{ analytics.procurement.vendor_count }}</strong>
+        </div>
+
+        <div class="metric-card">
+          <span>Total Procurement Cost</span>
+          <strong>
+            {{ currency(analytics.procurement.total_procurement_cost) }}
+          </strong>
+        </div>
+
+        <div class="metric-card">
+          <span>Average Order Value</span>
+          <strong>
+            {{ currency(analytics.procurement.average_order_value) }}
+          </strong>
+        </div>
+
+        <div class="metric-card">
+          <span>Completed Orders</span>
+          <strong>{{ analytics.orders.completed }}</strong>
+        </div>
+
+        <div class="metric-card">
+          <span>Pending Orders</span>
+          <strong>{{ analytics.orders.pending }}</strong>
+        </div>
+
+        <div class="metric-card">
+          <span>Delayed Orders</span>
+          <strong>{{ analytics.orders.delayed }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- DELIVERY ANALYTICS -->
+    <section class="section">
+      <div class="section-heading">
+        <div>
+          <h2>Delivery Status Analysis</h2>
+          <p>Purchase order distribution by current status.</p>
+        </div>
+      </div>
+
+      <div class="status-grid">
+        <div class="status-item">
+          <div class="status-top">
+            <span>Pending</span>
+            <strong>{{ analytics.procurement.delivery_status.pending }}</strong>
+          </div>
+          <div class="progress-track">
+            <div
+              class="progress-fill"
+              [style.width.%]="analytics.procurement.delivery_status.pending">
+            </div>
+          </div>
+        </div>
+
+        <div class="status-item">
+          <div class="status-top">
+            <span>Approved</span>
+            <strong>{{ analytics.procurement.delivery_status.approved }}</strong>
+          </div>
+          <div class="progress-track">
+            <div
+              class="progress-fill"
+              [style.width.%]="analytics.procurement.delivery_status.approved">
+            </div>
+          </div>
+        </div>
+
+        <div class="status-item">
+          <div class="status-top">
+            <span>Ordered</span>
+            <strong>{{ analytics.procurement.delivery_status.ordered }}</strong>
+          </div>
+          <div class="progress-track">
+            <div
+              class="progress-fill"
+              [style.width.%]="analytics.procurement.delivery_status.ordered">
+            </div>
+          </div>
+        </div>
+
+        <div class="status-item">
+          <div class="status-top">
+            <span>Delivered</span>
+            <strong>{{ analytics.procurement.delivery_status.delivered }}</strong>
+          </div>
+          <div class="progress-track">
+            <div
+              class="progress-fill"
+              [style.width.%]="analytics.procurement.delivery_status.delivered">
+            </div>
+          </div>
+        </div>
+
+        <div class="status-item">
+          <div class="status-top">
+            <span>Completed</span>
+            <strong>{{ analytics.procurement.delivery_status.completed }}</strong>
+          </div>
+          <div class="progress-track">
+            <div
+              class="progress-fill"
+              [style.width.%]="analytics.procurement.delivery_status.completed">
+            </div>
+          </div>
+        </div>
+
+        <div class="status-item">
+          <div class="status-top">
+            <span>Delayed</span>
+            <strong>{{ analytics.procurement.delivery_status.delayed }}</strong>
+          </div>
+          <div class="progress-track">
+            <div
+              class="progress-fill delayed"
+              [style.width.%]="analytics.procurement.delivery_status.delayed">
+            </div>
+          </div>
+        </div>
+
+        <div class="status-item">
+          <div class="status-top">
+            <span>Cancelled</span>
+            <strong>{{ analytics.procurement.delivery_status.cancelled }}</strong>
+          </div>
+          <div class="progress-track">
+            <div
+              class="progress-fill"
+              [style.width.%]="analytics.procurement.delivery_status.cancelled">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VENDOR RELIABILITY -->
+    <section class="section">
+      <div class="section-heading">
+        <div>
+          <h2>Vendor Reliability Intelligence</h2>
+          <p>Reliability and performance indicators.</p>
+        </div>
+      </div>
+
+      <div class="reliability-grid">
+        <div class="reliability-score-card">
+          <span class="card-label">Reliability Score</span>
+          <div class="score-value">
+            {{ formatNumber(analytics.vendor_performance.reliability_score) }}
+          </div>
+          <span class="score-caption">Overall supplier reliability</span>
+        </div>
+
+        <div class="reliability-score-card">
+          <span class="card-label">Performance Score</span>
+          <div class="score-value">
+            {{ formatNumber(analytics.vendor_performance.performance_score) }}
+          </div>
+          <span class="score-caption">Vendor performance</span>
+        </div>
+
+        <div class="reliability-score-card">
+          <span class="card-label">Delivery Rate</span>
+          <div class="score-value">
+            {{ percentage(analytics.vendor_performance.delivery_rate) }}
+          </div>
+          <span class="score-caption">Delivery performance</span>
+        </div>
+
+        <div class="reliability-score-card">
+          <span class="card-label">Quality Rating</span>
+          <div class="score-value">
+            {{ formatNumber(analytics.vendor_performance.quality_rating) }}
+          </div>
+          <span class="score-caption">Out of 5</span>
+        </div>
+      </div>
+
+      <div class="factor-panel">
+        <h3>Reliability Factors</h3>
+
+        <div
+          *ngFor="let factor of reliabilityFactors"
+          class="factor-row">
+          <div class="factor-header">
+            <span>{{ factor.name }}</span>
+            <strong>
+              {{ formatNumber(getFactorValue(factor.key)) }}
+            </strong>
+          </div>
+
+          <div class="factor-track">
+            <div
+              class="factor-fill"
+              [style.width]="factorWidth(getFactorValue(factor.key))">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTRACT ANALYTICS -->
+    <section class="section">
+      <div class="section-heading">
+        <div>
+          <h2>Contract & Compliance</h2>
+          <p>Current contract lifecycle and compliance status.</p>
+        </div>
+      </div>
+
+      <div class="metric-grid">
+        <div class="metric-card">
+          <span>Active Contracts</span>
+          <strong>{{ analytics.contracts.active }}</strong>
+        </div>
+
+        <div class="metric-card">
+          <span>Expiring Contracts</span>
+          <strong>{{ analytics.contracts.expiring }}</strong>
+        </div>
+
+        <div class="metric-card">
+          <span>Expired Contracts</span>
+          <strong>{{ analytics.contracts.expired }}</strong>
+        </div>
+
+        <div class="metric-card">
+          <span>Renewed Contracts</span>
+          <strong>{{ analytics.contracts.renewed }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMMUNICATION -->
+    <section class="section">
+      <div class="section-heading">
+        <div>
+          <h2>Communication Activity</h2>
+          <p>Vendor communication and issue activity.</p>
+        </div>
+      </div>
+
+      <div class="metric-grid">
+        <div class="metric-card">
+          <span>Total Messages</span>
+          <strong>{{ analytics.communication.messages }}</strong>
+        </div>
+
+        <div class="metric-card">
+          <span>Open Queries</span>
+          <strong>{{ analytics.communication.open_queries }}</strong>
+        </div>
+
+        <div class="metric-card">
+          <span>Resolved Queries</span>
+          <strong>{{ analytics.communication.resolved_queries }}</strong>
+        </div>
+
+        <div class="metric-card">
+          <span>Response Activity</span>
+          <strong>{{ analytics.communication.response_activity }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- ADMIN STATISTICS -->
+    <section
+      *ngIf="analytics.role === 'ADMINISTRATOR'"
+      class="section">
+      <div class="section-heading">
+        <div>
+          <h2>System Statistics</h2>
+          <p>Administrative overview of the platform.</p>
+        </div>
+      </div>
+
+      <div class="metric-grid">
+        <div class="metric-card">
+          <span>Total Users</span>
+          <strong>{{ analytics.admin.total_users }}</strong>
+        </div>
+
+        <div class="metric-card">
+          <span>Active Users</span>
+          <strong>{{ analytics.admin.active_users }}</strong>
+        </div>
+
+        <div class="metric-card">
+          <span>Total Vendors</span>
+          <strong>{{ analytics.admin.total_vendors }}</strong>
+        </div>
+
+        <div class="metric-card">
+          <span>Approved Vendors</span>
+          <strong>{{ analytics.admin.approved_vendors }}</strong>
+        </div>
+
+        <div class="metric-card">
+          <span>Pending Vendors</span>
+          <strong>{{ analytics.admin.pending_vendors }}</strong>
+        </div>
+
+        <div class="metric-card">
+          <span>Total Contracts</span>
+          <strong>{{ analytics.admin.total_contracts }}</strong>
+        </div>
+
+        <div class="metric-card">
+          <span>Compliant Contracts</span>
+          <strong>{{ analytics.admin.compliant_contracts }}</strong>
+        </div>
+
+        <div class="metric-card">
+          <span>Total Communications</span>
+          <strong>{{ analytics.admin.total_communications }}</strong>
+        </div>
+      </div>
+    </section>
+  </ng-container>
+
+  <!-- REAL DATACO DATASET -->
+  <section class="section dataset-section">
+    <div class="section-heading">
+      <div>
+        <div class="dataset-heading-line">
+          <h2>Supply Chain Dataset Analytics</h2>
+          <span class="dataset-badge">REAL DATA</span>
+        </div>
+        <p>
+          Delivery and supply-chain insights calculated
+          from the DataCo dataset.
+        </p>
+      </div>
+    </div>
+
+    <div *ngIf="datasetLoading" class="loading-card dataset-loading">
+      <div class="spinner"></div>
+      <span>Processing supply-chain dataset...</span>
+    </div>
+
+    <div *ngIf="datasetErrorMessage" class="error-message">
+      {{ datasetErrorMessage }}
+    </div>
+
+    <ng-container *ngIf="!datasetLoading && datasetAnalytics">
+      <!-- DATASET OVERVIEW -->
+      <div class="metric-grid">
+        <div class="metric-card dataset-card">
+          <span>Dataset Records</span>
+          <strong>{{ integer(datasetAnalytics.total_records) }}</strong>
+          <small>{{ datasetAnalytics.dataset_name }}</small>
+        </div>
+
+        <div class="metric-card dataset-card">
+          <span>Unique Orders</span>
+          <strong>{{ integer(datasetAnalytics.unique_orders) }}</strong>
+        </div>
+
+        <div class="metric-card dataset-card">
+          <span>Late Deliveries</span>
+          <strong>{{ integer(datasetAnalytics.late_delivery_count) }}</strong>
+          <small>{{ percentage(datasetAnalytics.late_delivery_rate) }}</small>
+        </div>
+
+        <div class="metric-card dataset-card">
+          <span>On-Time Delivery Rate</span>
+          <strong>{{ percentage(datasetAnalytics.on_time_delivery_rate) }}</strong>
+        </div>
+
+        <div class="metric-card dataset-card">
+          <span>Actual Shipping Days</span>
+          <strong>
+            {{ formatNumber(datasetAnalytics.average_actual_shipping_days) }}
+          </strong>
+          <small>Average</small>
+        </div>
+
+        <div class="metric-card dataset-card">
+          <span>Scheduled Shipping Days</span>
+          <strong>
+            {{ formatNumber(datasetAnalytics.average_scheduled_shipping_days) }}
+          </strong>
+          <small>Average</small>
+        </div>
+
+        <div class="metric-card dataset-card">
+          <span>Average Shipping Delay</span>
+          <strong>
+            {{ formatNumber(datasetAnalytics.average_shipping_delay_days) }}
+          </strong>
+          <small>Days</small>
+        </div>
+
+        <div class="metric-card dataset-card">
+          <span>Average Order Item Value</span>
+          <strong>
+            {{ currency(datasetAnalytics.average_order_item_value) }}
+          </strong>
+        </div>
+      </div>
+
+      <!-- SALES AND PROFIT -->
+      <div class="dataset-financial-grid">
+        <div class="dataset-large-card">
+          <span>Total Sales</span>
+          <strong>{{ currency(datasetAnalytics.total_sales) }}</strong>
+          <small>Calculated from dataset records</small>
+        </div>
+
+        <div class="dataset-large-card">
+          <span>Total Profit</span>
+          <strong>{{ currency(datasetAnalytics.total_profit) }}</strong>
+          <small>Calculated from dataset records</small>
+        </div>
+      </div>
+
+      <!-- DELIVERY STATUS -->
+      <div class="dataset-panel">
+        <div class="panel-heading">
+          <div>
+            <h3>Dataset Delivery Status</h3>
+            <p>Distribution of delivery outcomes in the dataset.</p>
+          </div>
+        </div>
+
+        <div class="dataset-status-grid">
+          <div class="dataset-status-item">
+            <div class="status-top">
+              <span>Late Delivery</span>
+              <strong>
+                {{ integer(datasetAnalytics.delivery_status.late_delivery) }}
+              </strong>
+            </div>
+            <div class="progress-track">
+              <div
+                class="progress-fill"
+                [style.width]="datasetStatusWidth(datasetAnalytics.delivery_status.late_delivery)">
+              </div>
+            </div>
+          </div>
+
+          <div class="dataset-status-item">
+            <div class="status-top">
+              <span>Advance Shipping</span>
+              <strong>
+                {{ integer(datasetAnalytics.delivery_status.advance_shipping) }}
+              </strong>
+            </div>
+            <div class="progress-track">
+              <div
+                class="progress-fill"
+                [style.width]="datasetStatusWidth(datasetAnalytics.delivery_status.advance_shipping)">
+              </div>
+            </div>
+          </div>
+
+          <div class="dataset-status-item">
+            <div class="status-top">
+              <span>Shipping On Time</span>
+              <strong>
+                {{ integer(datasetAnalytics.delivery_status.shipping_on_time) }}
+              </strong>
+            </div>
+            <div class="progress-track">
+              <div
+                class="progress-fill"
+                [style.width]="datasetStatusWidth(datasetAnalytics.delivery_status.shipping_on_time)">
+              </div>
+            </div>
+          </div>
+
+          <div class="dataset-status-item">
+            <div class="status-top">
+              <span>Shipping Canceled</span>
+              <strong>
+                {{ integer(datasetAnalytics.delivery_status.shipping_canceled) }}
+              </strong>
+            </div>
+            <div class="progress-track">
+              <div
+                class="progress-fill"
+                [style.width]="datasetStatusWidth(datasetAnalytics.delivery_status.shipping_canceled)">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VENDORIQ CHARTS -->
+      <div class="analytics-chart-grid">
+        <div class="dataset-panel chart-panel">
+          <div class="panel-heading">
+            <h3>Purchase Order Status</h3>
+            <p>Current purchase order distribution from VendorIQ.</p>
+          </div>
+          <div class="analytics-chart-container">
+            <canvas
+              baseChart
+              [type]="'bar'"
+              [data]="deliveryChartData"
+              [options]="barOptions">
+            </canvas>
+          </div>
+        </div>
+
+        <div class="dataset-panel chart-panel">
+          <div class="panel-heading">
+            <h3>Contract Status</h3>
+            <p>Current contract lifecycle distribution.</p>
+          </div>
+          <div class="analytics-chart-container">
+            <canvas
+              baseChart
+              [type]="'doughnut'"
+              [data]="contractChartData"
+              [options]="doughnutOptions">
+            </canvas>
+          </div>
+        </div>
+
+        <div class="dataset-panel chart-panel chart-full">
+          <div class="panel-heading">
+            <h3>Vendor Reliability Factors</h3>
+            <p>Reliability factors returned by the platform analytics API.</p>
+          </div>
+          <div class="analytics-chart-container">
+            <canvas
+              baseChart
+              [type]="'bar'"
+              [data]="reliabilityChartData"
+              [options]="barOptions">
+            </canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- DATASET CHARTS -->
+      <div class="analytics-chart-grid">
+        <div class="dataset-panel chart-panel">
+          <div class="panel-heading">
+            <h3>Dataset Delivery Distribution</h3>
+            <p>Delivery outcomes in the DataCo dataset.</p>
+          </div>
+          <div class="analytics-chart-container">
+            <canvas
+              baseChart
+              [type]="'doughnut'"
+              [data]="datasetDeliveryChartData"
+              [options]="doughnutOptions">
+            </canvas>
+          </div>
+        </div>
+
+        <div class="dataset-panel chart-panel">
+          <div class="panel-heading">
+            <h3>Shipping Mode Distribution</h3>
+            <p>Dataset records by shipping mode.</p>
+          </div>
+          <div class="analytics-chart-container">
+            <canvas
+              baseChart
+              [type]="'bar'"
+              [data]="shippingModeChartData"
+              [options]="barOptions">
+            </canvas>
+          </div>
+        </div>
+
+        <div class="dataset-panel chart-panel chart-full">
+          <div class="panel-heading">
+            <h3>Monthly Delivery Trend</h3>
+            <p>Monthly delivery records and outcomes.</p>
+          </div>
+          <div class="analytics-chart-container analytics-chart-tall">
+            <canvas
+              baseChart
+              [type]="'line'"
+              [data]="monthlyTrendChartData"
+              [options]="lineOptions">
+            </canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- SHIPPING MODES + MARKETS -->
+      <div class="dataset-two-column">
+        <div class="dataset-panel">
+          <div class="panel-heading">
+            <div>
+              <h3>Shipping Mode Distribution</h3>
+              <p>Records by shipping mode.</p>
+            </div>
+          </div>
+
+          <div
+            *ngFor="let mode of datasetAnalytics.shipping_modes"
+            class="distribution-row">
+            <div class="distribution-header">
+              <span>{{ mode.shipping_mode }}</span>
+              <strong>
+                {{ integer(mode.records) }} ·
+                {{ percentage(mode.percentage) }}
+              </strong>
+            </div>
+            <div class="progress-track">
+              <div
+                class="progress-fill"
+                [style.width.%]="mode.percentage">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dataset-panel">
+          <div class="panel-heading">
+            <div>
+              <h3>Market Distribution</h3>
+              <p>Records by market.</p>
+            </div>
+          </div>
+
+          <div
+            *ngFor="let market of datasetAnalytics.markets"
+            class="distribution-row">
+            <div class="distribution-header">
+              <span>{{ market.market }}</span>
+              <strong>
+                {{ integer(market.records) }} ·
+                {{ percentage(market.percentage) }}
+              </strong>
+            </div>
+            <div class="progress-track">
+              <div
+                class="progress-fill"
+                [style.width.%]="market.percentage">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MONTHLY TREND -->
+      <div class="dataset-panel">
+        <div class="panel-heading">
+          <div>
+            <h3>Monthly Delivery Trend</h3>
+            <p>Latest 12 months available in the dataset.</p>
+          </div>
+        </div>
+
+        <div
+          *ngFor="let month of latestMonthlyTrend()"
+          class="monthly-row">
+          <div class="monthly-label">
+            <span>{{ month.month }}</span>
+            <strong>{{ integer(month.total_records) }} records</strong>
+          </div>
+
+          <div class="monthly-track">
+            <div
+              class="monthly-fill"
+              [style.width]="monthlyWidth(month.total_records)">
+            </div>
+          </div>
+
+          <div class="monthly-details">
+            <span>Late: {{ integer(month.late_deliveries) }}</span>
+            <span>On time: {{ integer(month.on_time_deliveries) }}</span>
+            <span>Late rate: {{ percentage(month.late_delivery_rate) }}</span>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </section>
+
+  <!-- LIVE STATUS -->
+  <div class="live-status">
+    <div class="live-dot"></div>
+    <div>
+      <strong>Live analytics</strong>
+      <span>
+        VendorIQ values come from the PostgreSQL database,
+        while supply-chain insights are calculated from the
+        real DataCo dataset.
+      </span>
+    </div>
+  </div>
+</div>

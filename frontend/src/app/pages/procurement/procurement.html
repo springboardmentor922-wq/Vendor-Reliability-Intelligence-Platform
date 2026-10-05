@@ -1,0 +1,615 @@
+
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <span class="eyebrow">PROCUREMENT MANAGEMENT</span>
+      <h1>Procurement Requests</h1>
+      <p>
+        Create, monitor and manage procurement requests
+        and their approval workflow.
+      </p>
+    </div>
+
+    @if (canCreateRequest) {
+      <button
+        class="primary-button"
+        type="button"
+        (click)="openCreateForm()"
+      >
+        + Create Procurement Request
+      </button>
+    }
+  </div>
+
+  @if (successMessage) {
+    <div class="message success">
+      {{ successMessage }}
+    </div>
+  }
+
+  @if (errorMessage) {
+    <div class="message error">
+      {{ errorMessage }}
+    </div>
+  }
+
+  <!-- PROCUREMENT METRICS -->
+  <section class="metric-section">
+    <h2>Procurement Overview</h2>
+
+    <div class="metric-grid">
+      <div class="metric-card">
+        <span>Total Requests</span>
+        <strong>{{ totalRequests }}</strong>
+        <small>Database records</small>
+      </div>
+
+      <div class="metric-card">
+        <span>Pending Requests</span>
+        <strong>{{ pendingRequests }}</strong>
+        <small>Awaiting approval</small>
+      </div>
+
+      <div class="metric-card">
+        <span>Approved Requests</span>
+        <strong>{{ approvedRequests }}</strong>
+        <small>Approved</small>
+      </div>
+
+      <div class="metric-card">
+        <span>Rejected Requests</span>
+        <strong>{{ rejectedRequests }}</strong>
+        <small>Declined during review</small>
+      </div>
+
+      <div class="metric-card">
+        <span>Completed Requests</span>
+        <strong>{{ completedRequests }}</strong>
+        <small>Completed</small>
+      </div>
+
+      <div class="metric-card">
+        <span>Procurement Value</span>
+        <strong>{{ formatCurrency(procurementValue) }}</strong>
+        <small>Total request value</small>
+      </div>
+
+      <div class="metric-card">
+        <span>Completion Rate</span>
+        <strong>{{ completionRate | number:'1.0-1' }}%</strong>
+        <small>Completed requests</small>
+      </div>
+    </div>
+  </section>
+
+  <!-- PURCHASE ORDER SUMMARY -->
+  <section class="metric-section">
+    <h2>Purchase Order Summary</h2>
+
+    <div class="metric-grid">
+      <div class="metric-card">
+        <span>Active POs</span>
+        <strong>{{ activePOs }}</strong>
+        <small>Approved / ordered</small>
+      </div>
+
+      <div class="metric-card">
+        <span>Pending POs</span>
+        <strong>{{ pendingPOs }}</strong>
+        <small>Pending requests</small>
+      </div>
+
+      <div class="metric-card">
+        <span>In-Transit POs</span>
+        <strong>{{ inTransitPOs }}</strong>
+        <small>Ordered</small>
+      </div>
+
+      <div class="metric-card">
+        <span>Overdue POs</span>
+        <strong>{{ overduePOs }}</strong>
+        <small>Requires PO delivery data</small>
+      </div>
+
+      <div class="metric-card">
+        <span>PO Value</span>
+        <strong>{{ formatCurrency(poValue) }}</strong>
+        <small>Non-cancelled requests</small>
+      </div>
+
+      <div class="metric-card">
+        <span>Vendors Assigned</span>
+        <strong>{{ assignedVendorCount }}</strong>
+        <small>Requests with vendors</small>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROCUREMENT CHARTS -->
+  <section class="charts-section">
+    <div class="charts-heading">
+      <div>
+        <span class="eyebrow">DATA VISUALIZATION</span>
+        <h2>Procurement Analytics</h2>
+        <p>Visual overview of procurement requests and purchase orders.</p>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+
+      <!-- REQUEST STATUS PIE CHART -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <h3>Request Status</h3>
+            <p>Distribution of procurement requests by status</p>
+          </div>
+          <span class="chart-total">{{ totalRequests }} Total</span>
+        </div>
+
+        @if (loading) {
+          <div class="chart-state">Loading chart data...</div>
+        } @else if (totalRequests === 0) {
+          <div class="chart-state">No procurement requests available.</div>
+        } @else {
+          <div class="chart-container">
+            <canvas
+              baseChart
+              [type]="'pie'"
+              [data]="requestStatusChartData"
+              [options]="pieChartOptions"
+            ></canvas>
+          </div>
+        }
+      </div>
+
+      <!-- PRIORITY BAR CHART -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <h3>Requests by Priority</h3>
+            <p>Number of requests in each priority level</p>
+          </div>
+        </div>
+
+        @if (loading) {
+          <div class="chart-state">Loading chart data...</div>
+        } @else if (totalRequests === 0) {
+          <div class="chart-state">No procurement requests available.</div>
+        } @else {
+          <div class="chart-container">
+            <canvas
+              baseChart
+              [type]="'bar'"
+              [data]="priorityChartData"
+              [options]="barChartOptions"
+            ></canvas>
+          </div>
+        }
+      </div>
+
+      <!-- PURCHASE ORDER DOUGHNUT CHART -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <h3>Purchase Order Status</h3>
+            <p>Distribution of purchase orders by status</p>
+          </div>
+          <span class="chart-total">{{ purchaseOrders.length }} Total</span>
+        </div>
+
+        @if (loadingPurchaseOrders) {
+          <div class="chart-state">Loading chart data...</div>
+        } @else if (purchaseOrders.length === 0) {
+          <div class="chart-state">No purchase orders available.</div>
+        } @else {
+          <div class="chart-container">
+            <canvas
+              baseChart
+              [type]="'doughnut'"
+              [data]="purchaseOrderStatusChartData"
+              [options]="doughnutChartOptions"
+            ></canvas>
+          </div>
+        }
+      </div>
+
+      <!-- CATEGORY VALUE BAR CHART -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <h3>Procurement Value by Category</h3>
+            <p>Estimated procurement value for each category</p>
+          </div>
+        </div>
+
+        @if (loading) {
+          <div class="chart-state">Loading chart data...</div>
+        } @else if (totalRequests === 0) {
+          <div class="chart-state">No category data available.</div>
+        } @else {
+          <div class="chart-container">
+            <canvas
+              baseChart
+              [type]="'bar'"
+              [data]="categoryValueChartData"
+              [options]="barChartOptions"
+            ></canvas>
+          </div>
+        }
+      </div>
+
+    </div>
+  </section>
+
+  <!-- PROCUREMENT FORM -->
+  @if (showForm) {
+    <section class="form-panel">
+      <div class="form-header">
+        <div>
+          <span class="eyebrow">
+            {{ editingId === null ? 'NEW REQUEST' : 'EDIT REQUEST' }}
+          </span>
+
+          <h2>
+            {{
+              editingId === null
+                ? 'Create Procurement Request'
+                : 'Edit Procurement Request'
+            }}
+          </h2>
+        </div>
+
+        <button
+          class="icon-button"
+          type="button"
+          (click)="closeForm()"
+          [disabled]="saving"
+        >
+          ×
+        </button>
+      </div>
+
+      <form
+        #procurementForm="ngForm"
+        (ngSubmit)="saveRequest(procurementForm)"
+        novalidate
+      >
+        <div class="form-grid">
+
+          <div class="field">
+            <label for="title">Request Title</label>
+            <input
+              id="title"
+              name="title"
+              type="text"
+              [(ngModel)]="form.title"
+              required
+              minlength="2"
+              maxlength="200"
+              #title="ngModel"
+              placeholder="Enter procurement request"
+            >
+
+            @if (title.invalid && title.touched) {
+              <small class="field-error">
+                Request title is required.
+              </small>
+            }
+          </div>
+
+          <div class="field">
+            <label for="category">Category</label>
+            <input
+              id="category"
+              name="category"
+              type="text"
+              [(ngModel)]="form.category"
+              required
+              minlength="2"
+              maxlength="100"
+              #category="ngModel"
+              placeholder="Example: Raw Materials"
+            >
+
+            @if (category.invalid && category.touched) {
+              <small class="field-error">
+                Category is required.
+              </small>
+            }
+          </div>
+
+          <div class="field">
+            <label for="vendor">Vendor</label>
+            <select
+              id="vendor"
+              name="vendor_id"
+              [(ngModel)]="form.vendor_id"
+            >
+              <option [ngValue]="null">No vendor assigned</option>
+
+              @for (vendor of vendors; track vendor.id) {
+                <option [ngValue]="vendor.id">
+                  {{ vendor.name }}
+                </option>
+              }
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="quantity">Quantity</label>
+            <input
+              id="quantity"
+              name="quantity"
+              type="number"
+              [(ngModel)]="form.quantity"
+              required
+              min="1"
+              #quantity="ngModel"
+            >
+
+            @if (quantity.invalid && quantity.touched) {
+              <small class="field-error">
+                Quantity must be at least 1.
+              </small>
+            }
+          </div>
+
+          <div class="field">
+            <label for="estimatedCost">Estimated Cost</label>
+            <input
+              id="estimatedCost"
+              name="estimated_cost"
+              type="number"
+              [(ngModel)]="form.estimated_cost"
+              required
+              min="0"
+              step="0.01"
+              #estimatedCost="ngModel"
+            >
+
+            @if (estimatedCost.invalid && estimatedCost.touched) {
+              <small class="field-error">
+                Estimated cost is required.
+              </small>
+            }
+          </div>
+
+          <div class="field">
+            <label for="priority">Priority</label>
+            <select
+              id="priority"
+              name="priority"
+              [(ngModel)]="form.priority"
+              required
+            >
+              @for (priority of priorities; track priority) {
+                <option [value]="priority">
+                  {{ priority }}
+                </option>
+              }
+            </select>
+          </div>
+
+        </div>
+
+        <div class="form-actions">
+          <button
+            class="secondary-button"
+            type="button"
+            (click)="closeForm()"
+            [disabled]="saving"
+          >
+            Cancel
+          </button>
+
+          <button
+            class="primary-button"
+            type="submit"
+            [disabled]="saving"
+          >
+            {{ saving ? 'Saving...' : (
+              editingId === null
+                ? 'Create Request'
+                : 'Save Changes'
+            ) }}
+          </button>
+        </div>
+      </form>
+    </section>
+  }
+
+  <!-- REQUEST LIST -->
+  <section class="list-panel">
+    <div class="list-header">
+      <div>
+        <h2>Procurement Requests</h2>
+        <p>Requests stored in the procurement database.</p>
+      </div>
+
+      <div class="filter">
+        <label for="statusFilter">Status</label>
+        <select
+          id="statusFilter"
+          [(ngModel)]="filterStatus"
+          (ngModelChange)="onStatusFilterChange()"
+        >
+          <option value="">All Statuses</option>
+
+          @for (status of statuses; track status) {
+            <option [value]="status">
+              {{ status }}
+            </option>
+          }
+        </select>
+      </div>
+    </div>
+
+    @if (loading) {
+      <div class="state">
+        Loading procurement requests...
+      </div>
+    } @else if (requests.length === 0) {
+      <div class="state empty">
+        <h3>No procurement requests found</h3>
+        <p>
+          Create your first procurement request
+          to begin the procurement workflow.
+        </p>
+
+        @if (canCreateRequest) {
+          <button
+            class="primary-button"
+            type="button"
+            (click)="openCreateForm()"
+          >
+            Create Request
+          </button>
+        }
+      </div>
+    } @else {
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Request</th>
+              <th>Vendor</th>
+              <th>Category</th>
+              <th>Quantity</th>
+              <th>Estimated Cost</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (request of requests; track request.id) {
+              <tr>
+                <td>#{{ request.id }}</td>
+
+                <td>
+                  <strong>{{ request.title }}</strong>
+                </td>
+
+                <td>{{ getVendorName(request.vendor_id) }}</td>
+                <td>{{ request.category }}</td>
+                <td>{{ request.quantity }}</td>
+                <td>{{ formatCurrency(request.estimated_cost) }}</td>
+
+                <td>
+                  <span
+                    class="priority"
+                    [class.urgent]="request.priority === 'Urgent'"
+                    [class.high]="request.priority === 'High'"
+                    [class.normal]="request.priority === 'Normal'"
+                    [class.low]="request.priority === 'Low'"
+                  >
+                    {{ request.priority }}
+                  </span>
+                </td>
+
+                <td>
+                  @if (canChangeStatus(request)) {
+                    <select
+                      class="status-select"
+                      [ngModel]="request.status"
+                      (ngModelChange)="changeStatus(request, $event)"
+                    >
+                      <option [value]="request.status">
+                        {{ request.status }}
+                      </option>
+
+                      @for (status of getAllowedStatuses(request); track status) {
+                        <option [value]="status">
+                          {{ status }}
+                        </option>
+                      }
+                    </select>
+                  } @else {
+                    <span class="status-select">
+                      {{ request.status }}
+                    </span>
+                  }
+                </td>
+
+                <td>{{ formatDate(request.created_at) }}</td>
+
+                <td>
+                  <div class="actions">
+                    @if (canEditRequest(request)) {
+                      <button
+                        class="action-button"
+                        type="button"
+                        (click)="openEditForm(request)"
+                      >
+                        Edit
+                      </button>
+                    }
+
+                    @if (canDeleteRequest()) {
+                      <button
+                        class="action-button danger"
+                        type="button"
+                        (click)="deleteRequest(request)"
+                      >
+                        Delete
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+  <!-- DELIVERY SUMMARY -->
+  <section class="metric-section">
+    <h2>Delivery Status</h2>
+
+    <div class="metric-grid">
+      <div class="metric-card">
+        <span>Total Deliveries</span>
+        <strong>{{ totalDeliveries }}</strong>
+        <small>Delivered / completed</small>
+      </div>
+
+      <div class="metric-card">
+        <span>On-Time Deliveries</span>
+        <strong>{{ onTimeDeliveries }}</strong>
+        <small>Based on current status</small>
+      </div>
+
+      <div class="metric-card">
+        <span>Delayed Deliveries</span>
+        <strong>{{ delayedDeliveries }}</strong>
+        <small>Requires delivery dates</small>
+      </div>
+
+      <div class="metric-card">
+        <span>Pending Deliveries</span>
+        <strong>{{ pendingDeliveries }}</strong>
+        <small>Approved / ordered</small>
+      </div>
+
+      <div class="metric-card">
+        <span>Delivery Rate</span>
+        <strong>{{ deliveryRate | number:'1.0-1' }}%</strong>
+        <small>Current request status</small>
+      </div>
+
+      <div class="metric-card">
+        <span>Assigned Vendors</span>
+        <strong>{{ assignedVendorCount }}</strong>
+        <small>Vendor-linked requests</small>
+      </div>
+    </div>
+  </section>
+
+</div>

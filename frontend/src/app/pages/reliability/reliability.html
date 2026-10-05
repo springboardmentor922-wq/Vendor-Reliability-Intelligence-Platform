@@ -1,0 +1,702 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">VENDOR INTELLIGENCE</p>
+      <h1>Vendor Reliability</h1>
+      <p class="page-description">
+        Monitor supplier performance, reliability factors and procurement risk.
+      </p>
+    </div>
+
+    <button class="refresh-button" type="button" (click)="refresh()">
+      <span class="refresh-icon">↻</span>
+      Refresh Data
+    </button>
+  </header>
+
+  @if (loading) {
+    <section class="state-panel">
+      <div class="loader"></div>
+      <p>Loading vendor reliability data...</p>
+    </section>
+  } @else if (errorMessage) {
+    <section class="state-panel error-panel">
+      <h3>Unable to load reliability data</h3>
+      <p>{{ errorMessage }}</p>
+      <button type="button" class="secondary-button" (click)="refresh()">
+        Try Again
+      </button>
+    </section>
+  } @else if (vendors.length === 0) {
+    <section class="state-panel">
+      <h3>No vendor data available</h3>
+      <p>Vendor reliability information will appear here when available.</p>
+    </section>
+  } @else {
+    <!-- RISK ANALYSIS -->
+    <section class="panel risk-analysis-panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">PROCUREMENT INTELLIGENCE</p>
+          <h2>Risk Analysis</h2>
+          <p class="section-description">
+            Risk distribution and vendor-level evidence calculated from the backend.
+          </p>
+        </div>
+
+        @if (!riskLoading && riskAnalysis) {
+          <span class="data-tag">Live API Data</span>
+        }
+      </div>
+
+      @if (riskLoading) {
+        <div class="inline-loading">
+          <div class="loader small-loader"></div>
+          <span>Loading risk analysis...</span>
+        </div>
+      } @else if (riskErrorMessage) {
+        <div class="inline-error">
+          <p>{{ riskErrorMessage }}</p>
+          <button
+            type="button"
+            class="secondary-button"
+            (click)="loadRiskAnalysis()"
+          >
+            Retry
+          </button>
+        </div>
+      } @else if (riskAnalysis) {
+        <div class="risk-summary-grid">
+          <article class="risk-summary-card">
+            <span class="summary-label">Total Vendors</span>
+            <strong>{{ riskAnalysis.total_vendors }}</strong>
+            <span class="summary-note">Vendors evaluated</span>
+          </article>
+
+          <article class="risk-summary-card">
+            <span class="summary-label">Low Risk</span>
+            <strong class="low-text">
+              {{ getRiskCount('Low Risk') }}
+            </strong>
+            <span class="summary-note">Score ≥ 75</span>
+          </article>
+
+          <article class="risk-summary-card">
+            <span class="summary-label">Medium Risk</span>
+            <strong class="medium-text">
+              {{ getRiskCount('Medium Risk') }}
+            </strong>
+            <span class="summary-note">Score from 50 to 74</span>
+          </article>
+
+          <article class="risk-summary-card">
+            <span class="summary-label">High Risk</span>
+            <strong class="high-text">
+              {{ getRiskCount('High Risk') }}
+            </strong>
+            <span class="summary-note">Score below 50</span>
+          </article>
+
+          <article class="risk-summary-card">
+            <span class="summary-label">Purchase Orders</span>
+            <strong>{{ riskAnalysis.total_purchase_orders }}</strong>
+            <span class="summary-note">Across all vendors</span>
+          </article>
+        </div>
+
+        <div class="risk-content-grid">
+          <div class="risk-chart-card">
+            <div class="subsection-heading">
+              <h3>Risk Distribution</h3>
+              <span class="subtle-label">By vendor count</span>
+            </div>
+
+            <div class="risk-bars">
+              <div class="risk-bar-row">
+                <div class="risk-bar-label">
+                  <span class="risk-dot low-dot"></span>
+                  <span>Low Risk</span>
+                  <strong>{{ getRiskCount('Low Risk') }}</strong>
+                </div>
+                <div
+                  class="risk-bar-track"
+                  role="progressbar"
+                  aria-label="Low risk vendor percentage"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  [attr.aria-valuenow]="getRiskWidth('Low Risk')"
+                >
+                  <div
+                    class="risk-bar-fill low-fill"
+                    [style.width.%]="getRiskWidth('Low Risk')"
+                  ></div>
+                </div>
+                <span class="risk-percent">
+                  {{ getRiskWidth('Low Risk') | number:'1.0-0' }}%
+                </span>
+              </div>
+
+              <div class="risk-bar-row">
+                <div class="risk-bar-label">
+                  <span class="risk-dot medium-dot"></span>
+                  <span>Medium Risk</span>
+                  <strong>{{ getRiskCount('Medium Risk') }}</strong>
+                </div>
+                <div
+                  class="risk-bar-track"
+                  role="progressbar"
+                  aria-label="Medium risk vendor percentage"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  [attr.aria-valuenow]="getRiskWidth('Medium Risk')"
+                >
+                  <div
+                    class="risk-bar-fill medium-fill"
+                    [style.width.%]="getRiskWidth('Medium Risk')"
+                  ></div>
+                </div>
+                <span class="risk-percent">
+                  {{ getRiskWidth('Medium Risk') | number:'1.0-0' }}%
+                </span>
+              </div>
+
+              <div class="risk-bar-row">
+                <div class="risk-bar-label">
+                  <span class="risk-dot high-dot"></span>
+                  <span>High Risk</span>
+                  <strong>{{ getRiskCount('High Risk') }}</strong>
+                </div>
+                <div
+                  class="risk-bar-track"
+                  role="progressbar"
+                  aria-label="High risk vendor percentage"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  [attr.aria-valuenow]="getRiskWidth('High Risk')"
+                >
+                  <div
+                    class="risk-bar-fill high-fill"
+                    [style.width.%]="getRiskWidth('High Risk')"
+                  ></div>
+                </div>
+                <span class="risk-percent">
+                  {{ getRiskWidth('High Risk') | number:'1.0-0' }}%
+                </span>
+              </div>
+            </div>
+
+            <div class="risk-thresholds">
+              <h4>Risk Thresholds</h4>
+              <div>
+                <span class="risk-dot low-dot"></span>
+                <span>Low Risk</span>
+                <strong>{{ riskAnalysis.risk_thresholds['Low Risk'] }}</strong>
+              </div>
+              <div>
+                <span class="risk-dot medium-dot"></span>
+                <span>Medium Risk</span>
+                <strong>{{ riskAnalysis.risk_thresholds['Medium Risk'] }}</strong>
+              </div>
+              <div>
+                <span class="risk-dot high-dot"></span>
+                <span>High Risk</span>
+                <strong>{{ riskAnalysis.risk_thresholds['High Risk'] }}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="risk-vendor-card">
+            <div class="subsection-heading">
+              <div>
+                <h3>Vendor Risk Register</h3>
+                <p class="subtle-label">
+                  Select a vendor to inspect its risk evidence.
+                </p>
+              </div>
+              <span class="count-badge">
+                {{ getRiskVendors().length }} vendors
+              </span>
+            </div>
+
+            @if (getRiskVendors().length === 0) {
+              <p class="empty-note">No risk records returned by the API.</p>
+            } @else {
+              <div class="risk-table-wrap">
+                <table class="risk-table">
+                  <thead>
+                    <tr>
+                      <th>Vendor</th>
+                      <th>Score</th>
+                      <th>Risk</th>
+                      <th>Data</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (
+                      vendor of getRiskVendors();
+                      track trackByVendorId($index, vendor)
+                    ) {
+                      <tr
+                        tabindex="0"
+                        [class.selected-row]="selectedRiskVendor?.vendor_id === vendor.vendor_id"
+                        (click)="selectRiskVendor(vendor)"
+                        (keydown.enter)="selectRiskVendor(vendor)"
+                        (keydown.space)="selectRiskVendor(vendor); $event.preventDefault()"
+                      >
+                        <td>
+                          <span class="table-vendor-name">
+                            {{ vendor.vendor_name }}
+                          </span>
+                          <span class="table-vendor-category">
+                            {{ vendor.category || 'Uncategorized' }}
+                          </span>
+                        </td>
+                        <td>
+                          <strong [class]="getScoreClass(vendor.reliability_score)">
+                            {{ formatScore(vendor.reliability_score) }}
+                          </strong>
+                        </td>
+                        <td>
+                          <span
+                            class="risk-badge"
+                            [ngClass]="getRiskClass(vendor.procurement_risk_level)"
+                          >
+                            {{ vendor.procurement_risk_level }}
+                          </span>
+                        </td>
+                        <td>
+                          <span class="completeness-value">
+                            {{ vendor.data_completeness | number:'1.0-0' }}%
+                          </span>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        </div>
+
+        @if (selectedRiskVendor) {
+          <div class="risk-detail-card">
+            <div class="risk-detail-header">
+              <div>
+                <p class="eyebrow">SELECTED VENDOR</p>
+                <h3>{{ selectedRiskVendor.vendor_name }}</h3>
+                <p class="section-description">
+                  {{ selectedRiskVendor.category || 'Uncategorized' }}
+                  <span class="separator">·</span>
+                  {{ selectedRiskVendor.vendor_status }}
+                </p>
+              </div>
+
+              <span
+                class="risk-badge large-badge"
+                [ngClass]="getRiskClass(selectedRiskVendor.procurement_risk_level)"
+              >
+                {{ selectedRiskVendor.procurement_risk_level }}
+              </span>
+            </div>
+
+            <div class="detail-metrics">
+              <div>
+                <span>Reliability Score</span>
+                <strong [class]="getScoreClass(selectedRiskVendor.reliability_score)">
+                  {{ formatScore(selectedRiskVendor.reliability_score) }}
+                  <small>/ 100</small>
+                </strong>
+              </div>
+              <div>
+                <span>Data Completeness</span>
+                <strong>
+                  {{ selectedRiskVendor.data_completeness | number:'1.0-0' }}%
+                </strong>
+                <div class="completeness-track">
+                  <div
+                    class="completeness-fill"
+                    [style.width.%]="getCompletenessWidth(selectedRiskVendor.data_completeness)"
+                  ></div>
+                </div>
+              </div>
+              <div>
+                <span>Available Factors</span>
+                <strong>
+                  {{ selectedRiskVendor.available_factor_count }}
+                  <small>/ {{ selectedRiskVendor.total_factor_count }}</small>
+                </strong>
+              </div>
+              <div>
+                <span>Purchase Orders</span>
+                <strong>{{ selectedRiskVendor.purchase_order_count }}</strong>
+              </div>
+            </div>
+
+            @if (isInsufficientData(selectedRiskVendor)) {
+              <div class="data-warning">
+                <strong>Insufficient reliability data</strong>
+                <p>
+                  No reliability factors are currently available for this vendor.
+                  The risk category shown above is the category returned by the
+                  backend; it should be interpreted with this data limitation in mind.
+                </p>
+              </div>
+            }
+
+            <div class="factor-detail-section">
+              <h4>Reliability Factor Breakdown</h4>
+
+              @if (selectedRiskVendor.factors.length === 0) {
+                <p class="empty-note">
+                  No factor breakdown was returned for this vendor.
+                </p>
+              } @else {
+                <div class="factor-grid">
+                  @for (factor of selectedRiskVendor.factors; track factor.name) {
+                    <div class="factor-card">
+                      <div class="factor-card-top">
+                        <span>{{ factor.name }}</span>
+                        <strong [class]="getScoreClass(factor.score)">
+                          {{ formatScore(factor.score) }}
+                          @if (factor.score !== null) {
+                            <small>/ 100</small>
+                          }
+                        </strong>
+                      </div>
+
+                      <div class="factor-track">
+                        <div
+                          class="factor-fill"
+                          [ngClass]="getScoreClass(factor.score)"
+                          [style.width.%]="factor.score === null ? 0 : factor.score"
+                        ></div>
+                      </div>
+
+                      <p>{{ factor.description }}</p>
+                      <span class="factor-status">{{ factor.status }}</span>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="risk-explanation">
+              <h4>Risk Explanation</h4>
+              <p>{{ selectedRiskVendor.risk_explanation }}</p>
+            </div>
+
+            @if (selectedRiskVendor.recommendations.length > 0) {
+              <div class="risk-recommendations">
+                <h4>Procurement Recommendations</h4>
+                <ul>
+                  @for (
+                    recommendation of selectedRiskVendor.recommendations;
+                    track $index
+                  ) {
+                    <li>{{ recommendation }}</li>
+                  }
+                </ul>
+              </div>
+            }
+          </div>
+        }
+
+        <p class="risk-footnote">
+          Risk counts and vendor scores are returned by the backend. Vendors
+          with no available factors are highlighted as having insufficient data;
+          their backend risk category is not silently changed here.
+        </p>
+      }
+    </section>
+
+    <!-- VENDOR SELECTOR -->
+    <section class="panel vendor-selector-panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">SUPPLIER RECORDS</p>
+          <h2>Vendor Reliability Overview</h2>
+          <p class="section-description">
+            Select a vendor to review its reliability score and performance history.
+          </p>
+        </div>
+        <span class="count-badge">{{ vendors.length }} vendors</span>
+      </div>
+
+      <div class="vendor-list">
+        @for (vendor of vendors; track trackByVendorId($index, vendor)) {
+          <button
+            type="button"
+            class="vendor-option"
+            [class.active]="selectedVendor?.vendor_id === vendor.vendor_id"
+            (click)="selectVendor(vendor)"
+          >
+            <span class="vendor-avatar">
+              {{ vendor.vendor_name.charAt(0) || 'V' }}
+            </span>
+            <span class="vendor-option-info">
+              <strong>{{ vendor.vendor_name }}</strong>
+              <small>{{ vendor.category || 'Uncategorized' }}</small>
+            </span>
+            <span
+              class="risk-badge"
+              [ngClass]="getRiskClass(vendor.procurement_risk_level)"
+            >
+              {{ vendor.procurement_risk_level }}
+            </span>
+          </button>
+        }
+      </div>
+    </section>
+
+    @if (selectedVendor) {
+      <!-- SELECTED VENDOR OVERVIEW -->
+      <section class="selected-vendor-section">
+        <div class="selected-vendor-heading">
+          <div>
+            <p class="eyebrow">RELIABILITY PROFILE</p>
+            <h2>{{ selectedVendor.vendor_name }}</h2>
+            <p class="section-description">
+              {{ selectedVendor.category || 'Uncategorized' }}
+              <span class="separator">·</span>
+              {{ selectedVendor.vendor_status }}
+            </p>
+          </div>
+          <span
+            class="risk-badge large-badge"
+            [ngClass]="getRiskClass(selectedVendor.procurement_risk_level)"
+          >
+            {{ selectedVendor.procurement_risk_level }}
+          </span>
+        </div>
+
+        <div class="score-section">
+          <article class="score-card primary-score-card">
+            <span class="score-label">Reliability Score</span>
+            <div class="score-value" [class]="getScoreClass(selectedVendor.reliability_score)">
+              {{ formatScore(selectedVendor.reliability_score) }}
+              <small>/ 100</small>
+            </div>
+            <div class="score-track">
+              <div
+                class="score-fill"
+                [ngClass]="getScoreClass(selectedVendor.reliability_score)"
+                [style.width.%]="selectedVendor.reliability_score ?? 0"
+              ></div>
+            </div>
+            <span class="score-footnote">
+              Overall calculated reliability
+            </span>
+          </article>
+
+          <article class="score-card">
+            <span class="score-label">Supplier Ranking</span>
+            <div class="score-value">
+              @if (selectedVendor.supplier_ranking !== null) {
+                #{{ selectedVendor.supplier_ranking }}
+              } @else {
+                —
+              }
+            </div>
+            <span class="score-footnote">
+              Ranking returned by the backend
+            </span>
+          </article>
+
+          <article class="score-card">
+            <span class="score-label">Data Completeness</span>
+            <div class="score-value">
+              {{ selectedVendor.data_completeness | number:'1.0-0' }}%
+            </div>
+            <div class="score-track">
+              <div
+                class="score-fill completeness-fill"
+                [style.width.%]="getCompletenessWidth(selectedVendor.data_completeness)"
+              ></div>
+            </div>
+            <span class="score-footnote">
+              {{ selectedVendor.available_factor_count }}
+              of {{ selectedVendor.total_factor_count }} factors available
+            </span>
+          </article>
+        </div>
+
+        @if (selectedVendor.available_factor_count === 0) {
+          <div class="data-warning">
+            <strong>Insufficient reliability data</strong>
+            <p>
+              No reliability factors are available for this vendor. Treat the
+              displayed score and risk category cautiously until data is recorded.
+            </p>
+          </div>
+        }
+
+        <div class="content-grid">
+          <!-- FACTORS -->
+          <section class="panel content-panel">
+            <div class="section-heading">
+              <div>
+                <h3>Reliability Factors</h3>
+                <p class="section-description">
+                  Recorded evidence contributing to vendor reliability.
+                </p>
+              </div>
+            </div>
+
+            @if (selectedVendor.factors.length === 0) {
+              <p class="empty-note">No reliability factors available.</p>
+            } @else {
+              <div class="factor-list">
+                @for (factor of selectedVendor.factors; track factor.name) {
+                  <div class="factor-row">
+                    <div class="factor-main">
+                      <div class="factor-name-row">
+                        <strong>{{ factor.name }}</strong>
+                        <span [class]="getScoreClass(factor.score)">
+                          {{ formatScore(factor.score) }}
+                          @if (factor.score !== null) {
+                            <small>/ 100</small>
+                          }
+                        </span>
+                      </div>
+                      <p>{{ factor.description }}</p>
+                      <div class="factor-track">
+                        <div
+                          class="factor-fill"
+                          [ngClass]="getScoreClass(factor.score)"
+                          [style.width.%]="getFactorWidth(factor.name)"
+                        ></div>
+                      </div>
+                      <span class="factor-status">{{ factor.status }}</span>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </section>
+
+          <!-- RISK CLASSIFICATION -->
+          <section class="panel content-panel">
+            <div class="section-heading">
+              <div>
+                <h3>Risk Classification</h3>
+                <p class="section-description">
+                  Backend risk category and score thresholds.
+                </p>
+              </div>
+            </div>
+
+            <div class="risk-main">
+              <span class="risk-label">Current Risk Level</span>
+              <span
+                class="risk-badge large-badge"
+                [ngClass]="getRiskClass(selectedVendor.procurement_risk_level)"
+              >
+                {{ selectedVendor.procurement_risk_level }}
+              </span>
+              <p>
+                Reliability score:
+                <strong>{{ formatScore(selectedVendor.reliability_score) }}/100</strong>
+              </p>
+            </div>
+
+            <div class="risk-scale">
+              <div class="risk-scale-item">
+                <span class="risk-dot low-dot"></span>
+                <div>
+                  <strong>Low Risk</strong>
+                  <small>Reliability score ≥ 75</small>
+                </div>
+              </div>
+              <div class="risk-scale-item">
+                <span class="risk-dot medium-dot"></span>
+                <div>
+                  <strong>Medium Risk</strong>
+                  <small>Reliability score ≥ 50 and &lt; 75</small>
+                </div>
+              </div>
+              <div class="risk-scale-item">
+                <span class="risk-dot high-dot"></span>
+                <div>
+                  <strong>High Risk</strong>
+                  <small>Reliability score &lt; 50</small>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- PERFORMANCE TREND -->
+          <section class="panel content-panel">
+            <div class="section-heading">
+              <div>
+                <h3>Performance Trend</h3>
+                <p class="section-description">
+                  Evaluation history returned by the backend.
+                </p>
+              </div>
+            </div>
+
+            @if (selectedVendor.trend.length === 0) {
+              <p class="empty-note">No trend history available.</p>
+            } @else {
+              <div class="trend-list">
+                @for (item of selectedVendor.trend; track $index) {
+                  <div class="trend-row">
+                    <div class="trend-date">
+                      {{ item.evaluation_date | date:'mediumDate' }}
+                    </div>
+                    <div class="trend-values">
+                      <span>
+                        Reliability
+                        <strong>{{ item.reliability_score | number:'1.0-0' }}</strong>
+                      </span>
+                      <span>
+                        Performance
+                        <strong>{{ item.performance_score | number:'1.0-0' }}</strong>
+                      </span>
+                    </div>
+                    <div class="trend-track">
+                      <div
+                        class="trend-fill reliability-trend-fill"
+                        [style.width.%]="getTrendWidth(item.reliability_score)"
+                      ></div>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </section>
+
+          <!-- RECOMMENDATIONS -->
+          <section class="panel content-panel">
+            <div class="section-heading">
+              <div>
+                <h3>Procurement Recommendations</h3>
+                <p class="section-description">
+                  Suggestions returned for this vendor.
+                </p>
+              </div>
+            </div>
+
+            @if (selectedVendor.recommendations.length === 0) {
+              <p class="empty-note">
+                No recommendations are currently available.
+              </p>
+            } @else {
+              <ul class="recommendation-list">
+                @for (
+                  recommendation of selectedVendor.recommendations;
+                  track $index
+                ) {
+                  <li>
+                    <span class="recommendation-marker">›</span>
+                    <span>{{ recommendation }}</span>
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+        </div>
+      </section>
+    }
+  }
+</div>

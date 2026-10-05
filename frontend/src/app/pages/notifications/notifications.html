@@ -1,0 +1,429 @@
+
+<div class="notifications-page">
+
+  <div class="page-header">
+    <div>
+      <div class="eyebrow">ALERT CENTER</div>
+      <h1>Notifications</h1>
+      <p>
+        Procurement, delivery, vendor approval,
+        contract and compliance alerts.
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <button
+        class="secondary-button"
+        (click)="refresh()"
+        [disabled]="syncing">
+        {{ syncing ? 'Refreshing...' : 'Refresh' }}
+      </button>
+
+      <button
+        class="primary-button"
+        (click)="markAllAsRead()"
+        [disabled]="summary.unread === 0">
+        Mark all as read
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="loading" class="loading-card">
+    <div class="spinner"></div>
+    <span>Loading notifications...</span>
+  </div>
+
+  <ng-container *ngIf="!loading">
+
+    <!-- NOTIFICATION SUMMARY -->
+    <section class="summary-grid">
+
+      <div class="summary-card">
+        <div class="summary-icon">🔔</div>
+        <div>
+          <span class="summary-label">Total Notifications</span>
+          <strong>{{ summary.total }}</strong>
+        </div>
+      </div>
+
+      <div class="summary-card unread-card">
+        <div class="summary-icon">📬</div>
+        <div>
+          <span class="summary-label">Unread</span>
+          <strong>{{ summary.unread }}</strong>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-icon">📦</div>
+        <div>
+          <span class="summary-label">Procurement Alerts</span>
+          <strong>{{ summary.procurement_alerts }}</strong>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-icon">🚚</div>
+        <div>
+          <span class="summary-label">Delivery Delays</span>
+          <strong>{{ summary.delivery_delays }}</strong>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-icon">👤</div>
+        <div>
+          <span class="summary-label">Vendor Approvals</span>
+          <strong>{{ summary.vendor_approvals }}</strong>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-icon">📄</div>
+        <div>
+          <span class="summary-label">Contract Expiry</span>
+          <strong>{{ summary.contract_expiry_alerts }}</strong>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-icon">⚠️</div>
+        <div>
+          <span class="summary-label">Compliance</span>
+          <strong>{{ summary.compliance_alerts }}</strong>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- VENDOR RISK ALERTS -->
+    <section class="risk-alert-panel">
+
+      <div class="panel-header">
+        <div>
+          <h2>Vendor Risk Alerts</h2>
+          <p>
+            Risk levels calculated from vendor reliability data.
+          </p>
+        </div>
+
+        <button
+          class="secondary-button"
+          (click)="loadRiskAlerts()"
+          [disabled]="riskAlertsLoading">
+          {{ riskAlertsLoading ? 'Loading...' : 'Refresh Risks' }}
+        </button>
+      </div>
+
+      <div *ngIf="riskAlertsError" class="error-message">
+        {{ riskAlertsError }}
+      </div>
+
+      <div *ngIf="riskAlertsLoading" class="risk-loading">
+        <div class="spinner"></div>
+        <span>Loading vendor risk alerts...</span>
+      </div>
+
+      <ng-container *ngIf="!riskAlertsLoading">
+
+        <div
+          class="risk-summary-grid"
+          *ngIf="riskAlertSummary">
+
+          <div class="risk-summary-card">
+            <span>Total Vendors</span>
+            <strong>{{ riskAlertSummary.total }}</strong>
+          </div>
+
+          <div class="risk-summary-card high-risk">
+            <span>High Risk</span>
+            <strong>{{ riskAlertSummary.high_risk_count }}</strong>
+          </div>
+
+          <div class="risk-summary-card medium-risk">
+            <span>Medium Risk</span>
+            <strong>{{ riskAlertSummary.medium_risk_count }}</strong>
+          </div>
+
+          <div class="risk-summary-card unassessed-risk">
+            <span>Unassessed</span>
+            <strong>{{ riskAlertSummary.unassessed_count }}</strong>
+          </div>
+
+        </div>
+
+        <div class="risk-filters">
+          <button
+            [class.active]="riskAlertFilter === 'ALL'"
+            (click)="setRiskAlertFilter('ALL')">
+            All
+          </button>
+
+          <button
+            [class.active]="riskAlertFilter === 'HIGH'"
+            (click)="setRiskAlertFilter('HIGH')">
+            High Risk
+          </button>
+
+          <button
+            [class.active]="riskAlertFilter === 'MEDIUM'"
+            (click)="setRiskAlertFilter('MEDIUM')">
+            Medium Risk
+          </button>
+
+          <button
+            [class.active]="riskAlertFilter === 'LOW'"
+            (click)="setRiskAlertFilter('LOW')">
+            Low Risk
+          </button>
+
+          <button
+            [class.active]="riskAlertFilter === 'UNASSESSED'"
+            (click)="setRiskAlertFilter('UNASSESSED')">
+            Unassessed
+          </button>
+        </div>
+
+        <div
+          *ngIf="filteredRiskAlerts.length === 0"
+          class="empty-state">
+          <div class="empty-icon">✓</div>
+          <h3>No risk alerts found</h3>
+          <p>
+            There are no vendors matching the selected risk filter.
+          </p>
+        </div>
+
+        <div
+          *ngIf="filteredRiskAlerts.length > 0"
+          class="risk-alert-list">
+
+          <article
+            *ngFor="let alert of filteredRiskAlerts"
+            class="risk-alert-item">
+
+            <div class="risk-alert-top">
+              <div>
+                <h3>
+                  {{ alert.vendor_name || ('Vendor #' + alert.vendor_id) }}
+                </h3>
+
+                <span class="risk-vendor-id">
+                  Vendor ID: {{ alert.vendor_id }}
+                </span>
+              </div>
+
+              <span
+                class="risk-badge"
+                [ngClass]="getRiskAlertClass(alert.risk_level)">
+                {{ alert.risk_level }}
+              </span>
+            </div>
+
+            <div class="risk-alert-details">
+              <div>
+                <span>Reliability Score</span>
+                <strong>
+                  {{
+                    alert.reliability_score != null
+                      ? (alert.reliability_score | number:'1.0-2')
+                      : 'Not available'
+                  }}
+                </strong>
+              </div>
+            </div>
+
+            <div
+              class="risk-factors"
+              *ngIf="alert.factors?.length">
+
+              <h4>Risk Factors</h4>
+
+              <div
+                class="risk-factor"
+                *ngFor="let factor of alert.factors">
+
+                <div>
+                  <strong>{{ factor.name }}</strong>
+                  <span>{{ factor.description }}</span>
+                </div>
+
+                <span class="factor-score">
+                  {{ factor.score != null ? factor.score : 'N/A' }}
+                </span>
+
+              </div>
+            </div>
+
+          </article>
+        </div>
+
+      </ng-container>
+    </section>
+
+    <!-- NOTIFICATION ACTIVITY -->
+    <section class="notification-panel">
+
+      <div class="panel-header">
+        <div>
+          <h2>Notification Activity</h2>
+          <p>
+            Live notifications generated from application data.
+          </p>
+        </div>
+      </div>
+
+      <div class="filters">
+
+        <button
+          [class.active]="filter === 'ALL'"
+          (click)="setFilter('ALL')">
+          All
+        </button>
+
+        <button
+          [class.active]="filter === 'UNREAD'"
+          (click)="setFilter('UNREAD')">
+          Unread
+        </button>
+
+        <button
+          [class.active]="filter === 'PROCUREMENT_ALERT'"
+          (click)="setFilter('PROCUREMENT_ALERT')">
+          Procurement
+        </button>
+
+        <button
+          [class.active]="filter === 'DELIVERY_DELAY'"
+          (click)="setFilter('DELIVERY_DELAY')">
+          Delivery
+        </button>
+
+        <button
+          [class.active]="filter === 'VENDOR_APPROVAL'"
+          (click)="setFilter('VENDOR_APPROVAL')">
+          Vendors
+        </button>
+
+        <button
+          [class.active]="filter === 'CONTRACT_EXPIRY'"
+          (click)="setFilter('CONTRACT_EXPIRY')">
+          Contracts
+        </button>
+
+        <button
+          [class.active]="filter === 'COMPLIANCE'"
+          (click)="setFilter('COMPLIANCE')">
+          Compliance
+        </button>
+
+        <button
+          [class.active]="filter === 'RISK_ALERT'"
+          (click)="setFilter('RISK_ALERT')">
+          Risk Alerts
+        </button>
+
+      </div>
+
+      <!-- EMPTY STATE -->
+      <div
+        *ngIf="filteredNotifications.length === 0"
+        class="empty-state">
+
+        <div class="empty-icon">🔔</div>
+        <h3>No notifications</h3>
+        <p>
+          There are no notifications matching the selected filter.
+        </p>
+
+      </div>
+
+      <!-- NOTIFICATION LIST -->
+      <div
+        *ngIf="filteredNotifications.length > 0"
+        class="notification-list">
+
+        <article
+          *ngFor="let notification of filteredNotifications"
+          class="notification-item"
+          [class.unread]="!notification.is_read"
+          (click)="markAsRead(notification)">
+
+          <div class="notification-icon">
+            {{ getNotificationIcon(notification.notification_type) }}
+          </div>
+
+          <div class="notification-content">
+
+            <div class="notification-top">
+              <h3>{{ notification.title }}</h3>
+
+              <span class="notification-time">
+                {{ formatDate(notification.created_at) }}
+              </span>
+            </div>
+
+            <p>{{ notification.message }}</p>
+
+            <div class="notification-meta">
+
+              <span class="type-badge">
+                {{ getNotificationLabel(notification.notification_type) }}
+              </span>
+
+              <span class="channel-badge">
+                {{ notification.channel }}
+              </span>
+
+              <span
+                class="read-status"
+                *ngIf="!notification.is_read">
+                Unread
+              </span>
+
+              <span
+                class="read-status read"
+                *ngIf="notification.is_read">
+                Read
+              </span>
+
+            </div>
+          </div>
+
+          <button
+            class="delete-button"
+            title="Delete notification"
+            (click)="
+              $event.stopPropagation();
+              deleteNotification(notification)
+            ">
+            ×
+          </button>
+
+        </article>
+      </div>
+
+    </section>
+
+    <!-- SYSTEM INFORMATION -->
+    <section class="system-card">
+
+      <div class="system-icon">✓</div>
+
+      <div>
+        <h3>Notification system connected</h3>
+        <p>
+          Notifications are generated from the current vendors,
+          purchase orders and contracts stored in the database.
+          Vendor risk alerts are loaded from the risk assessment API.
+        </p>
+      </div>
+
+    </section>
+
+  </ng-container>
+</div>

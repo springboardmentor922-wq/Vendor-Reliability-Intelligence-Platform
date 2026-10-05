@@ -1,0 +1,1345 @@
+<div class="contracts-page">
+
+  <!-- ========================= -->
+  <!-- PAGE HEADER -->
+  <!-- ========================= -->
+
+  <div class="page-header">
+
+    <div>
+      <h1>Contract & Compliance</h1>
+
+      <p>
+        Manage vendor contracts, certifications,
+        compliance and vendor documentation.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="primary-btn"
+      (click)="openContractForm()">
+
+      + New Contract
+
+    </button>
+
+  </div>
+
+
+  <!-- ========================= -->
+  <!-- ALERTS -->
+  <!-- ========================= -->
+
+  <div
+    class="alert success"
+    *ngIf="successMessage">
+
+    {{ successMessage }}
+
+  </div>
+
+  <div
+    class="alert error"
+    *ngIf="errorMessage">
+
+    {{ errorMessage }}
+
+  </div>
+
+
+  <!-- ========================= -->
+  <!-- SUMMARY -->
+  <!-- ========================= -->
+
+  <div class="summary-grid">
+
+    <div class="summary-card">
+
+      <span>Active Contracts</span>
+
+      <strong>
+        {{ activeCount() }}
+      </strong>
+
+    </div>
+
+
+    <div class="summary-card">
+
+      <span>Compliant Contracts</span>
+
+      <strong>
+        {{ compliantCount() }}
+      </strong>
+
+    </div>
+
+
+    <div class="summary-card">
+
+      <span>Non-Compliant</span>
+
+      <strong>
+        {{ nonCompliantCount() }}
+      </strong>
+
+    </div>
+
+
+    <div class="summary-card warning">
+
+      <span>Contracts Expiring Soon</span>
+
+      <strong>
+        {{ expiringCount() }}
+      </strong>
+
+    </div>
+
+
+    <div class="summary-card">
+
+      <span>Valid Certifications</span>
+
+      <strong>
+        {{ validCertificationCount() }}
+      </strong>
+
+    </div>
+
+
+    <div class="summary-card">
+
+      <span>Expired Certifications</span>
+
+      <strong>
+        {{ expiredCertificationCount() }}
+      </strong>
+
+    </div>
+
+  </div>
+
+
+  <!-- ===================================================== -->
+  <!-- CREATE CONTRACT -->
+  <!-- ===================================================== -->
+
+  <div
+    class="form-card"
+    *ngIf="showContractForm">
+
+    <div class="section-heading">
+
+      <div>
+
+        <h2>Create Contract</h2>
+
+        <p>
+          Register a new vendor contract.
+        </p>
+
+      </div>
+
+      <button
+        type="button"
+        class="close-btn"
+        (click)="closeContractForm()">
+
+        ×
+
+      </button>
+
+    </div>
+
+
+    <form
+      [formGroup]="contractForm"
+      (ngSubmit)="saveContract()">
+
+      <div class="form-grid">
+
+
+        <!-- Contract Number -->
+
+        <div class="form-field">
+
+          <label>
+            Contract Number *
+          </label>
+
+          <input
+            type="text"
+            formControlName="contract_number"
+            placeholder="CON-2026-001">
+
+        </div>
+
+
+        <!-- Vendor -->
+
+        <div class="form-field">
+
+          <label>
+            Vendor *
+          </label>
+
+          <select formControlName="vendor_id">
+
+            <option value="">
+              Select Vendor
+            </option>
+
+            <option
+              *ngFor="let vendor of vendors"
+              [value]="vendor.id">
+
+              {{ vendor.name }}
+
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <!-- Title -->
+
+        <div class="form-field">
+
+          <label>
+            Contract Title *
+          </label>
+
+          <input
+            type="text"
+            formControlName="title"
+            placeholder="Annual Supply Agreement">
+
+        </div>
+
+
+        <!-- Contract Type -->
+
+        <div class="form-field">
+
+          <label>
+            Contract Type *
+          </label>
+
+          <input
+            type="text"
+            formControlName="contract_type"
+            placeholder="Supply / Service / Maintenance">
+
+        </div>
+
+
+        <!-- Start Date -->
+
+        <div class="form-field">
+
+          <label>
+            Start Date *
+          </label>
+
+          <input
+            type="date"
+            formControlName="start_date">
+
+        </div>
+
+
+        <!-- End Date -->
+
+        <div class="form-field">
+
+          <label>
+            End Date *
+          </label>
+
+          <input
+            type="date"
+            formControlName="end_date">
+
+        </div>
+
+
+        <!-- Renewal Date -->
+
+        <div class="form-field">
+
+          <label>
+            Renewal Date
+          </label>
+
+          <input
+            type="date"
+            formControlName="renewal_date">
+
+        </div>
+
+
+        <!-- Contract Value -->
+
+        <div class="form-field">
+
+          <label>
+            Contract Value
+          </label>
+
+          <input
+            type="number"
+            formControlName="contract_value"
+            min="0"
+            placeholder="0">
+
+        </div>
+
+
+        <!-- Payment Terms -->
+
+        <div class="form-field">
+
+          <label>
+            Payment Terms
+          </label>
+
+          <input
+            type="text"
+            formControlName="payment_terms"
+            placeholder="Net 30">
+
+        </div>
+
+
+        <!-- Notes -->
+
+        <div class="form-field full">
+
+          <label>
+            Notes
+          </label>
+
+          <textarea
+            formControlName="notes"
+            rows="4"
+            placeholder="Additional contract notes">
+          </textarea>
+
+        </div>
+
+      </div>
+
+
+      <div class="form-actions">
+
+        <button
+          type="button"
+          class="secondary-btn"
+          (click)="closeContractForm()">
+
+          Cancel
+
+        </button>
+
+        <button
+          type="submit"
+          class="primary-btn"
+          [disabled]="saving">
+
+          {{ saving ? 'Saving...' : 'Create Contract' }}
+
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+
+  <!-- ===================================================== -->
+  <!-- CONTRACT EXPIRY TRACKING -->
+  <!-- ===================================================== -->
+
+  <section class="section-card">
+
+    <div class="section-heading">
+
+      <div>
+
+        <h2>
+          Contract Expiry Tracking
+        </h2>
+
+        <p>
+          Contracts requiring attention within
+          the next 30 days.
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <div
+      class="empty-state"
+      *ngIf="expiringContracts.length === 0">
+
+      No contracts are expiring within
+      the next 30 days.
+
+    </div>
+
+
+    <div
+      class="table-wrapper"
+      *ngIf="expiringContracts.length > 0">
+
+      <table>
+
+        <thead>
+
+          <tr>
+
+            <th>
+              Contract
+            </th>
+
+            <th>
+              Vendor
+            </th>
+
+            <th>
+              End Date
+            </th>
+
+            <th>
+              Renewal Date
+            </th>
+
+            <th>
+              Days Remaining
+            </th>
+
+            <th>
+              Status
+            </th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody>
+
+          <tr
+            *ngFor="
+              let contract of expiringContracts
+            ">
+
+            <td>
+
+              <strong>
+                {{ contract.contract_number }}
+              </strong>
+
+              <small>
+                {{ contract.title }}
+              </small>
+
+            </td>
+
+
+            <td>
+
+              {{ vendorName(contract.vendor_id) }}
+
+            </td>
+
+
+            <td>
+
+              {{ formatDate(contract.end_date) }}
+
+            </td>
+
+
+            <td>
+
+              {{ formatDate(contract.renewal_date) }}
+
+            </td>
+
+
+            <td>
+
+              <span class="expiry-badge">
+
+                {{ daysUntil(contract.end_date) }}
+                days
+
+              </span>
+
+            </td>
+
+
+            <td>
+
+              <span class="status-badge">
+
+                {{ contract.status }}
+
+              </span>
+
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </section>
+
+
+  <!-- ===================================================== -->
+  <!-- CONTRACT REPOSITORY -->
+  <!-- ===================================================== -->
+
+  <section class="section-card">
+
+    <div class="section-heading">
+
+      <div>
+
+        <h2>
+          Contract Repository
+        </h2>
+
+        <p>
+          View and manage vendor contract records.
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <div
+      class="empty-state"
+      *ngIf="contracts.length === 0">
+
+      No contracts found.
+
+    </div>
+
+
+    <div
+      class="table-wrapper"
+      *ngIf="contracts.length > 0">
+
+      <table>
+
+        <thead>
+
+          <tr>
+
+            <th>
+              Contract
+            </th>
+
+            <th>
+              Vendor
+            </th>
+
+            <th>
+              Type
+            </th>
+
+            <th>
+              Contract Period
+            </th>
+
+            <th>
+              Value
+            </th>
+
+            <th>
+              Status
+            </th>
+
+            <th>
+              Compliance
+            </th>
+
+            <th>
+              Actions
+            </th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody>
+
+          <tr
+            *ngFor="
+              let contract of contracts
+            ">
+
+            <td>
+
+              <strong>
+                {{ contract.contract_number }}
+              </strong>
+
+              <small>
+                {{ contract.title }}
+              </small>
+
+            </td>
+
+
+            <td>
+
+              {{ vendorName(contract.vendor_id) }}
+
+            </td>
+
+
+            <td>
+
+              {{ contract.contract_type }}
+
+            </td>
+
+
+            <td>
+
+              {{ formatDate(contract.start_date) }}
+
+              <span>
+                -
+              </span>
+
+              {{ formatDate(contract.end_date) }}
+
+            </td>
+
+
+            <td>
+
+              {{ formatCurrency(contract.contract_value) }}
+
+            </td>
+
+
+            <td>
+
+              <select
+                class="table-select"
+                [ngModel]="contract.status"
+                (ngModelChange)="
+                  changeStatus(contract, $event)
+                ">
+
+                <option
+                  *ngFor="let status of statuses"
+                  [value]="status">
+
+                  {{ status }}
+
+                </option>
+
+              </select>
+
+            </td>
+
+
+            <td>
+
+              <select
+                class="table-select"
+                [ngModel]="contract.compliance_status"
+                (ngModelChange)="
+                  changeCompliance(contract, $event)
+                ">
+
+                <option
+                  *ngFor="
+                    let status of complianceStatuses
+                  "
+                  [value]="status">
+
+                  {{ status }}
+
+                </option>
+
+              </select>
+
+            </td>
+
+
+            <td>
+
+              <button
+                type="button"
+                class="delete-btn"
+                (click)="deleteContract(contract)">
+
+                Delete
+
+              </button>
+
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </section>
+
+
+  <!-- ===================================================== -->
+  <!-- CERTIFICATION MANAGEMENT -->
+  <!-- ===================================================== -->
+
+  <section class="section-card">
+
+    <div class="section-heading">
+
+      <div>
+
+        <h2>
+          Certification Management
+        </h2>
+
+        <p>
+          Track vendor certifications,
+          validity and expiry.
+        </p>
+
+      </div>
+
+
+      <button
+        type="button"
+        class="secondary-primary-btn"
+        (click)="openCertificationForm()">
+
+        + Add Certification
+
+      </button>
+
+    </div>
+
+
+    <!-- Certification Form -->
+
+    <div
+      class="inline-form"
+      *ngIf="showCertificationForm">
+
+      <form
+        [formGroup]="certificationForm"
+        (ngSubmit)="saveCertification()">
+
+        <div class="form-grid">
+
+
+          <div class="form-field">
+
+            <label>
+              Vendor *
+            </label>
+
+            <select formControlName="vendor_id">
+
+              <option value="">
+                Select Vendor
+              </option>
+
+              <option
+                *ngFor="let vendor of vendors"
+                [value]="vendor.id">
+
+                {{ vendor.name }}
+
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <div class="form-field">
+
+            <label>
+              Certification Name *
+            </label>
+
+            <input
+              type="text"
+              formControlName="name"
+              placeholder="ISO 9001">
+
+          </div>
+
+
+          <div class="form-field">
+
+            <label>
+              Certificate Number
+            </label>
+
+            <input
+              type="text"
+              formControlName="certificate_number"
+              placeholder="CERT-001">
+
+          </div>
+
+
+          <div class="form-field">
+
+            <label>
+              Issue Date *
+            </label>
+
+            <input
+              type="date"
+              formControlName="issue_date">
+
+          </div>
+
+
+          <div class="form-field">
+
+            <label>
+              Expiry Date *
+            </label>
+
+            <input
+              type="date"
+              formControlName="expiry_date">
+
+          </div>
+
+        </div>
+
+
+        <div class="form-actions">
+
+          <button
+            type="button"
+            class="secondary-btn"
+            (click)="closeCertificationForm()">
+
+            Cancel
+
+          </button>
+
+          <button
+            type="submit"
+            class="primary-btn"
+            [disabled]="saving">
+
+            {{
+              saving
+                ? 'Saving...'
+                : 'Add Certification'
+            }}
+
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+
+
+    <!-- Certification Table -->
+
+    <div
+      class="empty-state"
+      *ngIf="certifications.length === 0">
+
+      No certifications found.
+
+    </div>
+
+
+    <div
+      class="table-wrapper"
+      *ngIf="certifications.length > 0">
+
+      <table>
+
+        <thead>
+
+          <tr>
+
+            <th>
+              Vendor
+            </th>
+
+            <th>
+              Certification
+            </th>
+
+            <th>
+              Certificate Number
+            </th>
+
+            <th>
+              Issue Date
+            </th>
+
+            <th>
+              Expiry Date
+            </th>
+
+            <th>
+              Status
+            </th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody>
+
+          <tr
+            *ngFor="
+              let certification of certifications
+            ">
+
+            <td>
+
+              {{ vendorName(certification.vendor_id) }}
+
+            </td>
+
+
+            <td>
+
+              <strong>
+                {{ certification.name }}
+              </strong>
+
+            </td>
+
+
+            <td>
+
+              {{
+                certification.certificate_number
+                || '-'
+              }}
+
+            </td>
+
+
+            <td>
+
+              {{ formatDate(certification.issue_date) }}
+
+            </td>
+
+
+            <td>
+
+              {{ formatDate(certification.expiry_date) }}
+
+            </td>
+
+
+            <td>
+
+              <select
+                class="table-select"
+                [ngModel]="certification.status"
+                (ngModelChange)="
+                  changeCertificationStatus(
+                    certification,
+                    $event
+                  )
+                ">
+
+                <option
+                  *ngFor="
+                    let status of certificationStatuses
+                  "
+                  [value]="status">
+
+                  {{ status }}
+
+                </option>
+
+              </select>
+
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </section>
+
+
+  <!-- ===================================================== -->
+  <!-- VENDOR DOCUMENTATION -->
+  <!-- ===================================================== -->
+
+  <section class="section-card">
+
+    <div class="section-heading">
+
+      <div>
+
+        <h2>
+          Vendor Documentation
+        </h2>
+
+        <p>
+          Maintain vendor documentation,
+          expiry and compliance records.
+        </p>
+
+      </div>
+
+
+      <button
+        type="button"
+        class="secondary-primary-btn"
+        (click)="openDocumentForm()">
+
+        + Add Document
+
+      </button>
+
+    </div>
+
+
+    <!-- Document Form -->
+
+    <div
+      class="inline-form"
+      *ngIf="showDocumentForm">
+
+      <form
+        [formGroup]="documentForm"
+        (ngSubmit)="saveDocument()">
+
+        <div class="form-grid">
+
+
+          <div class="form-field">
+
+            <label>
+              Vendor *
+            </label>
+
+            <select formControlName="vendor_id">
+
+              <option value="">
+                Select Vendor
+              </option>
+
+              <option
+                *ngFor="let vendor of vendors"
+                [value]="vendor.id">
+
+                {{ vendor.name }}
+
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <div class="form-field">
+
+            <label>
+              Document Name *
+            </label>
+
+            <input
+              type="text"
+              formControlName="document_name"
+              placeholder="Business Registration Certificate">
+
+          </div>
+
+
+          <div class="form-field">
+
+            <label>
+              Document Type *
+            </label>
+
+            <input
+              type="text"
+              formControlName="document_type"
+              placeholder="Registration / Tax / Insurance">
+
+          </div>
+
+
+          <div class="form-field">
+
+            <label>
+              Document Number
+            </label>
+
+            <input
+              type="text"
+              formControlName="document_number"
+              placeholder="DOC-001">
+
+          </div>
+
+
+          <div class="form-field">
+
+            <label>
+              Issue Date
+            </label>
+
+            <input
+              type="date"
+              formControlName="issue_date">
+
+          </div>
+
+
+          <div class="form-field">
+
+            <label>
+              Expiry Date
+            </label>
+
+            <input
+              type="date"
+              formControlName="expiry_date">
+
+          </div>
+
+
+          <div class="form-field">
+
+            <label>
+              Status
+            </label>
+
+            <select formControlName="status">
+
+              <option
+                *ngFor="
+                  let status of documentStatuses
+                "
+                [value]="status">
+
+                {{ status }}
+
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <div class="form-field full">
+
+            <label>
+              Notes
+            </label>
+
+            <textarea
+              formControlName="notes"
+              rows="3"
+              placeholder="Additional document notes">
+            </textarea>
+
+          </div>
+
+        </div>
+
+
+        <div class="form-actions">
+
+          <button
+            type="button"
+            class="secondary-btn"
+            (click)="closeDocumentForm()">
+
+            Cancel
+
+          </button>
+
+          <button
+            type="submit"
+            class="primary-btn"
+            [disabled]="saving">
+
+            {{
+              saving
+                ? 'Saving...'
+                : 'Add Document'
+            }}
+
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+
+
+    <!-- Document Table -->
+
+    <div
+      class="empty-state"
+      *ngIf="documents.length === 0">
+
+      No vendor documents found.
+
+    </div>
+
+
+    <div
+      class="table-wrapper"
+      *ngIf="documents.length > 0">
+
+      <table>
+
+        <thead>
+
+          <tr>
+
+            <th>
+              Vendor
+            </th>
+
+            <th>
+              Document
+            </th>
+
+            <th>
+              Type
+            </th>
+
+            <th>
+              Document Number
+            </th>
+
+            <th>
+              Issue Date
+            </th>
+
+            <th>
+              Expiry Date
+            </th>
+
+            <th>
+              Status
+            </th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody>
+
+          <tr
+            *ngFor="
+              let document of documents
+            ">
+
+            <td>
+
+              {{ vendorName(document.vendor_id) }}
+
+            </td>
+
+
+            <td>
+
+              <strong>
+                {{ document.document_name }}
+              </strong>
+
+            </td>
+
+
+            <td>
+
+              {{ document.document_type }}
+
+            </td>
+
+
+            <td>
+
+              {{
+                document.document_number
+                || '-'
+              }}
+
+            </td>
+
+
+            <td>
+
+              {{ formatDate(document.issue_date) }}
+
+            </td>
+
+
+            <td>
+
+              {{ formatDate(document.expiry_date) }}
+
+            </td>
+
+
+            <td>
+
+              <span class="status-badge">
+
+                {{ document.status }}
+
+              </span>
+
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </section>
+
+</div>

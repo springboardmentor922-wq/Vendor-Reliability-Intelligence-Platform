@@ -1,0 +1,757 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <span class="eyebrow">PROCUREMENT</span>
+      <h1>Purchase Orders</h1>
+      <p>
+        Create, approve and track purchase orders,
+        deliveries and invoices.
+      </p>
+    </div>
+    <button class="primary-button" type="button" (click)="openCreateForm()">
+      + Create Purchase Order
+    </button>
+  </div>
+
+  @if (successMessage) {
+    <div class="message success">{{ successMessage }}</div>
+  }
+
+  @if (errorMessage) {
+    <div class="message error">{{ errorMessage }}</div>
+  }
+
+  <section class="section">
+    <h2>Purchase Order Overview</h2>
+    <div class="metric-grid">
+      <div class="metric-card">
+        <span>Total POs</span>
+        <strong>{{ totalOrders }}</strong>
+        <small>Database records</small>
+      </div>
+      <div class="metric-card">
+        <span>Pending POs</span>
+        <strong>{{ pendingOrders }}</strong>
+        <small>Awaiting approval</small>
+      </div>
+      <div class="metric-card">
+        <span>Approved POs</span>
+        <strong>{{ approvedOrders }}</strong>
+        <small>Approved</small>
+      </div>
+      <div class="metric-card">
+        <span>Ordered</span>
+        <strong>{{ orderedOrders }}</strong>
+        <small>In transit</small>
+      </div>
+      <div class="metric-card">
+        <span>Delivered</span>
+        <strong>{{ deliveredOrders }}</strong>
+        <small>Delivered orders</small>
+      </div>
+      <div class="metric-card">
+        <span>Completed</span>
+        <strong>{{ completedOrders }}</strong>
+        <small>Completed orders</small>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="metric-grid">
+      <div class="metric-card">
+        <span>Active POs</span>
+        <strong>{{ activeOrders }}</strong>
+        <small>Not completed/cancelled</small>
+      </div>
+      <div class="metric-card">
+        <span>PO Value</span>
+        <strong>{{ formatCurrency(totalPOValue) }}</strong>
+        <small>Total PO value</small>
+      </div>
+      <div class="metric-card">
+        <span>Overdue POs</span>
+        <strong>{{ overdueOrders }}</strong>
+        <small>Past expected delivery</small>
+      </div>
+      <div class="metric-card">
+        <span>On-Time Deliveries</span>
+        <strong>{{ onTimeDeliveries }}</strong>
+        <small>Actual date on or before expected date</small>
+      </div>
+      <div class="metric-card">
+        <span>Delayed Deliveries</span>
+        <strong>{{ delayedDeliveries }}</strong>
+        <small>Late or currently overdue</small>
+      </div>
+      <div class="metric-card">
+        <span>Delivery Rate</span>
+        <strong>{{ deliveryRate | number:'1.0-1' }}%</strong>
+        <small>Based on current PO status</small>
+      </div>
+    </div>
+  </section>
+
+  <!-- CREATE PURCHASE ORDER -->
+  @if (showForm) {
+    <section class="form-card">
+      <div class="form-heading">
+        <div>
+          <span class="eyebrow">ORDER CREATION</span>
+          <h2>Create Purchase Order</h2>
+        </div>
+        <button
+          class="close-button"
+          type="button"
+          (click)="closeForm()"
+          [disabled]="saving"
+        >
+          ×
+        </button>
+      </div>
+
+      <form #poForm="ngForm" (ngSubmit)="savePurchaseOrder(poForm)" novalidate>
+        <div class="form-section">
+          <h3>Purchase Order Information</h3>
+          <div class="form-grid">
+            <div class="field">
+              <label for="poNumber">PO Number</label>
+              <input
+                id="poNumber"
+                name="po_number"
+                type="text"
+                [(ngModel)]="form.po_number"
+                required
+                maxlength="50"
+                #poNumber="ngModel"
+              >
+              @if (poNumber.invalid && poNumber.touched) {
+                <small class="field-error">PO Number is required.</small>
+              }
+            </div>
+
+            <div class="field">
+              <label for="orderDate">Order Date</label>
+              <input
+                id="orderDate"
+                name="order_date"
+                type="date"
+                [(ngModel)]="form.order_date"
+                required
+              >
+            </div>
+
+            <div class="field">
+              <label for="expectedDeliveryDate">Expected Delivery Date</label>
+              <input
+                id="expectedDeliveryDate"
+                name="expected_delivery_date"
+                type="date"
+                [(ngModel)]="form.expected_delivery_date"
+                required
+              >
+              @if (form.expected_delivery_date < form.order_date) {
+                <small class="field-error">
+                  Delivery date cannot be before order date.
+                </small>
+              }
+            </div>
+
+            <div class="field">
+              <label for="procurementRequest">Procurement Request</label>
+              <select
+                id="procurementRequest"
+                name="procurement_request_id"
+                [(ngModel)]="form.procurement_request_id"
+              >
+                <option [ngValue]="null">No procurement request</option>
+                @for (request of procurementRequests; track request.id) {
+                  <option [ngValue]="request.id">
+                    #{{ request.id }} - {{ request.title }}
+                  </option>
+                }
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="department">Department</label>
+              <input
+                id="department"
+                name="department"
+                type="text"
+                [(ngModel)]="form.department"
+                required
+                maxlength="100"
+                placeholder="Example: Procurement"
+                #department="ngModel"
+              >
+              @if (department.invalid && department.touched) {
+                <small class="field-error">Department is required.</small>
+              }
+            </div>
+
+            <div class="field">
+              <label for="vendor">Vendor</label>
+              <select
+                id="vendor"
+                name="vendor_id"
+                [(ngModel)]="form.vendor_id"
+                required
+                #vendor="ngModel"
+              >
+                <option [ngValue]="0">Select approved vendor</option>
+                @for (vendorItem of vendors; track vendorItem.id) {
+                  <option [ngValue]="vendorItem.id">
+                    {{ vendorItem.name }}
+                  </option>
+                }
+              </select>
+              @if (vendors.length === 0) {
+                <small class="field-error">
+                  No approved vendors are available.
+                </small>
+              }
+              @if (vendor.invalid && vendor.touched) {
+                <small class="field-error">Please select a vendor.</small>
+              }
+            </div>
+
+            <div class="field full-width">
+              <label for="paymentTerms">Payment Terms</label>
+              <input
+                id="paymentTerms"
+                name="payment_terms"
+                type="text"
+                [(ngModel)]="form.payment_terms"
+                required
+                maxlength="200"
+                placeholder="Example: Net 30 days"
+                #paymentTerms="ngModel"
+              >
+              @if (paymentTerms.invalid && paymentTerms.touched) {
+                <small class="field-error">Payment terms are required.</small>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- ADDRESSES -->
+        <div class="form-section">
+          <h3>Delivery & Billing</h3>
+          <div class="form-grid">
+            <div class="field">
+              <label for="shippingAddress">Shipping Address</label>
+              <textarea
+                id="shippingAddress"
+                name="shipping_address"
+                [(ngModel)]="form.shipping_address"
+                (ngModelChange)="onShippingAddressChange()"
+                required
+                rows="4"
+                placeholder="Enter shipping address"
+              ></textarea>
+            </div>
+
+            <div class="field">
+              <label for="billingAddress">Billing Address</label>
+              <textarea
+                id="billingAddress"
+                name="billing_address"
+                [(ngModel)]="form.billing_address"
+                [disabled]="sameAsShipping"
+                required
+                rows="4"
+                placeholder="Enter billing address"
+              ></textarea>
+
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  name="sameAsShipping"
+                  [(ngModel)]="sameAsShipping"
+                  (change)="toggleSameAddress()"
+                >
+                Same as shipping address
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- ORDER ITEMS -->
+        <div class="form-section">
+          <div class="section-heading">
+            <div>
+              <h3>Order Items</h3>
+              <p>Add the items included in this purchase order.</p>
+            </div>
+            <button
+              class="secondary-button"
+              type="button"
+              (click)="addItem()"
+            >
+              + Add Item
+            </button>
+          </div>
+
+          <div class="items-table-wrapper">
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th>Item Description</th>
+                  <th>Quantity</th>
+                  <th>Unit Price</th>
+                  <th>Tax %</th>
+                  <th>Total</th>
+                  <th></th>
+                </tr>
+              </thead>
+
+              <tbody>
+                @for (item of items; track $index; let i = $index) {
+                  <tr>
+                    <td>
+                      <input
+                        type="text"
+                        [name]="'item_description_' + i"
+                        [(ngModel)]="item.item_description"
+                        required
+                        minlength="2"
+                        placeholder="Item description"
+                      >
+                    </td>
+
+                    <td>
+                      <input
+                        type="number"
+                        [name]="'quantity_' + i"
+                        [(ngModel)]="item.quantity"
+                        required
+                        min="1"
+                      >
+                    </td>
+
+                    <td>
+                      <input
+                        type="number"
+                        [name]="'unit_price_' + i"
+                        [(ngModel)]="item.unit_price"
+                        required
+                        min="0"
+                        step="0.01"
+                      >
+                    </td>
+
+                    <td>
+                      <input
+                        type="number"
+                        [name]="'tax_percent_' + i"
+                        [(ngModel)]="item.tax_percent"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                      >
+                    </td>
+
+                    <td class="item-total">
+                      {{ formatCurrency(itemTotal(item)) }}
+                    </td>
+
+                    <td>
+                      <button
+                        class="delete-item"
+                        type="button"
+                        (click)="removeItem(i)"
+                        [disabled]="items.length === 1"
+                      >
+                        ×
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ORDER SUMMARY -->
+        <div class="summary-section">
+          <div>
+            <label for="remarks">Remarks</label>
+            <textarea
+              id="remarks"
+              name="remarks"
+              [(ngModel)]="form.remarks"
+              rows="4"
+              placeholder="Additional remarks"
+            ></textarea>
+          </div>
+
+          <div class="order-summary">
+            <h3>Order Summary</h3>
+            <div class="summary-row">
+              <span>Subtotal</span>
+              <strong>{{ formatCurrency(subtotal) }}</strong>
+            </div>
+            <div class="summary-row">
+              <span>Tax</span>
+              <strong>{{ formatCurrency(taxAmount) }}</strong>
+            </div>
+            <div class="summary-row total">
+              <span>Total Amount</span>
+              <strong>{{ formatCurrency(totalAmount) }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button
+            class="secondary-button"
+            type="button"
+            (click)="closeForm()"
+            [disabled]="saving"
+          >
+            Cancel
+          </button>
+
+          <button
+            class="primary-button"
+            type="submit"
+            [disabled]="saving"
+          >
+            {{ saving ? 'Saving...' : 'Submit for Approval' }}
+          </button>
+        </div>
+      </form>
+    </section>
+  }
+
+  <!-- PURCHASE ORDER REGISTER -->
+  <section class="table-card">
+    <div class="table-header">
+      <div>
+        <h2>Purchase Order Register</h2>
+        <p>Purchase orders stored in the database.</p>
+      </div>
+
+      <div
+        class="table-controls"
+        style="display: flex; align-items: flex-end; justify-content: flex-end; gap: 16px; flex-wrap: wrap; width: 100%;"
+      >
+        <div
+          class="search-box"
+          style="display: flex; flex-direction: column; align-items: stretch; gap: 7px; flex: 1 1 320px; width: min(390px, 100%); max-width: 390px;"
+        >
+          <label for="poSearch" style="display: block; margin: 0;">
+            Search Purchase Orders
+          </label>
+          <input
+            id="poSearch"
+            class="po-search-input"
+            style="display: block; width: 100%; min-width: 0; box-sizing: border-box;"
+            type="text"
+            name="searchTerm"
+            [(ngModel)]="searchTerm"
+            (ngModelChange)="onSearchChange()"
+            placeholder="Search PO number, vendor or department..."
+          >
+        </div>
+
+        <div
+          class="filter"
+          style="display: flex; flex-direction: column; gap: 7px; flex: 0 1 220px; width: 220px;"
+        >
+          <label for="statusFilter">Status</label>
+          <select
+            id="statusFilter"
+            name="filterStatus"
+            [(ngModel)]="filterStatus"
+            (ngModelChange)="onStatusFilterChange()"
+          >
+            <option value="">All Statuses</option>
+            @for (status of statuses; track status) {
+              <option [value]="status">{{ status }}</option>
+            }
+          </select>
+        </div>
+      </div>
+    </div>
+
+    @if (loading) {
+      <div class="state">Loading purchase orders...</div>
+    } @else if (orders.length === 0) {
+      <div class="empty-state">
+        <h3>No purchase orders yet</h3>
+        <p>
+          Create a purchase order after an approved vendor is available.
+        </p>
+        <button
+          class="primary-button"
+          type="button"
+          (click)="openCreateForm()"
+        >
+          Create Purchase Order
+        </button>
+      </div>
+    } @else if (filteredOrders.length === 0) {
+      <div class="empty-state">
+        <h3>No matching purchase orders</h3>
+        <p>Try another search term or choose a different status.</p>
+      </div>
+    } @else {
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>PO Number</th>
+              <th>Vendor</th>
+              <th>Request</th>
+              <th>Order Date</th>
+              <th>Value</th>
+              <th>Status</th>
+              <th>Delivery Tracking</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (order of filteredOrders; track order.id) {
+              <tr>
+                <td><strong>{{ order.po_number }}</strong></td>
+                <td>{{ getVendorName(order.vendor_id) }}</td>
+                <td>
+                  {{ getProcurementRequestTitle(order.procurement_request_id) }}
+                </td>
+                <td>{{ formatDate(order.order_date) }}</td>
+                <td>{{ formatCurrency(order.total_amount) }}</td>
+
+                <td>
+                  <select
+                    class="status-select"
+                    [ngModel]="order.status"
+                    (ngModelChange)="changeStatus(order, $event)"
+                  >
+                    @for (status of statuses; track status) {
+                      <option [value]="status">{{ status }}</option>
+                    }
+                  </select>
+                </td>
+
+                <td class="delivery-cell">
+                  <div class="delivery-info">
+                    <span
+                      class="delivery-status"
+                      [class.overdue]="deliveryOutcome(order) === 'Overdue' || deliveryOutcome(order) === 'Late'"
+                      [class.on-time]="deliveryOutcome(order) === 'On Time'"
+                      [class.delivered]="deliveryOutcome(order).startsWith('Delivered')"
+                      [class.pending]="deliveryOutcome(order) === 'Pending'"
+                    >
+                      {{ deliveryOutcome(order) }}
+                    </span>
+
+                    <small class="delivery-date">
+                      Expected: {{ formatDate(order.expected_delivery_date) }}
+                    </small>
+
+                    @if (order.actual_delivery_date) {
+                      <small class="delivery-date">
+                        Actual: {{ formatDate(order.actual_delivery_date) }}
+                      </small>
+                    }
+
+                    @if (order.delivery_notes) {
+                      <small class="delivery-notes">
+                        {{ order.delivery_notes }}
+                      </small>
+                    }
+
+                    @if (deliveryFormId === order.id) {
+                      <div class="delivery-editor">
+                        <label [for]="'actualDate_' + order.id">
+                          Actual delivery date
+                        </label>
+
+                        <input
+                          [id]="'actualDate_' + order.id"
+                          type="date"
+                          name="actual_delivery_date"
+                          [(ngModel)]="deliveryForm.actual_delivery_date"
+                          [min]="order.order_date"
+                          [max]="getToday()"
+                          [disabled]="deliverySavingId === order.id"
+                        >
+
+                        <label [for]="'deliveryNotes_' + order.id">
+                          Delivery notes
+                        </label>
+
+                        <textarea
+                          [id]="'deliveryNotes_' + order.id"
+                          name="delivery_notes"
+                          [(ngModel)]="deliveryForm.delivery_notes"
+                          rows="3"
+                          maxlength="2000"
+                          placeholder="Enter delivery details or remarks"
+                          [disabled]="deliverySavingId === order.id"
+                        ></textarea>
+
+                        <div class="delivery-editor-actions">
+                          <button
+                            class="action-button"
+                            type="button"
+                            (click)="saveDelivery(order)"
+                            [disabled]="deliverySavingId === order.id"
+                          >
+                            {{ deliverySavingId === order.id ? 'Saving...' : 'Save' }}
+                          </button>
+
+                          <button
+                            class="action-button"
+                            type="button"
+                            (click)="closeDeliveryForm()"
+                            [disabled]="deliverySavingId === order.id"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    } @else if (order.status === 'Ordered' || order.status === 'Delivered') {
+                      <button
+                        class="action-button delivery-edit-button"
+                        type="button"
+                        (click)="openDeliveryForm(order)"
+                      >
+                        {{ order.actual_delivery_date ? 'Edit Delivery' : 'Record Delivery' }}
+                      </button>
+                    }
+                  </div>
+                </td>
+
+                <td>
+                  <div class="actions">
+                    <button
+                      class="action-button"
+                      type="button"
+                      (click)="openInvoiceForm(order)"
+                    >
+                      Invoice
+                    </button>
+
+                    <button
+                      class="action-button danger"
+                      type="button"
+                      (click)="deleteOrder(order)"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+  <!-- INVOICE FORM -->
+  @if (showInvoiceForm) {
+    <section class="form-card invoice-form-card">
+      <div class="form-heading">
+        <div>
+          <span class="eyebrow">INVOICE MANAGEMENT</span>
+          <h2>Create Invoice</h2>
+        </div>
+
+        <button
+          class="close-button"
+          type="button"
+          (click)="closeInvoiceForm()"
+          [disabled]="invoiceSaving"
+        >
+          ×
+        </button>
+      </div>
+
+      <form
+        #invoiceFormRef="ngForm"
+        (ngSubmit)="saveInvoice(invoiceFormRef)"
+        novalidate
+      >
+        <div class="form-grid">
+          <div class="field">
+            <label for="invoicePo">Purchase Order</label>
+            <select
+              id="invoicePo"
+              name="purchase_order_id"
+              [(ngModel)]="invoiceForm.purchase_order_id"
+              required
+            >
+              <option [ngValue]="0">Select purchase order</option>
+              @for (order of orders; track order.id) {
+                <option [ngValue]="order.id">
+                  {{ order.po_number }} - {{ getVendorName(order.vendor_id) }}
+                </option>
+              }
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="invoiceNumber">Invoice Number</label>
+            <input
+              id="invoiceNumber"
+              name="invoice_number"
+              type="text"
+              [(ngModel)]="invoiceForm.invoice_number"
+              required
+              maxlength="100"
+              placeholder="Enter invoice number"
+            >
+          </div>
+
+          <div class="field">
+            <label for="invoiceDate">Invoice Date</label>
+            <input
+              id="invoiceDate"
+              name="invoice_date"
+              type="date"
+              [(ngModel)]="invoiceForm.invoice_date"
+              required
+            >
+          </div>
+
+          <div class="field">
+            <label for="invoiceAmount">Invoice Amount</label>
+            <input
+              id="invoiceAmount"
+              name="amount"
+              type="number"
+              [(ngModel)]="invoiceForm.amount"
+              required
+              min="0"
+              step="0.01"
+            >
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button
+            class="secondary-button"
+            type="button"
+            (click)="closeInvoiceForm()"
+            [disabled]="invoiceSaving"
+          >
+            Cancel
+          </button>
+
+          <button
+            class="primary-button"
+            type="submit"
+            [disabled]="invoiceSaving"
+          >
+            {{ invoiceSaving ? 'Saving...' : 'Create Invoice' }}
+          </button>
+        </div>
+      </form>
+    </section>
+  }
+</div>

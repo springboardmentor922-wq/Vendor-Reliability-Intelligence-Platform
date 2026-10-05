@@ -1,0 +1,621 @@
+
+<div class="dashboard-page">
+
+  <!-- TOP HEADER -->
+  <header class="dashboard-header">
+    <div>
+      <span class="header-eyebrow">VENDOR RELIABILITY INTELLIGENCE</span>
+      <h1>Welcome back, {{ getUserName() }}</h1>
+      <p>Enterprise procurement and vendor performance intelligence center</p>
+    </div>
+
+    <div class="header-right">
+      <span class="role-badge">
+        {{ getRoleLabel() }}
+      </span>
+
+      <button
+        type="button"
+        class="refresh-btn"
+        (click)="refresh()"
+        [disabled]="loading">
+        ↻ Refresh
+      </button>
+    </div>
+  </header>
+
+  <!-- ERROR -->
+  @if (errorMessage) {
+    <div class="error-box">
+      <div>
+        <strong>Dashboard unavailable</strong>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <button type="button" (click)="refresh()">
+        Retry
+      </button>
+    </div>
+  }
+
+  <!-- LOADING -->
+  @if (loading) {
+    <div class="loading-card">
+      <div class="spinner"></div>
+      <strong>Loading dashboard...</strong>
+      <span>Fetching latest database analytics</span>
+    </div>
+  }
+
+  @if (!loading && analytics) {
+
+    <!-- KPI CARDS -->
+    <section class="kpi-grid">
+
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <span>ACTIVE VENDORS</span>
+          <div class="kpi-icon vendor-icon">V</div>
+        </div>
+
+        <strong class="kpi-value">
+          {{ analytics.procurement.vendor_count }}
+        </strong>
+
+        <small>Registered vendors</small>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <span>PURCHASE ORDERS</span>
+          <div class="kpi-icon po-icon">P</div>
+        </div>
+
+        <strong class="kpi-value">
+          {{ analytics.procurement.total_purchase_orders }}
+        </strong>
+
+        <small>Total purchase orders</small>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <span>ACTIVE ORDERS</span>
+          <div class="kpi-icon active-icon">A</div>
+        </div>
+
+        <strong class="kpi-value">
+          {{ analytics.procurement.active_purchase_orders }}
+        </strong>
+
+        <small>Current procurement pipeline</small>
+      </div>
+
+      <div class="kpi-card highlight-card">
+        <div class="kpi-top">
+          <span>PROCUREMENT VALUE</span>
+          <div class="kpi-icon cost-icon">₹</div>
+        </div>
+
+        <strong class="kpi-value">
+          ₹{{ analytics.procurement.total_procurement_cost | number:'1.0-0' }}
+        </strong>
+
+        <small>Total procurement cost</small>
+      </div>
+
+    </section>
+
+    <!-- MAIN TWO COLUMN AREA -->
+    <section class="dashboard-grid">
+
+      <!-- VENDOR PERFORMANCE -->
+      <div class="panel performance-panel">
+
+        <div class="panel-header">
+          <div>
+            <span class="panel-eyebrow">VENDOR INTELLIGENCE</span>
+            <h2>Vendor Performance</h2>
+            <p>Current vendor reliability indicators</p>
+          </div>
+
+          <span class="live-badge">
+            ● LIVE
+          </span>
+        </div>
+
+        @if (hasVendorPerformanceData()) {
+
+          <div class="performance-main">
+
+            <div class="score-circle">
+              <strong>
+                {{ value(analytics.vendor_performance.performance_score) }}
+              </strong>
+              <span>Score</span>
+            </div>
+
+            <div class="performance-details">
+
+              <div class="detail-row">
+                <span>Delivery Rate</span>
+                <strong>
+                  {{ percentage(analytics.vendor_performance.delivery_rate) }}
+                </strong>
+              </div>
+
+              <div class="progress-line">
+                <span
+                  [style.width.%]="factorValue(analytics.vendor_performance.delivery_rate)">
+                </span>
+              </div>
+
+              <div class="detail-row">
+                <span>Quality Rating</span>
+                <strong>
+                  {{ value(analytics.vendor_performance.quality_rating) }}
+                </strong>
+              </div>
+
+              <div class="progress-line">
+                <span
+                  [style.width.%]="factorValue((analytics.vendor_performance.quality_rating || 0) * 20)">
+                </span>
+              </div>
+
+              <div class="detail-row">
+                <span>Response Time</span>
+                <strong>
+                  {{ value(analytics.vendor_performance.response_time_hours) }} hrs
+                </strong>
+              </div>
+
+            </div>
+
+          </div>
+
+        } @else {
+
+          <div class="empty-panel">
+            <div class="empty-icon">V</div>
+            <strong>No performance evaluations</strong>
+            <span>
+              Vendor performance data will appear here once evaluations are recorded.
+            </span>
+          </div>
+
+        }
+
+      </div>
+
+      <!-- RELIABILITY -->
+      <div class="panel reliability-panel">
+
+        <div class="panel-header">
+          <div>
+            <span class="panel-eyebrow">RISK INTELLIGENCE</span>
+            <h2>Reliability Score</h2>
+            <p>Supplier reliability assessment</p>
+          </div>
+        </div>
+
+        <div class="reliability-score-row">
+
+          <div class="big-score">
+            <strong>
+              {{ value(analytics.vendor_performance.reliability_score) }}
+            </strong>
+
+            <span>Overall reliability</span>
+          </div>
+
+          <div class="factor-summary">
+
+            @for (factor of reliabilityFactors; track factor.key) {
+
+              <div class="factor-row">
+
+                <div class="factor-name">
+                  <span>{{ factor.name }}</span>
+
+                  <strong>
+                    {{ percentage(getFactorValue(factor.key)) }}
+                  </strong>
+                </div>
+
+                <div class="factor-bar">
+                  <span
+                    [style.width.%]="factorValue(getFactorValue(factor.key))">
+                  </span>
+                </div>
+
+              </div>
+
+            }
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- PROCUREMENT REQUEST / ORDERS -->
+      <div class="panel">
+
+        <div class="panel-header">
+          <div>
+            <span class="panel-eyebrow">PROCUREMENT</span>
+            <h2>Purchase Order Overview</h2>
+            <p>Current procurement activity</p>
+          </div>
+        </div>
+
+        <div class="order-summary">
+
+          <div class="order-stat">
+            <span>Total Orders</span>
+            <strong>
+              {{ analytics.procurement.total_purchase_orders }}
+            </strong>
+          </div>
+
+          <div class="order-stat">
+            <span>Active</span>
+            <strong>
+              {{ analytics.procurement.active_purchase_orders }}
+            </strong>
+          </div>
+
+          <div class="order-stat">
+            <span>Average Order</span>
+            <strong>
+              ₹{{ analytics.procurement.average_order_value | number:'1.0-0' }}
+            </strong>
+          </div>
+
+        </div>
+
+        <div class="status-table">
+
+          <div class="table-head">
+            <span>STATUS</span>
+            <span>COUNT</span>
+          </div>
+
+          <div class="table-row">
+            <span>
+              <i class="status-dot pending"></i>
+              Pending
+            </span>
+            <strong>
+              {{ analytics.procurement.delivery_status.pending }}
+            </strong>
+          </div>
+
+          <div class="table-row">
+            <span>
+              <i class="status-dot approved"></i>
+              Approved
+            </span>
+            <strong>
+              {{ analytics.procurement.delivery_status.approved }}
+            </strong>
+          </div>
+
+          <div class="table-row">
+            <span>
+              <i class="status-dot ordered"></i>
+              Ordered
+            </span>
+            <strong>
+              {{ analytics.procurement.delivery_status.ordered }}
+            </strong>
+          </div>
+
+          <div class="table-row">
+            <span>
+              <i class="status-dot delivered"></i>
+              Delivered
+            </span>
+            <strong>
+              {{ analytics.procurement.delivery_status.delivered }}
+            </strong>
+          </div>
+
+          <div class="table-row">
+            <span>
+              <i class="status-dot completed"></i>
+              Completed
+            </span>
+            <strong>
+              {{ analytics.procurement.delivery_status.completed }}
+            </strong>
+          </div>
+
+          <div class="table-row">
+            <span>
+              <i class="status-dot delayed"></i>
+              Delayed
+            </span>
+            <strong>
+              {{ analytics.procurement.delivery_status.delayed }}
+            </strong>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- CONTRACTS -->
+      <div class="panel">
+
+        <div class="panel-header">
+          <div>
+            <span class="panel-eyebrow">COMPLIANCE</span>
+            <h2>Contract Status</h2>
+            <p>Contract and compliance overview</p>
+          </div>
+        </div>
+
+        <div class="contract-grid">
+
+          <div class="contract-card active">
+            <span>ACTIVE</span>
+            <strong>
+              {{ analytics.contracts.active }}
+            </strong>
+          </div>
+
+          <div class="contract-card expiring">
+            <span>EXPIRING</span>
+            <strong>
+              {{ analytics.contracts.expiring }}
+            </strong>
+          </div>
+
+          <div class="contract-card expired">
+            <span>EXPIRED</span>
+            <strong>
+              {{ analytics.contracts.expired }}
+            </strong>
+          </div>
+
+          <div class="contract-card renewed">
+            <span>RENEWED</span>
+            <strong>
+              {{ analytics.contracts.renewed }}
+            </strong>
+          </div>
+
+        </div>
+
+        <div class="compliance-message">
+          <span class="message-icon">✓</span>
+
+          <div>
+            <strong>Compliance monitoring active</strong>
+            <span>
+              Contract information is connected to the live database.
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- COMMUNICATION -->
+      <div class="panel">
+
+        <div class="panel-header">
+          <div>
+            <span class="panel-eyebrow">COMMUNICATION</span>
+            <h2>Communication Activity</h2>
+            <p>Vendor communication tracking</p>
+          </div>
+        </div>
+
+        <div class="communication-grid">
+
+          <div class="communication-stat">
+            <span class="communication-icon">M</span>
+
+            <div>
+              <strong>
+                {{ analytics.communication.messages }}
+              </strong>
+
+              <span>Messages</span>
+            </div>
+          </div>
+
+          <div class="communication-stat">
+            <span class="communication-icon">Q</span>
+
+            <div>
+              <strong>
+                {{ analytics.communication.open_queries }}
+              </strong>
+
+              <span>Open Queries</span>
+            </div>
+          </div>
+
+          <div class="communication-stat">
+            <span class="communication-icon">✓</span>
+
+            <div>
+              <strong>
+                {{ analytics.communication.resolved_queries }}
+              </strong>
+
+              <span>Resolved</span>
+            </div>
+          </div>
+
+          <div class="communication-stat">
+            <span class="communication-icon">R</span>
+
+            <div>
+              <strong>
+                {{ analytics.communication.response_activity }}
+              </strong>
+
+              <span>Response Activity</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- PROCUREMENT COST -->
+      <div class="panel cost-panel">
+
+        <div class="panel-header">
+          <div>
+            <span class="panel-eyebrow">FINANCIAL ANALYTICS</span>
+            <h2>Procurement Cost Analysis</h2>
+            <p>Purchase order value overview</p>
+          </div>
+        </div>
+
+        <div class="cost-total">
+
+          <span>Total Procurement Value</span>
+
+          <strong>
+            ₹{{ analytics.procurement.total_procurement_cost | number:'1.0-0' }}
+          </strong>
+
+        </div>
+
+        <div class="cost-details">
+
+          <div>
+            <span>Average Order Value</span>
+            <strong>
+              ₹{{ analytics.procurement.average_order_value | number:'1.0-0' }}
+            </strong>
+          </div>
+
+          <div>
+            <span>Total Purchase Orders</span>
+            <strong>
+              {{ analytics.procurement.total_purchase_orders }}
+            </strong>
+          </div>
+
+          <div>
+            <span>Active Orders</span>
+            <strong>
+              {{ analytics.procurement.active_purchase_orders }}
+            </strong>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- LIVE ANALYTICS CHARTS -->
+    <section class="charts-grid">
+
+      <!-- PURCHASE ORDER STATUS CHART -->
+      <div class="panel chart-panel">
+
+        <div class="panel-header">
+          <div>
+            <span class="panel-eyebrow">PROCUREMENT ANALYTICS</span>
+            <h2>Purchase Order Status</h2>
+            <p>Current distribution of purchase orders</p>
+          </div>
+
+          <span class="live-badge">
+            ● LIVE
+          </span>
+        </div>
+
+        <div class="chart-container">
+          <canvas
+            baseChart
+            [type]="'doughnut'"
+            [data]="orderChartData"
+            [options]="doughnutOptions">
+          </canvas>
+        </div>
+
+      </div>
+
+      <!-- CONTRACT STATUS CHART -->
+      <div class="panel chart-panel">
+
+        <div class="panel-header">
+          <div>
+            <span class="panel-eyebrow">CONTRACT ANALYTICS</span>
+            <h2>Contract Status</h2>
+            <p>Current contract distribution</p>
+          </div>
+
+          <span class="live-badge">
+            ● LIVE
+          </span>
+        </div>
+
+        <div class="chart-container">
+          <canvas
+            baseChart
+            [type]="'doughnut'"
+            [data]="contractChartData"
+            [options]="doughnutOptions">
+          </canvas>
+        </div>
+
+      </div>
+
+      <!-- DELIVERY STATUS CHART -->
+      <div class="panel chart-panel chart-wide">
+
+        <div class="panel-header">
+          <div>
+            <span class="panel-eyebrow">DELIVERY ANALYTICS</span>
+            <h2>Delivery Status Overview</h2>
+            <p>Purchase orders grouped by delivery status</p>
+          </div>
+
+          <span class="live-badge">
+            ● LIVE
+          </span>
+        </div>
+
+        <div class="chart-container chart-container-wide">
+          <canvas
+            baseChart
+            [type]="'bar'"
+            [data]="deliveryChartData"
+            [options]="barOptions">
+          </canvas>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- DATABASE STATUS -->
+    <footer class="database-footer">
+
+      <span class="online-dot"></span>
+
+      <div>
+        <strong>PostgreSQL & API Online</strong>
+        <span>Live database analytics loaded successfully</span>
+      </div>
+
+      <span class="database-role">
+        {{ getRoleLabel() }}
+      </span>
+
+    </footer>
+
+  }
+
+</div>

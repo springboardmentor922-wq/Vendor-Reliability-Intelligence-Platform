@@ -1,0 +1,371 @@
+<div class="login-page">
+
+  <div class="login-background">
+    <div class="background-shape shape-one"></div>
+    <div class="background-shape shape-two"></div>
+    <div class="background-grid"></div>
+  </div>
+
+  <div class="login-container">
+
+    <!-- LEFT BRAND PANEL -->
+    <section class="brand-panel">
+
+      <div class="brand-header">
+        <div class="brand-mark">V</div>
+
+        <div>
+          <div class="brand-name">VendorIQ</div>
+          <div class="brand-tagline">
+            PROCUREMENT INTELLIGENCE
+          </div>
+        </div>
+      </div>
+
+      <div class="brand-content">
+
+        <div class="eyebrow">
+          VENDOR RELIABILITY PLATFORM
+        </div>
+
+        <h1>
+          Smarter procurement.<br />
+          <span>Stronger suppliers.</span>
+        </h1>
+
+        <p>
+          Make confident procurement decisions with
+          vendor performance intelligence, reliability
+          insights and risk-aware workflows.
+        </p>
+
+        <div class="feature-list">
+
+          <div class="feature">
+            <div class="feature-icon">✓</div>
+
+            <div>
+              <strong>Vendor Intelligence</strong>
+              <span>Monitor supplier performance and reliability.</span>
+            </div>
+          </div>
+
+          <div class="feature">
+            <div class="feature-icon">↗</div>
+
+            <div>
+              <strong>Procurement Visibility</strong>
+              <span>Track requests, purchase orders and deliveries.</span>
+            </div>
+          </div>
+
+          <div class="feature">
+            <div class="feature-icon">◆</div>
+
+            <div>
+              <strong>Risk Management</strong>
+              <span>Identify procurement risks before they impact operations.</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="brand-footer">
+        <span>Vendor Reliability Intelligence</span>
+        <span>•</span>
+        <span>Procurement Risk Management</span>
+      </div>
+
+    </section>
+
+
+    <!-- RIGHT LOGIN PANEL -->
+    <section class="login-panel">
+
+      <div class="mobile-brand">
+        <div class="brand-mark">V</div>
+
+        <div>
+          <div class="brand-name">VendorIQ</div>
+          <div class="brand-tagline">
+            PROCUREMENT INTELLIGENCE
+          </div>
+        </div>
+      </div>
+
+      <div class="login-content">
+
+        <div class="login-heading">
+
+          <div class="welcome-badge">
+            <span></span>
+            Secure workspace
+          </div>
+
+          <h2>Welcome back</h2>
+
+          <p>
+            Sign in to access your procurement
+            intelligence workspace.
+          </p>
+
+        </div>
+
+
+        @if (errorMessage) {
+
+          <div class="error-message">
+
+            <div class="error-icon">!</div>
+
+            <div>
+              <strong>Sign in unsuccessful</strong>
+              <span>{{ errorMessage }}</span>
+            </div>
+
+          </div>
+
+        }
+
+
+        <form
+          [formGroup]="loginForm"
+          (ngSubmit)="submit()"
+          class="login-form"
+          novalidate
+        >
+
+          <!-- EMAIL -->
+          <div class="field">
+
+            <label for="email">
+              Email address
+            </label>
+
+            <div
+              class="input-wrapper"
+              [class.input-error]="
+                loginForm.controls.email.touched &&
+                loginForm.controls.email.invalid
+              "
+            >
+
+              <span class="input-icon">✉</span>
+
+              <input
+                id="email"
+                type="email"
+                formControlName="email"
+                placeholder="name@company.com"
+                autocomplete="email"
+              />
+
+            </div>
+
+            @if (
+              loginForm.controls.email.touched &&
+              loginForm.controls.email.invalid
+            ) {
+
+              <span class="field-error">
+                Enter a valid email address.
+              </span>
+
+            }
+
+          </div>
+
+
+          <!-- PASSWORD -->
+          <div class="field">
+
+            <div class="password-label">
+
+              <label for="password">
+                Password
+              </label>
+
+              <a routerLink="/forgot-password">
+                Forgot password?
+              </a>
+
+            </div>
+
+            <div
+              class="input-wrapper"
+              [class.input-error]="
+                loginForm.controls.password.touched &&
+                loginForm.controls.password.invalid
+              "
+            >
+
+              <span class="input-icon">●</span>
+
+              <input
+                id="password"
+                type="password"
+                formControlName="password"
+                placeholder="Enter your password"
+                autocomplete="current-password"
+              />
+
+            </div>
+
+            @if (
+              loginForm.controls.password.touched &&
+              loginForm.controls.password.invalid
+            ) {
+
+              <span class="field-error">
+                Password is required.
+              </span>
+
+            }
+
+          </div>
+
+
+          <!-- ROLE -->
+          <div class="field">
+
+            <label for="role">
+              Sign in as
+            </label>
+
+            <div class="input-wrapper">
+
+              <span class="input-icon">◆</span>
+
+              <select
+                id="role"
+                formControlName="role"
+              >
+
+                <option value="" disabled>
+                  Select your role
+                </option>
+
+                <option value="Administrator">
+                  Administrator
+                </option>
+
+                <option value="Procurement Manager">
+                  Procurement Manager
+                </option>
+
+                <option value="Supply Chain Manager">
+                  Supply Chain Manager
+                </option>
+
+                <option value="Vendor">
+                  Vendor
+                </option>
+
+                <option value="Finance Officer">
+                  Finance Officer
+                </option>
+
+                <option value="Auditor">
+                  Auditor
+                </option>
+
+              </select>
+
+            </div>
+
+            @if (
+              loginForm.controls.role.touched &&
+              loginForm.controls.role.invalid
+            ) {
+
+              <span class="field-error">
+                Please select your role.
+              </span>
+
+            }
+
+          </div>
+
+
+          <!-- REMEMBER ME -->
+          <div class="form-options">
+
+            <label class="remember-option">
+
+              <input
+                type="checkbox"
+              />
+
+              <span>Remember me</span>
+
+            </label>
+
+          </div>
+
+
+          <!-- LOGIN BUTTON -->
+          <button
+            type="submit"
+            class="login-button"
+            [disabled]="loading"
+          >
+
+            @if (loading) {
+
+              <span class="spinner"></span>
+              Signing in...
+
+            } @else {
+
+              Sign in to VendorIQ
+              <span class="button-arrow">→</span>
+
+            }
+
+          </button>
+
+        </form>
+
+
+        <div class="divider">
+          <span>OR</span>
+        </div>
+
+
+        <div class="register-section">
+
+          <span>New to VendorIQ?</span>
+
+          <a routerLink="/register">
+            Create an account
+            <span>→</span>
+          </a>
+
+        </div>
+
+
+        <div class="security-note">
+
+          <span class="lock-icon">◆</span>
+
+          <span>
+            Your account is protected with secure
+            authentication and role-based access control.
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <div class="login-footer">
+        © 2026 VendorIQ · Vendor Reliability Intelligence Platform
+      </div>
+
+    </section>
+
+  </div>
+
+</div>

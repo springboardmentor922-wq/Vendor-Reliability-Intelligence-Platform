@@ -1,0 +1,627 @@
+<div class="page">
+
+  <div class="page-header">
+
+    <div>
+      <h1>Vendor Performance</h1>
+
+      <p>
+        Monitor supplier delivery, quality, service and
+        operational performance.
+      </p>
+    </div>
+
+    <button
+      class="refresh-button"
+      type="button"
+      (click)="loadPerformance()"
+    >
+      Refresh
+    </button>
+
+  </div>
+
+
+  <div
+    class="message success"
+    *ngIf="successMessage"
+  >
+    {{ successMessage }}
+  </div>
+
+
+  <div
+    class="message error"
+    *ngIf="errorMessage"
+  >
+    {{ errorMessage }}
+  </div>
+
+
+  <!-- SUMMARY -->
+
+  <div class="summary-grid">
+
+    <div class="summary-card">
+
+      <span class="summary-label">
+        Vendors
+      </span>
+
+      <strong>
+        {{ totalVendors }}
+      </strong>
+
+      <small>
+        Vendors evaluated
+      </small>
+
+    </div>
+
+
+    <div class="summary-card">
+
+      <span class="summary-label">
+        On-Time Deliveries
+      </span>
+
+      <strong>
+        {{ totalOnTime }}
+      </strong>
+
+      <small>
+        Recorded deliveries
+      </small>
+
+    </div>
+
+
+    <div class="summary-card">
+
+      <span class="summary-label">
+        Delayed Deliveries
+      </span>
+
+      <strong>
+        {{ totalDelayed }}
+      </strong>
+
+      <small>
+        Recorded delays
+      </small>
+
+    </div>
+
+
+    <div class="summary-card">
+
+      <span class="summary-label">
+        Avg Completion
+      </span>
+
+      <strong>
+        {{ formatNumber(averageCompletionRate) }}%
+      </strong>
+
+      <small>
+        Across vendors
+      </small>
+
+    </div>
+
+  </div>
+
+
+  <!-- EVALUATION FORM -->
+
+  <section class="panel">
+
+    <div class="panel-header">
+
+      <div>
+        <h2>Performance Evaluation</h2>
+
+        <p>
+          Record vendor performance against an order or
+          evaluation period.
+        </p>
+      </div>
+
+    </div>
+
+
+    <form
+      class="evaluation-form"
+      (ngSubmit)="saveEvaluation()"
+    >
+
+      <div class="form-grid">
+
+        <div class="field">
+
+          <label>Vendor *</label>
+
+          <select
+            name="vendor_id"
+            [(ngModel)]="form.vendor_id"
+            (ngModelChange)="selectVendor($event)"
+            required
+          >
+
+            <option [ngValue]="0">
+              Select Vendor
+            </option>
+
+            <option
+              *ngFor="let vendor of vendors"
+              [ngValue]="vendor.id"
+            >
+              {{ vendor.name }}
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="field">
+
+          <label>Purchase Order ID</label>
+
+          <input
+            type="number"
+            name="purchase_order_id"
+            [(ngModel)]="form.purchase_order_id"
+            placeholder="Optional PO ID"
+            min="1"
+          />
+
+        </div>
+
+
+        <div class="field">
+
+          <label>Actual Delivery Date</label>
+
+          <input
+            type="date"
+            name="actual_delivery_date"
+            [(ngModel)]="form.actual_delivery_date"
+          />
+
+        </div>
+
+
+        <div class="field">
+
+          <label>Evaluation Date *</label>
+
+          <input
+            type="date"
+            name="evaluation_date"
+            [(ngModel)]="form.evaluation_date"
+            required
+          />
+
+        </div>
+
+
+        <div class="field">
+
+          <label>Quality Rating</label>
+
+          <input
+            type="number"
+            name="quality_rating"
+            [(ngModel)]="form.quality_rating"
+            min="0"
+            max="5"
+            step="0.1"
+            placeholder="0 - 5"
+          />
+
+        </div>
+
+
+        <div class="field">
+
+          <label>Service Rating</label>
+
+          <input
+            type="number"
+            name="service_rating"
+            [(ngModel)]="form.service_rating"
+            min="0"
+            max="5"
+            step="0.1"
+            placeholder="0 - 5"
+          />
+
+        </div>
+
+
+        <div class="field">
+
+          <label>Response Time (hours)</label>
+
+          <input
+            type="number"
+            name="response_time_hours"
+            [(ngModel)]="form.response_time_hours"
+            min="0"
+            step="0.1"
+            placeholder="Hours"
+          />
+
+        </div>
+
+
+        <div class="field">
+
+          <label>Issue Resolution Time (hours)</label>
+
+          <input
+            type="number"
+            name="issue_resolution_time_hours"
+            [(ngModel)]="form.issue_resolution_time_hours"
+            min="0"
+            step="0.1"
+            placeholder="Hours"
+          />
+
+        </div>
+
+
+        <div class="field">
+
+          <label>Issue Count</label>
+
+          <input
+            type="number"
+            name="issue_count"
+            [(ngModel)]="form.issue_count"
+            min="0"
+          />
+
+        </div>
+
+
+        <div class="field full">
+
+          <label>Notes</label>
+
+          <textarea
+            name="notes"
+            [(ngModel)]="form.notes"
+            rows="3"
+            placeholder="Performance observations..."
+          ></textarea>
+
+        </div>
+
+      </div>
+
+
+      <div class="form-actions">
+
+        <button
+          type="button"
+          class="secondary-button"
+          (click)="resetForm()"
+        >
+          Clear
+        </button>
+
+        <button
+          type="submit"
+          class="primary-button"
+          [disabled]="saving"
+        >
+          {{ saving ? 'Saving...' : 'Save Evaluation' }}
+        </button>
+
+      </div>
+
+    </form>
+
+  </section>
+
+
+  <!-- RANKING -->
+
+  <section class="panel">
+
+    <div class="panel-header">
+
+      <div>
+        <h2>Vendor Ranking</h2>
+
+        <p>
+          Vendors ranked using database-backed performance metrics.
+        </p>
+      </div>
+
+    </div>
+
+
+    <div
+      class="loading"
+      *ngIf="loading"
+    >
+      Loading vendor performance...
+    </div>
+
+
+    <div
+      class="table-wrapper"
+      *ngIf="!loading && performance.length"
+    >
+
+      <table>
+
+        <thead>
+
+          <tr>
+
+            <th>Rank</th>
+            <th>Vendor</th>
+            <th>Category</th>
+            <th>Orders</th>
+            <th>On-Time</th>
+            <th>Delayed</th>
+            <th>Quality</th>
+            <th>Service</th>
+            <th>Response</th>
+            <th>Resolution</th>
+            <th>Completion</th>
+            <th>Score</th>
+            <th>Status</th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody>
+
+          <tr
+            *ngFor="let item of performance"
+            [class.selected-row]="
+              selectedVendorId === item.vendor_id
+            "
+            (click)="selectVendor(item.vendor_id)"
+          >
+
+            <td>
+              <span class="rank">
+                #{{ item.ranking }}
+              </span>
+            </td>
+
+            <td>
+              <strong>
+                {{ item.vendor_name }}
+              </strong>
+            </td>
+
+            <td>
+              {{ item.category }}
+            </td>
+
+            <td>
+              {{ item.total_orders }}
+            </td>
+
+            <td>
+              {{ item.on_time_deliveries }}
+            </td>
+
+            <td>
+              {{ item.delayed_deliveries }}
+            </td>
+
+            <td>
+              {{ formatNumber(item.quality_rating) }}/5
+            </td>
+
+            <td>
+              {{ formatNumber(item.service_rating) }}/5
+            </td>
+
+            <td>
+              {{ formatNumber(item.response_time_hours) }}h
+            </td>
+
+            <td>
+              {{ formatNumber(item.issue_resolution_time_hours) }}h
+            </td>
+
+            <td>
+              {{ formatNumber(item.order_completion_rate) }}%
+            </td>
+
+            <td>
+              <strong>
+                {{ formatNumber(item.performance_score) }}
+              </strong>
+            </td>
+
+            <td>
+
+              <span
+                class="status"
+                [ngClass]="performanceClass(item.performance_status)"
+              >
+                {{ item.performance_status }}
+              </span>
+
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+
+    <div
+      class="empty"
+      *ngIf="!loading && !performance.length"
+    >
+      No vendors are available yet.
+    </div>
+
+  </section>
+
+
+  <!-- HISTORY -->
+
+  <section
+    class="panel"
+    *ngIf="selectedVendorId"
+  >
+
+    <div class="panel-header">
+
+      <div>
+
+        <h2>
+          Performance History
+        </h2>
+
+        <p>
+          {{
+            selectedVendor?.vendor_name ||
+            'Selected vendor'
+          }}
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <div
+      class="loading"
+      *ngIf="historyLoading"
+    >
+      Loading performance history...
+    </div>
+
+
+    <div
+      class="table-wrapper"
+      *ngIf="!historyLoading && history.length"
+    >
+
+      <table>
+
+        <thead>
+
+          <tr>
+
+            <th>Date</th>
+            <th>PO</th>
+            <th>Expected</th>
+            <th>Actual</th>
+            <th>Delivery</th>
+            <th>Quality</th>
+            <th>Service</th>
+            <th>Response</th>
+            <th>Resolution</th>
+            <th>Issues</th>
+            <th>Notes</th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody>
+
+          <tr
+            *ngFor="let record of history"
+          >
+
+            <td>
+              {{ record.evaluation_date | date:'dd MMM yyyy' }}
+            </td>
+
+            <td>
+              {{ record.purchase_order_number || '—' }}
+            </td>
+
+            <td>
+              {{
+                record.expected_delivery_date
+                  ? (record.expected_delivery_date | date:'dd MMM yyyy')
+                  : '—'
+              }}
+            </td>
+
+            <td>
+              {{
+                record.actual_delivery_date
+                  ? (record.actual_delivery_date | date:'dd MMM yyyy')
+                  : '—'
+              }}
+            </td>
+
+            <td>
+
+              <span class="delivery-status">
+                {{ record.delivery_status }}
+              </span>
+
+            </td>
+
+            <td>
+              {{ formatNumber(record.quality_rating) }}/5
+            </td>
+
+            <td>
+              {{ formatNumber(record.service_rating) }}/5
+            </td>
+
+            <td>
+              {{ formatNumber(record.response_time_hours) }}h
+            </td>
+
+            <td>
+              {{
+                formatNumber(
+                  record.issue_resolution_time_hours
+                )
+              }}h
+            </td>
+
+            <td>
+              {{ record.issue_count }}
+            </td>
+
+            <td>
+              {{ record.notes || '—' }}
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+
+    <div
+      class="empty"
+      *ngIf="!historyLoading && !history.length"
+    >
+      No performance evaluations have been recorded
+      for this vendor.
+    </div>
+
+  </section>
+
+</div>
