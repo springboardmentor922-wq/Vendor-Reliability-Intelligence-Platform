@@ -5,7 +5,7 @@
  * Once your backend Web Service is deployed on Render (e.g., https://vendor-reliability-backend.onrender.com),
  * replace the placeholder string below with your actual Render URL (without any trailing slash).
  */
-export const RENDER_BACKEND_URL = '__REPLACE_WITH_RENDER_BACKEND_URL__'; // e.g. 'https://vendor-reliability-backend.onrender.com'
+export const RENDER_BACKEND_URL = 'https://vendor-reliability-platform-production.up.railway.app';
 
 // Helper to determine the effective backend base URL
 const getBaseUrl = (): string => {
