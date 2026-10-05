@@ -19,7 +19,7 @@ export type DashboardView =
 @Component({
   selector: 'app-workspace',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule],
   templateUrl: './workspace.html',
   styleUrl: './workspace.scss'
 })
