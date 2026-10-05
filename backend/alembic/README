@@ -1,0 +1,1 @@
+VendorIQ database migrations live in alembic/versions. Always run `alembic upgrade head` before seeding or starting the API in a new environment.

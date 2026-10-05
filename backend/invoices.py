@@ -1,16 +1,23 @@
-"""Milestone-2 and 3: Invoices management and Finance module.
+"""Invoice lifecycle and finance analytics."""
 
-Provides invoice creation from purchase orders, payment status tracking,
-and financial analytics for Finance Officers and Procurement Managers.
-"""
-from datetime import datetime, timedelta
+from __future__ import annotations
+
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 import models
-from deps import get_current_user, get_db, require_role, log_activity
-from notifications import create_notification, notify_roles
+from deps import (
+    ensure_vendor_scope,
+    get_current_user,
+    get_db,
+    log_activity,
+    normalize_role,
+    require_role,
+)
+from notifications import create_notification
 
 router = APIRouter(prefix="/api/invoices", tags=["invoices"])
 
@@ -18,33 +25,35 @@ router = APIRouter(prefix="/api/invoices", tags=["invoices"])
 class InvoiceCreate(BaseModel):
     purchase_order_id: int
     vendor_id: int | None = None
-    amount: float | None = None  # if none, uses PO total
-    tax_amount: float | None = None
-    total_amount: float | None = None
+    amount: float | None = Field(default=None, ge=0)
+    tax_amount: float | None = Field(default=None, ge=0)
     due_date: datetime | None = None
     notes: str | None = None
-
+    document_path: str | None = None
 
 
 class InvoiceStatusUpdate(BaseModel):
-    status: str  # Pending, Paid, Overdue, Cancelled
+    status: str
     notes: str | None = None
 
 
-def _serialize_invoice(i: models.Invoice, po: models.PurchaseOrder | None = None, vendor: models.Vendor | None = None) -> dict:
+def _serialize_invoice(i):
     return {
         "id": i.id,
         "invoice_number": i.invoice_number,
         "purchase_order_id": i.purchase_order_id,
-        "po_number": po.po_number if po and po.po_number else f"PO #{i.purchase_order_id}",
+        "po_number": i.purchase_order.po_number
+        if i.purchase_order and i.purchase_order.po_number
+        else f"PO #{i.purchase_order_id}",
         "vendor_id": i.vendor_id,
-        "vendor_name": vendor.company_name if vendor else (i.vendor.company_name if i.vendor else f"Vendor #{i.vendor_id}"),
+        "vendor_name": i.vendor.company_name if i.vendor else f"Vendor #{i.vendor_id}",
         "amount": i.amount,
-        "tax_amount": i.tax_amount,
-        "total": i.amount + (i.tax_amount or 0.0),
+        "tax_amount": i.tax_amount or 0,
+        "total": round(i.amount + (i.tax_amount or 0), 2),
         "status": i.status,
         "due_date": i.due_date.isoformat() if i.due_date else None,
         "paid_date": i.paid_date.isoformat() if i.paid_date else None,
+        "document_path": i.document_path,
         "notes": i.notes,
         "created_at": i.created_at.isoformat() if i.created_at else None,
     }
@@ -54,98 +63,67 @@ def _serialize_invoice(i: models.Invoice, po: models.PurchaseOrder | None = None
 def list_invoices(
     status: str | None = None,
     vendor_id: int | None = None,
-    limit: int = Query(100, ge=1, le=500),
+    limit: int = Query(200, ge=1, le=500),
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """List all invoices, filterable by status and vendor."""
-    query = db.query(models.Invoice)
-
-    # Vendor scoping
-    if "vendor" in current_user.role.lower():
-        if current_user.vendor_id:
-            query = query.filter(models.Invoice.vendor_id == current_user.vendor_id)
-        else:
-            v = db.query(models.Vendor).filter(models.Vendor.email == current_user.email).first()
-            if v:
-                query = query.filter(models.Invoice.vendor_id == v.id)
-            else:
-                return []
-    elif vendor_id is not None:
+    query = db.query(models.Invoice).order_by(models.Invoice.id.desc())
+    role = normalize_role(current_user.role)
+    if role == "vendor":
+        query = query.filter(models.Invoice.vendor_id == current_user.vendor_id)
+    elif vendor_id:
         query = query.filter(models.Invoice.vendor_id == vendor_id)
-
     if status:
         query = query.filter(models.Invoice.status == status)
-
-    invoices = query.order_by(models.Invoice.id.desc()).limit(limit).all()
-    result = []
-    for inv in invoices:
-        po = db.query(models.PurchaseOrder).filter(models.PurchaseOrder.id == inv.purchase_order_id).first()
-        vendor = db.query(models.Vendor).filter(models.Vendor.id == inv.vendor_id).first()
-        result.append(_serialize_invoice(inv, po, vendor))
-    return result
+    return [_serialize_invoice(i) for i in query.limit(limit).all()]
 
 
 @router.post("")
 def create_invoice(
     payload: InvoiceCreate,
     current_user: models.User = Depends(
-        require_role(["admin", "procurement", "manager", "finance", "vendor"])
+        require_role(
+            ["administrator", "procurement_manager", "finance_officer", "vendor"]
+        )
     ),
     db: Session = Depends(get_db),
 ):
-    """Create an invoice for a purchase order."""
-    po = db.query(models.PurchaseOrder).filter(
-        models.PurchaseOrder.id == payload.purchase_order_id
-    ).first()
+    po = (
+        db.query(models.PurchaseOrder)
+        .filter(models.PurchaseOrder.id == payload.purchase_order_id)
+        .first()
+    )
     if not po:
         raise HTTPException(status_code=404, detail="Purchase order not found")
-
-    vendor = db.query(models.Vendor).filter(models.Vendor.id == po.vendor_id).first()
-    if not vendor:
-        raise HTTPException(status_code=404, detail="Vendor not found")
-
-    amount = payload.amount if payload.amount is not None else po.total_amount
-    tax_amount = payload.tax_amount if payload.tax_amount is not None else round(amount * 0.18, 2)
-
-    # Auto-generate unique invoice number (INV-YEAR-XXXX)
-    from sqlalchemy import func
-    max_id = db.query(func.max(models.Invoice.id)).scalar() or 0
-    inv_num = f"INV-{datetime.now().year}-{(max_id + 1):04d}"
-    # Check if duplicate exists, increment if necessary
-    while db.query(models.Invoice).filter(models.Invoice.invoice_number == inv_num).first():
-        max_id += 1
-        inv_num = f"INV-{datetime.now().year}-{(max_id + 1):04d}"
-
-
+    ensure_vendor_scope(current_user, po.vendor_id)
+    vendor_id = po.vendor_id
+    amount = float(payload.amount if payload.amount is not None else po.subtotal)
+    tax = float(payload.tax_amount if payload.tax_amount is not None else po.tax_amount)
+    count = db.query(models.Invoice).count() + 1
     invoice = models.Invoice(
-        invoice_number=inv_num,
+        invoice_number=f"INV-{datetime.utcnow().year}-{count:05d}",
         purchase_order_id=po.id,
-        vendor_id=po.vendor_id,
+        vendor_id=vendor_id,
         amount=amount,
-        tax_amount=tax_amount,
+        tax_amount=tax,
         status="Pending",
-        due_date=payload.due_date or (datetime.now() + timedelta(days=30)),
+        due_date=payload.due_date,
         notes=payload.notes,
+        document_path=payload.document_path,
     )
     db.add(invoice)
+    db.flush()
+    log_activity(
+        db,
+        current_user.id,
+        "CREATE_INVOICE",
+        "Invoice",
+        invoice.id,
+        f"Created {invoice.invoice_number} for {amount + tax:.2f}",
+    )
     db.commit()
     db.refresh(invoice)
-
-    # Notify Finance & Procurement
-    notify_roles(
-        db, ["admin", "finance", "procurement"],
-        "Invoice Generated",
-        f"Invoice #{inv_num} (${amount + tax_amount:.2f}) generated for PO #{po.id} ({vendor.company_name}).",
-        "procurement",
-    )
-
-    log_activity(
-        db, current_user.id, "CREATE_INVOICE", "Invoice", invoice.id,
-        f"INV #{inv_num} for PO #{po.id} - Total: ${amount + tax_amount:.2f}"
-    )
-    db.commit()
-    return _serialize_invoice(invoice, po, vendor)
+    return _serialize_invoice(invoice)
 
 
 @router.put("/{invoice_id}/status")
@@ -153,77 +131,62 @@ def update_invoice_status(
     invoice_id: int,
     payload: InvoiceStatusUpdate,
     current_user: models.User = Depends(
-        require_role(["admin", "finance", "procurement", "manager"])
+        require_role(["administrator", "finance_officer", "vendor"])
     ),
     db: Session = Depends(get_db),
 ):
-    """Update invoice payment status (Paid, Pending, Overdue, Cancelled)."""
-    inv = db.query(models.Invoice).filter(models.Invoice.id == invoice_id).first()
-    if not inv:
+    invoice = db.query(models.Invoice).filter(models.Invoice.id == invoice_id).first()
+    if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
-
-    allowed = ["Pending", "Paid", "Overdue", "Cancelled"]
+    ensure_vendor_scope(current_user, invoice.vendor_id)
+    allowed = {"Pending", "Approved", "Paid", "Overdue", "Cancelled", "Disputed"}
     if payload.status not in allowed:
-        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {allowed}")
-
-    old_status = inv.status
-    inv.status = payload.status
+        raise HTTPException(status_code=400, detail="Invalid invoice status")
+    old = invoice.status
+    invoice.status = payload.status
+    if payload.status == "Paid":
+        invoice.paid_date = datetime.utcnow()
     if payload.notes:
-        inv.notes = payload.notes
-    if payload.status == "Paid" and not inv.paid_date:
-        inv.paid_date = datetime.now()
-
-    db.commit()
-    db.refresh(inv)
-
+        invoice.notes = payload.notes
     log_activity(
-        db, current_user.id, "UPDATE_INVOICE_STATUS", "Invoice", inv.id,
-        f"INV #{inv.invoice_number} status changed from {old_status} to {payload.status}",
+        db,
+        current_user.id,
+        "UPDATE_INVOICE_STATUS",
+        "Invoice",
+        invoice.id,
+        f"{old} -> {payload.status}",
     )
     db.commit()
-
-    po = db.query(models.PurchaseOrder).filter(models.PurchaseOrder.id == inv.purchase_order_id).first()
-    vendor = db.query(models.Vendor).filter(models.Vendor.id == inv.vendor_id).first()
-    return _serialize_invoice(inv, po, vendor)
+    db.refresh(invoice)
+    return _serialize_invoice(invoice)
 
 
 @router.get("/summary")
 def invoice_summary(
-    current_user: models.User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)
 ):
-    """Financial summary overview for dashboards."""
-    infil = db.query(models.Invoice)
-
-    if "vendor" in current_user.role.lower():
-        if current_user.vendor_id:
-            infil = infil.filter(models.Invoice.vendor_id == current_user.vendor_id)
-        else:
-            v = db.query(models.Vendor).filter(models.Vendor.email == current_user.email).first()
-            if v:
-                infil = infil.filter(models.Invoice.vendor_id == v.id)
-
-    invoices = infil.all()
-    total_count = len(invoices)
-    total_amount = sum(i.amount + (i.tax_amount or 0.0) for i in invoices)
-    paid_amount = sum(i.amount + (i.tax_amount or 0.0) for i in invoices if i.status == "Paid")
-    pending_amount = sum(i.amount + (i.tax_amount or 0.0) for i in invoices if i.status == "Pending")
-    overdue_amount = sum(i.amount + (i.tax_amount or 0.0) for i in invoices if i.status == "Overdue")
-
+    query = db.query(models.Invoice)
+    if normalize_role(current_user.role) == "vendor":
+        query = query.filter(models.Invoice.vendor_id == current_user.vendor_id)
+    invoices = query.all()
     return {
-        "total_invoices": total_count,
-        "total_amount": round(total_amount, 2),
-        "total_invoiced_amount": round(total_amount, 2),
-        "paid_amount": round(paid_amount, 2),
-        "total_paid_amount": round(paid_amount, 2),
-        "pending_amount": round(pending_amount, 2),
-        "total_pending_amount": round(pending_amount, 2),
-        "overdue_amount": round(overdue_amount, 2),
-        "total_overdue_amount": round(overdue_amount, 2),
-        "paid_count": len([i for i in invoices if i.status == "Paid"]),
-        "pending_count": len([i for i in invoices if i.status == "Pending"]),
-        "overdue_count": len([i for i in invoices if i.status == "Overdue"]),
-        "overdue_invoices_count": len([i for i in invoices if i.status == "Overdue"]),
+        "total": len(invoices),
+        "pending": sum(i.status == "Pending" for i in invoices),
+        "approved": sum(i.status == "Approved" for i in invoices),
+        "paid": sum(i.status == "Paid" for i in invoices),
+        "overdue": sum(i.status == "Overdue" for i in invoices),
+        "open_value": round(
+            sum(
+                (i.amount + (i.tax_amount or 0))
+                for i in invoices
+                if i.status not in {"Paid", "Cancelled"}
+            ),
+            2,
+        ),
+        "paid_value": round(
+            sum(
+                (i.amount + (i.tax_amount or 0)) for i in invoices if i.status == "Paid"
+            ),
+            2,
+        ),
     }
-
-

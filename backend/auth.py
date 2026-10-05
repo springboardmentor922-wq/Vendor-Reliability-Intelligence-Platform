@@ -1,70 +1,50 @@
+"""Authentication helpers for password hashing and JWT sessions."""
+
+from __future__ import annotations
+
 from datetime import datetime, timedelta, timezone
+import hashlib
 import os
+import secrets
 
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
+SECRET_KEY = os.getenv("SECRET_KEY", "CHANGE_ME_IN_ENV")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "480"))
+PASSWORD_RESET_EXPIRE_MINUTES = int(os.getenv("PASSWORD_RESET_EXPIRE_MINUTES", "30"))
 
-# Secret key used to create JWT tokens.
-# Override in production by setting the SECRET_KEY environment variable.
-SECRET_KEY = os.getenv(
-    "SECRET_KEY",
-    "a0a35d6d1f8b2c9e4f7a1b3c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4"
-)
-
-# Algorithm used for JWT
-ALGORITHM = "HS256"
-
-# Token validity
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
-
-
-# Password hashing configuration
-pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto"
-)
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
 
-def verify_password(
-    plain_password: str,
-    hashed_password: str
-) -> bool:
-    return pwd_context.verify(
-        plain_password,
-        hashed_password
-    )
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
 
 
-def create_access_token(data: dict):
+def create_access_token(data: dict, expires_minutes: int | None = None) -> str:
     to_encode = data.copy()
-
     expire = datetime.now(timezone.utc) + timedelta(
-        minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+        minutes=expires_minutes or ACCESS_TOKEN_EXPIRE_MINUTES
     )
-
     to_encode.update({"exp": expire})
-
-    return jwt.encode(
-        to_encode,
-        SECRET_KEY,
-        algorithm=ALGORITHM
-    )
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
 def verify_token(token: str):
     try:
-        payload = jwt.decode(
-            token,
-            SECRET_KEY,
-            algorithms=[ALGORITHM]
-        )
-
-        return payload
-
+        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     except JWTError:
         return None
+
+
+def create_password_reset_token() -> str:
+    return secrets.token_urlsafe(32)
+
+
+def hash_reset_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
