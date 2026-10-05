@@ -46,6 +46,11 @@ pip install -r requirements.txt
 streamlit run <entry_file>.py
 ````
 
+
+https://github.com/user-attachments/assets/ae54f97c-2227-4563-a73e-6423dd823029
+
+
+
 ## Internship Project
 
 Developed as part of the **Infosys Springboard Internship Program**.
