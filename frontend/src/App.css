@@ -1,0 +1,548 @@
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+// ================= PUBLIC =================
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import Unauthorized from "./pages/Unauthorized";
+
+// ================= DASHBOARDS =================
+import AdminDashboard from "./pages/AdminDashboard";
+import ProcurementDashboard from "./pages/ProcurementDashboard";
+import SupplyChainDashboard from "./pages/SupplyChainDashboard";
+import VendorDashboard from "./pages/VendorDashboard";
+import FinanceDashboard from "./pages/FinanceDashboard";
+import AuditorDashboard from "./pages/AuditorDashboard";
+
+// ================= ADMINISTRATOR =================
+import AdminUsers from "./pages/AdminUsers";
+import AdminVendors from "./pages/AdminVendors";
+import AdminSuppliers from "./pages/AdminSuppliers";
+import AdminProcurement from "./pages/AdminProcurement";
+import AdminPurchaseOrders from "./pages/AdminPurchaseOrders";
+import AdminRiskAnalysis from "./pages/AdminRiskAnalysis";
+import AdminReports from "./pages/AdminReports";
+import AdminSettings from "./pages/AdminSettings";
+import AdminNotifications from "./pages/AdminNotifications";
+
+// ================= PROCUREMENT MANAGER =================
+import ProcurementVendors from "./pages/ProcurementVendors";
+import ProcurementRequests from "./pages/ProcurementRequests";
+import ProcurementPurchaseOrders from "./pages/ProcurementPurchaseOrders";
+import ProcurementApprovals from "./pages/ProcurementApprovals";
+import ProcurementPerformance from "./pages/ProcurementPerformance";
+import ProcurementReports from "./pages/ProcurementReports";
+import ProcurementNotifications from "./pages/ProcurementNotifications";
+
+// ================= SUPPLY CHAIN MANAGER =================
+import SupplyChainSuppliers from "./pages/SupplyChainSuppliers";
+import SupplyChainPurchaseOrders from "./pages/SupplyChainPurchaseOrders";
+import SupplyChainDeliveries from "./pages/SupplyChainDeliveries";
+import SupplyChainDelayedDeliveries from "./pages/SupplyChainDelayedDeliveries";
+import SupplyChainPerformance from "./pages/SupplyChainPerformance";
+import SupplyChainRisk from "./pages/SupplyChainRisk";
+
+// ================= VENDOR =================
+import VendorProfile from "./pages/VendorProfile";
+import VendorPurchaseOrders from "./pages/VendorPurchaseOrders";
+import VendorDeliveries from "./pages/VendorDeliveries";
+import VendorDelayedDeliveries from "./pages/VendorDelayedDeliveries";
+import VendorPerformance from "./pages/VendorPerformance";
+import VendorRiskStatus from "./pages/VendorRiskStatus";
+import VendorNotifications from "./pages/VendorNotifications";
+
+// ================= FINANCE =================
+import FinancePurchaseOrders from "./pages/FinancePurchaseOrders";
+import FinanceInvoices from "./pages/FinanceInvoices";
+import FinancePayments from "./pages/FinancePayments";
+import FinanceStatus from "./pages/FinanceStatus";
+import FinanceReports from "./pages/FinanceReports";
+import FinanceNotifications from "./pages/FinanceNotifications";
+
+// ================= AUDITOR =================
+import AuditorRecords from "./pages/AuditorRecords";
+import AuditorVendors from "./pages/AuditorVendors";
+import AuditorProcurement from "./pages/AuditorProcurement";
+import AuditorRiskAssessments from "./pages/AuditorRiskAssessments";
+import AuditorPerformance from "./pages/AuditorPerformance";
+import AuditorReports from "./pages/AuditorReports";
+
+// ================= SECURITY =================
+import ProtectedRoute from "./components/ProtectedRoute";
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+
+        {/* =====================================================
+            PUBLIC
+        ===================================================== */}
+
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
+
+
+        {/* =====================================================
+            ADMINISTRATOR
+        ===================================================== */}
+
+        <Route
+          path="/admin-dashboard"
+          element={
+            <ProtectedRoute allowedRole="administrator">
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin-users"
+          element={
+            <ProtectedRoute allowedRole="administrator">
+              <AdminUsers />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin-vendors"
+          element={
+            <ProtectedRoute allowedRole="administrator">
+              <AdminVendors />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin-suppliers"
+          element={
+            <ProtectedRoute allowedRole="administrator">
+              <AdminSuppliers />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin-procurement"
+          element={
+            <ProtectedRoute allowedRole="administrator">
+              <AdminProcurement />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin-purchase-orders"
+          element={
+            <ProtectedRoute allowedRole="administrator">
+              <AdminPurchaseOrders />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin-risk-analysis"
+          element={
+            <ProtectedRoute allowedRole="administrator">
+              <AdminRiskAnalysis />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin-reports"
+          element={
+            <ProtectedRoute allowedRole="administrator">
+              <AdminReports />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin-settings"
+          element={
+            <ProtectedRoute allowedRole="administrator">
+              <AdminSettings />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin-notifications"
+          element={
+            <ProtectedRoute allowedRole="administrator">
+              <AdminNotifications />
+            </ProtectedRoute>
+          }
+        />
+
+
+        {/* =====================================================
+            PROCUREMENT MANAGER
+        ===================================================== */}
+
+        <Route
+          path="/procurement-dashboard"
+          element={
+            <ProtectedRoute allowedRole="procurement_manager">
+              <ProcurementDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/procurement-vendors"
+          element={
+            <ProtectedRoute allowedRole="procurement_manager">
+              <ProcurementVendors />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/procurement-requests"
+          element={
+            <ProtectedRoute allowedRole="procurement_manager">
+              <ProcurementRequests />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/procurement-purchase-orders"
+          element={
+            <ProtectedRoute allowedRole="procurement_manager">
+              <ProcurementPurchaseOrders />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/procurement-approvals"
+          element={
+            <ProtectedRoute allowedRole="procurement_manager">
+              <ProcurementApprovals />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/procurement-performance"
+          element={
+            <ProtectedRoute allowedRole="procurement_manager">
+              <ProcurementPerformance />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/procurement-reports"
+          element={
+            <ProtectedRoute allowedRole="procurement_manager">
+              <ProcurementReports />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/procurement-notifications"
+          element={
+            <ProtectedRoute allowedRole="procurement_manager">
+              <ProcurementNotifications />
+            </ProtectedRoute>
+          }
+        />
+
+
+        {/* =====================================================
+            SUPPLY CHAIN MANAGER
+        ===================================================== */}
+
+        <Route
+          path="/supply-chain-dashboard"
+          element={
+            <ProtectedRoute allowedRole="supply_chain_manager">
+              <SupplyChainDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/supply-chain-suppliers"
+          element={
+            <ProtectedRoute allowedRole="supply_chain_manager">
+              <SupplyChainSuppliers />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/supply-chain-purchase-orders"
+          element={
+            <ProtectedRoute allowedRole="supply_chain_manager">
+              <SupplyChainPurchaseOrders />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/supply-chain-deliveries"
+          element={
+            <ProtectedRoute allowedRole="supply_chain_manager">
+              <SupplyChainDeliveries />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/supply-chain-delayed-deliveries"
+          element={
+            <ProtectedRoute allowedRole="supply_chain_manager">
+              <SupplyChainDelayedDeliveries />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/supply-chain-performance"
+          element={
+            <ProtectedRoute allowedRole="supply_chain_manager">
+              <SupplyChainPerformance />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/supply-chain-risk"
+          element={
+            <ProtectedRoute allowedRole="supply_chain_manager">
+              <SupplyChainRisk />
+            </ProtectedRoute>
+          }
+        />
+
+
+        {/* =====================================================
+            VENDOR
+        ===================================================== */}
+
+        <Route
+          path="/vendor-dashboard"
+          element={
+            <ProtectedRoute allowedRole="vendor">
+              <VendorDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/vendor-profile"
+          element={
+            <ProtectedRoute allowedRole="vendor">
+              <VendorProfile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/vendor-purchase-orders"
+          element={
+            <ProtectedRoute allowedRole="vendor">
+              <VendorPurchaseOrders />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/vendor-deliveries"
+          element={
+            <ProtectedRoute allowedRole="vendor">
+              <VendorDeliveries />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* IMPORTANT: Vendor has its own delayed-deliveries route */}
+        <Route
+          path="/vendor-delayed-deliveries"
+          element={
+            <ProtectedRoute allowedRole="vendor">
+              <VendorDelayedDeliveries />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/vendor-performance"
+          element={
+            <ProtectedRoute allowedRole="vendor">
+              <VendorPerformance />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/vendor-risk-status"
+          element={
+            <ProtectedRoute allowedRole="vendor">
+              <VendorRiskStatus />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/vendor-notifications"
+          element={
+            <ProtectedRoute allowedRole="vendor">
+              <VendorNotifications />
+            </ProtectedRoute>
+          }
+        />
+
+
+        {/* =====================================================
+            FINANCE OFFICER
+        ===================================================== */}
+
+        <Route
+          path="/finance-dashboard"
+          element={
+            <ProtectedRoute allowedRole="finance_officer">
+              <FinanceDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/finance-purchase-orders"
+          element={
+            <ProtectedRoute allowedRole="finance_officer">
+              <FinancePurchaseOrders />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/finance-invoices"
+          element={
+            <ProtectedRoute allowedRole="finance_officer">
+              <FinanceInvoices />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/finance-payments"
+          element={
+            <ProtectedRoute allowedRole="finance_officer">
+              <FinancePayments />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/finance-status"
+          element={
+            <ProtectedRoute allowedRole="finance_officer">
+              <FinanceStatus />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/finance-reports"
+          element={
+            <ProtectedRoute allowedRole="finance_officer">
+              <FinanceReports />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/finance-notifications"
+          element={
+            <ProtectedRoute allowedRole="finance_officer">
+              <FinanceNotifications />
+            </ProtectedRoute>
+          }
+        />
+
+
+        {/* =====================================================
+            AUDITOR
+        ===================================================== */}
+
+        <Route
+          path="/auditor-dashboard"
+          element={
+            <ProtectedRoute allowedRole="auditor">
+              <AuditorDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/auditor-records"
+          element={
+            <ProtectedRoute allowedRole="auditor">
+              <AuditorRecords />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/auditor-vendors"
+          element={
+            <ProtectedRoute allowedRole="auditor">
+              <AuditorVendors />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/auditor-procurement"
+          element={
+            <ProtectedRoute allowedRole="auditor">
+              <AuditorProcurement />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/auditor-risk-assessments"
+          element={
+            <ProtectedRoute allowedRole="auditor">
+              <AuditorRiskAssessments />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/auditor-performance"
+          element={
+            <ProtectedRoute allowedRole="auditor">
+              <AuditorPerformance />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/auditor-reports"
+          element={
+            <ProtectedRoute allowedRole="auditor">
+              <AuditorReports />
+            </ProtectedRoute>
+          }
+        />
+
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+export default App;
