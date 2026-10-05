@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Reliability Intelligence - VendorIQ</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css?v=rbac2">
+</head>
+<body>
+
+    <div class="d-flex">
+        <!-- Shared Sidebar Mount -->
+        <div id="sidebarMount"></div>
+
+        <!-- Main Content Area -->
+        <div class="app-main">
+            <!-- Shared Header Mount -->
+            <div id="headerMount"></div>
+
+            <div class="page-container" id="performanceMount">
+                <div class="text-center py-5 text-muted">
+                    <div class="spinner-border text-primary me-2" role="status"></div> Verifying role permissions...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/auth.js?v=rbac2"></script>
+    <script src="js/api.js?v=rbac2"></script>
+    <script src="js/navigation.js?v=rbac2"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = await checkAuth();
+            if (!user) return;
+
+            renderSharedLayout('Performance');
+
+            const mount = document.getElementById('performanceMount');
+            const role = user.role;
+
+            if (role === 'Vendor') {
+                // 1. VENDOR VIEW: Isolated private scorecard only
+                renderVendorPrivateScorecard(mount, user);
+            } else if (role === 'Finance Officer' || role === 'Auditor') {
+                // 2. RESTRICTED ACCESS VIEW: For Finance / Auditor roles
+                renderRestrictedAccessNotice(mount, role);
+            } else {
+                // 3. AUTHORIZED OPERATIONAL VIEW: Supply Chain Manager, Procurement Manager, Administrator
+                renderInternalRiskIntelligence(mount);
+            }
+        });
+
+        // ==========================================
+        // 1. VENDOR PRIVATE SCORECARD (Strictly isolated)
+        // ==========================================
+        async function renderVendorPrivateScorecard(mount, user) {
+            mount.innerHTML = `
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <h3 class="fw-bold text-dark m-0 tracking-tight">My Supplier Performance Scorecard</h3>
+                            <span class="badge" style="background-color: #faeee4; color: #5c331d; border: 1px solid #ebdcd0;">Tier 1 Partner</span>
+                        </div>
+                        <p class="text-muted small m-0">Confidential performance report evaluated by the VendorIQ Intelligence Algorithm.</p>
+                    </div>
+                    <div>
+                        <span class="badge bg-light text-secondary border p-2">
+                            <i class="bi bi-lock-fill me-1" style="color: #7c4a2d;"></i> Data Isolated to Your Account
+                        </span>
+                    </div>
+                </div>
+
+                <div class="alert alert-light border small text-muted mb-4 d-flex align-items-center gap-2">
+                    <i class="bi bi-shield-check fs-5" style="color: #ea580c;"></i>
+                    <div>
+                        <strong>Confidential Supplier View:</strong> You are viewing private fulfillment scores calculated specifically for your registered business (<em>Apex Logistics & Supply Co.</em>). Competitor rankings and internal risk models are strictly hidden.
+                    </div>
+                </div>
+
+                <!-- 4 Personal KPI Cards -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <div class="kpi-card">
+                            <small class="text-muted text-uppercase fw-bold">Overall Reliability Index</small>
+                            <h2 class="fw-bold mt-1 mb-0" style="color: #ea580c;">94.5 / 100</h2>
+                            <small style="color: #7c4a2d;"><i class="bi bi-star-fill" style="color: #ea580c;"></i> Preferred Supplier Status</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="kpi-card">
+                            <small class="text-muted text-uppercase fw-bold">Fulfillment Accuracy</small>
+                            <h2 class="fw-bold text-dark mt-1 mb-0">98.0%</h2>
+                            <small style="color: #7c4a2d;">Zero return defect discrepancies</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="kpi-card">
+                            <small class="text-muted text-uppercase fw-bold">Response Latency</small>
+                            <h2 class="fw-bold text-dark mt-1 mb-0">2.4 Hours</h2>
+                            <small class="text-muted">Target threshold: &lt; 4.0h</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="kpi-card">
+                            <small class="text-muted text-uppercase fw-bold">Contract SLA Health</small>
+                            <h2 class="fw-bold text-dark mt-1 mb-0">100%</h2>
+                            <small style="color: #7c4a2d;">CNT-2026-001 (Compliant)</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Chart -->
+                <div class="card-widget p-4 mb-4">
+                    <h5 class="fw-bold text-dark mb-1">Your Fulfillment Accuracy vs Network SLA Benchmark</h5>
+                    <small class="text-muted d-block mb-3">6-Month operational trend analysis</small>
+                    <div style="height: 280px; position: relative;">
+                        <canvas id="vendorTrendChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Scorecard Table -->
+                <div class="card-widget p-4">
+                    <h5 class="fw-bold text-dark mb-3">Audited Order Ratings</h5>
+                    <div class="table-responsive">
+                        <table class="table table-custom">
+                            <thead>
+                                <tr>
+                                    <th>PO Code</th>
+                                    <th>Service Description</th>
+                                    <th>Fulfillment Date</th>
+                                    <th>Quality Rating</th>
+                                    <th>Defect Rate</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong class="text-primary">PO-2026-101</strong></td>
+                                    <td>Q1 Priority Logistics Operations</td>
+                                    <td>2026-08-25</td>
+                                    <td><i class="bi bi-star-fill me-1" style="color: #ea580c;"></i>4.9 / 5.0</td>
+                                    <td>0.0%</td>
+                                    <td><span class="status-chip delivered">Verified Complete</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong class="text-primary">PO-2026-102</strong></td>
+                                    <td>Express Material Transport - Batch B</td>
+                                    <td>2026-09-11 (Est.)</td>
+                                    <td><span class="text-muted">In transit</span></td>
+                                    <td><span class="text-muted">--</span></td>
+                                    <td><span class="status-chip ordered">In Progress</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            setTimeout(() => {
+                new Chart(document.getElementById('vendorTrendChart').getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: ['April', 'May', 'June', 'July', 'August', 'September'],
+                        datasets: [
+                            {
+                                label: 'Your Delivery Accuracy (%)',
+                                data: [94.0, 95.5, 96.2, 97.0, 98.0, 98.0],
+                                borderColor: '#ea580c',
+                                backgroundColor: 'rgba(234, 88, 12, 0.08)',
+                                pointBackgroundColor: '#7c4a2d',
+                                pointBorderColor: '#ffffff',
+                                pointRadius: 5,
+                                fill: true,
+                                tension: 0.35
+                            },
+                            {
+                                label: 'Network SLA Target (%)',
+                                data: [90.0, 90.0, 90.0, 90.0, 90.0, 90.0],
+                                borderColor: '#c4a696',
+                                borderDash: [5, 5],
+                                fill: false,
+                                pointRadius: 0
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#4a3022',
+                                    font: { family: 'Plus Jakarta Sans', weight: '600' }
+                                }
+                            }
+                        },
+                        scales: { 
+                            x: {
+                                ticks: { color: '#7c5c4a', font: { family: 'Plus Jakarta Sans' } },
+                                grid: { display: false }
+                            },
+                            y: { 
+                                min: 80, 
+                                max: 100,
+                                ticks: { color: '#7c5c4a', font: { family: 'Plus Jakarta Sans' } },
+                                grid: { color: 'rgba(235, 220, 208, 0.6)' }
+                            } 
+                        }
+                    }
+                });
+            }, 100);
+        }
+
+        // ==========================================
+        // 2. RESTRICTED ACCESS NOTICE (Finance & Auditor)
+        // ==========================================
+        function renderRestrictedAccessNotice(mount, role) {
+            mount.innerHTML = `
+                <div class="d-flex align-items-center justify-content-center py-5">
+                    <div class="card-widget p-5 text-center" style="max-width: 540px;">
+                        <div class="kpi-icon mx-auto mb-3" style="width: 54px; height: 54px; font-size: 1.5rem; background-color: #ffedd5; color: #c2410c;">
+                            <i class="bi bi-shield-lock-fill"></i>
+                        </div>
+                        <h4 class="fw-bold text-dark mb-2">Module Access Restricted</h4>
+                        <p class="text-muted small mb-4">
+                            The full <strong>Vendor Reliability Scoring & Predictive Risk Matrix</strong> is an internal operational workbench restricted to <strong>Supply Chain Managers</strong>, <strong>Procurement Managers</strong>, and <strong>System Administrators</strong>.
+                        </p>
+                        <div class="p-3 bg-light rounded-3 text-start small mb-4">
+                            <div class="fw-semibold text-dark mb-1"><i class="bi bi-info-circle text-primary me-1"></i> Why is this restricted?</div>
+                            <div class="text-muted">
+                                As a <strong>${role}</strong>, your access is focused on ${role === 'Finance Officer' ? 'invoice audits, budget reconciliations, and payment authorization' : 'regulatory legal compliance, contract SLAs, and inspection audit logs'}.
+                            </div>
+                        </div>
+                        <a href="dashboard.html" class="btn btn-primary btn-sm px-4" style="border-radius: 8px;">
+                            <i class="bi bi-arrow-left me-1"></i> Return to ${role} Cockpit
+                        </a>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ==========================================
+        // 3. FULL RISK INTELLIGENCE (Authorized Internal Teams)
+        // ==========================================
+        async function renderInternalRiskIntelligence(mount) {
+            mount.innerHTML = `
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+                    <div>
+                        <h3 class="fw-bold text-dark m-0 tracking-tight">Vendor Reliability & Risk Intelligence</h3>
+                        <p class="text-muted small m-0">Predictive supplier scoring based on delivery accuracy, quality ratings, and response latency.</p>
+                    </div>
+                    <div>
+                        <span class="badge bg-primary px-3 py-2" style="font-size: 0.85rem;">
+                            <i class="bi bi-cpu me-1"></i> Autonomous Scoring Active
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Scoring Formula Breakdown Cards -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <div class="kpi-card">
+                            <small class="text-muted text-uppercase fw-bold">Delivery Fulfillment (35%)</small>
+                            <h4 class="fw-bold text-dark mt-1 mb-0">96.8%</h4>
+                            <small style="color: #7c4a2d;"><i class="bi bi-check-circle"></i> On-Time Threshold Met</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="kpi-card">
+                            <small class="text-muted text-uppercase fw-bold">Product Quality (30%)</small>
+                            <h4 class="fw-bold text-dark mt-1 mb-0">4.8 / 5.0</h4>
+                            <small class="text-muted">&lt; 0.5% return rate</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="kpi-card">
+                            <small class="text-muted text-uppercase fw-bold">Response Latency (15%)</small>
+                            <h4 class="fw-bold text-dark mt-1 mb-0">2.8 hrs</h4>
+                            <small class="text-muted">Target: &lt; 4 hours</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="kpi-card">
+                            <small class="text-muted text-uppercase fw-bold">Contract SLA (20%)</small>
+                            <h4 class="fw-bold text-dark mt-1 mb-0">100%</h4>
+                            <small style="color: #7c4a2d;">Zero non-conformities</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visual Charts Section -->
+                <div class="row g-4 mb-4">
+                    <div class="col-lg-7">
+                        <div class="card-widget p-4 h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h5 class="fw-bold m-0 text-dark">Supplier Reliability Leaderboard</h5>
+                                    <small class="text-muted">Overall performance score index (0 - 100)</small>
+                                </div>
+                                <span class="badge bg-light text-secondary border">Real-Time</span>
+                            </div>
+                            <div style="height: 300px; position: relative;">
+                                <canvas id="perfLeaderboardChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-5">
+                        <div class="card-widget p-4 h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h5 class="fw-bold m-0 text-dark">Procurement Risk Distribution</h5>
+                                    <small class="text-muted">Supplier tier segregation</small>
+                                </div>
+                            </div>
+                            <div style="height: 300px; position: relative;">
+                                <canvas id="riskDoughnutChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Supplier Ranking Table -->
+                <div class="card-widget p-4">
+                    <h5 class="fw-bold text-dark mb-3">Supplier Risk Assessment & Tiers</h5>
+                    <div class="table-responsive">
+                        <table class="table table-custom">
+                            <thead>
+                                <tr>
+                                    <th>Supplier Name</th>
+                                    <th>Category</th>
+                                    <th>Reliability Index</th>
+                                    <th>Quality Score</th>
+                                    <th>Risk Classification</th>
+                                    <th>Procurement Recommendation</th>
+                                </tr>
+                            </thead>
+                            <tbody id="riskTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-muted">Loading risk metrics...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            try {
+                const vendors = await API.getVendors();
+                const summary = await API.getSummary();
+                const chartData = await API.getCharts();
+
+                const tbody = document.getElementById('riskTableBody');
+                if (vendors && vendors.length > 0) {
+                    tbody.innerHTML = vendors.map(v => {
+                        const tier = getRiskTier(v.reliability_score);
+                        return `
+                            <tr>
+                                <td><strong class="text-dark">${v.company_name}</strong></td>
+                                <td><span class="badge bg-light text-secondary border">${v.category}</span></td>
+                                <td><span class="fw-bold" style="${tier.colorStyle}">${v.reliability_score} / 100</span></td>
+                                <td><i class="bi bi-star-fill text-primary me-1"></i>${(v.reliability_score / 20).toFixed(1)} / 5.0</td>
+                                <td><span class="status-chip ${tier.chipClass}">${tier.label}</span></td>
+                                <td><small class="fw-semibold" style="${tier.recStyle}">${tier.recommendation}</small></td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+
+                if (chartData) {
+                    new Chart(document.getElementById('perfLeaderboardChart').getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: chartData.leaderboard.labels,
+                            datasets: [
+                                { 
+                                    label: 'Reliability Score', 
+                                    data: chartData.leaderboard.scores, 
+                                    backgroundColor: '#ea580c', 
+                                    hoverBackgroundColor: '#c2410c',
+                                    borderRadius: 8 
+                                },
+                                { 
+                                    label: 'Delivery Accuracy (%)', 
+                                    data: chartData.leaderboard.accuracies, 
+                                    backgroundColor: '#7c4a2d', 
+                                    hoverBackgroundColor: '#5c331d',
+                                    borderRadius: 8 
+                                }
+                            ]
+                        },
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false, 
+                            plugins: {
+                                legend: {
+                                    labels: {
+                                        color: '#4a3022',
+                                        font: { family: 'Plus Jakarta Sans', weight: '600' }
+                                    }
+                                }
+                            },
+                            scales: { 
+                                x: {
+                                    ticks: { color: '#7c5c4a', font: { family: 'Plus Jakarta Sans' } },
+                                    grid: { display: false }
+                                },
+                                y: { 
+                                    min: 50, 
+                                    max: 100,
+                                    ticks: { color: '#7c5c4a', font: { family: 'Plus Jakarta Sans' } },
+                                    grid: { color: 'rgba(235, 220, 208, 0.6)' }
+                                } 
+                            } 
+                        }
+                    });
+
+                    new Chart(document.getElementById('riskDoughnutChart').getContext('2d'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Low Risk (Preferred)', 'Medium Risk (Standard)', 'High Risk (Critical)'],
+                            datasets: [{
+                                data: [summary?.risk_breakdown?.low_risk || 2, summary?.risk_breakdown?.medium_risk || 0, summary?.risk_breakdown?.high_risk || 0],
+                                backgroundColor: ['#ea580c', '#f4a261', '#5c331d'],
+                                borderWidth: 3,
+                                borderColor: '#ffffff'
+                            }]
+                        },
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false, 
+                            plugins: { 
+                                legend: { 
+                                    position: 'bottom',
+                                    labels: {
+                                        color: '#4a3022',
+                                        font: { family: 'Plus Jakarta Sans', weight: '500', size: 12 },
+                                        padding: 16
+                                    }
+                                } 
+                            }, 
+                            cutout: '72%' 
+                        }
+                    });
+                }
+            } catch (err) {
+                console.error("Error loading performance data:", err);
+            }
+        }
+
+        function getRiskTier(score) {
+            if (score >= 90) {
+                return { label: 'Low Risk', chipClass: 'delivered', colorStyle: 'color: #ea580c;', recStyle: 'color: #7c4a2d;', recommendation: 'Recommended for priority contracts & multi-year renewals' };
+            } else if (score >= 75) {
+                return { label: 'Medium Risk', chipClass: 'ordered', colorStyle: 'color: #c2410c;', recStyle: 'color: #5c331d;', recommendation: 'Maintain standard delivery monitoring and quarterly reviews' };
+            } else {
+                return { label: 'High Risk', chipClass: 'high-risk', colorStyle: 'color: #be123c;', recStyle: 'color: #9f1239;', recommendation: 'Trigger procurement audit and implement corrective action' };
+            }
+        }
+    </script>
+</body>
+</html>

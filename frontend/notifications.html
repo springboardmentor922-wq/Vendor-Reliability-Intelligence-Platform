@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alerts Center - VendorIQ</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css?v=rbac2">
+</head>
+<body>
+
+    <div class="d-flex">
+        <!-- Shared Sidebar Mount -->
+        <div id="sidebarMount"></div>
+
+        <!-- Main Content Area -->
+        <div class="app-main">
+            <!-- Shared Header Mount -->
+            <div id="headerMount"></div>
+
+            <div class="page-container">
+                <!-- Header with Actions -->
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+                    <div>
+                        <h3 class="fw-bold text-dark m-0 tracking-tight">Notifications & Procurement Alerts</h3>
+                        <p class="text-muted small m-0">Real-time alerts for delivery delays, contract expirations, quality flags, and approval tasks.</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-secondary btn-sm" onclick="markAllAsReadAction()" style="border-radius: 8px;">
+                            <i class="bi bi-check2-all me-1"></i> Mark All as Read
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Alert Filter Tabs -->
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    <button class="filter-pill active" onclick="filterAlerts('All', this)">All Notifications</button>
+                    <button class="filter-pill" onclick="filterAlerts('Urgent', this)">Urgent Actions</button>
+                    <button class="filter-pill" onclick="filterAlerts('Delivery', this)">Shipments & Deliveries</button>
+                    <button class="filter-pill" onclick="filterAlerts('Compliance', this)">Legal & Compliance</button>
+                </div>
+
+                <!-- Alert Cards Feed -->
+                <div class="d-flex flex-column gap-3" id="alertsListContainer">
+                    <div class="text-center py-5 text-muted">
+                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div> Loading live alerts...
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/auth.js?v=rbac2"></script>
+    <script src="js/api.js?v=rbac2"></script>
+    <script src="js/navigation.js?v=rbac2"></script>
+
+    <script>
+        let currentFilter = 'All';
+        let allNotifications = [];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = await checkAuth();
+            if (!user) return;
+
+            renderSharedLayout('Notifications');
+            await loadNotifications();
+        });
+
+        async function loadNotifications() {
+            try {
+                const data = await API.getNotifications();
+                allNotifications = data || [];
+                renderNotifications();
+            } catch (err) {
+                console.error("Error loading notifications:", err);
+                document.getElementById('alertsListContainer').innerHTML = `
+                    <div class="card-widget p-4 text-center text-muted">
+                        Failed to load notifications from database.
+                    </div>
+                `;
+            }
+        }
+
+        function renderNotifications() {
+            const container = document.getElementById('alertsListContainer');
+            const filtered = allNotifications.filter(n => {
+                if (currentFilter === 'All') return true;
+                return n.type === currentFilter;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="card-widget p-4 text-center text-muted">
+                        No notifications found for current filter.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(n => {
+                const icon = getNotifIcon(n.type);
+                const chipClass = getNotifChipClass(n.type);
+                return `
+                    <div class="card-widget p-4 alert-item ${n.is_read ? 'opacity-75' : ''}" data-type="${n.type}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="d-flex gap-3">
+                                <div class="kpi-icon" style="${icon.style}">
+                                    <i class="${icon.iconClass}"></i>
+                                </div>
+                                <div>
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <h6 class="fw-bold text-dark m-0">${n.title}</h6>
+                                        <span class="status-chip ${chipClass}">${n.type}</span>
+                                        ${!n.is_read ? '<span class="badge rounded-pill" style="background-color: #ea580c; color: #ffffff; font-size: 0.65rem;">New</span>' : ''}
+                                    </div>
+                                    <p class="text-muted small mb-2">${n.message}</p>
+                                    <small class="text-muted"><i class="bi bi-clock me-1"></i> ${new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
+                                </div>
+                            </div>
+                            <div>
+                                <a href="${n.link || 'procurement.html'}" class="btn btn-sm btn-primary">Open</a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getNotifIcon(type) {
+            switch (type) {
+                case 'Urgent':
+                    return { iconClass: 'bi bi-exclamation-triangle-fill', style: 'background-color: #ffedd5; color: #c2410c;' };
+                case 'Delivery':
+                    return { iconClass: 'bi bi-truck', style: 'background-color: #faeee4; color: #7c4a2d;' };
+                case 'Compliance':
+                    return { iconClass: 'bi bi-file-earmark-check', style: 'background-color: #ffedd5; color: #c2410c;' };
+                default:
+                    return { iconClass: 'bi bi-bell-fill', style: 'background-color: #faeee4; color: #ea580c;' };
+            }
+        }
+
+        function getNotifChipClass(type) {
+            switch (type) {
+                case 'Urgent': return 'high-risk';
+                case 'Delivery': return 'delivered';
+                case 'Compliance': return 'compliant';
+                default: return 'ordered';
+            }
+        }
+
+        function filterAlerts(type, btn) {
+            document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentFilter = type;
+            renderNotifications();
+        }
+
+        async function markAllAsReadAction() {
+            try {
+                await API.markNotificationsRead();
+                await loadNotifications();
+            } catch (err) {
+                alert("Error marking notifications as read: " + err.message);
+            }
+        }
+    </script>
+</body>
+</html>

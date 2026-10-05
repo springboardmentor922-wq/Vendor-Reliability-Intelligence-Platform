@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports & Exports - VendorIQ</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css?v=rbac2">
+</head>
+<body>
+
+    <div class="d-flex">
+        <!-- Shared Sidebar Mount -->
+        <div id="sidebarMount"></div>
+
+        <!-- Main Content Area -->
+        <div class="app-main">
+            <!-- Shared Header Mount -->
+            <div id="headerMount"></div>
+
+            <div class="page-container" id="reportsPageContainer">
+                <!-- Header -->
+                <div class="mb-4">
+                    <h3 class="fw-bold text-dark m-0 tracking-tight">Audit Reports & Data Export Center</h3>
+                    <p class="text-muted small m-0">Generate, schedule, and download certified vendor performance scorecards and procurement spend ledgers.</p>
+                </div>
+
+                <!-- Report Template Cards -->
+                <div class="row g-4 mb-4">
+                    <!-- Report 1: Vendor Performance -->
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card-widget p-4 h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="kpi-icon bg-primary-subtle text-primary mb-3">
+                                    <i class="bi bi-speedometer2"></i>
+                                </div>
+                                <h5 class="fw-bold text-dark mb-1">Vendor Scorecard Summary</h5>
+                                <p class="text-muted small mb-3">Complete metrics report on delivery accuracy, defect rate, and calculated reliability score indices.</p>
+                                <span class="badge bg-light text-secondary border mb-3">Monthly Audit</span>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-primary btn-sm flex-grow-1" onclick="exportVendorReportCSV()">
+                                    <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV
+                                </button>
+                                <button class="btn btn-primary btn-sm flex-grow-1" onclick="simulatePDFDownload('Vendor_Scorecard_Summary.pdf')">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Report 2: Procurement Spend -->
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card-widget p-4 h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="kpi-icon mb-3" style="background-color: #faeee4; color: #7c4a2d;">
+                                    <i class="bi bi-cash-stack"></i>
+                                </div>
+                                <h5 class="fw-bold text-dark mb-1">Purchase Order Spend Ledger</h5>
+                                <p class="text-muted small mb-3">Itemized financial procurement log covering order values, payment states, and vendor allocations.</p>
+                                <span class="badge bg-light text-secondary border mb-3">Financial Q1</span>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-primary btn-sm flex-grow-1" onclick="exportOrdersReportCSV()">
+                                    <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV
+                                </button>
+                                <button class="btn btn-primary btn-sm flex-grow-1" onclick="simulatePDFDownload('PO_Spend_Ledger.pdf')">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Report 3: Contract Compliance -->
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card-widget p-4 h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="kpi-icon mb-3" style="background-color: #ffedd5; color: #c2410c;">
+                                    <i class="bi bi-shield-check"></i>
+                                </div>
+                                <h5 class="fw-bold text-dark mb-1">Contract Compliance Audit</h5>
+                                <p class="text-muted small mb-3">Legal agreements inventory, expiration timeline schedule, and non-conformity compliance review.</p>
+                                <span class="badge bg-light text-secondary border mb-3">Compliance Ready</span>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-primary btn-sm flex-grow-1" onclick="exportContractsReportCSV()">
+                                    <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV
+                                </button>
+                                <button class="btn btn-primary btn-sm flex-grow-1" onclick="simulatePDFDownload('Compliance_Audit_Log.pdf')">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Custom Query Report Generator Card -->
+                <div class="card-widget p-4">
+                    <h5 class="fw-bold text-dark mb-3"><i class="bi bi-sliders me-2 text-primary"></i>Custom Query Report Builder</h5>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Dataset</label>
+                            <select class="form-select" id="customDatasetSelect">
+                                <option value="vendors">Vendor Performance</option>
+                                <option value="orders">Purchase Orders</option>
+                                <option value="contracts">Contracts Repository</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Time Period</label>
+                            <select class="form-select">
+                                <option>Current Fiscal Quarter (Q1 2026)</option>
+                                <option>Year to Date (YTD)</option>
+                                <option>Last 30 Days</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Format</label>
+                            <select class="form-select" id="customFormatSelect">
+                                <option value="csv">Comma-Separated Values (.csv)</option>
+                                <option value="pdf">Adobe Portable Document (.pdf)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button class="btn btn-primary w-100" onclick="generateCustomExport()">
+                                <i class="bi bi-download me-1"></i> Generate & Download
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/auth.js?v=rbac2"></script>
+    <script src="js/api.js?v=rbac2"></script>
+    <script src="js/navigation.js?v=rbac2"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = await checkAuth();
+            if (!user) return;
+
+            renderSharedLayout('Reports');
+
+            if (user.role === 'Vendor') {
+                const container = document.getElementById('reportsPageContainer');
+                container.innerHTML = `
+                    <div class="card-widget p-5 text-center my-4" style="max-width: 740px; margin: 0 auto; border: 1px solid #ebdcd0;">
+                        <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 72px; height: 72px; background: #fff7ed; color: #ea580c; font-size: 2rem; border: 1px solid #fed7aa;">
+                            <i class="bi bi-shield-lock-fill"></i>
+                        </div>
+                        <h4 class="fw-bold text-dark mb-2">Access Restricted: Internal Reports</h4>
+                        <span class="badge mb-3 px-3 py-1.5" style="font-size: 0.78rem; background-color: #faeee4; color: #5c331d; border: 1px solid #ebdcd0;">
+                            Role: ${user.role} (${user.email})
+                        </span>
+                        <p class="text-muted mb-4" style="line-height: 1.7; font-size: 0.92rem;">
+                            Corporate spend ledgers, network-wide procurement audit trails, and financial exports are restricted to internal enterprise personnel.
+                            <br><br>
+                            As a supplier partner, please refer to your <strong>Supplier Dashboard</strong> or <strong>My Purchase Orders</strong> for your order fulfillment records.
+                        </p>
+                        <div class="d-flex flex-wrap justify-content-center gap-2">
+                            <a href="dashboard.html" class="btn btn-primary btn-sm px-3" style="border-radius: 8px;">
+                                <i class="bi bi-grid-1x2-fill me-1"></i> Supplier Dashboard
+                            </a>
+                            <a href="procurement.html" class="btn btn-outline-primary btn-sm px-3" style="border-radius: 8px;">
+                                <i class="bi bi-box-seam me-1"></i> My Purchase Orders
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+
+        function downloadCSV(filename, csvContent) {
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        async function exportVendorReportCSV() {
+            try {
+                const vendors = await API.getVendors();
+                let csv = "ID,Company Name,Category,Email,Reliability Score,Delivery Accuracy,Response Time (Hours),Status\n";
+                vendors.forEach(v => {
+                    csv += `"${v.id}","${v.company_name}","${v.category}","${v.email}","${v.reliability_score}","${v.delivery_accuracy}","${v.response_time}","${v.status}"\n`;
+                });
+                downloadCSV("Vendor_Performance_Report.csv", csv);
+            } catch (err) {
+                alert("Export error: " + err.message);
+            }
+        }
+
+        async function exportOrdersReportCSV() {
+            try {
+                const orders = await API.getOrders();
+                let csv = "PO Code,Title,Vendor Name,Total Amount ($),Expected Delivery,Status,Quality Rating\n";
+                orders.forEach(o => {
+                    csv += `"${o.order_number}","${o.title}","${o.vendor_name || ''}","${o.total_amount}","${o.expected_delivery_date}","${o.status}","${o.quality_rating || 'N/A'}"\n`;
+                });
+                downloadCSV("Purchase_Orders_Ledger.csv", csv);
+            } catch (err) {
+                alert("Export error: " + err.message);
+            }
+        }
+
+        async function exportContractsReportCSV() {
+            try {
+                const contracts = await API.getContracts();
+                let csv = "Contract Number,Title,Vendor Name,Value ($),Start Date,End Date,Compliance Status\n";
+                contracts.forEach(c => {
+                    csv += `"${c.contract_number}","${c.title}","${c.vendor_name || ''}","${c.value}","${c.start_date}","${c.end_date}","${c.compliance_status}"\n`;
+                });
+                downloadCSV("Contract_Compliance_Report.csv", csv);
+            } catch (err) {
+                alert("Export error: " + err.message);
+            }
+        }
+
+        function simulatePDFDownload(filename) {
+            window.print();
+        }
+
+        function generateCustomExport() {
+            const ds = document.getElementById('customDatasetSelect').value;
+            const fmt = document.getElementById('customFormatSelect').value;
+            if (fmt === 'pdf') {
+                window.print();
+            } else {
+                if (ds === 'vendors') exportVendorReportCSV();
+                else if (ds === 'orders') exportOrdersReportCSV();
+                else exportContractsReportCSV();
+            }
+        }
+    </script>
+</body>
+</html>
