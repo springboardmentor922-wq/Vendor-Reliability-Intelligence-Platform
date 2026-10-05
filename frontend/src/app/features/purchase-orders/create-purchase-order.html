@@ -1,0 +1,204 @@
+<div class="page">
+  <div class="po-head">
+    <div>
+      <div class="crumbs"><a routerLink="/procurement">Procurement</a><mat-icon>chevron_right</mat-icon><span>Create Purchase Order</span></div>
+      <h1>Create Purchase Order</h1>
+      <p>Fill in the details below to create a new purchase order. It is submitted for approval before being sent to the vendor.</p>
+    </div>
+    <a class="btn-ghost" routerLink="/purchase-orders"><mat-icon>arrow_back</mat-icon>Back to Orders</a>
+  </div>
+
+  @if (draftSavedAt()) {
+    <div class="alert alert-info draft-note">
+      <mat-icon>restore</mat-icon>
+      <span>Restored your draft from {{ draftSavedAt() }}.</span>
+      <button type="button" class="link-btn" (click)="discardDraft()">Start fresh</button>
+    </div>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="po-layout">
+    <div class="po-main">
+      <!-- Order details -->
+      <section class="section-card">
+        <h3><mat-icon>description</mat-icon>Order Details</h3>
+
+        <div class="grid-3">
+          <mat-form-field appearance="outline">
+            <mat-label>PO Number</mat-label>
+            <input matInput value="Auto-generated on submit" disabled />
+            <mat-icon matSuffix>tag</mat-icon>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Order Date</mat-label>
+            <input matInput type="date" formControlName="order_date" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Expected Delivery Date</mat-label>
+            <input matInput type="date" formControlName="expected_delivery" />
+            @if (form.controls.expected_delivery.hasError('required')) { <mat-error>Required</mat-error> }
+          </mat-form-field>
+        </div>
+
+        <div class="grid-2">
+          <mat-form-field appearance="outline">
+            <mat-label>Procurement Request</mat-label>
+            <mat-select formControlName="procurement_request_id">
+              <mat-option [value]="null">— Direct order (no request) —</mat-option>
+              @for (r of requests(); track r.id) {
+                <mat-option [value]="r.id">{{ r.request_number }} | {{ r.item }}</mat-option>
+              }
+            </mat-select>
+            <mat-hint>Only approved requests can be converted</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Department</mat-label>
+            <mat-select formControlName="department">
+              @for (d of departments; track d) { <mat-option [value]="d">{{ d }}</mat-option> }
+            </mat-select>
+            @if (form.controls.department.hasError('required')) { <mat-error>Choose the requesting department</mat-error> }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Vendor</mat-label>
+            <mat-select formControlName="vendor_id" panelClass="vendor-panel">
+              @for (v of vendors(); track v.id) {
+                <mat-option [value]="v.id">
+                  {{ v.vendor_name }}@if (ranking().get(v.id); as r) { — score {{ r.reliability_score.toFixed(0) }}, {{ r.risk_level }} risk }
+                </mat-option>
+              }
+            </mat-select>
+            <mat-hint>Approved vendors only · reliability score shown</mat-hint>
+            @if (form.controls.vendor_id.hasError('required')) { <mat-error>Choose an approved vendor</mat-error> }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Payment Terms</mat-label>
+            <mat-select formControlName="payment_terms">
+              @for (t of paymentTerms; track t) { <mat-option [value]="t">{{ t }}</mat-option> }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="span-all">
+            <mat-label>Order title</mat-label>
+            <input matInput formControlName="title" placeholder="e.g. Laptops for IT team" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Shipping Address</mat-label>
+            <textarea matInput rows="4" formControlName="shipping_address" placeholder="Site, street, city, PIN"></textarea>
+            @if (form.controls.shipping_address.hasError('required')) { <mat-error>Where should the goods be delivered?</mat-error> }
+          </mat-form-field>
+
+          <div class="billing">
+            <mat-checkbox formControlName="same_as_shipping">Billing address same as shipping</mat-checkbox>
+            @if (form.value.same_as_shipping) {
+              <div class="billing-preview">{{ form.value.shipping_address || 'Uses the shipping address' }}</div>
+            } @else {
+              <mat-form-field appearance="outline">
+                <mat-label>Billing Address</mat-label>
+                <textarea matInput rows="3" formControlName="billing_address"></textarea>
+              </mat-form-field>
+            }
+          </div>
+        </div>
+      </section>
+
+      <!-- Items -->
+      <section class="section-card">
+        <div class="items-head">
+          <h3><mat-icon>list_alt</mat-icon>Order Items</h3>
+          <button type="button" matButton="filled" (click)="addItem()"><mat-icon>add</mat-icon>Add Item</button>
+        </div>
+
+        <div class="items-table" formArrayName="items">
+          <div class="it-row it-header">
+            <span>#</span><span>Item Description</span><span>Quantity</span><span>Unit</span>
+            <span>Unit Price</span><span>Tax (%)</span><span class="right">Total</span><span></span>
+          </div>
+          @for (item of items.controls; track item; let i = $index) {
+            <div class="it-row" [formGroupName]="i">
+              <span class="it-index">{{ i + 1 }}</span>
+              <input class="it-input" formControlName="item_name" placeholder="Item description" [class.invalid]="item.get('item_name')?.invalid && item.get('item_name')?.touched" />
+              <input class="it-input num" type="number" min="0" step="any" formControlName="quantity" />
+              <select class="it-input" formControlName="unit">
+                @for (u of units; track u) { <option [value]="u">{{ u }}</option> }
+              </select>
+              <input class="it-input num" type="number" min="0" step="0.01" formControlName="unit_price" />
+              <input class="it-input num" type="number" min="0" max="100" step="0.5" formControlName="tax_rate" />
+              <span class="it-total">{{ lines()[i]?.total | number: '1.2-2' }}</span>
+              <button type="button" class="it-remove" (click)="removeItem(i)" [disabled]="items.length === 1" matTooltip="Remove line" aria-label="Remove line">
+                <mat-icon>delete_outline</mat-icon>
+              </button>
+            </div>
+          }
+        </div>
+      </section>
+    </div>
+
+    <!-- Summary -->
+    <aside class="po-side">
+      <section class="section-card summary">
+        <h3><mat-icon>receipt</mat-icon>Order Summary</h3>
+        <div class="sum-row"><span>Subtotal</span><strong>{{ fmtMoney(subtotal()) }}</strong></div>
+        <div class="sum-row"><span>Tax ({{ effectiveTaxRate() | number: '1.0-1' }}%)</span><strong>{{ fmtMoney(tax()) }}</strong></div>
+        <div class="sum-row">
+          <span>Shipping</span>
+          <input class="ship-input" type="number" min="0" step="0.01" formControlName="shipping_amount" aria-label="Shipping amount" />
+        </div>
+        <div class="sum-total">
+          <span>Total Amount</span>
+          <strong [viqCountUp]="total()" [format]="fmtMoney" [duration]="500"></strong>
+        </div>
+        <mat-form-field appearance="outline">
+          <mat-label>Currency</mat-label>
+          <mat-select formControlName="currency">
+            @for (c of currencies; track c) { <mat-option [value]="c">{{ c }}</mat-option> }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Remarks (optional)</mat-label>
+          <textarea matInput rows="3" formControlName="notes" maxlength="500"></textarea>
+          <mat-hint align="end">{{ remarksLength() }}/500</mat-hint>
+        </mat-form-field>
+      </section>
+
+      @if (selectedVendor(); as v) {
+        <section class="section-card intel">
+          <h3><mat-icon>insights</mat-icon>Vendor Intelligence</h3>
+          <div class="intel-top">
+            <div>
+              <div class="intel-name">{{ v.vendor_name }}</div>
+              <div class="intel-cat">{{ v.category }}</div>
+            </div>
+            @if (selectedScore(); as s) {
+              <div class="intel-score">{{ s.reliability_score.toFixed(1) }}</div>
+            }
+          </div>
+          @if (selectedScore(); as s) {
+            <div class="intel-tags">
+              <span [class]="riskClass(s.risk_level)">{{ s.risk_level }} risk</span>
+              @if (s.rank_position) { <span class="pill pill-info">Rank #{{ s.rank_position }}</span> }
+              @if (s.trend) { <span class="pill">{{ s.trend }}</span> }
+            </div>
+            @if (s.predicted_delay_risk !== null) {
+              <div class="intel-line">Predicted delay risk <strong>{{ (s.predicted_delay_risk * 100) | number: '1.0-0' }}%</strong></div>
+            }
+          }
+          @if (advice(); as a) {
+            <div class="recommendation"><mat-icon>tips_and_updates</mat-icon><span>{{ a.recommendation }}</span></div>
+          }
+        </section>
+      }
+    </aside>
+
+    <div class="po-actions">
+      <a class="btn-ghost" routerLink="/purchase-orders">Cancel</a>
+      <span class="spacer"></span>
+      <button type="button" class="btn-ghost" (click)="saveDraft()"><mat-icon>save</mat-icon>Save as Draft</button>
+      <button type="submit" matButton="filled" [disabled]="saving()">
+        <mat-icon>send</mat-icon>{{ saving() ? 'Submitting…' : 'Submit for Approval' }}
+      </button>
+    </div>
+  </form>
+</div>

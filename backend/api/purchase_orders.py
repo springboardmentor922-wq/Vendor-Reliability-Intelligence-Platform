@@ -97,6 +97,20 @@ def _recalculate_totals(po: PurchaseOrder) -> None:
         Decimal("0")
     )
 
+    # Line-level tax rates (the Create Purchase Order screen captures a tax %
+    # per line) take precedence over a single order-level tax amount.
+    line_tax = sum(
+        (
+            Decimal(item.quantity) * Decimal(item.unit_price)
+            * Decimal(item.tax_rate or 0) / Decimal("100")
+            for item in po.items
+        ),
+        Decimal("0")
+    )
+
+    if line_tax > 0:
+        po.tax_amount = line_tax.quantize(Decimal("0.01"))
+
     po.subtotal = subtotal
     po.total_amount = (
         subtotal
@@ -173,6 +187,7 @@ def _replace_items(
             quantity=item.quantity,
             unit=item.unit,
             unit_price=item.unit_price,
+            tax_rate=item.tax_rate,
             line_total=Decimal(item.quantity) * Decimal(item.unit_price)
         )
         db.add(line)
@@ -263,10 +278,21 @@ def list_purchase_orders(
     status_filter: Optional[str] = Query(default=None, alias="status"),
     vendor_id: Optional[int] = Query(default=None),
     delayed_only: bool = Query(default=False),
+    month: Optional[str] = Query(default=None, pattern=r"^\d{4}-\d{2}$"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     query = db.query(PurchaseOrder)
+
+    if month:
+        # Dashboard drill-down: orders raised in one calendar month.
+        year, month_no = (int(part) for part in month.split("-"))
+        first = date(year, month_no, 1)
+        following = date(year + (month_no == 12), month_no % 12 + 1, 1)
+        query = query.filter(
+            PurchaseOrder.order_date >= first,
+            PurchaseOrder.order_date < following
+        )
 
     scope = vendor_scope(current_user)
     if scope is not None:
@@ -410,6 +436,8 @@ def create_purchase_order(
         shipping_amount=payload.shipping_amount,
         payment_terms=payload.payment_terms,
         shipping_address=payload.shipping_address,
+        billing_address=payload.billing_address,
+        department=payload.department or (request.department if request else None),
         notes=payload.notes,
         status=PurchaseOrderStatus.PENDING
     )

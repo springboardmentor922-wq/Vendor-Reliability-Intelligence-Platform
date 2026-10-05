@@ -13,6 +13,7 @@ class PurchaseOrderItemBase(BaseModel):
     quantity: Decimal = Field(default=Decimal("1"), gt=0)
     unit: str = Field(default="Units", max_length=30)
     unit_price: Decimal = Field(default=Decimal("0"), ge=0)
+    tax_rate: Decimal = Field(default=Decimal("0"), ge=0, le=100)
 
 
 class PurchaseOrderItemCreate(PurchaseOrderItemBase):
@@ -39,6 +40,8 @@ class PurchaseOrderBase(BaseModel):
     shipping_amount: Decimal = Field(default=Decimal("0"), ge=0)
     payment_terms: Optional[str] = Field(default=None, max_length=100)
     shipping_address: Optional[str] = None
+    billing_address: Optional[str] = None
+    department: Optional[str] = Field(default=None, max_length=100)
     notes: Optional[str] = None
 
 
@@ -57,6 +60,8 @@ class PurchaseOrderUpdate(BaseModel):
     shipping_amount: Optional[Decimal] = Field(default=None, ge=0)
     payment_terms: Optional[str] = Field(default=None, max_length=100)
     shipping_address: Optional[str] = None
+    billing_address: Optional[str] = None
+    department: Optional[str] = Field(default=None, max_length=100)
     notes: Optional[str] = None
     items: Optional[list[PurchaseOrderItemCreate]] = None
 
@@ -88,6 +93,8 @@ class PurchaseOrderResponse(BaseModel):
     total_amount: Decimal
     payment_terms: Optional[str] = None
     shipping_address: Optional[str] = None
+    billing_address: Optional[str] = None
+    department: Optional[str] = None
     notes: Optional[str] = None
     status: str
     approved_by: Optional[int] = None

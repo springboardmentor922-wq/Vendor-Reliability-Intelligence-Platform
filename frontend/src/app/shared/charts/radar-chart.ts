@@ -66,7 +66,7 @@ import { Point, TONE } from './chart-types';
               [attr.cy]="node.y"
               r="3.5"
               [attr.fill]="colour()"
-              stroke="#fff"
+              stroke="var(--viq-surface)"
               stroke-width="1.5"
             >
               <title>{{ node.label }}: {{ node.value }}</title>

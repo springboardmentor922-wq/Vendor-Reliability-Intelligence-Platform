@@ -10,6 +10,8 @@ from api.analytics import router as analytics_router
 from api.auth import router as auth_router
 from api.communication import router as communication_router
 from api.contracts import router as contracts_router
+from api.dashboards import router as dashboards_router
+from api.data_import import router as data_import_router
 from api.dashboard import router as dashboard_router
 from api.invoices import router as invoices_router
 from api.notifications import router as notifications_router
@@ -18,10 +20,13 @@ from api.purchase_orders import router as purchase_orders_router
 from api.reliability import router as reliability_router
 from api.reports import router as reports_router
 from api.users import router as users_router
+from api.vendor_applications import router as vendor_applications_router
 from api.vendor_performance import router as vendor_performance_router
 from api.vendors import router as vendors_router
 from config import settings
-from database import get_db
+from database import engine, get_db
+from services import migrations
+from services.monitoring import MonitoringMiddleware
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -46,7 +51,11 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Content-Disposition"],
 )
+
+# Times every request for the live system-statistics panel.
+app.add_middleware(MonitoringMiddleware)
 
 
 # --------------------------------------------------
@@ -78,11 +87,24 @@ app.include_router(vendor_performance_router)
 app.include_router(reliability_router)
 app.include_router(analytics_router)
 app.include_router(reports_router)
+app.include_router(dashboards_router)
+app.include_router(data_import_router)
+app.include_router(vendor_applications_router)
 
 
 # --------------------------------------------------
 # ROOT / HEALTH
 # --------------------------------------------------
+
+@app.on_event("startup")
+def apply_schema_upgrades():
+    """Additive, idempotent column/table upgrades for existing databases."""
+
+    try:
+        migrations.apply(engine)
+    except Exception as exc:  # noqa: BLE001 - never block start-up
+        print(f"[startup] schema upgrade skipped: {exc}")
+
 
 @app.on_event("startup")
 def warm_prediction_model():

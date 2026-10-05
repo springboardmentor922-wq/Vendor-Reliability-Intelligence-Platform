@@ -1,3 +1,4 @@
+import { ActivatedRoute } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -69,6 +70,7 @@ export class UserList {
   });
 
   constructor() {
+    this.roleFilter = inject(ActivatedRoute).snapshot.queryParamMap.get('role') ?? '';
     this.load();
   }
 

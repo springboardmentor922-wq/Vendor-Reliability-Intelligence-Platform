@@ -1,0 +1,202 @@
+<div class="page">
+  <section class="dash-banner admin">
+    <div class="banner-row">
+      <div class="banner-title">
+        <span class="banner-icon"><mat-icon>admin_panel_settings</mat-icon></span>
+        <div>
+          <h1>Admin Dashboard</h1>
+          <p>Manage users, analyse vendors, monitor compliance and system performance</p>
+        </div>
+      </div>
+      <div class="banner-controls">
+        <div class="range-group" role="group" aria-label="Date range">
+          @for (r of ranges; track r.key) {
+            <button type="button" [class.active]="range() === r.key" (click)="setRange(r.key)">{{ r.label }}</button>
+          }
+        </div>
+        <a class="banner-chip" routerLink="/data-import"><mat-icon>upload_file</mat-icon>Import data</a>
+        <button type="button" class="banner-chip" (click)="refresh()" matTooltip="Refresh now">
+          <mat-icon [class.spin]="refreshing()">sync</mat-icon>
+          @if (updatedAt(); as t) { {{ t | date: 'HH:mm:ss' }} }
+        </button>
+        <span class="live-badge on-banner"><span class="live-dot" [class.paused]="!live.connected()"></span>Live</span>
+      </div>
+    </div>
+  </section>
+
+  @if (loading()) {
+    <div class="kpi-row four">
+      @for (i of [1, 2, 3, 4]; track i) { <div class="skeleton" style="height: 150px"></div> }
+    </div>
+    <div class="chart-grid">
+      @for (i of [1, 2, 3, 4]; track i) { <div class="skeleton span-3" style="height: 340px"></div> }
+    </div>
+  } @else if (data(); as d) {
+    <div class="kpi-row four stagger">
+      @for (k of d.kpis; track k.key) {
+        <viq-kpi [kpi]="k" [icon]="kpiStyle(k.key).icon" [tone]="kpiStyle(k.key).tone" />
+      }
+    </div>
+
+    <div class="chart-grid">
+      <section class="panel span-3" [class.refreshing]="refreshing()">
+        <div class="panel-head">
+          <div>
+            <h2>User Management</h2>
+            <div class="panel-sub">Users by role · click to manage</div>
+          </div>
+          <a class="icon-btn" routerLink="/users" matTooltip="User management"><mat-icon>manage_accounts</mat-icon></a>
+        </div>
+        <viq-donut [slices]="d.user_management.slices" centerLabel="Users" [stacked]="true" [size]="180" (sliceClick)="openRole($event)" />
+        <div class="panel-foot">
+          <span>Active <strong>{{ d.user_management.active }}</strong></span>
+          <span>Inactive <strong>{{ d.user_management.inactive }}</strong></span>
+          <span>Pending approvals <strong>{{ d.user_management.pending_approvals }}</strong></span>
+        </div>
+      </section>
+
+      <section class="panel span-3" [class.refreshing]="refreshing()">
+        <div class="panel-head">
+          <div>
+            <h2>Vendor Analytics</h2>
+            <div class="panel-sub">Risk distribution · click a bar to see those vendors</div>
+          </div>
+        </div>
+        <viq-chart type="bar" [data]="riskData()" [options]="riskOptions" [height]="250" ariaLabel="Vendors by risk level" (pointClick)="openRisk($event)" />
+        <div class="panel-foot">
+          <span>Total <strong>{{ d.vendor_analytics.total }}</strong></span>
+          <span>Approved <strong>{{ d.vendor_analytics.active }}</strong></span>
+          <span>High risk <strong>{{ d.vendor_analytics.high_risk }}</strong></span>
+          <span>Avg reliability <strong>{{ d.vendor_analytics.average_reliability.toFixed(1) }}</strong></span>
+        </div>
+      </section>
+
+      <section class="panel span-3" [class.refreshing]="refreshing()">
+        <div class="panel-head">
+          <div>
+            <h2>Procurement Reports</h2>
+            <div class="panel-sub">Bars: value (left) · line: PO count (right)</div>
+          </div>
+          <a class="icon-btn" routerLink="/reports" matTooltip="Generate reports"><mat-icon>summarize</mat-icon></a>
+        </div>
+        <viq-chart type="bar" [data]="reportData()" [options]="reportOptions" [height]="250" ariaLabel="Procurement value and PO count by month" (pointClick)="openMonth($event)" />
+        <div class="panel-foot">
+          <span>Requests <strong>{{ num(d.procurement_reports.total_requests) }}</strong></span>
+          <span>POs <strong>{{ num(d.procurement_reports.total_orders) }}</strong></span>
+          <span>Value <strong>{{ money(d.procurement_reports.procurement_value) }}</strong></span>
+          <span>Pending <strong>{{ d.procurement_reports.pending_approvals }}</strong></span>
+          <span>Completion <strong>{{ pct(d.procurement_reports.completion_rate) }}</strong></span>
+        </div>
+      </section>
+
+      <section class="panel span-3" [class.refreshing]="refreshing()">
+        <div class="panel-head">
+          <div>
+            <h2>Compliance Monitoring</h2>
+            <div class="panel-sub">Vendors by compliance position · rate {{ pct(d.compliance.compliance_rate) }}</div>
+          </div>
+        </div>
+        <viq-donut [slices]="d.compliance.slices" centerLabel="Vendors" colorMode="status" [stacked]="true" [size]="180" (sliceClick)="openCompliance($event)" />
+        <div class="panel-foot">
+          <span>Expired certs <strong>{{ d.compliance.expired_certifications }}</strong></span>
+          <span>Expiring <strong>{{ d.compliance.expiring_certifications }}</strong></span>
+        </div>
+      </section>
+    </div>
+
+    <div class="chart-grid">
+      <section class="panel span-4">
+        <div class="panel-head">
+          <div>
+            <h2>System Statistics</h2>
+            <div class="panel-sub">Measured live from the API · refreshes every 5 s</div>
+          </div>
+          <span class="live-badge"><span class="live-dot"></span>Live</span>
+        </div>
+        @if (sys(); as s) {
+          <div class="sys-grid">
+            <div class="sys-item">
+              <div class="sys-top"><mat-icon>storage</mat-icon><span>Database size</span><strong>{{ bytes(s.database_bytes) }}</strong></div>
+              <div class="meter" [class.warn]="dbPct() > 70" [class.danger]="dbPct() > 90"><span [style.width.%]="dbPct()"></span></div>
+              <div class="sys-note">{{ dbPct().toFixed(1) }}% of {{ bytes(s.database_quota_bytes) }} allocation</div>
+            </div>
+            <div class="sys-item">
+              <div class="sys-top"><mat-icon>bolt</mat-icon><span>API response time</span><strong>{{ s.api_avg_ms }} ms</strong></div>
+              <div class="meter" [class.success]="s.api_avg_ms < 300" [class.warn]="s.api_avg_ms >= 300"><span [style.width.%]="Math.min(100, s.api_avg_ms / 3)"></span></div>
+              <div class="sys-note">p95 {{ s.api_p95_ms }} ms · target &lt; 300 ms</div>
+            </div>
+            <div class="sys-item">
+              <div class="sys-top"><mat-icon>people_alt</mat-icon><span>Active sessions</span><strong>{{ s.active_sessions }}</strong></div>
+              <div class="sys-note">Users seen in the last {{ s.session_window_minutes }} minutes · {{ s.requests_last_minute }} req/min</div>
+            </div>
+            <div class="sys-item">
+              <div class="sys-top"><mat-icon>folder</mat-icon><span>File storage</span><strong>{{ bytes(s.storage_bytes) }}</strong></div>
+              <div class="sys-note">Attachments, vendor documents and staged imports</div>
+            </div>
+            <div class="sys-item">
+              <div class="sys-top"><mat-icon>schedule</mat-icon><span>API uptime</span><strong>{{ duration(s.uptime_seconds) }}</strong></div>
+              <div class="sys-note">{{ pct(s.availability_pct, 2) }} of requests served without server error</div>
+            </div>
+          </div>
+          <div class="latency">
+            <div class="sys-note">API latency, last 15 minutes</div>
+            <viq-chart type="line" [data]="latencyData()" [options]="latencyOptions" [height]="70" ariaLabel="API latency over the last fifteen minutes" />
+          </div>
+          <div class="panel-foot">
+            <span>POs <strong>{{ num(s.total_purchase_orders) }}</strong></span>
+            <span>Requests <strong>{{ num(s.total_requests) }}</strong></span>
+            <span>Contracts <strong>{{ s.total_contracts }}</strong></span>
+            <span>Transactions <strong>{{ num(s.total_transactions) }}</strong></span>
+            <span>Messages <strong>{{ num(s.total_messages) }}</strong></span>
+          </div>
+        }
+      </section>
+
+      <section class="panel span-4" [class.refreshing]="refreshing()">
+        <div class="panel-head">
+          <div>
+            <h2>Vendor Performance Trend</h2>
+            <div class="panel-sub">Average reliability score across all scored vendors</div>
+          </div>
+        </div>
+        <viq-chart type="line" [data]="reliabilityData()" [options]="reliabilityOptions" [height]="200" ariaLabel="Average vendor reliability over time" />
+        <h3 class="mini-head">High-risk vendors</h3>
+        <table class="mini-table">
+          <tbody>
+            @for (v of d.vendor_analytics.at_risk; track v.vendor_id) {
+              <tr [routerLink]="['/vendors', v.vendor_id]">
+                <td>{{ v.vendor_name }}</td>
+                <td><span class="risk-tag" [class]="'risk-tag ' + v.risk_level">{{ v.risk_level }}</span></td>
+                <td class="num">{{ v.reliability_score.toFixed(1) }}</td>
+                <td>{{ v.trend }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+
+      <section class="panel span-4">
+        <div class="panel-head">
+          <div>
+            <h2>Audit &amp; Activity</h2>
+            <div class="panel-sub">Latest actions across every module</div>
+          </div>
+          <a class="icon-btn" routerLink="/activity" matTooltip="Full activity log"><mat-icon>history</mat-icon></a>
+        </div>
+        @if (d.compliance.flagged.length) {
+          <div class="flagged">
+            @for (f of d.compliance.flagged.slice(0, 3); track f.vendor_id) {
+              <a class="flag" [routerLink]="['/vendors', f.vendor_id]">
+                <mat-icon>report</mat-icon>
+                <span><strong>{{ f.vendor_name }}</strong> · {{ f.status }} — {{ f.reason }}</span>
+              </a>
+            }
+          </div>
+        }
+        <div class="feed-scroll">
+          <viq-activity-feed [items]="d.recent_activity" [now]="live.now()" />
+        </div>
+      </section>
+    </div>
+  }
+</div>

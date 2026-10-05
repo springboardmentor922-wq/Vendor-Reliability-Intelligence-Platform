@@ -80,6 +80,20 @@ export class PurchaseOrderList {
   search = '';
   statusFilter = '';
   delayedOnly = false;
+  monthFilter = '';
+  vendorFilter: number | null = null;
+
+  monthLabel(period: string): string {
+    const [y, m] = period.split('-');
+    return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  }
+
+  clearMonth(): void {
+    this.monthFilter = '';
+    this.vendorFilter = null;
+    void this.router.navigate([], { queryParams: {} });
+    this.load();
+  }
 
   readonly columns = computed(() =>
     this.canEdit()
@@ -105,14 +119,22 @@ export class PurchaseOrderList {
   );
 
   constructor() {
-    this.load();
+    // Dashboard drill-downs arrive as query parameters.
+    const q = this.route.snapshot.queryParamMap;
+    this.search = q.get('search') ?? '';
+    this.statusFilter = q.get('status') ?? '';
+    this.monthFilter = q.get('month') ?? '';
+    this.vendorFilter = Number(q.get('vendor')) || null;
 
     // Deep link from a procurement request: /purchase-orders?fromRequest=12
-    const fromRequest = this.route.snapshot.queryParamMap.get('fromRequest');
+    const fromRequest = q.get('fromRequest');
 
     if (fromRequest && this.canEdit()) {
-      queueMicrotask(() => this.create(Number(fromRequest)));
+      void this.router.navigate(['/purchase-orders/new'], { queryParams: { fromRequest } });
+      return;
     }
+
+    this.load();
   }
 
   load(): void {
@@ -123,6 +145,8 @@ export class PurchaseOrderList {
         search: this.search,
         status: this.statusFilter,
         delayed_only: this.delayedOnly ? true : '',
+        month: this.monthFilter,
+        vendor_id: this.vendorFilter,
       })
       .subscribe({
         next: (orders) => {
@@ -145,6 +169,9 @@ export class PurchaseOrderList {
     this.search = '';
     this.statusFilter = '';
     this.delayedOnly = false;
+    this.monthFilter = '';
+    this.vendorFilter = null;
+    void this.router.navigate([], { queryParams: {} });
     this.load();
   }
 
@@ -157,6 +184,12 @@ export class PurchaseOrderList {
   }
 
   create(fromRequestId?: number): void {
+    void this.router.navigate(['/purchase-orders/new'], {
+      queryParams: fromRequestId ? { fromRequest: fromRequestId } : {},
+    });
+  }
+
+  quickCreate(fromRequestId?: number): void {
     this.dialog
       .open(PurchaseOrderFormDialog, {
         width: '960px',

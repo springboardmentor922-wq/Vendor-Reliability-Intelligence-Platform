@@ -1,0 +1,225 @@
+<div class="page">
+  <section class="dash-banner vendor">
+    <div class="banner-row">
+      <div class="banner-title">
+        <span class="banner-icon"><mat-icon>storefront</mat-icon></span>
+        <div>
+          <h1>Vendor Dashboard</h1>
+          <p>
+            Monitor vendor performance, reliability, contracts and communication
+            @if (data(); as d) { · <strong>{{ d.vendor.vendor_name }}</strong> ({{ d.vendor.vendor_code }}) }
+          </p>
+        </div>
+      </div>
+
+      <div class="banner-controls">
+        @if (!isVendor()) {
+          <select class="banner-select" [value]="vendorId() ?? data()?.vendor?.id ?? ''" (change)="selectVendor($any($event.target).value)" aria-label="Vendor">
+            @for (v of vendors(); track v.id) {
+              <option [value]="v.id" [selected]="v.id === data()?.vendor?.id">{{ v.name }}</option>
+            }
+          </select>
+        }
+        <div class="range-group" role="group" aria-label="Date range">
+          @for (r of ranges; track r.key) {
+            <button type="button" [class.active]="range() === r.key" (click)="setRange(r.key)">{{ r.label }}</button>
+          }
+        </div>
+        <button type="button" class="banner-chip" (click)="refresh()" matTooltip="Refresh now">
+          <mat-icon [class.spin]="refreshing()">sync</mat-icon>
+          @if (updatedAt(); as t) { {{ t | date: 'HH:mm:ss' }} }
+        </button>
+        <span class="live-badge on-banner"><span class="live-dot" [class.paused]="!live.connected()"></span>Live</span>
+      </div>
+    </div>
+  </section>
+
+  @if (loading()) {
+    <div class="kpi-row four">
+      @for (i of [1, 2, 3, 4]; track i) { <div class="skeleton" style="height: 150px"></div> }
+    </div>
+    <div class="chart-grid">
+      @for (i of [1, 2, 3]; track i) { <div class="skeleton span-4" style="height: 340px"></div> }
+    </div>
+  } @else if (data(); as d) {
+    @if (d.vendor.status !== 'Approved') {
+      <div class="alert alert-warn" style="margin-bottom: 16px">
+        <mat-icon>hourglass_top</mat-icon>
+        <span>This vendor is <strong>{{ d.vendor.status }}</strong>. Purchase orders can only be raised once the registration has been approved.</span>
+      </div>
+    }
+
+    <div class="kpi-row four stagger">
+      @for (k of d.kpis; track k.key) {
+        <viq-kpi [kpi]="k" [icon]="kpiStyle(k.key).icon" [tone]="kpiStyle(k.key).tone" />
+      }
+    </div>
+
+    <div class="chart-grid">
+      <section class="panel span-5" [class.refreshing]="refreshing()">
+        <div class="panel-head">
+          <div>
+            <h2>Vendor Performance</h2>
+            <div class="panel-sub">
+              @if (d.vendor_performance.mode === 'peers') {
+                {{ d.vendor.vendor_name }} vs. top peers in {{ d.vendor.category }} · click a peer to switch
+              } @else {
+                Your factor scores over the last six scoring periods
+              }
+            </div>
+          </div>
+        </div>
+        <viq-chart type="bar" [data]="performanceData()" [options]="performanceOptions" [height]="280"
+                   ariaLabel="Grouped bar chart of delivery, quality, communication and compliance scores" (pointClick)="openPeer($event)" />
+        <div class="panel-foot">
+          <span>On-time <strong>{{ pct(d.vendor_performance.on_time_delivery_rate) }}</strong></span>
+          <span>Quality <strong>{{ d.vendor_performance.quality_rating.toFixed(2) }}/5</strong></span>
+          <span>Response <strong>{{ d.vendor_performance.avg_response_time_hours.toFixed(1) }} h</strong></span>
+          <span>Resolution <strong>{{ d.vendor_performance.avg_issue_resolution_hours.toFixed(1) }} h</strong></span>
+          <span>Completion <strong>{{ pct(d.vendor_performance.order_completion_rate) }}</strong></span>
+        </div>
+      </section>
+
+      <section class="panel span-4" [class.refreshing]="refreshing()">
+        <div class="panel-head">
+          <div>
+            <h2>Reliability Score Trend</h2>
+            <div class="panel-sub">Stored six-factor score, period by period</div>
+          </div>
+          @if (d.reliability.current.trend) {
+            <span class="pill" [class.pill-success]="d.reliability.current.trend === 'Improving'" [class.pill-danger]="d.reliability.current.trend === 'Declining'">
+              {{ d.reliability.current.trend }}
+            </span>
+          }
+        </div>
+        @if (d.reliability.trend.length === 0) {
+          <div class="empty-note">No reliability history yet.</div>
+        } @else {
+          <viq-chart type="line" [data]="trendData()" [options]="trendOptions()" [height]="280" ariaLabel="Reliability score over time" />
+        }
+      </section>
+
+      <section class="panel span-3" [class.refreshing]="refreshing()">
+        <div class="panel-head">
+          <div>
+            <h2>Contract Status</h2>
+            <div class="panel-sub">Compliance rate {{ pct(d.contract_status.compliance_rate) }}</div>
+          </div>
+        </div>
+        <viq-donut [slices]="d.contract_status.slices" centerLabel="Contracts" [stacked]="true" [size]="180"
+                   emptyText="No contracts on record." (sliceClick)="openContracts($event)" />
+        @if (d.contract_status.expiring_soon.length) {
+          <div class="panel-foot">
+            @for (c of d.contract_status.expiring_soon; track c.id) {
+              <a class="pill pill-warn" [routerLink]="['/contracts', c.id]">{{ c.contract_number }} · {{ c.days_to_expiry }}d</a>
+            }
+          </div>
+        }
+      </section>
+
+      <section class="panel span-5" [class.refreshing]="refreshing()">
+        <div class="panel-head">
+          <div>
+            <h2>Order History</h2>
+            <div class="panel-sub">Bars: order value (left) · line: order count (right) · click a month</div>
+          </div>
+        </div>
+        <viq-chart type="bar" [data]="orderData()" [options]="orderOptions" [height]="270" ariaLabel="Order value and count by month" (pointClick)="openMonth($event)" />
+        <div class="panel-foot">
+          <span>Total <strong>{{ num(d.order_history.total_orders) }}</strong></span>
+          <span>Completed <strong>{{ num(d.order_history.completed) }}</strong></span>
+          <span>Open <strong>{{ d.order_history.pending }}</strong></span>
+          <span>Delayed <strong>{{ d.order_history.delayed }}</strong></span>
+          <span>Cancelled <strong>{{ d.order_history.cancelled }}</strong></span>
+          <span>Value <strong>{{ money(d.order_history.order_value) }}</strong></span>
+        </div>
+      </section>
+
+      <section class="panel span-3" [class.refreshing]="refreshing()">
+        <div class="panel-head">
+          <div>
+            <h2>Communication Activity</h2>
+            <div class="panel-sub">Avg response {{ d.communication.avg_response_hours.toFixed(1) }} h · resolved {{ pct(d.communication.resolution_rate) }}</div>
+          </div>
+          <a class="icon-btn" routerLink="/communication" matTooltip="Open messages"><mat-icon>forum</mat-icon></a>
+        </div>
+        <viq-donut [slices]="d.communication.slices" centerLabel="Activities" [stacked]="true" [size]="180"
+                   emptyText="No communication yet." />
+      </section>
+
+      <section class="panel span-4" [class.refreshing]="refreshing()">
+        <div class="panel-head">
+          <div>
+            <h2>Reliability Breakdown</h2>
+            <div class="panel-sub">
+              @if (d.reliability.current.rank_position) { Ranked #{{ d.reliability.current.rank_position }} · }
+              <span class="risk-tag" [class]="'risk-tag ' + d.reliability.current.risk_level">{{ d.reliability.current.risk_level }} risk</span>
+            </div>
+          </div>
+          <div class="score-badge">{{ d.reliability.current.overall?.toFixed(1) ?? '—' }}</div>
+        </div>
+        <div class="factor-bars">
+          @for (f of factorRows(); track f.label) {
+            <div class="factor-bar">
+              <div class="fb-top"><span>{{ f.label }}</span><strong>{{ f.value.toFixed(1) }}</strong></div>
+              <div class="meter" [class]="'meter ' + f.tone"><span [style.width.%]="f.value"></span></div>
+            </div>
+          }
+        </div>
+        @if (d.reliability.current.recommendation) {
+          <div class="recommendation">
+            <mat-icon>tips_and_updates</mat-icon>
+            <span>{{ d.reliability.current.recommendation }}</span>
+          </div>
+        }
+        @if (d.reliability.current.predicted_delay_risk !== null) {
+          <div class="panel-foot">
+            <span>Predicted delay risk (ML model) <strong>{{ pct(d.reliability.current.predicted_delay_risk! * 100) }}</strong></span>
+          </div>
+        }
+      </section>
+    </div>
+
+    <div class="chart-grid">
+      <section class="panel span-7">
+        <div class="panel-head">
+          <div>
+            <h2>Recent Orders</h2>
+            <div class="panel-sub">Latest purchase orders for {{ d.vendor.vendor_name }}</div>
+          </div>
+          <a class="icon-btn" routerLink="/purchase-orders" matTooltip="All orders"><mat-icon>arrow_forward</mat-icon></a>
+        </div>
+        <div style="overflow-x: auto">
+          <table class="mini-table">
+            <thead><tr><th>PO</th><th>Title</th><th>Status</th><th>Ordered</th><th>Expected</th><th class="num">Amount</th></tr></thead>
+            <tbody>
+              @for (po of d.order_history.recent; track po.id) {
+                <tr (click)="openOrder(po.id)">
+                  <td class="mono">{{ po.po_number }}</td>
+                  <td>{{ po.title }}</td>
+                  <td><app-status-pill [status]="po.status" /></td>
+                  <td>{{ po.order_date | date: 'dd MMM yy' }}</td>
+                  <td>{{ po.expected_delivery | date: 'dd MMM yy' }}</td>
+                  <td class="num">{{ money(po.total_amount, po.currency, false) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel span-5">
+        <div class="panel-head">
+          <div>
+            <h2>Vendor Activity</h2>
+            <div class="panel-sub">Approvals, orders and contract events for this vendor</div>
+          </div>
+          <span class="live-dot"></span>
+        </div>
+        <div class="feed-scroll">
+          <viq-activity-feed [items]="d.recent_activity" [now]="live.now()" />
+        </div>
+      </section>
+    </div>
+  }
+</div>

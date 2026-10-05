@@ -64,6 +64,8 @@ class PurchaseOrder(Base):
 
     payment_terms = Column(String(100), nullable=True)
     shipping_address = Column(Text, nullable=True)
+    billing_address = Column(Text, nullable=True)
+    department = Column(String(100), nullable=True)
     notes = Column(Text, nullable=True)
 
     status = Column(
@@ -125,6 +127,7 @@ class PurchaseOrderItem(Base):
     quantity = Column(Numeric(12, 2), nullable=False, default=1)
     unit = Column(String(30), nullable=False, default="Units")
     unit_price = Column(Numeric(15, 2), nullable=False, default=0)
+    tax_rate = Column(Numeric(5, 2), nullable=False, default=0)
     line_total = Column(Numeric(15, 2), nullable=False, default=0)
 
     purchase_order = relationship("PurchaseOrder", back_populates="items")

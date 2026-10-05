@@ -38,6 +38,13 @@ class VendorBase(BaseModel):
     country: Optional[str] = Field(default=None, max_length=100)
     tax_id: Optional[str] = Field(default=None, max_length=60)
     registration_number: Optional[str] = Field(default=None, max_length=60)
+    state: Optional[str] = Field(default=None, max_length=100)
+    postal_code: Optional[str] = Field(default=None, max_length=20)
+    company_type: Optional[str] = Field(default=None, max_length=60)
+    year_established: Optional[int] = Field(default=None, ge=1800, le=2100)
+    employee_count: Optional[str] = Field(default=None, max_length=30)
+    annual_turnover: Optional[str] = Field(default=None, max_length=60)
+    products_services: Optional[str] = None
     notes: Optional[str] = None
 
     @field_validator("category")
@@ -69,6 +76,13 @@ class VendorUpdate(BaseModel):
     country: Optional[str] = Field(default=None, max_length=100)
     tax_id: Optional[str] = Field(default=None, max_length=60)
     registration_number: Optional[str] = Field(default=None, max_length=60)
+    state: Optional[str] = Field(default=None, max_length=100)
+    postal_code: Optional[str] = Field(default=None, max_length=20)
+    company_type: Optional[str] = Field(default=None, max_length=60)
+    year_established: Optional[int] = Field(default=None, ge=1800, le=2100)
+    employee_count: Optional[str] = Field(default=None, max_length=30)
+    annual_turnover: Optional[str] = Field(default=None, max_length=60)
+    products_services: Optional[str] = None
     risk_level: Optional[str] = None
     notes: Optional[str] = None
 
@@ -118,6 +132,14 @@ class VendorResponse(BaseModel):
     country: Optional[str] = None
     tax_id: Optional[str] = None
     registration_number: Optional[str] = None
+    state: Optional[str] = None
+    postal_code: Optional[str] = None
+    company_type: Optional[str] = None
+    year_established: Optional[int] = None
+    employee_count: Optional[str] = None
+    annual_turnover: Optional[str] = None
+    products_services: Optional[str] = None
+    application_source: Optional[str] = None
     status: str
     risk_level: str
     reliability_score: Optional[Decimal] = None
@@ -131,8 +153,23 @@ class VendorResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class VendorDocumentResponse(BaseModel):
+    id: int
+    vendor_id: int
+    document_type: str
+    file_name: str
+    file_path: str
+    file_size: Optional[int] = None
+    content_type: Optional[str] = None
+    status: str
+    uploaded_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class VendorDetailResponse(VendorResponse):
     contacts: list[VendorContactResponse] = []
+    documents: list[VendorDocumentResponse] = []
     approvals: list[VendorApprovalResponse] = []
     open_purchase_orders: int = 0
     total_purchase_orders: int = 0

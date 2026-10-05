@@ -122,7 +122,7 @@ interface PlottedSeries {
                   [attr.cy]="point.y"
                   r="4"
                   [attr.fill]="item.colour"
-                  stroke="#fff"
+                  stroke="var(--viq-surface)"
                   stroke-width="1.5"
                 />
               }

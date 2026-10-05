@@ -5,6 +5,7 @@ from sqlalchemy import (
     Date,
     DateTime,
     ForeignKey,
+    Integer,
     Numeric,
     String,
     Text
@@ -57,6 +58,16 @@ class Vendor(Base):
     tax_id = Column(String(60), nullable=True)
     registration_number = Column(String(60), nullable=True)
 
+    # ---- application form (vendor registration wizard) ----------
+    state = Column(String(100), nullable=True)
+    postal_code = Column(String(20), nullable=True)
+    company_type = Column(String(60), nullable=True)
+    year_established = Column(Integer, nullable=True)
+    employee_count = Column(String(30), nullable=True)
+    annual_turnover = Column(String(60), nullable=True)
+    products_services = Column(Text, nullable=True)
+    application_source = Column(String(30), nullable=True)
+
     status = Column(
         String(50),
         nullable=False,
@@ -104,6 +115,13 @@ class Vendor(Base):
         back_populates="vendor",
         cascade="all, delete-orphan",
         order_by="VendorApproval.id.desc()"
+    )
+
+    documents = relationship(
+        "VendorDocument",
+        back_populates="vendor",
+        cascade="all, delete-orphan",
+        order_by="VendorDocument.id"
     )
 
 
@@ -161,3 +179,30 @@ class VendorApproval(Base):
 
     vendor = relationship("Vendor", back_populates="approvals")
     performer = relationship("User")
+
+
+class VendorDocument(Base):
+    """Supporting documents submitted with a vendor application."""
+
+    __tablename__ = "vendor_documents"
+
+    id = Column(BigInteger, primary_key=True, index=True)
+    vendor_id = Column(
+        BigInteger,
+        ForeignKey("vendors.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    document_type = Column(String(80), nullable=False)
+    file_name = Column(String(255), nullable=False)
+    file_path = Column(Text, nullable=False)
+    file_size = Column(BigInteger, nullable=True)
+    content_type = Column(String(120), nullable=True)
+    status = Column(String(30), nullable=False, default="Submitted")
+    uploaded_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now()
+    )
+
+    vendor = relationship("Vendor", back_populates="documents")

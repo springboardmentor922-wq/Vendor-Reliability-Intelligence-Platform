@@ -1,0 +1,222 @@
+<div class="page">
+  <section class="import-hero">
+    <div class="hero-text">
+      <div class="eyebrow"><mat-icon>bolt</mat-icon>Bulk data import</div>
+      <h1>Upload an Excel sheet - the whole platform updates</h1>
+      <p>
+        Vendors, purchase orders, contracts, invoices, certifications, requests and performance ratings are read from your
+        workbook, validated row by row and written to the database. Reliability scores, risk levels, alerts and every
+        dashboard refresh automatically.
+      </p>
+      <div class="hero-actions">
+        <button class="btn-ghost" type="button" (click)="downloadTemplate()"><mat-icon>download</mat-icon>Download template</button>
+        <a class="btn-ghost" routerLink="/dashboards/procurement"><mat-icon>monitoring</mat-icon>Watch the dashboards</a>
+      </div>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      <div class="sheet s1"><span></span><span></span><span></span><span></span></div>
+      <div class="sheet s2"><span></span><span></span><span></span><span></span></div>
+      <div class="arrow"><mat-icon>east</mat-icon></div>
+      <div class="db"><mat-icon>storage</mat-icon></div>
+    </div>
+  </section>
+
+  <!-- progress -->
+  <ol class="flow">
+    @for (s of steps; track s.key; let i = $index) {
+      <li [class.done]="i < stepIndex()" [class.active]="i === stepIndex()">
+        <span class="flow-dot"><mat-icon>{{ i < stepIndex() ? 'check' : s.icon }}</mat-icon></span>
+        <span>{{ s.label }}</span>
+      </li>
+    }
+  </ol>
+
+  @if (error()) {
+    <div class="alert alert-danger" style="margin-bottom: 16px"><mat-icon>error_outline</mat-icon><span>{{ error() }}</span></div>
+  }
+
+  @switch (stage()) {
+    @case ('idle') {
+      <label class="drop" [class.drag]="dragging()"
+             (dragover)="$event.preventDefault(); dragging.set(true)" (dragleave)="dragging.set(false)" (drop)="onDrop($event)">
+        <input #picker type="file" accept=".xlsx,.xlsm,.xls,.csv" (change)="onPick(picker)" />
+        <div class="drop-icon"><mat-icon>upload_file</mat-icon></div>
+        <strong>Drop your Excel workbook or CSV here</strong>
+        <span>or click to browse · .xlsx / .csv · up to 150 MB</span>
+        <div class="drop-chips">
+          <span>Vendors</span><span>Purchase Orders</span><span>Contracts</span><span>Invoices</span>
+          <span>Certifications</span><span>Requests</span><span>Performance</span><span>DataCo dataset</span>
+        </div>
+      </label>
+    }
+
+    @case ('reading') {
+      <div class="working">
+        <div class="spinner-ring"></div>
+        <strong>Validating {{ file()?.name }}</strong>
+        <span>Every row is checked against the business rules in a dry run - nothing is saved yet.</span>
+        <mat-progress-bar mode="indeterminate" />
+      </div>
+    }
+
+    @case ('importing') {
+      <div class="working">
+        <div class="spinner-ring"></div>
+        <strong>Importing {{ file()?.name }}</strong>
+        <span>Writing records, rescoring every vendor and raising alerts…</span>
+        <mat-progress-bar mode="indeterminate" />
+      </div>
+    }
+
+    @case ('preview') {
+      @if (report(); as r) {
+        <section class="preview">
+          <div class="preview-head">
+            <div class="file-badge">
+              <mat-icon>{{ r.file_format === 'csv' ? 'description' : 'grid_on' }}</mat-icon>
+              <div>
+                <strong>{{ r.file_name }}</strong>
+                <span>{{ file() ? bytes(file()!.size) : '' }} · {{ r.mode === 'dataco' ? 'DataCo supply-chain dataset' : r.sheets.length + ' sheet(s) recognised' }}</span>
+              </div>
+            </div>
+            <div class="totals">
+              <div class="t"><span>Rows</span><strong>{{ r.totals.rows | number }}</strong></div>
+              <div class="t good"><span>New</span><strong>{{ r.totals.created | number }}</strong></div>
+              <div class="t info"><span>Updates</span><strong>{{ r.totals.updated | number }}</strong></div>
+              <div class="t bad"><span>Errors</span><strong>{{ r.totals.errors | number }}</strong></div>
+            </div>
+          </div>
+
+          @for (n of r.notes; track n) {
+            <div class="alert alert-info"><mat-icon>info</mat-icon><span>{{ n }}</span></div>
+          }
+
+          @if (r.mode === 'dataco' && r.dataco; as dc) {
+            <div class="dataco">
+              <div class="metric"><div class="metric-label">Rows in file</div><div class="metric-value">{{ dc.rows | number }}</div></div>
+              <div class="metric"><div class="metric-label">Distinct orders</div><div class="metric-value">{{ dc.orders | number }}</div></div>
+              <div class="metric"><div class="metric-label">Order dates</div><div class="metric-value small">{{ dc.first_order }} → {{ dc.last_order }}</div></div>
+              <label class="metric">
+                <div class="metric-label">Orders to load</div>
+                <input type="number" min="100" max="20000" step="100" [value]="datacoOrders()" (change)="datacoOrders.set(+$any($event.target).value)" />
+              </label>
+            </div>
+          } @else {
+            @if (r.unrecognised_sheets.length) {
+              <div class="alert alert-warn"><mat-icon>help_outline</mat-icon><span>Skipped sheets that don't match a record type: {{ r.unrecognised_sheets.join(', ') }}</span></div>
+            }
+
+            <div class="sheet-list">
+              @for (s of r.sheets; track s.sheet) {
+                <article class="sheet-card" [class.open]="openSheet() === s.sheet">
+                  <button type="button" class="sheet-top" (click)="openSheet.set(openSheet() === s.sheet ? null : s.sheet)">
+                    <span class="sheet-icon"><mat-icon>{{ icon(s.entity) }}</mat-icon></span>
+                    <span class="sheet-name"><strong>{{ s.sheet }}</strong><span>→ {{ s.entity_label }}</span></span>
+                    <span class="pill pill-success">{{ s.created }} new</span>
+                    @if (s.updated) { <span class="pill pill-info">{{ s.updated }} update</span> }
+                    @if (s.skipped) { <span class="pill pill-danger">{{ s.skipped }} skipped</span> }
+                    <mat-icon class="chev">expand_more</mat-icon>
+                  </button>
+                  @if (openSheet() === s.sheet) {
+                    <div class="sheet-body">
+                      <div class="mapping">
+                        @for (m of s.mapped_columns | keyvalue; track m.key) {
+                          <span class="map"><em>{{ m.value }}</em><mat-icon>arrow_right_alt</mat-icon>{{ m.key }}</span>
+                        }
+                        @for (c of s.ignored_columns; track c) {
+                          <span class="map ignored" matTooltip="Not used">{{ c }}</span>
+                        }
+                      </div>
+                      @if (s.sample.length) {
+                        <div class="sample">
+                          <table class="mini-table">
+                            <thead><tr>@for (c of sampleColumns(s); track c) { <th>{{ c }}</th> }</tr></thead>
+                            <tbody>
+                              @for (row of s.sample; track $index) {
+                                <tr>@for (c of sampleColumns(s); track c) { <td>{{ cell(row[c]) }}</td> }</tr>
+                              }
+                            </tbody>
+                          </table>
+                        </div>
+                      }
+                      @if (sheetErrors(s).length) {
+                        <ul class="errors">
+                          @for (e of sheetErrors(s); track $index) {
+                            <li><span class="row-no">Row {{ e.row }}</span>{{ e.message }}</li>
+                          }
+                        </ul>
+                      }
+                    </div>
+                  }
+                </article>
+              }
+            </div>
+          }
+
+          <div class="preview-actions">
+            <button class="btn-ghost" type="button" (click)="reset()"><mat-icon>close</mat-icon>Choose another file</button>
+            <span class="spacer"></span>
+            @if (r.totals.errors && r.mode !== 'dataco') {
+              <span class="muted small">Rows with errors will be skipped; everything else is imported.</span>
+            }
+            <button matButton="filled" type="button" [disabled]="!importable()" (click)="commit()">
+              <mat-icon>cloud_done</mat-icon>
+              {{ r.mode === 'dataco' ? 'Load dataset history' : 'Import ' + (r.totals.created + r.totals.updated) + ' records' }}
+            </button>
+          </div>
+        </section>
+      }
+    }
+
+    @case ('done') {
+      @if (result(); as r) {
+        <section class="done">
+          <div class="done-icon"><mat-icon>task_alt</mat-icon></div>
+          <h2>Import complete</h2>
+          <p>{{ r.file_name }} is now part of the platform. The dashboards picked up the change automatically.</p>
+          <div class="totals centered">
+            <div class="t good"><span>Created</span><strong>{{ r.totals.created | number }}</strong></div>
+            <div class="t info"><span>Updated</span><strong>{{ r.totals.updated | number }}</strong></div>
+            <div class="t bad"><span>Skipped</span><strong>{{ r.totals.skipped | number }}</strong></div>
+            <div class="t"><span>Vendors rescored</span><strong>{{ postValue('vendors_rescored') }}</strong></div>
+            <div class="t"><span>New alerts</span><strong>{{ postValue('alerts_raised') }}</strong></div>
+          </div>
+          @for (n of r.notes; track n) { <p class="muted small">{{ n }}</p> }
+          <div class="done-actions">
+            <a matButton="filled" routerLink="/dashboards/procurement"><mat-icon>monitoring</mat-icon>Open Procurement Dashboard</a>
+            <a class="btn-ghost" routerLink="/vendors"><mat-icon>storefront</mat-icon>Vendors</a>
+            <button class="btn-ghost" type="button" (click)="reset()"><mat-icon>upload_file</mat-icon>Import another file</button>
+          </div>
+        </section>
+      }
+    }
+  }
+
+  <section class="panel history">
+    <div class="panel-head">
+      <div><h2>Import history</h2><div class="panel-sub">Every spreadsheet imported into the platform</div></div>
+    </div>
+    @if (history().length === 0) {
+      <div class="empty-note">No imports yet.</div>
+    } @else {
+      <table class="mini-table">
+        <thead><tr><th>When</th><th>File</th><th>Type</th><th>Status</th><th class="num">Rows</th><th class="num">Created</th><th class="num">Updated</th><th class="num">Skipped</th><th>By</th></tr></thead>
+        <tbody>
+          @for (h of history(); track h.id) {
+            <tr>
+              <td>{{ h.created_at | date: 'dd MMM yy, HH:mm' }}</td>
+              <td>{{ h.file_name }}</td>
+              <td>{{ h.mode === 'dataco' ? 'Dataset' : 'Workbook' }}</td>
+              <td><span class="pill" [class.pill-success]="h.status === 'Completed'" [class.pill-warn]="h.status !== 'Completed'">{{ h.status }}</span></td>
+              <td class="num">{{ h.rows_read | number }}</td>
+              <td class="num">{{ h.rows_created | number }}</td>
+              <td class="num">{{ h.rows_updated | number }}</td>
+              <td class="num">{{ h.rows_skipped | number }}</td>
+              <td>{{ h.imported_by }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
+</div>

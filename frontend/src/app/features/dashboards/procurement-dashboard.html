@@ -1,0 +1,224 @@
+<div class="page">
+  <section class="dash-banner procurement">
+    <div class="banner-row">
+      <div class="banner-title">
+        <span class="banner-icon"><mat-icon>shopping_cart</mat-icon></span>
+        <div>
+          <h1>Procurement Dashboard</h1>
+          <p>Track procurement activities, costs, vendors and delivery performance in real time</p>
+        </div>
+      </div>
+
+      <div class="banner-controls">
+        <div class="range-group" role="group" aria-label="Date range">
+          @for (r of ranges; track r.key) {
+            <button type="button" [class.active]="range() === r.key" (click)="setRange(r.key)">{{ r.label }}</button>
+          }
+        </div>
+
+        <select class="banner-select" [value]="category() ?? ''" (change)="setCategory($any($event.target).value)" aria-label="Vendor category">
+          <option value="">All categories</option>
+          @for (c of categories(); track c) {
+            <option [value]="c">{{ c }}</option>
+          }
+        </select>
+
+        <button type="button" class="banner-chip" (click)="refresh()" matTooltip="Refresh now">
+          <mat-icon [class.spin]="refreshing()">sync</mat-icon>
+          @if (updatedAt(); as t) { {{ t | date: 'HH:mm:ss' }} }
+        </button>
+
+        <span class="live-badge on-banner"><span class="live-dot" [class.paused]="!live.connected()"></span>Live</span>
+      </div>
+    </div>
+  </section>
+
+  @if (loading()) {
+    <div class="kpi-row">
+      @for (i of [1, 2, 3, 4, 5]; track i) {
+        <div class="skeleton" style="height: 150px"></div>
+      }
+    </div>
+    <div class="chart-grid">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="skeleton span-3" style="height: 360px"></div>
+      }
+    </div>
+  } @else if (data(); as d) {
+    <!-- KPI row + delivery status gauge -->
+    <div class="kpi-row stagger">
+      @for (k of d.kpis; track k.key) {
+        <viq-kpi [kpi]="k" [icon]="kpiStyle(k.key).icon" [tone]="kpiStyle(k.key).tone" />
+      }
+
+      <div class="panel" [class.refreshing]="refreshing()">
+        <div class="panel-head">
+          <div>
+            <h2>Delivery Status</h2>
+            <div class="panel-sub">{{ num(d.delivery_status.total_deliveries) }} deliveries measured</div>
+          </div>
+          <a class="icon-btn" routerLink="/performance" matTooltip="Delivery performance"><mat-icon>open_in_new</mat-icon></a>
+        </div>
+        <div class="delivery-wrap">
+          <viq-gauge [value]="d.delivery_status.on_time_rate" label="On-time delivery" />
+          <div class="delivery-legend">
+            @for (row of deliveryRows(); track row.label) {
+              <div class="dl-row">
+                <span class="legend-swatch" [style.background]="row.color"></span>
+                <span class="dl-name">{{ row.label }}</span>
+                <span class="dl-val">{{ num(row.value) }}</span>
+                <span class="dl-pct">{{ row.pct }}%</span>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- The four mandatory charts -->
+    <div class="chart-grid">
+      <section class="panel span-3" [class.refreshing]="refreshing()">
+        <div class="panel-head">
+          <div>
+            <h2>Procurement Overview</h2>
+            <div class="panel-sub">Bars: cost (USD, left) · line: PO count (right) · click a month</div>
+          </div>
+        </div>
+        <viq-chart type="bar" [data]="overviewData()" [options]="overviewOptions()" [height]="300"
+                   ariaLabel="Procurement cost by month with purchase order count" (pointClick)="openMonth($event)" />
+        <div class="panel-foot">
+          <span>Requests <strong>{{ num(d.procurement_overview.total_requests) }}</strong></span>
+          <span>Pending <strong>{{ d.procurement_overview.pending_requests }}</strong></span>
+          <span>Approved <strong>{{ d.procurement_overview.approved_requests }}</strong></span>
+          <span>Completed <strong>{{ num(d.procurement_overview.completed_requests) }}</strong></span>
+          <span>Completion <strong>{{ pct(d.procurement_overview.completion_rate) }}</strong></span>
+        </div>
+      </section>
+
+      <section class="panel span-3" [class.refreshing]="refreshing()">
+        <div class="panel-head">
+          <div>
+            <h2>Active Purchase Orders</h2>
+            <div class="panel-sub">By status · click a segment to open the list</div>
+          </div>
+        </div>
+        <viq-donut [slices]="d.active_purchase_orders.slices" [centerValue]="d.active_purchase_orders.active_total"
+                   centerLabel="Active POs" [stacked]="true" [size]="190" (sliceClick)="openStatus($event)" />
+        <div class="panel-foot">
+          <span>Pending <strong>{{ d.active_purchase_orders.pending }}</strong></span>
+          <span>In transit <strong>{{ d.active_purchase_orders.in_transit }}</strong></span>
+          <span>Overdue <strong class="danger">{{ d.active_purchase_orders.overdue }}</strong></span>
+          <span>Open value <strong>{{ money(d.active_purchase_orders.active_value) }}</strong></span>
+        </div>
+      </section>
+
+      <section class="panel span-3" [class.refreshing]="refreshing()">
+        <div class="panel-head">
+          <div>
+            <h2>Vendor Performance Summary</h2>
+            <div class="panel-sub">Top-ranked vendor vs. the average, six reliability factors</div>
+          </div>
+        </div>
+        <viq-chart type="radar" [data]="radarData()" [options]="radarOptions" [height]="290"
+                   ariaLabel="Radar chart comparing the top vendor with the average" (pointClick)="openRadar()" />
+        <div class="metric-list">
+          <div class="metric"><div class="metric-label">Performance score</div><div class="metric-value">{{ d.vendor_performance.performance_score.toFixed(1) }}</div></div>
+          <div class="metric"><div class="metric-label">Quality rating</div><div class="metric-value">{{ d.vendor_performance.quality_rating.toFixed(2) }} / 5</div></div>
+          <div class="metric"><div class="metric-label">On-time rate</div><div class="metric-value">{{ pct(d.vendor_performance.on_time_delivery_rate) }}</div></div>
+          <div class="metric"><div class="metric-label">Response time</div><div class="metric-value">{{ d.vendor_performance.avg_response_time_hours.toFixed(1) }} h</div></div>
+          <div class="metric"><div class="metric-label">Issue resolution</div><div class="metric-value">{{ pct(d.vendor_performance.issue_resolution_rate) }}</div></div>
+          <div class="metric"><div class="metric-label">Completion</div><div class="metric-value">{{ pct(d.vendor_performance.order_completion_rate) }}</div></div>
+        </div>
+      </section>
+
+      <section class="panel span-3" [class.refreshing]="refreshing()">
+        <div class="panel-head">
+          <div>
+            <h2>Procurement Cost Analysis</h2>
+            <div class="panel-sub">Spend by category · click to filter the dashboard</div>
+          </div>
+        </div>
+        <viq-donut [slices]="categorySlices()" [centerValue]="d.cost_analysis.total_cost" centerLabel="Total cost"
+                   [valueFormat]="moneyFmt" [highlight]="category()" [stacked]="true" [size]="190"
+                   (sliceClick)="setCategory($event)" />
+        <div class="budget">
+          <div class="budget-row"><span>Budget (estimates)</span><strong>{{ money(d.cost_analysis.budget) }}</strong></div>
+          <div class="budget-row"><span>Actual</span><strong>{{ money(d.cost_analysis.actual) }}</strong></div>
+          <div class="meter" [class.success]="d.cost_analysis.variance <= 0" [class.danger]="d.cost_analysis.variance > 0">
+            <span [style.width.%]="d.cost_analysis.budget ? Math.min(100, (100 * d.cost_analysis.actual) / d.cost_analysis.budget) : 0"></span>
+          </div>
+          <div class="budget-row small">
+            <span>Variance</span>
+            <span class="delta" [class.good]="d.cost_analysis.variance <= 0" [class.bad]="d.cost_analysis.variance > 0">
+              {{ money(d.cost_analysis.variance) }} ({{ d.cost_analysis.variance_pct }}%)
+            </span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Operational detail -->
+    <div class="chart-grid">
+      <section class="panel span-6" [class.refreshing]="refreshing()">
+        <div class="panel-head">
+          <div>
+            <h2>Open Purchase Orders</h2>
+            <div class="panel-sub">Earliest expected delivery first · click to open</div>
+          </div>
+          <a class="icon-btn" routerLink="/purchase-orders" matTooltip="All purchase orders"><mat-icon>arrow_forward</mat-icon></a>
+        </div>
+        @if (d.active_purchase_orders.list.length === 0) {
+          <div class="empty-note">No open purchase orders in this selection.</div>
+        } @else {
+          <div style="overflow-x: auto">
+            <table class="mini-table">
+              <thead>
+                <tr><th>PO</th><th>Vendor</th><th>Status</th><th>Expected</th><th class="num">Amount</th></tr>
+              </thead>
+              <tbody>
+                @for (po of d.active_purchase_orders.list; track po.id) {
+                  <tr (click)="openOrder(po.id)">
+                    <td class="mono">{{ po.po_number }}</td>
+                    <td>{{ po.vendor_name }}</td>
+                    <td><app-status-pill [status]="po.status" /></td>
+                    <td>
+                      {{ po.expected_delivery | date: 'dd MMM' }}
+                      @if (po.days_late > 0) {
+                        <span class="delta bad">{{ po.days_late }}d late</span>
+                      }
+                    </td>
+                    <td class="num">{{ money(po.total_amount, po.currency, false) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+
+      <section class="panel span-3" [class.refreshing]="refreshing()">
+        <div class="panel-head">
+          <div>
+            <h2>Cost by Vendor</h2>
+            <div class="panel-sub">Top vendors by spend · click to open</div>
+          </div>
+        </div>
+        <viq-chart type="bar" [data]="vendorBarData()" [options]="vendorBarOptions" [height]="280"
+                   ariaLabel="Spend by vendor" (pointClick)="openVendorBar($event)" />
+      </section>
+
+      <section class="panel span-3">
+        <div class="panel-head">
+          <div>
+            <h2>Live Activity</h2>
+            <div class="panel-sub">Every action across the platform</div>
+          </div>
+          <span class="live-dot"></span>
+        </div>
+        <div class="feed-scroll">
+          <viq-activity-feed [items]="d.recent_activity" [now]="live.now()" />
+        </div>
+      </section>
+    </div>
+  }
+</div>

@@ -1,0 +1,400 @@
+<div class="app-wrap" [class.public]="mode() === 'public'">
+  @if (result(); as r) {
+    <!-- ================= Success ================= -->
+    <section class="success">
+      <div class="burst">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <circle cx="60" cy="60" r="52" class="ring" />
+          <path d="M38 62 L54 77 L84 45" class="tick" />
+        </svg>
+      </div>
+      <h1>Application submitted</h1>
+      <p class="lead">{{ r.message }}</p>
+
+      <div class="ref-card">
+        <div><span>Reference</span><strong>{{ r.vendor_code }}</strong></div>
+        <div><span>Vendor</span><strong>{{ r.vendor_name }}</strong></div>
+        <div><span>Status</span><strong class="pending">{{ r.status }}</strong></div>
+        <div><span>Documents</span><strong>{{ r.documents_received }}</strong></div>
+        <div><span>Certifications</span><strong>{{ r.certifications_recorded }}</strong></div>
+      </div>
+
+      <ol class="journey">
+        <li class="done"><mat-icon>check_circle</mat-icon><span>Submitted</span></li>
+        <li class="active"><mat-icon>manage_search</mat-icon><span>Verification</span></li>
+        <li><mat-icon>fact_check</mat-icon><span>Approval</span></li>
+        <li><mat-icon>storefront</mat-icon><span>Active vendor</span></li>
+      </ol>
+
+      <div class="success-actions">
+        @if (mode() === 'public') {
+          @if (r.account_created) {
+            <button matButton="filled" (click)="openPortal()"><mat-icon>login</mat-icon>Open my vendor portal</button>
+          } @else {
+            <a matButton="filled" routerLink="/login"><mat-icon>login</mat-icon>Back to sign in</a>
+          }
+        } @else {
+          <a matButton="filled" [routerLink]="['/vendors', r.vendor_id]"><mat-icon>visibility</mat-icon>View vendor profile</a>
+          <a class="btn-ghost" routerLink="/approvals"><mat-icon>fact_check</mat-icon>Go to approvals</a>
+          <button class="btn-ghost" (click)="startAnother()"><mat-icon>add</mat-icon>Register another</button>
+        }
+      </div>
+    </section>
+  } @else {
+    <!-- ================= Header ================= -->
+    <header class="app-head">
+      <div>
+        <div class="eyebrow"><mat-icon>app_registration</mat-icon>Vendor Registration Application</div>
+        <h1>{{ mode() === 'public' ? 'Become a VendorIQ supplier' : 'Register a new vendor' }}</h1>
+        <p>Complete each step. The application goes into the approval queue - the vendor can only receive purchase orders once approved.</p>
+      </div>
+      @if (mode() === 'internal') {
+        <a class="btn-ghost" routerLink="/vendors"><mat-icon>close</mat-icon>Cancel</a>
+      }
+    </header>
+
+    <!-- ================= Stepper ================= -->
+    <nav class="stepper" aria-label="Application steps">
+      <div class="stepper-track"><div class="stepper-fill" [style.width.%]="progress()"></div></div>
+      @for (s of steps(); track s.key; let i = $index) {
+        <button type="button" class="step" [class.active]="i === step()" [class.done]="i < step()" (click)="goTo(i)">
+          <span class="step-dot">
+            @if (i < step()) { <mat-icon>check</mat-icon> } @else { <mat-icon>{{ s.icon }}</mat-icon> }
+          </span>
+          <span class="step-text">
+            <span class="step-title">{{ s.title }}</span>
+            <span class="step-sub">{{ s.subtitle }}</span>
+          </span>
+        </button>
+      }
+    </nav>
+
+    <form class="app-body" [formGroup]="form" (ngSubmit)="submit()">
+      @switch (current().key) {
+        <!-- -------- Company -------- -->
+        @case ('company') {
+          <section class="step-panel" [class.back]="direction() === 'back'" formGroupName="company">
+            <h2><mat-icon>apartment</mat-icon>Company information</h2>
+            <div class="grid-2">
+              <mat-form-field appearance="outline" class="span-all">
+                <mat-label>Registered company name</mat-label>
+                <input matInput formControlName="vendor_name" placeholder="e.g. Deccan Precision Tools Pvt Ltd" />
+                @if (form.get('company.vendor_name')?.hasError('required')) { <mat-error>Company name is required</mat-error> }
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Company type</mat-label>
+                <mat-select formControlName="company_type">
+                  @for (t of companyTypes(); track t) { <mat-option [value]="t">{{ t }}</mat-option> }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Year established</mat-label>
+                <input matInput type="number" formControlName="year_established" placeholder="2015" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Registration number (CIN / company no.)</mat-label>
+                <input matInput formControlName="registration_number" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Tax ID (GSTIN / VAT)</mat-label>
+                <input matInput formControlName="tax_id" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Employees</mat-label>
+                <mat-select formControlName="employee_count">
+                  @for (b of employeeBands; track b) { <mat-option [value]="b">{{ b }}</mat-option> }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Annual turnover</mat-label>
+                <mat-select formControlName="annual_turnover">
+                  @for (b of turnoverBands; track b) { <mat-option [value]="b">{{ b }}</mat-option> }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="span-all">
+                <mat-label>Website</mat-label>
+                <input matInput formControlName="website" placeholder="www.example.com" />
+                <mat-icon matSuffix>language</mat-icon>
+              </mat-form-field>
+            </div>
+          </section>
+        }
+
+        <!-- -------- Business -------- -->
+        @case ('business') {
+          <section class="step-panel" [class.back]="direction() === 'back'" formGroupName="business">
+            <h2><mat-icon>category</mat-icon>What do you supply?</h2>
+            <div class="cat-grid">
+              @for (c of categories(); track c; let i = $index) {
+                <button type="button" class="cat" [class.selected]="form.value.business?.category === c" (click)="pickCategory(c)" [style.animation-delay.ms]="i * 50">
+                  <mat-icon>{{ categoryMeta[c]?.icon ?? 'category' }}</mat-icon>
+                  <span class="cat-name">{{ c }}</span>
+                  <span class="cat-blurb">{{ categoryMeta[c]?.blurb }}</span>
+                  <span class="cat-check"><mat-icon>check</mat-icon></span>
+                </button>
+              }
+            </div>
+            @if (form.get('business.category')?.touched && form.get('business.category')?.invalid) {
+              <div class="field-error">Choose the category that best describes your business.</div>
+            }
+            <mat-form-field appearance="outline">
+              <mat-label>Products and services offered</mat-label>
+              <textarea matInput rows="4" formControlName="products_services" placeholder="List your main products, services, brands and capacities"></textarea>
+              @if (form.get('business.products_services')?.hasError('required')) { <mat-error>Describe what you supply</mat-error> }
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Anything else we should know? (optional)</mat-label>
+              <textarea matInput rows="2" formControlName="notes"></textarea>
+            </mat-form-field>
+          </section>
+        }
+
+        <!-- -------- Contacts -------- -->
+        @case ('contact') {
+          <section class="step-panel" [class.back]="direction() === 'back'" formGroupName="contact">
+            <h2><mat-icon>location_on</mat-icon>Registered address</h2>
+            <div class="grid-3">
+              <mat-form-field appearance="outline">
+                <mat-label>Company email</mat-label>
+                <input matInput type="email" formControlName="email" />
+                @if (form.get('contact.email')?.invalid) { <mat-error>Enter a valid email</mat-error> }
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Company phone</mat-label>
+                <input matInput formControlName="phone" />
+                @if (form.get('contact.phone')?.invalid) { <mat-error>Phone is required</mat-error> }
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Country</mat-label>
+                <input matInput formControlName="country" />
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="span-all">
+                <mat-label>Street address</mat-label>
+                <input matInput formControlName="address" />
+                @if (form.get('contact.address')?.invalid) { <mat-error>Address is required</mat-error> }
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>City</mat-label>
+                <input matInput formControlName="city" />
+                @if (form.get('contact.city')?.invalid) { <mat-error>City is required</mat-error> }
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>State / Province</mat-label>
+                <input matInput formControlName="state" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>PIN / Postal code</mat-label>
+                <input matInput formControlName="postal_code" />
+              </mat-form-field>
+            </div>
+
+            <div class="sub-head">
+              <h2><mat-icon>badge</mat-icon>Contact persons</h2>
+              <button type="button" class="btn-ghost" (click)="addContact()"><mat-icon>person_add</mat-icon>Add contact</button>
+            </div>
+
+            <mat-radio-group formControlName="primary">
+            <div class="contact-list" formArrayName="contacts">
+              @for (c of contacts.controls; track c; let i = $index) {
+                <div class="contact-card" [formGroupName]="i">
+                  <div class="contact-top">
+                    <span class="contact-no">Contact {{ i + 1 }}</span>
+                    <mat-radio-button [value]="i">Primary contact</mat-radio-button>
+                    @if (contacts.length > 1) {
+                      <button type="button" class="icon-btn" (click)="removeContact(i)" matTooltip="Remove"><mat-icon>close</mat-icon></button>
+                    }
+                  </div>
+                  <div class="grid-3">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Full name</mat-label>
+                      <input matInput formControlName="name" />
+                      @if (c.get('name')?.invalid) { <mat-error>Name is required</mat-error> }
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Designation</mat-label>
+                      <input matInput formControlName="designation" placeholder="Sales Head" />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Department</mat-label>
+                      <input matInput formControlName="department" placeholder="Sales" />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Email</mat-label>
+                      <input matInput formControlName="email" />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Phone</mat-label>
+                      <input matInput formControlName="phone" />
+                    </mat-form-field>
+                  </div>
+                </div>
+              }
+            </div>
+            </mat-radio-group>
+          </section>
+        }
+
+        <!-- -------- Compliance -------- -->
+        @case ('compliance') {
+          <section class="step-panel" [class.back]="direction() === 'back'">
+            <div class="sub-head">
+              <h2><mat-icon>workspace_premium</mat-icon>Certifications</h2>
+              <button type="button" class="btn-ghost" (click)="addCert()"><mat-icon>add</mat-icon>Add certification</button>
+            </div>
+            @if (certifications.length === 0) {
+              <div class="hint-box">Add ISO, quality, environmental or industry certifications. Expiry dates feed compliance monitoring and expiry alerts.</div>
+            }
+            <div formGroupName="compliance">
+              <div formArrayName="certifications" class="cert-list">
+                @for (c of certifications.controls; track c; let i = $index) {
+                  <div class="cert-row" [formGroupName]="i">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Certification</mat-label>
+                      <input matInput formControlName="certification_name" placeholder="ISO 9001:2015" />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Issuing authority</mat-label>
+                      <input matInput formControlName="issuing_authority" />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Certificate no.</mat-label>
+                      <input matInput formControlName="certificate_number" />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Issued</mat-label>
+                      <input matInput type="date" formControlName="issue_date" />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Expires</mat-label>
+                      <input matInput type="date" formControlName="expiry_date" />
+                    </mat-form-field>
+                    <button type="button" class="icon-btn" (click)="removeCert(i)" matTooltip="Remove"><mat-icon>delete_outline</mat-icon></button>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <h2 class="docs-title"><mat-icon>folder_open</mat-icon>Supporting documents</h2>
+            <label class="dropzone" [class.drag]="dragging()"
+                   (dragover)="$event.preventDefault(); dragging.set(true)" (dragleave)="dragging.set(false)" (drop)="onDrop($event)">
+              <input type="file" multiple (change)="onFiles($any($event.target).files); $any($event.target).value = ''" />
+              <mat-icon>cloud_upload</mat-icon>
+              <strong>Drop files here or click to browse</strong>
+              <span>PDF, images, Word or Excel · up to 10 MB each</span>
+            </label>
+            @if (documents().length) {
+              <ul class="doc-list">
+                @for (d of documents(); track d.file; let i = $index) {
+                  <li>
+                    <mat-icon>description</mat-icon>
+                    <div class="doc-name">{{ d.file.name }}<span>{{ bytes(d.file.size) }}</span></div>
+                    <select class="doc-type" [value]="d.type" (change)="setDocType(i, $any($event.target).value)">
+                      @for (t of documentTypes(); track t) { <option [value]="t">{{ t }}</option> }
+                    </select>
+                    <button type="button" class="icon-btn" (click)="removeDoc(i)"><mat-icon>close</mat-icon></button>
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+        }
+
+        <!-- -------- Account -------- -->
+        @case ('account') {
+          <section class="step-panel" [class.back]="direction() === 'back'" formGroupName="account">
+            <h2><mat-icon>key</mat-icon>Vendor portal access <span class="optional">optional</span></h2>
+            <p class="muted">Create a login to track your application, purchase orders, contracts and performance. Leave blank to skip.</p>
+            <div class="grid-2">
+              <mat-form-field appearance="outline">
+                <mat-label>Your name</mat-label>
+                <input matInput formControlName="account_name" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Login email</mat-label>
+                <input matInput type="email" formControlName="account_email" autocomplete="username" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Password</mat-label>
+                <input matInput type="password" formControlName="account_password" autocomplete="new-password" />
+                <mat-hint>At least 8 characters</mat-hint>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Confirm password</mat-label>
+                <input matInput type="password" formControlName="account_confirm" autocomplete="new-password" />
+              </mat-form-field>
+            </div>
+            @if (form.get('account')?.hasError('mismatch')) {
+              <div class="field-error">Passwords do not match.</div>
+            }
+          </section>
+        }
+
+        <!-- -------- Review -------- -->
+        @case ('review') {
+          <section class="step-panel" [class.back]="direction() === 'back'">
+            <h2><mat-icon>task_alt</mat-icon>Review your application</h2>
+            <div class="review-grid">
+              <div class="review-card">
+                <h4>Company <button type="button" (click)="goTo(0)">Edit</button></h4>
+                <dl>
+                  <dt>Name</dt><dd>{{ value('company.vendor_name') }}</dd>
+                  <dt>Type</dt><dd>{{ value('company.company_type') }}</dd>
+                  <dt>Registration</dt><dd>{{ value('company.registration_number') }}</dd>
+                  <dt>Tax ID</dt><dd>{{ value('company.tax_id') }}</dd>
+                  <dt>Established</dt><dd>{{ value('company.year_established') }}</dd>
+                </dl>
+              </div>
+              <div class="review-card">
+                <h4>Business <button type="button" (click)="goTo(1)">Edit</button></h4>
+                <dl>
+                  <dt>Category</dt><dd>{{ value('business.category') }}</dd>
+                  <dt>Offering</dt><dd>{{ value('business.products_services') }}</dd>
+                </dl>
+              </div>
+              <div class="review-card">
+                <h4>Contacts <button type="button" (click)="goTo(2)">Edit</button></h4>
+                <dl>
+                  <dt>Email</dt><dd>{{ value('contact.email') }}</dd>
+                  <dt>Phone</dt><dd>{{ value('contact.phone') }}</dd>
+                  <dt>Address</dt><dd>{{ value('contact.address') }}, {{ value('contact.city') }}, {{ value('contact.country') }}</dd>
+                  <dt>People</dt><dd>{{ contacts.length }} contact(s)</dd>
+                </dl>
+              </div>
+              <div class="review-card">
+                <h4>Compliance <button type="button" (click)="goTo(3)">Edit</button></h4>
+                <dl>
+                  <dt>Certifications</dt><dd>{{ certifications.length }}</dd>
+                  <dt>Documents</dt><dd>{{ documents().length }}</dd>
+                </dl>
+              </div>
+            </div>
+
+            <label class="declaration">
+              <mat-checkbox formControlName="declaration"></mat-checkbox>
+              <span>I confirm that the information provided is accurate and complete, and I am authorised to submit this application on behalf of the company.</span>
+            </label>
+
+            @if (error()) {
+              <div class="alert alert-danger"><mat-icon>error_outline</mat-icon><span>{{ error() }}</span></div>
+            }
+          </section>
+        }
+      }
+
+      <footer class="app-foot">
+        <span class="step-count">Step {{ step() + 1 }} of {{ steps().length }}</span>
+        <span class="spacer"></span>
+        @if (step() > 0) {
+          <button type="button" class="btn-ghost" (click)="back()"><mat-icon>arrow_back</mat-icon>Back</button>
+        }
+        @if (current().key !== 'review') {
+          <button type="button" matButton="filled" (click)="next()">Continue<mat-icon iconPositionEnd>arrow_forward</mat-icon></button>
+        } @else {
+          <button type="submit" matButton="filled" [disabled]="submitting() || !form.value.declaration">
+            <mat-icon>send</mat-icon>{{ submitting() ? 'Submitting…' : 'Submit application' }}
+          </button>
+        }
+      </footer>
+    </form>
+  }
+</div>

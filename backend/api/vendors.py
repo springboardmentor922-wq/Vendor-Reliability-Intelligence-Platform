@@ -40,6 +40,7 @@ from schemas.vendor import (
     VendorCreate,
     VendorDetailResponse,
     VendorDirectoryEntry,
+    VendorDocumentResponse,
     VendorResponse,
     VendorStatsResponse,
     VendorUpdate
@@ -312,6 +313,9 @@ def get_vendor(
         VendorContactResponse.model_validate(c) for c in vendor.contacts
     ]
     payload.approvals = _approval_history(vendor)
+    payload.documents = [
+        VendorDocumentResponse.model_validate(d) for d in vendor.documents
+    ]
     payload.open_purchase_orders = open_pos
     payload.total_purchase_orders = total_pos
     payload.active_contracts = active_contracts

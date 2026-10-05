@@ -1,3 +1,4 @@
+import { environment } from '../../../environments/environment';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, inject, input, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
@@ -44,6 +45,7 @@ import { VendorReliabilityPanel } from './vendor-reliability-panel';
   templateUrl: './vendor-detail.html',
 })
 export class VendorDetail {
+  readonly uploadsBase = environment.apiUrl;
   private readonly service = inject(VendorService);
   private readonly poService = inject(PurchaseOrderService);
   private readonly contractService = inject(ContractService);

@@ -82,6 +82,16 @@ CREATE TABLE vendors (
     tax_id               VARCHAR(60),
     registration_number  VARCHAR(60),
 
+    -- Vendor application form
+    state                VARCHAR(100),
+    postal_code          VARCHAR(20),
+    company_type         VARCHAR(60),
+    year_established     INTEGER,
+    employee_count       VARCHAR(30),
+    annual_turnover      VARCHAR(60),
+    products_services    TEXT,
+    application_source   VARCHAR(30),
+
     -- Pending | Approved | Rejected | Suspended | Inactive
     status               VARCHAR(50)   NOT NULL DEFAULT 'Pending',
     -- Low | Medium | High | Critical  (refined by the M3 scoring engine)
@@ -236,6 +246,8 @@ CREATE TABLE purchase_orders (
 
     payment_terms           VARCHAR(100),
     shipping_address        TEXT,
+    billing_address         TEXT,
+    department              VARCHAR(100),
     notes                   TEXT,
 
     -- Pending | Approved | Ordered | Delivered | Completed | Cancelled
@@ -269,6 +281,7 @@ CREATE TABLE purchase_order_items (
     quantity           NUMERIC(12, 2) NOT NULL DEFAULT 1,
     unit               VARCHAR(30)   NOT NULL DEFAULT 'Units',
     unit_price         NUMERIC(15, 2) NOT NULL DEFAULT 0,
+    tax_rate           NUMERIC(5, 2)  NOT NULL DEFAULT 0,
     line_total         NUMERIC(15, 2) NOT NULL DEFAULT 0,
 
     CONSTRAINT fk_po_item_order
@@ -635,3 +648,43 @@ ALTER TABLE purchase_orders
 CREATE INDEX idx_po_order_date ON purchase_orders (order_date);
 CREATE INDEX idx_performance_vendor_date
     ON vendor_performance (vendor_id, evaluation_date);
+
+
+-- =====================================================================
+-- Milestone 4: vendor application documents and spreadsheet imports
+-- =====================================================================
+
+CREATE TABLE vendor_documents (
+    id             BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    vendor_id      BIGINT        NOT NULL,
+    document_type  VARCHAR(80)   NOT NULL,
+    file_name      VARCHAR(255)  NOT NULL,
+    file_path      TEXT          NOT NULL,
+    file_size      BIGINT,
+    content_type   VARCHAR(120),
+    status         VARCHAR(30)   NOT NULL DEFAULT 'Submitted',
+    uploaded_at    TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_vendor_document_vendor
+        FOREIGN KEY (vendor_id) REFERENCES vendors (id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_vendor_documents_vendor ON vendor_documents (vendor_id);
+
+CREATE TABLE data_imports (
+    id             BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    file_name      VARCHAR(255)  NOT NULL,
+    file_format    VARCHAR(30)   NOT NULL,
+    mode           VARCHAR(30)   NOT NULL,
+    status         VARCHAR(30)   NOT NULL,
+    rows_read      INTEGER       NOT NULL DEFAULT 0,
+    rows_created   INTEGER       NOT NULL DEFAULT 0,
+    rows_updated   INTEGER       NOT NULL DEFAULT 0,
+    rows_skipped   INTEGER       NOT NULL DEFAULT 0,
+    summary        TEXT,
+    imported_by    BIGINT,
+    created_at     TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_data_import_user
+        FOREIGN KEY (imported_by) REFERENCES users (id) ON DELETE SET NULL
+);

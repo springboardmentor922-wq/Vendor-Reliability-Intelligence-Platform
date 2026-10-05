@@ -77,6 +77,16 @@
       </mat-select>
     </mat-form-field>
 
+    <mat-form-field appearance="outline">
+      <mat-label>Risk</mat-label>
+      <mat-select [(ngModel)]="riskFilter" (selectionChange)="load()">
+        <mat-option value="">All risk levels</mat-option>
+        @for (level of riskLevels; track level) {
+          <mat-option [value]="level">{{ level }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
     <button matButton (click)="load()">
       <mat-icon>filter_alt</mat-icon>
       Apply

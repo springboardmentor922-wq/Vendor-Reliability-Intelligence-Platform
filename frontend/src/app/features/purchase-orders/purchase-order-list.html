@@ -74,6 +74,12 @@
       Apply
     </button>
     <button matButton (click)="clearFilters()">Clear</button>
+    @if (monthFilter) {
+      <span class="pill pill-info filter-chip">
+        Ordered in {{ monthLabel(monthFilter) }}@if (vendorFilter) { · vendor #{{ vendorFilter }} }
+        <button type="button" (click)="clearMonth()" aria-label="Clear month filter">×</button>
+      </span>
+    }
   </div>
 
   <div class="table-wrap">

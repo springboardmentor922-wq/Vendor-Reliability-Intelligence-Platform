@@ -37,6 +37,7 @@ from .vendor import (
     VendorApproval,
     VendorCategory,
     VendorContact,
+    VendorDocument,
     VendorStatus
 )
 from .vendor_performance import VendorPerformance
@@ -73,6 +74,7 @@ __all__ = [
     "VendorCategory",
     "VendorCertification",
     "VendorContact",
+    "VendorDocument",
     "VendorPerformance",
     "VendorReliabilityScore",
     "VendorStatus",

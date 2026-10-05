@@ -10,7 +10,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { ContractService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
@@ -98,6 +98,9 @@ export class ContractList {
   );
 
   constructor() {
+    const q = inject(ActivatedRoute).snapshot.queryParamMap;
+    this.statusFilter = q.get('status') ?? '';
+    this.complianceFilter = q.get('compliance') ?? '';
     this.load();
   }
 

@@ -93,6 +93,14 @@ export interface Vendor {
   country?: string | null;
   tax_id?: string | null;
   registration_number?: string | null;
+  state?: string | null;
+  postal_code?: string | null;
+  company_type?: string | null;
+  year_established?: number | null;
+  employee_count?: string | null;
+  annual_turnover?: string | null;
+  products_services?: string | null;
+  application_source?: string | null;
   status: string;
   risk_level: string;
   reliability_score?: number | null;
@@ -104,8 +112,21 @@ export interface Vendor {
   created_at?: string | null;
 }
 
+export interface VendorDocument {
+  id: number;
+  vendor_id: number;
+  document_type: string;
+  file_name: string;
+  file_path: string;
+  file_size?: number | null;
+  content_type?: string | null;
+  status: string;
+  uploaded_at?: string | null;
+}
+
 export interface VendorDetail extends Vendor {
   contacts: VendorContact[];
+  documents?: VendorDocument[];
   approvals: VendorApprovalEntry[];
   open_purchase_orders: number;
   total_purchase_orders: number;
@@ -201,6 +222,7 @@ export interface PurchaseOrderItemInput {
   quantity: number;
   unit: string;
   unit_price: number;
+  tax_rate?: number;
 }
 
 export interface PurchaseOrder {
@@ -224,6 +246,8 @@ export interface PurchaseOrder {
   total_amount: number;
   payment_terms?: string | null;
   shipping_address?: string | null;
+  billing_address?: string | null;
+  department?: string | null;
   notes?: string | null;
   status: string;
   approved_by?: number | null;

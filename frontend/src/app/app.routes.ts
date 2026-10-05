@@ -1,6 +1,19 @@
+import { inject } from '@angular/core';
 import { Routes } from '@angular/router';
 
+import { AuthService } from './core/auth.service';
+
 import { authGuard, guestGuard, roleGuard } from './core/guards';
+
+const STAFF = [
+  'Administrator',
+  'Procurement Manager',
+  'Supply Chain Manager',
+  'Finance Officer',
+  'Auditor',
+];
+
+const EDITORS = ['Administrator', 'Procurement Manager', 'Supply Chain Manager'];
 
 export const routes: Routes = [
   // ---------------------------------------------------- public
@@ -14,6 +27,10 @@ export const routes: Routes = [
     canActivate: [guestGuard],
     loadComponent: () =>
       import('./features/auth/register').then((m) => m.Register),
+  },
+  {
+    path: 'apply',
+    loadComponent: () => import('./features/vendors/public-apply').then((m) => m.PublicApply),
   },
   {
     path: 'forgot-password',
@@ -36,8 +53,38 @@ export const routes: Routes = [
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
 
+      // Each role lands on its own dashboard.
       {
         path: 'dashboard',
+        pathMatch: 'full',
+        redirectTo: () => {
+          const auth = inject(AuthService);
+          if (auth.hasRole('Administrator')) return '/dashboards/admin';
+          if (auth.hasRole('Vendor')) return '/dashboards/vendor';
+          return '/dashboards/procurement';
+        },
+      },
+      {
+        path: 'dashboards/procurement',
+        canActivate: [roleGuard],
+        data: { roles: STAFF },
+        loadComponent: () =>
+          import('./features/dashboards/procurement-dashboard').then((m) => m.ProcurementDashboard),
+      },
+      {
+        path: 'dashboards/vendor',
+        loadComponent: () =>
+          import('./features/dashboards/vendor-dashboard').then((m) => m.VendorDashboard),
+      },
+      {
+        path: 'dashboards/admin',
+        canActivate: [roleGuard],
+        data: { roles: ['Administrator'] },
+        loadComponent: () =>
+          import('./features/dashboards/admin-dashboard').then((m) => m.AdminDashboard),
+      },
+      {
+        path: 'overview',
         loadComponent: () =>
           import('./features/dashboard/dashboard').then((m) => m.Dashboard),
       },
@@ -47,6 +94,13 @@ export const routes: Routes = [
         path: 'vendors',
         loadComponent: () =>
           import('./features/vendors/vendor-list').then((m) => m.VendorList),
+      },
+      {
+        path: 'vendors/register',
+        canActivate: [roleGuard],
+        data: { roles: EDITORS, mode: 'internal' },
+        loadComponent: () =>
+          import('./features/vendors/vendor-application').then((m) => m.VendorApplication),
       },
       {
         path: 'vendors/:id',
@@ -88,6 +142,13 @@ export const routes: Routes = [
           import('./features/purchase-orders/purchase-order-list').then(
             (m) => m.PurchaseOrderList,
           ),
+      },
+      {
+        path: 'purchase-orders/new',
+        canActivate: [roleGuard],
+        data: { roles: EDITORS },
+        loadComponent: () =>
+          import('./features/purchase-orders/create-purchase-order').then((m) => m.CreatePurchaseOrder),
       },
       {
         path: 'purchase-orders/:id',
@@ -162,6 +223,15 @@ export const routes: Routes = [
         },
         loadComponent: () =>
           import('./features/activity/activity-log').then((m) => m.ActivityLog),
+      },
+
+      // Spreadsheet import
+      {
+        path: 'data-import',
+        canActivate: [roleGuard],
+        data: { roles: EDITORS },
+        loadComponent: () =>
+          import('./features/data-import/data-import').then((m) => m.DataImport),
       },
 
       // Account

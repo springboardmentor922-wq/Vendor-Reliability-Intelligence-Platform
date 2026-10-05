@@ -11,7 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { VendorService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
@@ -58,9 +58,13 @@ export class VendorList {
   readonly vendors = signal<Vendor[]>([]);
   readonly stats = signal<VendorStats | null>(null);
 
+  private readonly route = inject(ActivatedRoute);
+
   search = '';
   statusFilter = '';
   categoryFilter = '';
+  riskFilter = '';
+  readonly riskLevels = ['Low', 'Medium', 'High', 'Critical'];
 
   readonly columns = computed(() =>
     this.canEdit()
@@ -86,6 +90,12 @@ export class VendorList {
   );
 
   constructor() {
+    // Dashboard drill-downs arrive as query parameters.
+    const q = this.route.snapshot.queryParamMap;
+    this.search = q.get('search') ?? '';
+    this.statusFilter = q.get('status') ?? '';
+    this.categoryFilter = q.get('category') ?? '';
+    this.riskFilter = q.get('risk_level') ?? '';
     this.load();
   }
 
@@ -97,6 +107,7 @@ export class VendorList {
         search: this.search,
         status: this.statusFilter,
         category: this.categoryFilter,
+        risk_level: this.riskFilter,
       })
       .subscribe({
         next: (vendors) => {
@@ -119,6 +130,8 @@ export class VendorList {
     this.search = '';
     this.statusFilter = '';
     this.categoryFilter = '';
+    this.riskFilter = '';
+    void this.router.navigate([], { queryParams: {} });
     this.load();
   }
 
@@ -127,6 +140,10 @@ export class VendorList {
   }
 
   register(): void {
+    void this.router.navigate(['/vendors/register']);
+  }
+
+  quickRegister(): void {
     this.dialog
       .open(VendorFormDialog, { width: '760px', autoFocus: 'first-tabbable' })
       .afterClosed()

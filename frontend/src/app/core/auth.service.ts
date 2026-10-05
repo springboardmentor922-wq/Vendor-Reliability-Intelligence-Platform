@@ -116,6 +116,13 @@ export class AuthService {
     );
   }
 
+  /** Signs in with tokens issued elsewhere (e.g. a vendor application). */
+  adoptTokens(accessToken: string, refreshToken: string): Observable<User> {
+    localStorage.setItem(ACCESS_KEY, accessToken);
+    localStorage.setItem(REFRESH_KEY, refreshToken);
+    return this.refreshProfile();
+  }
+
   logout(redirect = true): void {
     localStorage.removeItem(ACCESS_KEY);
     localStorage.removeItem(REFRESH_KEY);

@@ -208,11 +208,15 @@ export class PurchaseOrderService {
     procurement_request_id?: number | null;
     title?: string | null;
     description?: string | null;
+    order_date?: string | null;
     expected_delivery?: string | null;
+    currency?: string;
     tax_amount?: number;
     shipping_amount?: number;
     payment_terms?: string | null;
     shipping_address?: string | null;
+    billing_address?: string | null;
+    department?: string | null;
     notes?: string | null;
     items: PurchaseOrderItemInput[];
   }): Observable<PurchaseOrderDetail> {

@@ -13,6 +13,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { extractDetail } from '../../core/auth.interceptor';
 import { AuthService } from '../../core/auth.service';
+import { ThemeService } from '../../core/theme.service';
 
 @Component({
   selector: 'app-login',
@@ -43,16 +44,20 @@ export class Login {
     password: ['', [Validators.required, Validators.minLength(8)]],
   });
 
+  readonly theme = inject(ThemeService);
+  readonly picked = signal<string | null>(null);
+
   readonly demoAccounts = [
-    { role: 'Administrator', email: 'admin@vendoriq.com' },
-    { role: 'Procurement Manager', email: 'procurement@vendoriq.com' },
-    { role: 'Supply Chain Manager', email: 'supplychain@vendoriq.com' },
-    { role: 'Finance Officer', email: 'finance@vendoriq.com' },
-    { role: 'Auditor', email: 'auditor@vendoriq.com' },
-    { role: 'Vendor', email: 'northwind@vendor.vendoriq.com' },
+    { role: 'Administrator', email: 'admin@vendoriq.com', icon: 'admin_panel_settings', color: '#8b5cf6' },
+    { role: 'Procurement Manager', email: 'procurement@vendoriq.com', icon: 'shopping_cart', color: '#3b82f6' },
+    { role: 'Supply Chain Manager', email: 'supplychain@vendoriq.com', icon: 'local_shipping', color: '#0891b2' },
+    { role: 'Finance Officer', email: 'finance@vendoriq.com', icon: 'payments', color: '#f59e0b' },
+    { role: 'Auditor', email: 'auditor@vendoriq.com', icon: 'policy', color: '#ec4899' },
+    { role: 'Vendor', email: 'northwind@vendor.vendoriq.com', icon: 'storefront', color: '#10b981' },
   ];
 
   useDemoAccount(email: string): void {
+    this.picked.set(email);
     this.form.patchValue({ email, password: 'VendorIQ@2026' });
   }
 

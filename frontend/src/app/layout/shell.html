@@ -1,95 +1,115 @@
-<mat-sidenav-container class="shell">
-  <mat-sidenav
-    class="sidebar"
-    mode="side"
-    [opened]="sidenavOpen()"
-    disableClose
-  >
-    <div class="brand">
-      <span class="brand-mark">V</span>
+<div class="shell" [class.collapsed]="collapsed()" [class.mobile-open]="mobileOpen()">
+  <aside class="sidebar">
+    <a class="brand" routerLink="/dashboard">
+      <span class="brand-mark">
+        <svg viewBox="0 0 32 32" aria-hidden="true">
+          <path d="M6 8 L16 26 L26 8" />
+          <circle cx="16" cy="8" r="2.4" />
+        </svg>
+      </span>
       <span class="brand-text">Vendor<strong>IQ</strong></span>
-    </div>
-
-    <div class="menu-title">Main menu</div>
+    </a>
 
     <nav class="nav">
-      @for (item of navItems(); track item.route) {
-        <a
-          class="nav-link"
-          [routerLink]="item.route"
-          routerLinkActive="active"
-          [routerLinkActiveOptions]="{ exact: false }"
-        >
-          <mat-icon>{{ item.icon }}</mat-icon>
-          <span>{{ item.label }}</span>
-        </a>
+      @for (group of nav(); track group.title) {
+        <div class="nav-group">
+          <div class="nav-title">{{ group.title }}</div>
+          @for (item of group.items; track item.route) {
+            <a
+              class="nav-link"
+              [routerLink]="item.route"
+              routerLinkActive="active"
+              [routerLinkActiveOptions]="{ exact: !!item.exact }"
+              [matTooltip]="collapsed() ? item.label : ''"
+              matTooltipPosition="right"
+            >
+              <mat-icon>{{ item.icon }}</mat-icon>
+              <span class="nav-label">{{ item.label }}</span>
+            </a>
+          }
+        </div>
       }
     </nav>
 
-    <div class="sidebar-foot">
-      <div class="foot-name">{{ user()?.name }}</div>
-      <div class="foot-role">{{ user()?.role }}</div>
+    <div class="sidebar-card">
+      <div class="card-glow"></div>
+      <mat-icon>inventory_2</mat-icon>
+      <div class="card-title">Smarter Procurement</div>
+      <div class="card-sub">Stronger Tomorrow</div>
+      <div class="card-live"><span class="live-dot" [class.paused]="!live.enabled() || !live.connected()"></span>{{ live.connected() ? 'Monitoring live' : 'Offline' }}</div>
     </div>
-  </mat-sidenav>
+  </aside>
 
-  <mat-sidenav-content class="content-area">
-    <mat-toolbar class="topbar">
-      <button
-        matIconButton
-        (click)="toggleSidenav()"
-        aria-label="Toggle navigation"
-      >
-        <mat-icon>menu</mat-icon>
+  <div class="scrim" (click)="mobileOpen.set(false)"></div>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="tb-icon" (click)="toggleSidebar()" aria-label="Toggle navigation">
+        <mat-icon>{{ collapsed() ? 'menu' : 'menu_open' }}</mat-icon>
       </button>
 
-      <span class="topbar-title">Vendor Reliability Intelligence Platform</span>
+      <div class="crumb">
+        <span class="crumb-root">VendorIQ</span>
+        <mat-icon>chevron_right</mat-icon>
+        <span class="crumb-page">{{ section() }}</span>
+      </div>
+
+      <form class="search" (ngSubmit)="runSearch()">
+        <mat-icon>search</mat-icon>
+        <input
+          name="q"
+          [ngModel]="search()"
+          (ngModelChange)="search.set($event)"
+          placeholder="Search vendors, PO-2026-…"
+          autocomplete="off"
+        />
+        <kbd>Enter</kbd>
+      </form>
 
       <span class="spacer"></span>
 
-      <a
-        matIconButton
-        routerLink="/notifications"
-        matTooltip="Notifications"
-        aria-label="Notifications"
-      >
-        <mat-icon
-          [matBadge]="unread()"
-          [matBadgeHidden]="unread() === 0"
-          matBadgeColor="warn"
-          matBadgeSize="small"
-        >
-          notifications
-        </mat-icon>
+      <button class="live-badge" type="button" (click)="live.toggle()" [matTooltip]="live.enabled() ? 'Pause live updates' : 'Resume live updates'">
+        <span class="live-dot" [class.paused]="!live.enabled() || !live.connected()"></span>
+        {{ syncedText() }}
+      </button>
+
+      <button class="tb-icon" (click)="theme.toggle()" [matTooltip]="theme.mode() === 'dark' ? 'Light mode' : 'Dark mode'" aria-label="Toggle theme">
+        <mat-icon class="theme-icon">{{ theme.mode() === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon>
+      </button>
+
+      <a class="tb-icon" routerLink="/notifications" matTooltip="Notifications" aria-label="Notifications">
+        <mat-icon [matBadge]="live.unread()" [matBadgeHidden]="live.unread() === 0" matBadgeColor="warn" matBadgeSize="small">notifications</mat-icon>
       </a>
 
-      <button
-        matButton
-        class="account-button"
-        [matMenuTriggerFor]="accountMenu"
-        aria-label="Account menu"
-      >
+      @if (canRegisterVendor()) {
+        <a class="register-btn" routerLink="/vendors/register">
+          <mat-icon>add_business</mat-icon>
+          <span>Register Vendor</span>
+        </a>
+      }
+
+      <button class="account" [matMenuTriggerFor]="accountMenu" aria-label="Account menu">
         <span class="avatar">{{ initials() }}</span>
-        <span class="account-name">{{ user()?.name }}</span>
+        <span class="account-text">
+          <span class="account-name">{{ user()?.name }}</span>
+          <span class="account-role">{{ user()?.role }}</span>
+        </span>
         <mat-icon>expand_more</mat-icon>
       </button>
 
-      <mat-menu #accountMenu="matMenu">
+      <mat-menu #accountMenu="matMenu" xPosition="before">
         <div class="menu-header">
           <div class="menu-name">{{ user()?.name }}</div>
           <div class="menu-email">{{ user()?.email }}</div>
-          <div class="menu-role">{{ user()?.role }}</div>
         </div>
-        <a mat-menu-item routerLink="/profile">
-          <mat-icon>person</mat-icon>
-          <span>My profile</span>
-        </a>
-        <button mat-menu-item (click)="logout()">
-          <mat-icon>logout</mat-icon>
-          <span>Sign out</span>
-        </button>
+        <a mat-menu-item routerLink="/profile"><mat-icon>person</mat-icon><span>My profile</span></a>
+        <button mat-menu-item (click)="theme.toggle()"><mat-icon>contrast</mat-icon><span>Switch theme</span></button>
+        <button mat-menu-item (click)="logout()"><mat-icon>logout</mat-icon><span>Sign out</span></button>
       </mat-menu>
-    </mat-toolbar>
+    </header>
 
-    <router-outlet />
-  </mat-sidenav-content>
-</mat-sidenav-container>
+    <main class="content">
+      <router-outlet />
+    </main>
+  </div>
+</div>

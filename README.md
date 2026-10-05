@@ -1,11 +1,10 @@
-<<<<<<< HEAD
 # VendorIQ — Vendor Reliability Intelligence Platform
 
 Full-stack vendor reliability, procurement and contract management platform.
 
 **Stack:** FastAPI + SQLAlchemy + PostgreSQL · Angular 21 + Angular Material
 
-**Status:** Milestones 1, 2 and 3 complete.
+**Status:** Milestones 1, 2 and 3 complete; Milestone 4 UI, live dashboards and spreadsheet import added.
 
 Vendor performance monitoring, six-factor reliability scoring, delivery-delay
 prediction, interactive analytics and PDF/Excel reporting are all live, driven
@@ -62,7 +61,7 @@ API docs: <http://127.0.0.1:8000/docs>
 
 ```bash
 cd frontend
-npm install
+npm install          # re-run after pulling: chart.js and local fonts were added
 npx ng serve
 ```
 
@@ -91,6 +90,29 @@ The login screen lists these as click-to-fill chips.
 
 ---
 
+## Milestone 4: live dashboards, animated UI and Excel import
+
+See [docs/milestone-4-guide.md](docs/milestone-4-guide.md) for the full walkthrough.
+
+- **Role dashboards** - `/dashboards/procurement` (blue), `/dashboards/vendor` (green) and
+  `/dashboards/admin` (purple) carry every mandatory chart: KPI tiles with period-over-period
+  change, bar + line combos, donuts, radar, delivery gauge, grouped factor bars, reliability
+  trend, risk distribution, compliance donut and live system statistics. Each role lands on its
+  own dashboard after sign-in.
+- **Live monitoring** - screens poll `GET /dashboards/live` every 5 s; when the data fingerprint
+  changes (new PO, approval, import, message...) the charts animate to the new values without a
+  reload, the activity feed flashes the new event and new alerts pop up as toasts.
+- **Drill-down** - clicking a donut segment, bar or month opens the matching filtered list.
+- **Excel / CSV import** - *Administration -> Data Import*: upload a workbook, review a dry-run
+  preview (column mapping, sample rows, row-level errors), then import. Vendors are rescored and
+  alerts raised automatically. The DataCo dataset file is recognised and loaded through the ETL.
+- **Vendor registration application** - a six-step wizard (top-right *Register Vendor*, or the
+  public `/apply` page with portal-login creation), including certifications and document upload.
+- **Create Purchase Order** - full-page form (`/purchase-orders/new`) with department, billing
+  address, per-line tax, live order summary and the vendor's reliability score and recommendation.
+- **Dark / light theme** toggle, animated navigation, route transitions and count-up KPIs. Fonts
+  and icons are bundled locally, so the UI renders fully offline.
+
 ## Tests
 
 With the API running on port 8000:
@@ -98,9 +120,10 @@ With the API running on port 8000:
 ```bash
 python tests/smoke_test.py        # 110 checks - Milestones 1 & 2
 python tests/milestone3_test.py   # 130 checks - Milestone 3
+python tests/milestone4_test.py   #  59 checks - dashboards, live probe, application, PO form, import
 ```
 
-240 end-to-end checks covering authentication, RBAC, every module, the
+299 end-to-end checks covering authentication, RBAC, every module, the
 reliability arithmetic, the model's leakage guards, filter behaviour, the
 alert sweep, real PDF/XLSX exports and the 300 ms response-time target.
 
@@ -129,6 +152,9 @@ backend/
     analytics.py       Filtered aggregations behind the dashboards
     reporting.py       Report datasets + PDF / Excel rendering
     notifier.py        Alert sweep, email (SMTP) and SMS (Twilio) dispatch
+    monitoring.py      Request timing / active-session middleware (system stats)
+    data_import.py     Spreadsheet import engine (workbook + DataCo detection)
+    migrations.py      Additive start-up schema upgrades for existing databases
   ml/
     dataset.py         DataCo loading, supplier assignment, features
     train_delay_model.py   Trains the classifier (chronological split)
@@ -146,6 +172,9 @@ frontend/
   src/app/features/    One folder per feature screen
   src/app/shared/      Status pill, confirm dialog, date helpers
   src/app/shared/charts/   Line, bar, donut, radar, gauge (inline SVG)
+  src/app/shared/viz/      Chart.js wrapper, KPI tile, donut, gauge, feed, palette
+  src/app/features/dashboards/   Procurement / Vendor / Admin dashboards
+  src/experience.scss      Theme tokens, motion and dashboard chrome
 frontend_legacy/       The original vanilla HTML/JS prototype
 data/                  DataCoSupplyChainDataset.csv + its field reference
 docs/                  Requirements, wireframes, guides, milestone reports
@@ -253,7 +282,3 @@ walkthrough and the end-to-end demonstration script.
 - Docker, cloud deployment and load testing are Milestone 4 scope.
 - `frontend_legacy/` holds the original single-file prototype, kept for
   reference. It is not part of the build.
-=======
-# Vendor-Reliability-Intelligence-Platform
-Predictive Vendor Intelligence Platform for Supplier Risk and Performance Management
->>>>>>> cef37cba8743d922078aa9d856f597fbe9c3d722

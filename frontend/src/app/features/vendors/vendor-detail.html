@@ -141,6 +141,21 @@
                 <dt>Registration number</dt>
                 <dd>{{ v.registration_number || '—' }}</dd>
 
+                <dt>Company type</dt>
+                <dd>{{ v.company_type || '—' }}</dd>
+
+                <dt>Established</dt>
+                <dd>{{ v.year_established || '—' }}</dd>
+
+                <dt>Employees / turnover</dt>
+                <dd>{{ v.employee_count || '—' }} · {{ v.annual_turnover || '—' }}</dd>
+
+                <dt>Products &amp; services</dt>
+                <dd>{{ v.products_services || '—' }}</dd>
+
+                <dt>Application source</dt>
+                <dd>{{ v.application_source || 'Internal registration' }}</dd>
+
                 <dt>Onboarded on</dt>
                 <dd>
                   {{ v.onboarded_on ? (v.onboarded_on | date: 'mediumDate') : '—' }}
@@ -152,6 +167,22 @@
                 <dt>Notes</dt>
                 <dd>{{ v.notes || '—' }}</dd>
               </dl>
+
+              <h3 class="doc-head">Supporting documents</h3>
+              @if (!v.documents?.length) {
+                <p class="muted">No documents were uploaded with this vendor's application.</p>
+              } @else {
+                <div class="doc-grid">
+                  @for (d of v.documents; track d.id) {
+                    <a class="doc-tile" [href]="uploadsBase + '/uploads/' + d.file_path" target="_blank" rel="noopener">
+                      <mat-icon>description</mat-icon>
+                      <span class="doc-type">{{ d.document_type }}</span>
+                      <span class="doc-file">{{ d.file_name }}</span>
+                      <span class="pill pill-info">{{ d.status }}</span>
+                    </a>
+                  }
+                </div>
+              }
             </div>
           </mat-tab>
 
