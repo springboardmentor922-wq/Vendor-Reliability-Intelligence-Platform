@@ -1,0 +1,492 @@
+<div class="app-layout" [class.sidebar-collapsed]="isSidebarCollapsed">
+  <!-- Modern Navigation Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo-wrapper">🛡️</div>
+      <div class="brand-text" *ngIf="!isSidebarCollapsed">
+        <h2>VendorIQ</h2>
+        <small>Microservices Enterprise Suite</small>
+      </div>
+    </div>
+
+    <!-- Active RBAC Role -->
+    <div class="role-selector-box" *ngIf="!isSidebarCollapsed">
+      <label>ACTIVE RBAC ROLE</label>
+      <select [value]="currentUser.role" (change)="onRoleChange($event)">
+        <option *ngFor="let role of availableRoles" [value]="role">{{ role }}</option>
+      </select>
+    </div>
+
+    <nav class="nav-menu">
+      <div class="menu-label" *ngIf="!isSidebarCollapsed">NAVIGATION</div>
+      
+      <button [class.active]="activeTab === 'dashboard'" (click)="setActiveTab('dashboard')" title="Dashboard">
+        <span class="nav-icon">📊</span> <span *ngIf="!isSidebarCollapsed">Dashboard</span>
+      </button>
+      <button [class.active]="activeTab === 'vendors'" (click)="setActiveTab('vendors')" title="Vendors Service">
+        <span class="nav-icon">🏢</span> <span *ngIf="!isSidebarCollapsed">Vendors Service</span>
+      </button>
+      <button [class.active]="activeTab === 'procurement'" (click)="setActiveTab('procurement')" title="Procurement">
+        <span class="nav-icon">🛒</span> <span *ngIf="!isSidebarCollapsed">Procurement Service</span>
+      </button>
+      <button [class.active]="activeTab === 'orders'" (click)="setActiveTab('orders')" title="Purchase Orders">
+        <span class="nav-icon">📦</span> <span *ngIf="!isSidebarCollapsed">Purchase Orders</span>
+      </button>
+      <button [class.active]="activeTab === 'contracts'" (click)="setActiveTab('contracts')" title="Contracts & SLA">
+        <span class="nav-icon">📄</span> <span *ngIf="!isSidebarCollapsed">Contracts &amp; SLA</span>
+      </button>
+      <button [class.active]="activeTab === 'performance'" (click)="setActiveTab('performance')" title="Performance">
+        <span class="nav-icon">⭐</span> <span *ngIf="!isSidebarCollapsed">Reliability &amp; Risk</span>
+      </button>
+      <button [class.active]="activeTab === 'reports'" (click)="setActiveTab('reports')" title="Reporting">
+        <span class="nav-icon">📈</span> <span *ngIf="!isSidebarCollapsed">Reporting Service</span>
+      </button>
+      <button [class.active]="activeTab === 'notifications'" (click)="setActiveTab('notifications')" title="Notifications">
+        <span class="nav-icon">🔔</span> 
+        <span *ngIf="!isSidebarCollapsed">Notifications ({{ notifications.length }})</span>
+      </button>
+      <button [class.active]="activeTab === 'profile'" (click)="setActiveTab('profile')" title="Gateway Auth">
+        <span class="nav-icon">👤</span> <span *ngIf="!isSidebarCollapsed">Gateway &amp; Auth</span>
+      </button>
+
+      <div class="menu-label margin-top" *ngIf="!isSidebarCollapsed">ACTIONS</div>
+      <button class="btn-action-side" (click)="togglePOModal()" *ngIf="!isSidebarCollapsed">➕ Issue PO</button>
+      <button class="btn-action-side" (click)="toggleVendorModal()" *ngIf="!isSidebarCollapsed">👤 Onboard Vendor</button>
+    </nav>
+
+    <div class="sidebar-user">
+      <div class="avatar">{{ userInitials }}</div>
+      <div class="user-meta" *ngIf="!isSidebarCollapsed">
+        <strong>{{ currentUser.name }}</strong>
+        <span>{{ currentUser.role }}</span>
+      </div>
+      <button class="logout-btn" (click)="logout()" title="Logout via OAuth2 Gateway">🚪</button>
+    </div>
+  </aside>
+
+  <!-- Main Content Layout -->
+  <div class="main-content">
+    <header class="top-header">
+      <div class="header-left">
+        <button class="sidebar-toggle-btn" (click)="toggleSidebar()" title="Toggle Menu">
+          ☰
+        </button>
+        <div class="search-bar">
+          <span class="search-icon">🔍</span>
+          <input type="text" [(ngModel)]="searchTerm" placeholder="Search POs, Vendors, Contracts, Reports..." />
+        </div>
+      </div>
+
+      <div class="header-right">
+        <button class="action-btn-secondary" (click)="toggleVendorModal()">+ Vendor</button>
+        <button class="action-btn-primary" (click)="togglePOModal()">+ Issue PO</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+
+      <!-- TAB 1: EXECUTIVE DASHBOARD -->
+      <div *ngIf="activeTab === 'dashboard'">
+        <div class="workspace-title">
+          <h1>Vendor Reliability &amp; Procurement Risk Dashboard</h1>
+          <p>Real-time Microservices Orchestration &amp; Event Telemetry Engine.</p>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <span class="kpi-title">Active Spend Monitored</span>
+            <span class="kpi-val">${{ (totalSpend || 0) | number:'1.2-2' }}</span>
+            <span class="sub-kpi">PO Service Stream</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-title">Total Active Vendors</span>
+            <span class="kpi-val">{{ filteredVendors.length }}</span>
+            <span class="sub-kpi">Vendor Registry</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-title">Avg Reliability Index</span>
+            <span class="kpi-val highlight">{{ avgReliability }}%</span>
+            <span class="sub-kpi">Reliability Engine</span>
+          </div>
+          <div class="kpi-card alert-card">
+            <span class="kpi-title">High Risk Vendor Alerts</span>
+            <span class="kpi-val alert-text">{{ highRiskCount }} Action Required</span>
+            <span class="sub-kpi">Risk Assessment</span>
+          </div>
+        </div>
+
+        <!-- Telemetry Data Visualizations / Graphs -->
+        <div class="content-grid margin-bottom">
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Vendor Risk Breakdown</h3>
+            </div>
+            <div style="height: 250px; position: relative;">
+              <canvas #riskDonutCanvas></canvas>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Spend vs. Reliability Performance</h3>
+            </div>
+            <div style="height: 250px; position: relative;">
+              <canvas #trendChartCanvas></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Microservices Cluster Status -->
+        <div class="panel arch-health-panel">
+          <div class="panel-header">
+            <h3>FastAPI Microservices Cluster Telemetry</h3>
+            <span class="subtitle-badge">System Live</span>
+          </div>
+          <div class="services-grid">
+            <div class="service-chip" *ngFor="let s of microservices">
+              <div class="service-name">
+                <span class="status-dot green"></span>
+                <strong>{{ s.name }}</strong>
+              </div>
+              <div class="service-metrics">
+                <span>{{ s.latencyMs }}ms</span> | <span>CPU: {{ s.cpuUsage }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="content-grid">
+          <div class="panel">
+            <div class="panel-header"><h3>Active Purchase Orders</h3></div>
+            <table class="custom-table">
+              <thead>
+                <tr><th>PO #</th><th>Vendor</th><th>Amount</th><th>Invoice</th><th>Status</th></tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let po of filteredPOs">
+                  <td><strong class="code-link">{{ po.po_number }}</strong></td>
+                  <td>{{ po.vendor_name }}</td>
+                  <td>${{ po.total_amount | number }}</td>
+                  <td><span class="pill outline">{{ po.invoiceStatus }}</span></td>
+                  <td><span class="pill blue">{{ po.status }}</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header"><h3>Vendor Risk &amp; Reliability Matrix</h3></div>
+            <table class="custom-table">
+              <thead>
+                <tr><th>Code</th><th>Vendor</th><th>Rank</th><th>Score</th><th>Risk</th></tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let v of filteredVendors">
+                  <td class="code-link">{{ v.vendor_code }}</td>
+                  <td><strong>{{ v.name }}</strong></td>
+                  <td><span class="rank-badge">#{{ v.vendorRank }}</span></td>
+                  <td>{{ v.reliabilityScore }}%</td>
+                  <td>
+                    <span class="pill" [ngClass]="{'green': v.riskLevel === 'Low', 'yellow': v.riskLevel === 'Medium', 'red': v.riskLevel === 'High' || v.riskLevel === 'Critical'}">
+                      {{ v.riskLevel }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: VENDORS SERVICE -->
+      <div *ngIf="activeTab === 'vendors'">
+        <div class="workspace-title">
+          <h1>Vendor Management Microservice</h1>
+          <p>Vendor CRUD Directory, Onboarding Workflows &amp; Contact Telemetry.</p>
+        </div>
+        <div class="panel">
+          <table class="custom-table">
+            <thead>
+              <tr><th>Code</th><th>Name</th><th>Category</th><th>Email</th><th>On-Time %</th><th>Compliance %</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let v of filteredVendors">
+                <td class="code-link">{{ v.vendor_code }}</td>
+                <td><strong>{{ v.name }}</strong></td>
+                <td>{{ v.category }}</td>
+                <td class="muted">{{ v.contact_email }}</td>
+                <td class="highlight-val">{{ v.onTimeDeliveryRate }}%</td>
+                <td class="highlight-val">{{ v.qualityComplianceRate }}%</td>
+                <td><span class="pill blue">{{ v.status }}</span></td>
+                <td>
+                  <button *ngIf="v.status === 'Pending'" (click)="approveVendor(v.id)" class="btn-sm action-btn">Approve Vendor</button>
+                  <button *ngIf="v.status === 'Active'" (click)="dispatchSMSAlert(v.contact_email)" class="btn-sm warning-btn">Trigger Alert</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 3: PROCUREMENT SERVICE -->
+      <div *ngIf="activeTab === 'procurement'">
+        <div class="workspace-title">
+          <h1>Procurement Requests &amp; Workflow Service</h1>
+          <p>Requisition Routing, Vendor Assignment &amp; Approval Gates.</p>
+        </div>
+        <div class="panel">
+          <table class="custom-table">
+            <thead>
+              <tr><th>REQ #</th><th>Item Description</th><th>Requester</th><th>Assigned Vendor</th><th>Est. Cost</th><th>Status</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let pr of filteredProcurements">
+                <td><strong class="code-link">{{ pr.req_number }}</strong></td>
+                <td>{{ pr.item_description }}</td>
+                <td>{{ pr.requested_by }}</td>
+                <td><strong>{{ pr.assigned_vendor || 'Unassigned' }}</strong></td>
+                <td>${{ pr.estimated_cost | number }}</td>
+                <td>
+                  <span class="pill" [ngClass]="{'green': pr.status === 'Approved', 'yellow': pr.status === 'Under Review'}">
+                    {{ pr.status }}
+                  </span>
+                </td>
+                <td>
+                  <button *ngIf="pr.status === 'Under Review'" (click)="approveProcurement(pr.id)" class="btn-sm green-btn">Approve Budget</button>
+                  <span *ngIf="pr.status === 'Approved'" class="status-ok">Approved &amp; Locked</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 4: PURCHASE ORDERS -->
+      <div *ngIf="activeTab === 'orders'">
+        <div class="workspace-title">
+          <h1>Purchase Order &amp; Invoice Service</h1>
+          <p>PO Generation, Real-Time Delivery Tracking &amp; Invoice Settlement.</p>
+        </div>
+        <div class="panel">
+          <table class="custom-table">
+            <thead>
+              <tr><th>PO #</th><th>Vendor</th><th>Date</th><th>Amount</th><th>Delivery Status</th><th>Invoice Status</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let po of filteredPOs">
+                <td><strong class="code-link">{{ po.po_number }}</strong></td>
+                <td>{{ po.vendor_name }}</td>
+                <td class="muted">{{ po.created_date }}</td>
+                <td>${{ po.total_amount | number }}</td>
+                <td><span class="pill green">{{ po.deliveryStatus }}</span></td>
+                <td><span class="pill outline">{{ po.invoiceStatus }}</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 5: CONTRACTS & SLA -->
+      <div *ngIf="activeTab === 'contracts'">
+        <div class="workspace-title">
+          <h1>Contract Repository &amp; SLA Service</h1>
+          <p>Contract Legal Lifecycles, Storage Links &amp; Compliance Penalty Enforcement.</p>
+        </div>
+        <div class="panel">
+          <table class="custom-table">
+            <thead>
+              <tr><th>Title</th><th>Vendor</th><th>Expiry Date</th><th>Value</th><th>SLA Penalty Terms</th><th>Document Storage</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let c of filteredContracts">
+                <td><strong>{{ c.title }}</strong></td>
+                <td>{{ c.vendor_name }}</td>
+                <td class="muted">{{ c.expiry_date }}</td>
+                <td class="highlight-val">${{ c.value | number }}</td>
+                <td class="alert-text">{{ c.slaPenaltyRate }}</td>
+                <td><code class="s3-link">{{ c.documentStorageUrl }}</code></td>
+                <td><span class="pill yellow">{{ c.status }}</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 6: PERFORMANCE & RELIABILITY -->
+      <div *ngIf="activeTab === 'performance'">
+        <div class="workspace-title">
+          <h1>Performance &amp; Reliability Intelligence Service</h1>
+          <p>Quality Evaluation, Risk Scoring &amp; Multi-Factor Trend Analytics.</p>
+        </div>
+        <div class="panel">
+          <table class="custom-table">
+            <thead>
+              <tr><th>Vendor</th><th>Quality Score</th><th>Delivery Score</th><th>Compliance</th><th>Comms Score</th><th>Overall Score</th><th>Trend</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let pm of filteredPerformance">
+                <td><strong>{{ pm.vendor_name }}</strong></td>
+                <td>{{ pm.quality_score }}%</td>
+                <td>{{ pm.delivery_score }}%</td>
+                <td>{{ pm.compliance_score }}%</td>
+                <td>{{ pm.communication_score }}%</td>
+                <td><strong class="highlight-val">{{ pm.overall_score }}%</strong></td>
+                <td>
+                  <span class="pill" [ngClass]="{'green': pm.trend === 'Improving', 'blue': pm.trend === 'Stable', 'red': pm.trend === 'Declining'}">
+                    {{ pm.trend }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 7: REPORTING SERVICE -->
+      <div *ngIf="activeTab === 'reports'">
+        <div class="workspace-title">
+          <h1>Reporting Microservice</h1>
+          <p>Automated PDF &amp; XLSX Report Generation Pipelines.</p>
+        </div>
+        <div class="panel">
+          <table class="custom-table">
+            <thead>
+              <tr><th>Report Title</th><th>Category</th><th>Generated Date</th><th>Format</th><th>Schedule</th><th>Size</th><th>Export</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let rep of filteredReports">
+                <td><strong>{{ rep.title }}</strong></td>
+                <td>{{ rep.category }}</td>
+                <td class="muted">{{ rep.generated_date }}</td>
+                <td><span class="pill blue">{{ rep.format }}</span></td>
+                <td><span class="pill outline">{{ rep.scheduled ? 'Cron Active' : 'Ad-hoc' }}</span></td>
+                <td>{{ rep.size }}</td>
+                <td><button (click)="downloadReport(rep.title, rep.format)" class="btn-sm action-btn">Download {{ rep.format }}</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 8: NOTIFICATIONS -->
+      <div *ngIf="activeTab === 'notifications'">
+        <div class="workspace-title">
+          <h1>Communications &amp; Notification Telemetry</h1>
+          <p>SMS Dispatch Logs, Email Gateways &amp; Event Streams.</p>
+        </div>
+        <div class="content-grid">
+          <div class="panel">
+            <div class="panel-header"><h3>In-App Notifications Feed</h3></div>
+            <div class="notif-list">
+              <div class="notif-card" *ngFor="let n of notifications">
+                <div class="notif-header">
+                  <strong>{{ n.title }}</strong>
+                  <small class="muted">{{ n.time }}</small>
+                </div>
+                <p>{{ n.message }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header"><h3>External Integration Logs</h3></div>
+            <table class="custom-table">
+              <thead>
+                <tr><th>Channel</th><th>Recipient</th><th>Subject</th><th>Status</th></tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let comm of communications">
+                  <td><span class="pill blue">{{ comm.channel }}</span></td>
+                  <td>{{ comm.recipient }}</td>
+                  <td>{{ comm.subject }}</td>
+                  <td><span class="status-ok">{{ comm.status }}</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 9: PROFILE & GATEWAY -->
+      <div *ngIf="activeTab === 'profile'">
+        <div class="workspace-title">
+          <h1>API Gateway &amp; Auth Microservice Telemetry</h1>
+          <p>OAuth2 Authentication State, JWT Validation &amp; API Gateway Configuration.</p>
+        </div>
+        <div class="content-grid">
+          <div class="panel">
+            <div class="panel-header"><h3>Authenticated Context</h3></div>
+            <div class="profile-box">
+              <p><strong>User:</strong> {{ currentUser.name }}</p>
+              <p><strong>Email:</strong> {{ currentUser.email }}</p>
+              <p><strong>Role:</strong> <span class="pill green">{{ currentUser.role }}</span></p>
+              <p><strong>OAuth2 Bearer JWT Token:</strong></p>
+              <textarea readonly class="jwt-box">{{ currentUser.jwtToken }}</textarea>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header"><h3>Gateway Configuration</h3></div>
+            <ul class="gateway-list">
+              <li><strong>CORS Header:</strong> <code>Access-Control-Allow-Origin: *</code></li>
+              <li><strong>Rate Limit Engine:</strong> <code>1000 Req / min</code></li>
+              <li><strong>Container Engine:</strong> Kubernetes Cluster (Us-East-1)</li>
+              <li><strong>CI/CD Deployment:</strong> Active Continuous Sync</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Modal: New Purchase Order -->
+<div class="modal-backdrop" *ngIf="showPOModal" (click)="togglePOModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <h2>Issue Purchase Order</h2>
+    <form (ngSubmit)="submitPO()">
+      <div class="form-group">
+        <label>PO Identifier</label>
+        <input type="text" [(ngModel)]="newPO.po_number" name="modalPoNumber" required placeholder="PO-2026-101" />
+      </div>
+      <div class="form-group">
+        <label>Vendor Name</label>
+        <input type="text" [(ngModel)]="newPO.vendor_name" name="modalPoVendor" required placeholder="Apex Logistics Corp" />
+      </div>
+      <div class="form-group">
+        <label>Total Amount ($)</label>
+        <input type="number" [(ngModel)]="newPO.total_amount" name="modalPoAmount" required placeholder="75000" />
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" (click)="togglePOModal()">Cancel</button>
+        <button type="submit" class="btn-primary-modal">Create Purchase Order</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: New Vendor -->
+<div class="modal-backdrop" *ngIf="showVendorModal" (click)="toggleVendorModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <h2>Onboard New Vendor</h2>
+    <form (ngSubmit)="submitVendor()">
+      <div class="form-group">
+        <label>Vendor Code</label>
+        <input type="text" [(ngModel)]="newVendor.vendor_code" name="modalVndCode" required />
+      </div>
+      <div class="form-group">
+        <label>Company Legal Name</label>
+        <input type="text" [(ngModel)]="newVendor.name" name="modalVndName" required placeholder="Apex Logistics Inc" />
+      </div>
+      <div class="form-group">
+        <label>Contact Email</label>
+        <input type="email" [(ngModel)]="newVendor.contact_email" name="modalVndEmail" required placeholder="compliance@apex.com" />
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" (click)="toggleVendorModal()">Cancel</button>
+        <button type="submit" class="btn-primary-modal">Register Vendor</button>
+      </div>
+    </form>
+  </div>
+</div>
