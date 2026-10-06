@@ -1,736 +1,1085 @@
 <div class="dashboard-page">
 
-  <!-- ========================================================= -->
-  <!-- HEADER -->
-  <!-- ========================================================= -->
-
-  <div class="dashboard-header">
+  <!-- ============================================================
+       DASHBOARD HEADER
+       ============================================================ -->
+  <div class="dashboard-header mb-4">
 
     <div>
-      <h3 class="page-title">
-        {{ roleTitle }}
-      </h3>
+      <h2 class="dashboard-title">
+        <i class="fa-solid fa-shield-halved me-2"></i>
 
-      <p class="page-subtitle">
-        Welcome back, {{ auth.currentUser()?.full_name }}.
-        {{ roleDescription }}
+        <ng-container *ngIf="role === 'auditor'">
+          Audit Dashboard
+        </ng-container>
+
+        <ng-container *ngIf="role !== 'auditor'">
+          Dashboard
+        </ng-container>
+      </h2>
+
+      <p class="text-muted mb-0">
+        <ng-container *ngIf="role === 'auditor'">
+          Review procurement, vendor, compliance, performance and risk
+          information.
+        </ng-container>
+
+        <ng-container *ngIf="role !== 'auditor'">
+          Monitor your organization's activities and performance.
+        </ng-container>
       </p>
     </div>
 
-    <button
-      class="dashboard-refresh-btn"
-      (click)="refreshDashboard()"
-      [disabled]="loading || analyticsLoading">
-
-      <i class="fa-solid fa-arrows-rotate"></i>
-      Refresh
-
-    </button>
+    <div class="dashboard-user" *ngIf="currentUser">
+      <span class="text-muted small">Logged in as</span>
+      <strong>
+        {{ currentUser.full_name || currentUser.email }}
+      </strong>
+    </div>
 
   </div>
 
 
-  <!-- ========================================================= -->
-  <!-- LOADING -->
-  <!-- ========================================================= -->
-
+  <!-- ============================================================
+       LOADING
+       ============================================================ -->
   <div
-    class="dashboard-loading"
-    *ngIf="loading">
+    *ngIf="analyticsLoading"
+    class="text-center py-5">
 
-    <div class="spinner-border text-primary"></div>
+    <div
+      class="spinner-border text-primary"
+      role="status">
+    </div>
 
-    <p>Loading dashboard...</p>
+    <p class="text-muted mt-3">
+      Loading dashboard analytics...
+    </p>
 
   </div>
 
 
-  <!-- ========================================================= -->
-  <!-- GENERAL ERROR -->
-  <!-- ========================================================= -->
-
+  <!-- ============================================================
+       ERROR
+       ============================================================ -->
   <div
-    class="dashboard-alert"
-    *ngIf="error">
+    *ngIf="analyticsError && !analyticsLoading"
+    class="alert alert-warning">
 
-    {{ error }}
+    <i class="fa-solid fa-triangle-exclamation me-2"></i>
+
+    {{ analyticsError }}
 
   </div>
 
 
-  <!-- ========================================================= -->
-  <!-- PROCUREMENT MANAGER -->
-  <!-- ========================================================= -->
+  <!-- ============================================================
+       AUDITOR DASHBOARD
+       ============================================================ -->
+  <ng-container *ngIf="role === 'auditor' && !analyticsLoading">
 
-  <ng-container *ngIf="role === 'procurement_manager'">
+    <!-- ==========================================================
+         AUDITOR PURPOSE
+         ========================================================== -->
+    <div class="card card-elevated mb-4">
 
-    <!-- PROCUREMENT HERO -->
+      <div class="card-body">
 
-    <section class="procurement-hero">
+        <div class="d-flex align-items-start">
 
-      <div class="procurement-hero-icon">
-        <i class="fa-solid fa-cart-shopping"></i>
-      </div>
-
-      <div>
-
-        <h2>
-          Procurement Management
-        </h2>
-
-        <p>
-          Manage procurement requests, purchase orders,
-          approvals, vendor assignment, order tracking and invoices.
-        </p>
-
-      </div>
-
-    </section>
-
-
-    <!-- ======================================================= -->
-    <!-- SIX REQUIRED PROCUREMENT FEATURES -->
-    <!-- ======================================================= -->
-
-    <section class="procurement-features-section">
-
-      <div class="section-title-row">
-
-        <div>
-          <h4>Procurement Management</h4>
-
-          <p>
-            Access the core procurement operations.
-          </p>
-        </div>
-
-      </div>
-
-
-      <div class="procurement-feature-grid">
-
-
-        <!-- PROCUREMENT REQUESTS -->
-
-        <a
-          routerLink="/procurement"
-          class="procurement-feature-card">
-
-          <div class="feature-icon feature-blue">
-
-            <i class="fa-solid fa-file-circle-plus"></i>
-
+          <div class="me-3">
+            <div class="dashboard-icon">
+              <i class="fa-solid fa-magnifying-glass-chart"></i>
+            </div>
           </div>
 
-          <div class="feature-content">
-
-            <h5>
-              Procurement Requests
+          <div>
+            <h5 class="mb-1">
+              Auditor Review & Governance
             </h5>
 
-            <p>
-              Create, review and manage procurement requests.
+            <p class="text-muted mb-0">
+              Review procurement activity, vendor information,
+              compliance status, performance metrics and supplier
+              risk information using system-generated data.
             </p>
-
-            <span>
-              Open Requests
-              <i class="fa-solid fa-arrow-right"></i>
-            </span>
-
           </div>
 
-        </a>
-
-
-        <!-- PURCHASE ORDER CREATION -->
-
-        <a
-          routerLink="/purchase-orders"
-          class="procurement-feature-card">
-
-          <div class="feature-icon feature-purple">
-
-            <i class="fa-solid fa-file-invoice"></i>
-
-          </div>
-
-          <div class="feature-content">
-
-            <h5>
-              Purchase Order Creation
-            </h5>
-
-            <p>
-              Create and manage purchase orders for approved requests.
-            </p>
-
-            <span>
-              Manage Purchase Orders
-              <i class="fa-solid fa-arrow-right"></i>
-            </span>
-
-          </div>
-
-        </a>
-
-
-        <!-- PROCUREMENT APPROVAL -->
-
-        <a
-          routerLink="/procurement"
-          class="procurement-feature-card">
-
-          <div class="feature-icon feature-orange">
-
-            <i class="fa-solid fa-circle-check"></i>
-
-          </div>
-
-          <div class="feature-content">
-
-            <h5>
-              Procurement Approval Workflow
-            </h5>
-
-            <p>
-              Review procurement requests and manage approval workflow.
-            </p>
-
-            <span>
-              Review Approvals
-              <i class="fa-solid fa-arrow-right"></i>
-            </span>
-
-          </div>
-
-        </a>
-
-
-        <!-- VENDOR ASSIGNMENT -->
-
-        <a
-          routerLink="/vendors"
-          class="procurement-feature-card">
-
-          <div class="feature-icon feature-green">
-
-            <i class="fa-solid fa-users"></i>
-
-          </div>
-
-          <div class="feature-content">
-
-            <h5>
-              Vendor Assignment
-            </h5>
-
-            <p>
-              Assign suitable vendors to approved procurement requests.
-            </p>
-
-            <span>
-              Manage Vendors
-              <i class="fa-solid fa-arrow-right"></i>
-            </span>
-
-          </div>
-
-        </a>
-
-
-        <!-- ORDER TRACKING -->
-
-        <a
-          routerLink="/purchase-orders"
-          class="procurement-feature-card">
-
-          <div class="feature-icon feature-cyan">
-
-            <i class="fa-solid fa-truck-fast"></i>
-
-          </div>
-
-          <div class="feature-content">
-
-            <h5>
-              Order Tracking
-            </h5>
-
-            <p>
-              Track purchase orders through delivery and completion.
-            </p>
-
-            <span>
-              Track Orders
-              <i class="fa-solid fa-arrow-right"></i>
-            </span>
-
-          </div>
-
-        </a>
-
-
-        <!-- INVOICE MANAGEMENT -->
-
-        <a
-          routerLink="/purchase-orders"
-          class="procurement-feature-card">
-
-          <div class="feature-icon feature-red">
-
-            <i class="fa-solid fa-receipt"></i>
-
-          </div>
-
-          <div class="feature-content">
-
-            <h5>
-              Invoice Management
-            </h5>
-
-            <p>
-              Manage invoices and payment information associated with orders.
-            </p>
-
-            <span>
-              Manage Invoices
-              <i class="fa-solid fa-arrow-right"></i>
-            </span>
-
-          </div>
-
-        </a>
+        </div>
 
       </div>
 
-    </section>
+    </div>
 
 
-    <!-- ======================================================= -->
-    <!-- PROCUREMENT KPI -->
-    <!-- ======================================================= -->
+    <!-- ==========================================================
+         1. PROCUREMENT REVIEW
+         ========================================================== -->
+    <section class="dashboard-section mb-5">
 
-    <section class="procurement-kpi-grid">
-
-      <div class="procurement-kpi kpi-blue">
-
-        <div class="kpi-icon">
-          <i class="fa-solid fa-file-circle-plus"></i>
-        </div>
+      <div class="section-header mb-3">
 
         <div>
-          <span>Procurement Requests</span>
-
-          <strong>
-            {{ summary?.procurement?.total_requests ?? 0 }}
-          </strong>
-
-          <small>
-            Total requests
-          </small>
-        </div>
-
-      </div>
-
-
-      <div class="procurement-kpi kpi-purple">
-
-        <div class="kpi-icon">
-          <i class="fa-solid fa-file-invoice"></i>
-        </div>
-
-        <div>
-          <span>Purchase Orders</span>
-
-          <strong>
-            {{ summary?.purchase_orders?.total ?? 0 }}
-          </strong>
-
-          <small>
-            {{ summary?.purchase_orders?.active ?? 0 }} active
-          </small>
-        </div>
-
-      </div>
-
-
-      <div class="procurement-kpi kpi-green">
-
-        <div class="kpi-icon">
-          <i class="fa-solid fa-truck-fast"></i>
-        </div>
-
-        <div>
-          <span>Delivery Performance</span>
-
-          <strong>
-            {{ procurementAnalytics?.delivery_performance_rate ?? 0 }}%
-          </strong>
-
-          <small>
-            On-time delivery performance
-          </small>
-        </div>
-
-      </div>
-
-
-      <div class="procurement-kpi kpi-orange">
-
-        <div class="kpi-icon">
-          <i class="fa-solid fa-clock"></i>
-        </div>
-
-        <div>
-          <span>Pending Approvals</span>
-
-          <strong>
-            {{ analytics?.procurement_reports?.pending_approvals ?? 0 }}
-          </strong>
-
-          <small>
-            Awaiting approval
-          </small>
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- ======================================================= -->
-    <!-- PROCUREMENT STATUS -->
-    <!-- ======================================================= -->
-
-    <section class="procurement-status-section">
-
-      <div class="section-title-row">
-
-        <div>
-          <h4>Procurement Status</h4>
-
-          <p>
-            Current procurement lifecycle status.
-          </p>
-        </div>
-
-      </div>
-
-
-      <div class="status-grid">
-
-        <div class="status-item status-pending">
-          <i class="fa-solid fa-clock"></i>
-          <span>Pending</span>
-          <strong>
-            {{ procurementStatus.pending }}
-          </strong>
-        </div>
-
-        <div class="status-item status-approved">
-          <i class="fa-solid fa-circle-check"></i>
-          <span>Approved</span>
-          <strong>
-            {{ procurementStatus.approved }}
-          </strong>
-        </div>
-
-        <div class="status-item status-ordered">
-          <i class="fa-solid fa-file-invoice"></i>
-          <span>Ordered</span>
-          <strong>
-            {{ procurementStatus.ordered }}
-          </strong>
-        </div>
-
-        <div class="status-item status-delivered">
-          <i class="fa-solid fa-truck"></i>
-          <span>Delivered</span>
-          <strong>
-            {{ procurementStatus.delivered }}
-          </strong>
-        </div>
-
-        <div class="status-item status-completed">
-          <i class="fa-solid fa-circle-check"></i>
-          <span>Completed</span>
-          <strong>
-            {{ procurementStatus.completed }}
-          </strong>
-        </div>
-
-        <div class="status-item status-cancelled">
-          <i class="fa-solid fa-circle-xmark"></i>
-          <span>Cancelled</span>
-          <strong>
-            {{ procurementStatus.cancelled }}
-          </strong>
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- ======================================================= -->
-    <!-- PROCUREMENT DASHBOARD VISUALS -->
-    <!-- ======================================================= -->
-
-    <section class="visual-dashboard-section">
-
-      <div class="visual-dashboard-header">
-
-        <div>
-          <h4>
-            <i class="fa-solid fa-chart-column"></i>
-            Procurement Dashboard
+          <h4 class="section-title">
+            <i class="fa-solid fa-cart-shopping me-2"></i>
+            Procurement Review
           </h4>
 
-          <p>
-            Procurement overview, purchase orders,
-            vendor performance, procurement cost and delivery status.
+          <p class="text-muted mb-0">
+            Review procurement requests, purchase orders,
+            procurement value and delivery status.
           </p>
         </div>
 
-        <div class="live-badge">
-          <span></span>
-          Live Data
-        </div>
-
       </div>
 
 
+      <!-- PROCUREMENT KPI CARDS -->
       <div
-        class="analytics-error"
-        *ngIf="analyticsError">
+        class="row g-4"
+        *ngIf="procurementAnalytics">
 
-        {{ analyticsError }}
+        <!-- Total Requests -->
+        <div class="col-xl-3 col-md-6">
 
-      </div>
+          <div class="card card-elevated dashboard-stat-card">
 
+            <div class="card-body">
 
-      <div
-        class="analytics-loading"
-        *ngIf="analyticsLoading">
+              <div class="stat-icon">
+                <i class="fa-solid fa-file-lines"></i>
+              </div>
 
-        <div class="spinner-border text-primary"></div>
+              <span class="stat-label">
+                Total Requests
+              </span>
 
-        <span>
-          Loading procurement analytics...
-        </span>
-
-      </div>
-
-
-      <div
-        class="procurement-charts-grid"
-        *ngIf="!analyticsLoading">
-
-
-        <!-- ================================================= -->
-        <!-- PROCUREMENT OVERVIEW -->
-        <!-- ================================================= -->
-
-        <div class="procurement-chart-card chart-overview">
-
-          <div class="chart-card-header">
-
-            <div>
-
-              <h5>
-                Procurement Overview
-              </h5>
-
-              <p>
-                Delivery and procurement performance
-              </p>
+              <h3 class="stat-value">
+                {{
+                  procurementAnalytics.procurement_overview
+                    ?.total_requests ?? 0
+                }}
+              </h3>
 
             </div>
-
-            <div class="chart-header-icon blue">
-              <i class="fa-solid fa-chart-column"></i>
-            </div>
-
-          </div>
-
-          <div class="chart-wrapper chart-tall">
-
-            <canvas #procurementOverviewChart></canvas>
 
           </div>
 
         </div>
 
 
-        <!-- ================================================= -->
-        <!-- ACTIVE PURCHASE ORDERS -->
-        <!-- ================================================= -->
+        <!-- Pending Requests -->
+        <div class="col-xl-3 col-md-6">
 
-        <div class="procurement-chart-card">
+          <div class="card card-elevated dashboard-stat-card">
 
-          <div class="chart-card-header">
+            <div class="card-body">
 
-            <div>
+              <div class="stat-icon">
+                <i class="fa-solid fa-clock"></i>
+              </div>
 
-              <h5>
+              <span class="stat-label">
+                Pending Requests
+              </span>
+
+              <h3 class="stat-value">
+                {{
+                  procurementAnalytics.procurement_overview
+                    ?.pending_requests ?? 0
+                }}
+              </h3>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- Approved Requests -->
+        <div class="col-xl-3 col-md-6">
+
+          <div class="card card-elevated dashboard-stat-card">
+
+            <div class="card-body">
+
+              <div class="stat-icon">
+                <i class="fa-solid fa-circle-check"></i>
+              </div>
+
+              <span class="stat-label">
+                Approved Requests
+              </span>
+
+              <h3 class="stat-value">
+                {{
+                  procurementAnalytics.procurement_overview
+                    ?.approved_requests ?? 0
+                }}
+              </h3>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- Completed Requests -->
+        <div class="col-xl-3 col-md-6">
+
+          <div class="card card-elevated dashboard-stat-card">
+
+            <div class="card-body">
+
+              <div class="stat-icon">
+                <i class="fa-solid fa-check-double"></i>
+              </div>
+
+              <span class="stat-label">
+                Completed Requests
+              </span>
+
+              <h3 class="stat-value">
+                {{
+                  procurementAnalytics.procurement_overview
+                    ?.completed_requests ?? 0
+                }}
+              </h3>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- Procurement Value -->
+        <div class="col-xl-3 col-md-6">
+
+          <div class="card card-elevated dashboard-stat-card">
+
+            <div class="card-body">
+
+              <div class="stat-icon">
+                <i class="fa-solid fa-indian-rupee-sign"></i>
+              </div>
+
+              <span class="stat-label">
+                Procurement Value
+              </span>
+
+              <h3 class="stat-value">
+                ₹{{
+                  procurementAnalytics.procurement_overview
+                    ?.procurement_value ?? 0
+                    | number:'1.0-0'
+                }}
+              </h3>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- Completion Rate -->
+        <div class="col-xl-3 col-md-6">
+
+          <div class="card card-elevated dashboard-stat-card">
+
+            <div class="card-body">
+
+              <div class="stat-icon">
+                <i class="fa-solid fa-chart-line"></i>
+              </div>
+
+              <span class="stat-label">
+                Completion Rate
+              </span>
+
+              <h3 class="stat-value">
+                {{
+                  procurementAnalytics.procurement_overview
+                    ?.completion_rate ?? 0
+                }}%
+              </h3>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- Active Purchase Orders -->
+        <div class="col-xl-3 col-md-6">
+
+          <div class="card card-elevated dashboard-stat-card">
+
+            <div class="card-body">
+
+              <div class="stat-icon">
+                <i class="fa-solid fa-boxes-stacked"></i>
+              </div>
+
+              <span class="stat-label">
                 Active Purchase Orders
-              </h5>
+              </span>
 
-              <p>
-                Current purchase order activity
-              </p>
+              <h3 class="stat-value">
+                {{
+                  procurementAnalytics.active_purchase_orders
+                    ?.active ?? 0
+                }}
+              </h3>
 
             </div>
-
-            <div class="chart-header-icon purple">
-              <i class="fa-solid fa-file-invoice"></i>
-            </div>
-
-          </div>
-
-          <div class="chart-wrapper">
-
-            <canvas #activePurchaseOrdersChart></canvas>
 
           </div>
 
         </div>
 
 
-        <!-- ================================================= -->
-        <!-- VENDOR PERFORMANCE -->
-        <!-- ================================================= -->
+        <!-- Overdue POs -->
+        <div class="col-xl-3 col-md-6">
 
-        <div class="procurement-chart-card">
+          <div class="card card-elevated dashboard-stat-card">
 
-          <div class="chart-card-header">
+            <div class="card-body">
 
-            <div>
+              <div class="stat-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+              </div>
 
-              <h5>
-                Vendor Performance Summary
-              </h5>
+              <span class="stat-label">
+                Overdue POs
+              </span>
 
-              <p>
-                Delivery, completion and supplier concentration
-              </p>
+              <h3 class="stat-value">
+                {{
+                  procurementAnalytics.active_purchase_orders
+                    ?.overdue ?? 0
+                }}
+              </h3>
 
-            </div>
-
-            <div class="chart-header-icon green">
-              <i class="fa-solid fa-chart-radar"></i>
             </div>
 
           </div>
 
-          <div class="chart-wrapper">
+        </div>
 
-            <canvas #vendorPerformanceSummaryChart></canvas>
+      </div>
+
+    </section>
+
+
+    <!-- ==========================================================
+         2. VENDOR REVIEW
+         ========================================================== -->
+    <section class="dashboard-section mb-5">
+
+      <div class="section-header mb-3">
+
+        <div>
+          <h4 class="section-title">
+            <i class="fa-solid fa-building me-2"></i>
+            Vendor Review
+          </h4>
+
+          <p class="text-muted mb-0">
+            Review vendor population, approval status and
+            vendor categorization.
+          </p>
+        </div>
+
+      </div>
+
+
+      <div class="row g-4">
+
+        <!-- Total Vendors -->
+        <div class="col-xl-3 col-md-6">
+
+          <div class="card card-elevated dashboard-stat-card">
+
+            <div class="card-body">
+
+              <div class="stat-icon">
+                <i class="fa-solid fa-building"></i>
+              </div>
+
+              <span class="stat-label">
+                Total Vendors
+              </span>
+
+              <h3 class="stat-value">
+                {{
+                  analytics?.system_statistics?.total_vendors
+                  ?? 0
+                }}
+              </h3>
+
+            </div>
 
           </div>
 
         </div>
 
 
-        <!-- ================================================= -->
-        <!-- PROCUREMENT COST -->
-        <!-- ================================================= -->
+        <!-- Approved Vendors -->
+        <div class="col-xl-3 col-md-6">
 
-        <div class="procurement-chart-card">
+          <div class="card card-elevated dashboard-stat-card">
 
-          <div class="chart-card-header">
+            <div class="card-body">
 
-            <div>
+              <div class="stat-icon">
+                <i class="fa-solid fa-circle-check"></i>
+              </div>
 
-              <h5>
-                Procurement Cost Analysis
-              </h5>
+              <span class="stat-label">
+                Approved Vendors
+              </span>
 
-              <p>
-                Procurement value and purchase volume
-              </p>
+              <h3 class="stat-value">
+                {{
+                  analytics?.vendor_analytics?.approved
+                  ?? analytics?.vendor_analytics?.approved_vendors
+                  ?? 0
+                }}
+              </h3>
 
             </div>
-
-            <div class="chart-header-icon orange">
-              <i class="fa-solid fa-coins"></i>
-            </div>
-
-          </div>
-
-          <div class="chart-wrapper">
-
-            <canvas #procurementCostChart></canvas>
 
           </div>
 
         </div>
 
 
-        <!-- ================================================= -->
-        <!-- DELIVERY STATUS -->
-        <!-- ================================================= -->
+        <!-- Pending Vendors -->
+        <div class="col-xl-3 col-md-6">
 
-        <div class="procurement-chart-card delivery-card">
+          <div class="card card-elevated dashboard-stat-card">
 
-          <div class="chart-card-header">
+            <div class="card-body">
 
-            <div>
+              <div class="stat-icon">
+                <i class="fa-solid fa-hourglass-half"></i>
+              </div>
 
-              <h5>
-                Delivery Status
-              </h5>
+              <span class="stat-label">
+                Pending Vendors
+              </span>
 
-              <p>
-                Current delivery performance
-              </p>
+              <h3 class="stat-value">
+                {{
+                  analytics?.vendor_analytics?.pending
+                  ?? analytics?.vendor_analytics?.pending_vendors
+                  ?? 0
+                }}
+              </h3>
 
             </div>
-
-            <div class="chart-header-icon cyan">
-              <i class="fa-solid fa-truck-fast"></i>
-            </div>
-
-          </div>
-
-          <div class="chart-wrapper">
-
-            <canvas #deliveryStatusChart></canvas>
 
           </div>
 
         </div>
 
 
-        <!-- ================================================= -->
-        <!-- PROCESSING PERFORMANCE -->
-        <!-- ================================================= -->
+        <!-- Rejected Vendors -->
+        <div class="col-xl-3 col-md-6">
 
-        <div class="procurement-chart-card">
+          <div class="card card-elevated dashboard-stat-card">
 
-          <div class="chart-card-header">
+            <div class="card-body">
 
-            <div>
+              <div class="stat-icon">
+                <i class="fa-solid fa-circle-xmark"></i>
+              </div>
 
-              <h5>
-                Procurement Processing
-              </h5>
+              <span class="stat-label">
+                Rejected Vendors
+              </span>
 
-              <p>
-                Request-to-order and PO processing time
-              </p>
+              <h3 class="stat-value">
+                {{
+                  analytics?.vendor_analytics?.rejected
+                  ?? analytics?.vendor_analytics?.rejected_vendors
+                  ?? 0
+                }}
+              </h3>
 
-            </div>
-
-            <div class="chart-header-icon red">
-              <i class="fa-solid fa-clock-rotate-left"></i>
             </div>
 
           </div>
 
-          <div class="chart-wrapper">
+        </div>
 
-            <canvas #procurementProcessingChart></canvas>
+      </div>
+
+    </section>
+
+
+    <!-- ==========================================================
+         3. COMPLIANCE REVIEW
+         ========================================================== -->
+    <section class="dashboard-section mb-5">
+
+      <div class="section-header mb-3">
+
+        <div>
+          <h4 class="section-title">
+            <i class="fa-solid fa-file-shield me-2"></i>
+            Compliance Review
+          </h4>
+
+          <p class="text-muted mb-0">
+            Review certification compliance, expired documents
+            and upcoming compliance expirations.
+          </p>
+        </div>
+
+      </div>
+
+
+      <div class="row g-4">
+
+        <!-- Compliance Rate -->
+        <div class="col-xl-3 col-md-6">
+
+          <div class="card card-elevated dashboard-stat-card">
+
+            <div class="card-body">
+
+              <div class="stat-icon">
+                <i class="fa-solid fa-shield-check"></i>
+              </div>
+
+              <span class="stat-label">
+                Compliance Rate
+              </span>
+
+              <h3 class="stat-value">
+                {{
+                  analytics?.compliance_monitoring
+                    ?.compliance_rate ?? 0
+                }}%
+              </h3>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- Compliant -->
+        <div class="col-xl-3 col-md-6">
+
+          <div class="card card-elevated dashboard-stat-card">
+
+            <div class="card-body">
+
+              <div class="stat-icon">
+                <i class="fa-solid fa-circle-check"></i>
+              </div>
+
+              <span class="stat-label">
+                Compliant Certifications
+              </span>
+
+              <h3 class="stat-value">
+                {{
+                  analytics?.compliance_monitoring
+                    ?.compliant_certifications ?? 0
+                }}
+              </h3>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- Expired -->
+        <div class="col-xl-3 col-md-6">
+
+          <div class="card card-elevated dashboard-stat-card">
+
+            <div class="card-body">
+
+              <div class="stat-icon">
+                <i class="fa-solid fa-circle-xmark"></i>
+              </div>
+
+              <span class="stat-label">
+                Expired Certifications
+              </span>
+
+              <h3 class="stat-value">
+                {{
+                  analytics?.compliance_monitoring
+                    ?.expired_certifications ?? 0
+                }}
+              </h3>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- Expiring -->
+        <div class="col-xl-3 col-md-6">
+
+          <div class="card card-elevated dashboard-stat-card">
+
+            <div class="card-body">
+
+              <div class="stat-icon">
+                <i class="fa-solid fa-calendar-xmark"></i>
+              </div>
+
+              <span class="stat-label">
+                Expiring Soon
+              </span>
+
+              <h3 class="stat-value">
+                {{
+                  analytics?.compliance_monitoring
+                    ?.expiring_certifications ?? 0
+                }}
+              </h3>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ==========================================================
+         4. PERFORMANCE REVIEW
+         ========================================================== -->
+    <section class="dashboard-section mb-5">
+
+      <div class="section-header mb-3">
+
+        <div>
+          <h4 class="section-title">
+            <i class="fa-solid fa-chart-column me-2"></i>
+            Performance Review
+          </h4>
+
+          <p class="text-muted mb-0">
+            Review vendor performance, quality, delivery,
+            response and issue-resolution metrics.
+          </p>
+        </div>
+
+      </div>
+
+
+      <div
+        class="row g-4"
+        *ngIf="procurementAnalytics">
+
+        <!-- Performance Score -->
+        <div class="col-xl-3 col-md-6">
+
+          <div class="card card-elevated dashboard-stat-card">
+
+            <div class="card-body">
+
+              <div class="stat-icon">
+                <i class="fa-solid fa-star"></i>
+              </div>
+
+              <span class="stat-label">
+                Performance Score
+              </span>
+
+              <h3 class="stat-value">
+                {{
+                  procurementAnalytics
+                    .vendor_performance_summary
+                    ?.avg_performance_score ?? 0
+                }}
+              </h3>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- Quality -->
+        <div class="col-xl-3 col-md-6">
+
+          <div class="card card-elevated dashboard-stat-card">
+
+            <div class="card-body">
+
+              <div class="stat-icon">
+                <i class="fa-solid fa-medal"></i>
+              </div>
+
+              <span class="stat-label">
+                Quality Rating
+              </span>
+
+              <h3 class="stat-value">
+                {{
+                  procurementAnalytics
+                    .vendor_performance_summary
+                    ?.avg_quality_rating ?? 0
+                }}
+              </h3>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- On-Time Delivery -->
+        <div class="col-xl-3 col-md-6">
+
+          <div class="card card-elevated dashboard-stat-card">
+
+            <div class="card-body">
+
+              <div class="stat-icon">
+                <i class="fa-solid fa-truck-fast"></i>
+              </div>
+
+              <span class="stat-label">
+                On-Time Delivery
+              </span>
+
+              <h3 class="stat-value">
+                {{
+                  procurementAnalytics
+                    .vendor_performance_summary
+                    ?.avg_on_time_delivery_rate ?? 0
+                }}%
+              </h3>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- Response Time -->
+        <div class="col-xl-3 col-md-6">
+
+          <div class="card card-elevated dashboard-stat-card">
+
+            <div class="card-body">
+
+              <div class="stat-icon">
+                <i class="fa-solid fa-clock"></i>
+              </div>
+
+              <span class="stat-label">
+                Response Time
+              </span>
+
+              <h3 class="stat-value">
+
+                {{
+                  procurementAnalytics
+                    .vendor_performance_summary
+                    ?.avg_response_time_hours ?? 0
+                }}
+
+                <small class="fs-6 text-muted">
+                  hrs
+                </small>
+
+              </h3>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- Issue Resolution -->
+        <div class="col-xl-3 col-md-6">
+
+          <div class="card card-elevated dashboard-stat-card">
+
+            <div class="card-body">
+
+              <div class="stat-icon">
+                <i class="fa-solid fa-screwdriver-wrench"></i>
+              </div>
+
+              <span class="stat-label">
+                Issue Resolution Rate
+              </span>
+
+              <h3 class="stat-value">
+                {{
+                  procurementAnalytics
+                    .vendor_performance_summary
+                    ?.issue_resolution_rate ?? 0
+                }}%
+              </h3>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- Total Deliveries -->
+        <div class="col-xl-3 col-md-6">
+
+          <div class="card card-elevated dashboard-stat-card">
+
+            <div class="card-body">
+
+              <div class="stat-icon">
+                <i class="fa-solid fa-truck"></i>
+              </div>
+
+              <span class="stat-label">
+                Total Deliveries
+              </span>
+
+              <h3 class="stat-value">
+                {{
+                  procurementAnalytics.delivery_status
+                    ?.total_deliveries ?? 0
+                }}
+              </h3>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- Delayed Deliveries -->
+        <div class="col-xl-3 col-md-6">
+
+          <div class="card card-elevated dashboard-stat-card">
+
+            <div class="card-body">
+
+              <div class="stat-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+              </div>
+
+              <span class="stat-label">
+                Delayed Deliveries
+              </span>
+
+              <h3 class="stat-value">
+                {{
+                  procurementAnalytics.delivery_status
+                    ?.delayed_deliveries ?? 0
+                }}
+              </h3>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- Delivery Rate -->
+        <div class="col-xl-3 col-md-6">
+
+          <div class="card card-elevated dashboard-stat-card">
+
+            <div class="card-body">
+
+              <div class="stat-icon">
+                <i class="fa-solid fa-percent"></i>
+              </div>
+
+              <span class="stat-label">
+                Delivery Rate
+              </span>
+
+              <h3 class="stat-value">
+                {{
+                  procurementAnalytics.delivery_status
+                    ?.delivery_rate ?? 0
+                }}%
+              </h3>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ==========================================================
+         5. RISK REVIEW
+         ========================================================== -->
+    <section class="dashboard-section mb-5">
+
+      <div class="section-header mb-3">
+
+        <div>
+          <h4 class="section-title">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i>
+            Risk Review
+          </h4>
+
+          <p class="text-muted mb-0">
+            Review supplier risk levels and reliability
+            distribution for audit and governance.
+          </p>
+        </div>
+
+      </div>
+
+
+      <div
+        class="row g-4"
+        *ngIf="riskSummary">
+
+        <!-- Low Risk -->
+        <div class="col-xl-3 col-md-6">
+
+          <div class="card card-elevated dashboard-stat-card">
+
+            <div class="card-body">
+
+              <div class="stat-icon">
+                <i class="fa-solid fa-circle-check"></i>
+              </div>
+
+              <span class="stat-label">
+                Low Risk
+              </span>
+
+              <h3 class="stat-value">
+                {{
+                  riskSummary.low_risk
+                  ?? riskSummary.low
+                  ?? 0
+                }}
+              </h3>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- Medium Risk -->
+        <div class="col-xl-3 col-md-6">
+
+          <div class="card card-elevated dashboard-stat-card">
+
+            <div class="card-body">
+
+              <div class="stat-icon">
+                <i class="fa-solid fa-circle-exclamation"></i>
+              </div>
+
+              <span class="stat-label">
+                Medium Risk
+              </span>
+
+              <h3 class="stat-value">
+                {{
+                  riskSummary.medium_risk
+                  ?? riskSummary.medium
+                  ?? 0
+                }}
+              </h3>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- High Risk -->
+        <div class="col-xl-3 col-md-6">
+
+          <div class="card card-elevated dashboard-stat-card">
+
+            <div class="card-body">
+
+              <div class="stat-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+              </div>
+
+              <span class="stat-label">
+                High Risk
+              </span>
+
+              <h3 class="stat-value">
+                {{
+                  riskSummary.high_risk
+                  ?? riskSummary.high
+                  ?? 0
+                }}
+              </h3>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- Critical Risk -->
+        <div class="col-xl-3 col-md-6">
+
+          <div class="card card-elevated dashboard-stat-card">
+
+            <div class="card-body">
+
+              <div class="stat-icon">
+                <i class="fa-solid fa-skull-crossbones"></i>
+              </div>
+
+              <span class="stat-label">
+                Critical Risk
+              </span>
+
+              <h3 class="stat-value">
+                {{
+                  riskSummary.critical_risk
+                  ?? riskSummary.critical
+                  ?? 0
+                }}
+              </h3>
+
+            </div>
 
           </div>
 
@@ -743,193 +1092,777 @@
   </ng-container>
 
 
-  <!-- ========================================================= -->
-  <!-- VENDOR DASHBOARD -->
-  <!-- Existing vendor functionality -->
-  <!-- ========================================================= -->
+  <!-- ============================================================
+       ADMINISTRATOR DASHBOARD
+       ============================================================ -->
 
-  <ng-container *ngIf="role === 'vendor'">
+  <ng-container *ngIf="role === 'administrator' && !analyticsLoading">
 
-    <div class="role-placeholder-card">
+    <section class="dashboard-section mb-5">
 
-      <i class="fa-solid fa-building"></i>
+      <div class="section-header mb-3">
+        <div>
+          <h4 class="section-title">
+            <i class="fa-solid fa-gauge-high me-2"></i>
+            Administrator Dashboard
+          </h4>
+          <p class="text-muted mb-0">
+            Manage users, vendors, procurement, compliance and system performance.
+          </p>
+        </div>
+      </div>
 
-      <h4>Vendor Dashboard</h4>
+      <div class="row g-4" *ngIf="analytics">
 
-      <p>
-        Monitor your purchase orders, contracts,
-        communication and vendor performance.
-      </p>
+        <div class="col-xl-3 col-md-6">
+          <div class="card card-elevated dashboard-stat-card">
+            <div class="card-body">
+              <div class="stat-icon">
+                <i class="fa-solid fa-users"></i>
+              </div>
+              <span class="stat-label">Total Users</span>
+              <h3 class="stat-value">
+                {{ analytics?.user_management?.total_users ?? 0 }}
+              </h3>
+            </div>
+          </div>
+        </div>
 
-      <div class="placeholder-actions">
+        <div class="col-xl-3 col-md-6">
+          <div class="card card-elevated dashboard-stat-card">
+            <div class="card-body">
+              <div class="stat-icon">
+                <i class="fa-solid fa-building"></i>
+              </div>
+              <span class="stat-label">Total Vendors</span>
+              <h3 class="stat-value">
+                {{ analytics?.system_statistics?.total_vendors ?? 0 }}
+              </h3>
+            </div>
+          </div>
+        </div>
 
-        <a routerLink="/purchase-orders">
-          Purchase Orders
-        </a>
+        <div class="col-xl-3 col-md-6">
+          <div class="card card-elevated dashboard-stat-card">
+            <div class="card-body">
+              <div class="stat-icon">
+                <i class="fa-solid fa-file-invoice"></i>
+              </div>
+              <span class="stat-label">Purchase Orders</span>
+              <h3 class="stat-value">
+                {{ analytics?.system_statistics?.total_purchase_orders ?? 0 }}
+              </h3>
+            </div>
+          </div>
+        </div>
 
-        <a routerLink="/contracts">
-          Contracts
-        </a>
-
-        <a routerLink="/communication">
-          Communication
-        </a>
+        <div class="col-xl-3 col-md-6">
+          <div class="card card-elevated dashboard-stat-card">
+            <div class="card-body">
+              <div class="stat-icon">
+                <i class="fa-solid fa-shield-halved"></i>
+              </div>
+              <span class="stat-label">Compliance Rate</span>
+              <h3 class="stat-value">
+                {{ analytics?.compliance_monitoring?.compliance_rate ?? 0 }}%
+              </h3>
+            </div>
+          </div>
+        </div>
 
       </div>
 
-    </div>
+      <div class="row g-4 mt-1" *ngIf="analytics">
+
+        <div class="col-lg-6">
+          <div class="analytics-card">
+            <div class="analytics-card-header">
+              <div>
+                <h5>User Management</h5>
+                <p class="text-muted small mb-0">
+                  System user distribution and account activity.
+                </p>
+              </div>
+            </div>
+            <div class="chart-container chart-large">
+              <canvas #adminUserChart></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="analytics-card">
+            <div class="analytics-card-header">
+              <div>
+                <h5>Procurement Overview</h5>
+                <p class="text-muted small mb-0">
+                  Procurement activity across the system.
+                </p>
+              </div>
+            </div>
+            <div class="chart-container chart-large">
+              <canvas #adminProcurementChart></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="analytics-card">
+            <div class="analytics-card-header">
+              <div>
+                <h5>Compliance Monitoring</h5>
+                <p class="text-muted small mb-0">
+                  Current certification and compliance status.
+                </p>
+              </div>
+            </div>
+            <div class="chart-container chart-large">
+              <canvas #adminComplianceChart></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6" *ngIf="riskSummary">
+          <div class="analytics-card">
+            <div class="analytics-card-header">
+              <div>
+                <h5>Vendor Risk</h5>
+                <p class="text-muted small mb-0">
+                  Supplier risk distribution.
+                </p>
+              </div>
+            </div>
+            <div class="chart-container chart-large">
+              <canvas #adminRiskChart></canvas>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
 
   </ng-container>
 
 
-  <!-- ========================================================= -->
-  <!-- ADMINISTRATOR -->
-  <!-- ========================================================= -->
+  <!-- ============================================================
+       PROCUREMENT MANAGER DASHBOARD
+       ============================================================ -->
 
-  <ng-container *ngIf="role === 'administrator'">
+  <ng-container *ngIf="role === 'procurement_manager' && !analyticsLoading">
 
-    <div class="role-placeholder-card admin-role-card">
+    <section class="dashboard-section mb-5">
 
-      <i class="fa-solid fa-user-shield"></i>
+      <div class="section-header mb-3">
+        <div>
+          <h4 class="section-title">
+            <i class="fa-solid fa-cart-shopping me-2"></i>
+            Procurement Manager Dashboard
+          </h4>
+          <p class="text-muted mb-0">
+            Monitor procurement requests, purchase orders, suppliers and procurement performance.
+          </p>
+        </div>
+      </div>
 
-      <h4>Administrator Dashboard</h4>
+      <div class="row g-4" *ngIf="procurementAnalytics">
 
-      <p>
-        Manage users, vendors, procurement,
-        compliance and system performance.
-      </p>
+        <div class="col-xl-3 col-md-6">
+          <div class="card card-elevated dashboard-stat-card">
+            <div class="card-body">
+              <div class="stat-icon"><i class="fa-solid fa-file-lines"></i></div>
+              <span class="stat-label">Total Requests</span>
+              <h3 class="stat-value">
+                {{ procurementAnalytics?.procurement_overview?.total_requests ?? 0 }}
+              </h3>
+            </div>
+          </div>
+        </div>
 
-      <div class="placeholder-actions">
+        <div class="col-xl-3 col-md-6">
+          <div class="card card-elevated dashboard-stat-card">
+            <div class="card-body">
+              <div class="stat-icon"><i class="fa-solid fa-clock"></i></div>
+              <span class="stat-label">Pending Requests</span>
+              <h3 class="stat-value">
+                {{ procurementAnalytics?.procurement_overview?.pending_requests ?? 0 }}
+              </h3>
+            </div>
+          </div>
+        </div>
 
-        <a routerLink="/vendors">
-          Vendors
-        </a>
+        <div class="col-xl-3 col-md-6">
+          <div class="card card-elevated dashboard-stat-card">
+            <div class="card-body">
+              <div class="stat-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+              <span class="stat-label">Active Purchase Orders</span>
+              <h3 class="stat-value">
+                {{ procurementAnalytics?.active_purchase_orders?.active ?? 0 }}
+              </h3>
+            </div>
+          </div>
+        </div>
 
-        <a routerLink="/procurement">
-          Procurement
-        </a>
-
-        <a routerLink="/analytics">
-          Analytics
-        </a>
+        <div class="col-xl-3 col-md-6">
+          <div class="card card-elevated dashboard-stat-card">
+            <div class="card-body">
+              <div class="stat-icon"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+              <span class="stat-label">Procurement Value</span>
+              <h3 class="stat-value">
+                ₹{{ procurementAnalytics?.procurement_overview?.procurement_value ?? 0 | number:'1.0-0' }}
+              </h3>
+            </div>
+          </div>
+        </div>
 
       </div>
 
-    </div>
+      <div class="row g-4 mt-1" *ngIf="procurementAnalytics">
+
+        <div class="col-lg-6">
+          <div class="analytics-card">
+            <div class="analytics-card-header">
+              <div>
+                <h5>Procurement Overview</h5>
+                <p class="text-muted small mb-0">Procurement requests by status.</p>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas #procurementOverviewChart></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="analytics-card">
+            <div class="analytics-card-header">
+              <div>
+                <h5>Purchase Order Status</h5>
+                <p class="text-muted small mb-0">Current purchase order activity.</p>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas #activePurchaseOrdersChart></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="analytics-card">
+            <div class="analytics-card-header">
+              <div>
+                <h5>Vendor Performance Summary</h5>
+                <p class="text-muted small mb-0">Aggregate vendor performance indicators.</p>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas #vendorPerformanceSummaryChart></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="analytics-card">
+            <div class="analytics-card-header">
+              <div>
+                <h5>Procurement Cost Analysis</h5>
+                <p class="text-muted small mb-0">Procurement expenditure and cost distribution.</p>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas #procurementCostChart></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="analytics-card">
+            <div class="analytics-card-header">
+              <div>
+                <h5>Delivery Status</h5>
+                <p class="text-muted small mb-0">Delivery performance and delays.</p>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas #deliveryStatusChart></canvas>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
 
   </ng-container>
 
 
-  <!-- ========================================================= -->
-  <!-- SUPPLY CHAIN MANAGER -->
-  <!-- ========================================================= -->
+  <!-- ============================================================
+       SUPPLY CHAIN MANAGER DASHBOARD
+       NO CHARTS
+       ============================================================ -->
 
-  <ng-container *ngIf="role === 'supply_chain_manager'">
+  <ng-container *ngIf="role === 'supply_chain_manager' && !analyticsLoading">
 
-    <div class="role-placeholder-card">
+    <section class="dashboard-section mb-5">
 
-      <i class="fa-solid fa-truck-fast"></i>
+      <div class="section-header mb-3">
+        <div>
+          <h4 class="section-title">
+            <i class="fa-solid fa-truck-fast me-2"></i>
+            Supply Chain Dashboard
+          </h4>
+          <p class="text-muted mb-0">
+            Monitor vendors, purchase orders, delivery operations and supplier reliability.
+          </p>
+        </div>
+      </div>
 
-      <h4>Supply Chain Dashboard</h4>
+      <div class="row g-4">
 
-      <p>
-        Monitor vendors, delivery performance,
-        reliability, risk and supply chain operations.
-      </p>
+        <div class="col-xl-3 col-md-6">
+          <div class="card card-elevated dashboard-stat-card">
+            <div class="card-body">
+              <div class="stat-icon"><i class="fa-solid fa-building"></i></div>
+              <span class="stat-label">Active Vendors</span>
+              <h3 class="stat-value">{{ summary?.vendors?.approved ?? 0 }}</h3>
+            </div>
+          </div>
+        </div>
 
-      <div class="placeholder-actions">
+        <div class="col-xl-3 col-md-6">
+          <div class="card card-elevated dashboard-stat-card">
+            <div class="card-body">
+              <div class="stat-icon"><i class="fa-solid fa-file-invoice"></i></div>
+              <span class="stat-label">Purchase Orders</span>
+              <h3 class="stat-value">{{ summary?.purchase_orders?.total ?? 0 }}</h3>
+            </div>
+          </div>
+        </div>
 
-        <a routerLink="/vendors">
-          Vendors
-        </a>
+        <div class="col-xl-3 col-md-6">
+          <div class="card card-elevated dashboard-stat-card">
+            <div class="card-body">
+              <div class="stat-icon"><i class="fa-solid fa-truck"></i></div>
+              <span class="stat-label">Delivery Performance</span>
+              <h3 class="stat-value">
+                {{ procurementAnalytics?.delivery_performance_rate ?? 0 }}%
+              </h3>
+            </div>
+          </div>
+        </div>
 
-        <a routerLink="/purchase-orders">
-          Delivery Tracking
-        </a>
-
-        <a routerLink="/contracts">
-          Contracts
-        </a>
+        <div class="col-xl-3 col-md-6">
+          <div class="card card-elevated dashboard-stat-card">
+            <div class="card-body">
+              <div class="stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+              <span class="stat-label">High Risk Vendors</span>
+              <h3 class="stat-value">
+                {{ riskSummary?.high_risk ?? riskSummary?.high ?? 0 }}
+              </h3>
+            </div>
+          </div>
+        </div>
 
       </div>
 
-    </div>
+      <div class="row g-4 mt-2">
+
+        <div class="col-lg-4">
+          <div class="card card-elevated h-100">
+            <div class="card-body">
+              <h5><i class="fa-solid fa-building me-2"></i>Vendor Operations</h5>
+              <p class="text-muted">
+                Manage active suppliers and vendor information.
+              </p>
+              <a routerLink="/vendors" class="btn btn-primary">
+                Vendor Management
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="card card-elevated h-100">
+            <div class="card-body">
+              <h5><i class="fa-solid fa-truck me-2"></i>Delivery Tracking</h5>
+              <p class="text-muted">
+                Monitor purchase orders and delivery progress.
+              </p>
+              <a routerLink="/purchase-orders" class="btn btn-primary">
+                Purchase Orders
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="card card-elevated h-100">
+            <div class="card-body">
+              <h5><i class="fa-solid fa-shield-halved me-2"></i>Supplier Reliability</h5>
+              <p class="text-muted">
+                Review supplier reliability and risk information.
+              </p>
+              <a routerLink="/vendor-reliability" class="btn btn-primary">
+                Vendor Reliability
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="card card-elevated mt-4" *ngIf="riskSummary">
+        <div class="card-body">
+          <h5 class="mb-4">Supplier Risk Status</h5>
+
+          <div class="row g-4">
+
+            <div class="col-md-3">
+              <div class="audit-indicator">
+                <span class="text-muted">Low Risk</span>
+                <strong>{{ riskSummary?.low_risk ?? riskSummary?.low ?? 0 }}</strong>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="audit-indicator">
+                <span class="text-muted">Medium Risk</span>
+                <strong>{{ riskSummary?.medium_risk ?? riskSummary?.medium ?? 0 }}</strong>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="audit-indicator">
+                <span class="text-muted">High Risk</span>
+                <strong>{{ riskSummary?.high_risk ?? riskSummary?.high ?? 0 }}</strong>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="audit-indicator">
+                <span class="text-muted">Critical Risk</span>
+                <strong>{{ riskSummary?.critical_risk ?? riskSummary?.critical ?? 0 }}</strong>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </section>
 
   </ng-container>
 
 
-  <!-- ========================================================= -->
-  <!-- FINANCE OFFICER -->
-  <!-- ========================================================= -->
+  <!-- ============================================================
+       FINANCE OFFICER DASHBOARD
+       NO CHARTS
+       ============================================================ -->
 
-  <ng-container *ngIf="role === 'finance_officer'">
+  <ng-container *ngIf="role === 'finance_officer' && !analyticsLoading">
 
-    <div class="role-placeholder-card">
+    <section class="dashboard-section mb-5">
 
-      <i class="fa-solid fa-coins"></i>
+      <div class="section-header mb-3">
+        <div>
+          <h4 class="section-title">
+            <i class="fa-solid fa-coins me-2"></i>
+            Finance Dashboard
+          </h4>
+          <p class="text-muted mb-0">
+            Monitor procurement value, purchase orders, financial activity and contracts.
+          </p>
+        </div>
+      </div>
 
-      <h4>Finance Dashboard</h4>
+      <div class="row g-4" *ngIf="procurementAnalytics">
 
-      <p>
-        Monitor procurement value, purchase orders,
-        financial activity and contracts.
-      </p>
+        <div class="col-xl-3 col-md-6">
+          <div class="card card-elevated dashboard-stat-card">
+            <div class="card-body">
+              <div class="stat-icon"><i class="fa-solid fa-file-invoice"></i></div>
+              <span class="stat-label">Purchase Orders</span>
+              <h3 class="stat-value">
+                {{ procurementAnalytics?.active_purchase_orders?.active ?? 0 }}
+              </h3>
+            </div>
+          </div>
+        </div>
 
-      <div class="placeholder-actions">
+        <div class="col-xl-3 col-md-6">
+          <div class="card card-elevated dashboard-stat-card">
+            <div class="card-body">
+              <div class="stat-icon"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+              <span class="stat-label">Procurement Value</span>
+              <h3 class="stat-value">
+                ₹{{ procurementAnalytics?.procurement_overview?.procurement_value ?? 0 | number:'1.0-0' }}
+              </h3>
+            </div>
+          </div>
+        </div>
 
-        <a routerLink="/purchase-orders">
-          Purchase Orders
-        </a>
+        <div class="col-xl-3 col-md-6">
+          <div class="card card-elevated dashboard-stat-card">
+            <div class="card-body">
+              <div class="stat-icon"><i class="fa-solid fa-file-lines"></i></div>
+              <span class="stat-label">Procurement Requests</span>
+              <h3 class="stat-value">
+                {{ procurementAnalytics?.procurement_overview?.total_requests ?? 0 }}
+              </h3>
+            </div>
+          </div>
+        </div>
 
-        <a routerLink="/procurement">
-          Procurement
-        </a>
-
-        <a routerLink="/contracts">
-          Contracts
-        </a>
+        <div class="col-xl-3 col-md-6">
+          <div class="card card-elevated dashboard-stat-card">
+            <div class="card-body">
+              <div class="stat-icon"><i class="fa-solid fa-file-contract"></i></div>
+              <span class="stat-label">Contracts</span>
+              <h3 class="stat-value">
+                {{ summary?.contracts?.total ?? 0 }}
+              </h3>
+            </div>
+          </div>
+        </div>
 
       </div>
 
-    </div>
+      <div class="row g-4 mt-2">
+
+        <div class="col-lg-6">
+          <div class="card card-elevated h-100">
+            <div class="card-body">
+              <h5>
+                <i class="fa-solid fa-money-bill-transfer me-2"></i>
+                Procurement Financial Activity
+              </h5>
+
+              <div class="audit-indicator">
+                <span class="text-muted">Total Procurement Value</span>
+                <strong>
+                  ₹{{ procurementAnalytics?.procurement_overview?.procurement_value ?? 0 | number:'1.0-0' }}
+                </strong>
+              </div>
+
+              <div class="audit-indicator">
+                <span class="text-muted">Pending Requests</span>
+                <strong>
+                  {{ procurementAnalytics?.procurement_overview?.pending_requests ?? 0 }}
+                </strong>
+              </div>
+
+              <div class="audit-indicator">
+                <span class="text-muted">Approved Requests</span>
+                <strong>
+                  {{ procurementAnalytics?.procurement_overview?.approved_requests ?? 0 }}
+                </strong>
+              </div>
+
+              <div class="audit-indicator">
+                <span class="text-muted">Completed Requests</span>
+                <strong>
+                  {{ procurementAnalytics?.procurement_overview?.completed_requests ?? 0 }}
+                </strong>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card card-elevated h-100">
+            <div class="card-body">
+              <h5>
+                <i class="fa-solid fa-file-invoice-dollar me-2"></i>
+                Purchase Order Status
+              </h5>
+
+              <div class="audit-indicator">
+                <span class="text-muted">Active Purchase Orders</span>
+                <strong>
+                  {{ procurementAnalytics?.active_purchase_orders?.active ?? 0 }}
+                </strong>
+              </div>
+
+              <div class="audit-indicator">
+                <span class="text-muted">Pending Orders</span>
+                <strong>
+                  {{ procurementAnalytics?.active_purchase_orders?.pending ?? 0 }}
+                </strong>
+              </div>
+
+              <div class="audit-indicator">
+                <span class="text-muted">Overdue Orders</span>
+                <strong>
+                  {{ procurementAnalytics?.active_purchase_orders?.overdue ?? 0 }}
+                </strong>
+              </div>
+
+              <div class="audit-indicator">
+                <span class="text-muted">Completion Rate</span>
+                <strong>
+                  {{ procurementAnalytics?.procurement_overview?.completion_rate ?? 0 }}%
+                </strong>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
 
   </ng-container>
 
 
-  <!-- ========================================================= -->
-  <!-- AUDITOR -->
-  <!-- ========================================================= -->
+  <!-- ============================================================
+       VENDOR DASHBOARD
+       ============================================================ -->
 
-  <ng-container *ngIf="role === 'auditor'">
+  <ng-container *ngIf="role === 'vendor' && !analyticsLoading">
 
-    <div class="role-placeholder-card">
+    <section class="dashboard-section mb-5">
 
-      <i class="fa-solid fa-user-check"></i>
+      <div class="section-header mb-3">
+        <div>
+          <h4 class="section-title">
+            <i class="fa-solid fa-store me-2"></i>
+            Vendor Dashboard
+          </h4>
+          <p class="text-muted mb-0">
+            Monitor your purchase orders, contracts, communication and vendor performance.
+          </p>
+        </div>
+      </div>
 
-      <h4>Audit Dashboard</h4>
+      <div class="row g-4" *ngIf="vendorDashboard">
 
-      <p>
-        Review procurement, vendor, compliance,
-        performance and risk information.
-      </p>
+        <div class="col-xl-3 col-md-6">
+          <div class="card card-elevated dashboard-stat-card">
+            <div class="card-body">
+              <div class="stat-icon"><i class="fa-solid fa-star"></i></div>
+              <span class="stat-label">Performance Score</span>
+              <h3 class="stat-value">
+                {{ vendorDashboard?.performance?.performance_score ?? 0 }}
+              </h3>
+            </div>
+          </div>
+        </div>
 
-      <div class="placeholder-actions">
+        <div class="col-xl-3 col-md-6">
+          <div class="card card-elevated dashboard-stat-card">
+            <div class="card-body">
+              <div class="stat-icon"><i class="fa-solid fa-shield-halved"></i></div>
+              <span class="stat-label">Reliability Score</span>
+              <h3 class="stat-value">
+                {{ vendorDashboard?.reliability?.reliability_score ?? 0 }}
+              </h3>
+            </div>
+          </div>
+        </div>
 
-        <a routerLink="/vendors">
-          Vendors
-        </a>
+        <div class="col-xl-3 col-md-6">
+          <div class="card card-elevated dashboard-stat-card">
+            <div class="card-body">
+              <div class="stat-icon"><i class="fa-solid fa-file-contract"></i></div>
+              <span class="stat-label">Contract Status</span>
+              <h3 class="stat-value">
+                {{ vendorDashboard?.contract_status?.status ?? 'N/A' }}
+              </h3>
+            </div>
+          </div>
+        </div>
 
-        <a routerLink="/procurement">
-          Procurement
-        </a>
-
-        <a routerLink="/analytics">
-          Analytics
-        </a>
+        <div class="col-xl-3 col-md-6">
+          <div class="card card-elevated dashboard-stat-card">
+            <div class="card-body">
+              <div class="stat-icon"><i class="fa-solid fa-box-open"></i></div>
+              <span class="stat-label">Orders</span>
+              <h3 class="stat-value">
+                {{ vendorDashboard?.order_history?.total_orders ?? 0 }}
+              </h3>
+            </div>
+          </div>
+        </div>
 
       </div>
 
-    </div>
+      <div class="row g-4 mt-1" *ngIf="vendorDashboard">
+
+        <div class="col-lg-6">
+          <div class="analytics-card">
+            <div class="analytics-card-header">
+              <div>
+                <h5>Vendor Performance</h5>
+                <p class="text-muted small mb-0">Your performance indicators.</p>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas #vendorPerformanceChart></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="analytics-card">
+            <div class="analytics-card-header">
+              <div>
+                <h5>Reliability Score</h5>
+                <p class="text-muted small mb-0">Supplier reliability assessment.</p>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas #vendorReliabilityChart></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="analytics-card">
+            <div class="analytics-card-header">
+              <div>
+                <h5>Contract Status</h5>
+                <p class="text-muted small mb-0">Current contract information.</p>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas #vendorContractChart></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="analytics-card">
+            <div class="analytics-card-header">
+              <div>
+                <h5>Order History</h5>
+                <p class="text-muted small mb-0">Purchase order activity.</p>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas #vendorOrderChart></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="analytics-card">
+            <div class="analytics-card-header">
+              <div>
+                <h5>Communication Activity</h5>
+                <p class="text-muted small mb-0">Vendor communication activity.</p>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas #vendorCommunicationChart></canvas>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
 
   </ng-container>
 

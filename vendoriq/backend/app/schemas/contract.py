@@ -4,8 +4,15 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
-from app.models.contract import ContractStatus, CertificationStatus
+from app.models.contract import (
+    ContractStatus,
+    CertificationStatus,
+)
 
+
+# ============================================================
+# CONTRACT SCHEMAS
+# ============================================================
 
 class ContractBase(BaseModel):
     vendor_id: UUID
@@ -30,7 +37,9 @@ class ContractUpdate(BaseModel):
 
 
 class ContractOut(ContractBase):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True
+    )
 
     id: int
     contract_number: str
@@ -39,6 +48,10 @@ class ContractOut(ContractBase):
     created_by_id: UUID
     created_at: datetime
 
+
+# ============================================================
+# CERTIFICATION SCHEMAS
+# ============================================================
 
 class CertificationBase(BaseModel):
     vendor_id: UUID
@@ -54,7 +67,9 @@ class CertificationCreate(CertificationBase):
 
 
 class CertificationOut(CertificationBase):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True
+    )
 
     id: int
     status: CertificationStatus

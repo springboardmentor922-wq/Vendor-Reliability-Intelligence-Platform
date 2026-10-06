@@ -60,7 +60,7 @@ def list_requests(
         query = query.filter(ProcurementRequest.priority == priority)
     if department:
         query = query.filter(ProcurementRequest.department == department)
-    if current_user.role not in (UserRole.ADMIN, UserRole.PROCUREMENT_MANAGER, UserRole.SUPPLY_CHAIN_MANAGER, UserRole.AUDITOR):
+    if current_user.role not in (UserRole.ADMIN, UserRole.PROCUREMENT_MANAGER, UserRole.SUPPLY_CHAIN_MANAGER, UserRole.AUDITOR, UserRole.FINANCE_OFFICER):
         query = query.filter(ProcurementRequest.requested_by_id == current_user.id)
     return query.order_by(ProcurementRequest.created_at.desc()).all()
 

@@ -1,0 +1,703 @@
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+
+  <div>
+    <h3 class="page-title mb-0">
+      <i class="fa-solid fa-comments me-2"></i>
+      Communication Activity
+    </h3>
+
+    <p class="text-muted mb-0 small">
+      Review vendor communications, notifications and activity history.
+    </p>
+  </div>
+
+  <div class="d-flex gap-2">
+
+    <button
+      class="btn btn-outline-primary"
+      type="button"
+      (click)="refresh()"
+      [disabled]="loading"
+    >
+      <i class="fa-solid fa-arrows-rotate me-1"></i>
+      Refresh
+    </button>
+
+    <button
+      class="btn btn-brand"
+      type="button"
+      (click)="toggleCompose()"
+    >
+      <i class="fa-solid fa-paper-plane me-1"></i>
+      {{ showCompose ? 'Cancel' : 'New Message' }}
+    </button>
+
+  </div>
+
+</div>
+
+
+<!-- ERROR -->
+
+<div
+  class="alert alert-danger"
+  *ngIf="error"
+>
+  <i class="fa-solid fa-circle-exclamation me-2"></i>
+  {{ error }}
+</div>
+
+
+<!-- SUMMARY CARDS -->
+
+<div class="row g-3 mb-4">
+
+  <div class="col-md-4">
+
+    <div class="card card-elevated p-3 h-100">
+
+      <div class="d-flex justify-content-between align-items-center">
+
+        <div>
+          <div class="text-muted small">
+            Total Messages
+          </div>
+
+          <h3 class="mb-0">
+            {{ messages.length }}
+          </h3>
+        </div>
+
+        <div class="text-primary fs-3">
+          <i class="fa-solid fa-envelope"></i>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div class="col-md-4">
+
+    <div class="card card-elevated p-3 h-100">
+
+      <div class="d-flex justify-content-between align-items-center">
+
+        <div>
+          <div class="text-muted small">
+            Unread Messages
+          </div>
+
+          <h3 class="mb-0">
+            {{ unreadMessages }}
+          </h3>
+        </div>
+
+        <div class="text-warning fs-3">
+          <i class="fa-solid fa-envelope-open-text"></i>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div class="col-md-4">
+
+    <div class="card card-elevated p-3 h-100">
+
+      <div class="d-flex justify-content-between align-items-center">
+
+        <div>
+          <div class="text-muted small">
+            Notifications
+          </div>
+
+          <h3 class="mb-0">
+            {{ unreadNotifications }}
+          </h3>
+        </div>
+
+        <div class="text-danger fs-3">
+          <i class="fa-solid fa-bell"></i>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- COMPOSE MESSAGE -->
+
+<div
+  class="card card-elevated p-3 mb-4"
+  *ngIf="showCompose"
+>
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+
+    <h5 class="mb-0">
+      <i class="fa-solid fa-pen-to-square me-2"></i>
+      New Message
+    </h5>
+
+  </div>
+
+  <form
+    [formGroup]="form"
+    (ngSubmit)="sendMessage()"
+  >
+
+    <div class="row g-3">
+
+      <div class="col-md-6">
+
+        <label class="form-label">
+          Receiver ID
+        </label>
+
+        <input
+          type="text"
+          class="form-control"
+          formControlName="receiver_id"
+          placeholder="Enter recipient user UUID"
+        />
+
+        <small class="text-muted">
+          Leave empty for a general message.
+        </small>
+
+      </div>
+
+
+      <div class="col-md-6">
+
+        <label class="form-label">
+          Category
+        </label>
+
+        <select
+          class="form-select"
+          formControlName="category"
+        >
+
+          <option value="general">
+            General
+          </option>
+
+          <option value="procurement">
+            Procurement
+          </option>
+
+          <option value="delivery">
+            Delivery
+          </option>
+
+          <option value="invoice">
+            Invoice
+          </option>
+
+          <option value="issue">
+            Issue
+          </option>
+
+          <option value="contract">
+            Contract
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div class="col-12">
+
+        <label class="form-label">
+          Subject
+        </label>
+
+        <input
+          type="text"
+          class="form-control"
+          formControlName="subject"
+          placeholder="Message subject"
+        />
+
+      </div>
+
+
+      <div class="col-12">
+
+        <label class="form-label">
+          Message
+        </label>
+
+        <textarea
+          class="form-control"
+          rows="4"
+          formControlName="body"
+          placeholder="Write your message..."
+        ></textarea>
+
+      </div>
+      <div class="col-12">
+    <label class="form-label">
+      Attachment
+    </label>
+
+    <input
+      type="file"
+      class="form-control"
+      (change)="onFileSelected($event)"
+      accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.txt,.csv,.zip"
+    />
+
+    <div
+      *ngIf="selectedFile"
+      class="alert alert-light border mt-2 d-flex justify-content-between align-items-center"
+    >
+      <span>
+        <i class="fa-solid fa-paperclip me-2"></i>
+        {{ selectedFile.name }}
+      </span>
+
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-danger"
+        (click)="removeSelectedFile()"
+      >
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+</div>
+
+    </div>
+
+
+    <button
+      type="submit"
+      class="btn btn-brand mt-3"
+      [disabled]="form.invalid || sending || uploadingFile"
+    >
+
+      <span
+        *ngIf="sending"
+        class="spinner-border spinner-border-sm me-2"
+      ></span>
+
+      <i
+        *ngIf="!sending"
+        class="fa-solid fa-paper-plane me-1"
+      ></i>
+
+      {{ uploadingFile ? 'Uploading File...' : (sending ? 'Sending...' : 'Send Message') }}
+
+    </button>
+
+  </form>
+
+</div>
+
+
+<!-- TABS -->
+
+<div class="card card-elevated mb-3">
+
+  <div class="card-body p-2">
+
+    <div class="d-flex flex-wrap gap-2">
+
+      <button
+        type="button"
+        class="btn"
+        [ngClass]="
+          activeTab === 'messages'
+            ? 'btn-primary'
+            : 'btn-outline-secondary'
+        "
+        (click)="setTab('messages')"
+      >
+        <i class="fa-solid fa-envelope me-1"></i>
+        Messages
+
+        <span
+          class="badge bg-light text-dark ms-1"
+          *ngIf="unreadMessages > 0"
+        >
+          {{ unreadMessages }}
+        </span>
+
+      </button>
+
+
+      <button
+        type="button"
+        class="btn"
+        [ngClass]="
+          activeTab === 'notifications'
+            ? 'btn-primary'
+            : 'btn-outline-secondary'
+        "
+        (click)="setTab('notifications')"
+      >
+        <i class="fa-solid fa-bell me-1"></i>
+        Notifications
+
+        <span
+          class="badge bg-light text-dark ms-1"
+          *ngIf="unreadNotifications > 0"
+        >
+          {{ unreadNotifications }}
+        </span>
+
+      </button>
+
+
+      <button
+        type="button"
+        class="btn"
+        [ngClass]="
+          activeTab === 'activity'
+            ? 'btn-primary'
+            : 'btn-outline-secondary'
+        "
+        (click)="setTab('activity')"
+      >
+        <i class="fa-solid fa-clock-rotate-left me-1"></i>
+        Activity History
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- LOADING -->
+
+<div
+  class="text-center py-5"
+  *ngIf="loading"
+>
+  <div class="spinner-border text-primary"></div>
+
+  <div class="text-muted mt-2">
+    Loading communication activity...
+  </div>
+</div>
+
+
+<!-- MESSAGES -->
+
+<div
+  class="card card-elevated"
+  *ngIf="!loading && activeTab === 'messages'"
+>
+
+  <div class="card-header bg-transparent">
+
+    <h5 class="mb-0">
+      Communication History
+    </h5>
+
+  </div>
+
+
+  <div class="card-body">
+
+    <div
+      *ngIf="!messages.length"
+      class="text-center text-muted py-5"
+    >
+
+      <i class="fa-solid fa-envelope-open-text fs-1 mb-3"></i>
+
+      <div>
+        No communication history found.
+      </div>
+
+    </div>
+
+
+    <div
+      class="list-group"
+      *ngIf="messages.length"
+    >
+
+      <div
+        class="list-group-item"
+        *ngFor="let message of messages"
+        [ngClass]="{
+          'bg-light': !message.is_read
+        }"
+      >
+
+        <div class="d-flex justify-content-between align-items-start gap-3">
+
+          <div class="flex-grow-1">
+
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+
+              <strong>
+                {{ message.subject || 'No Subject' }}
+              </strong>
+
+              <span
+                class="badge"
+                [ngClass]="directionClass(message)"
+              >
+                {{ messageDirection(message) }}
+              </span>
+
+              <span class="badge bg-secondary">
+                {{ categoryLabel(message.category) }}
+              </span>
+
+              <span
+                class="badge bg-warning text-dark"
+                *ngIf="!message.is_read && message.receiver_id === auth.currentUser()?.id"
+              >
+                Unread
+              </span>
+
+            </div>
+
+
+            <p class="mb-2 mt-2">
+              {{ message.body }}
+            </p>
+
+            <div
+              *ngIf="message.attachment_path"
+              class="mt-2"
+            >
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-primary"
+                (click)="downloadAttachment(message)"
+              >
+                <i class="fa-solid fa-paperclip me-1"></i>
+                Download Attachment
+              </button>
+
+              <span class="small text-muted ms-2">
+                {{ message.attachment_path.split('/').pop() }}
+              </span>
+            </div>
+
+
+            <div class="small text-muted">
+
+              <span>
+                <i class="fa-regular fa-clock me-1"></i>
+                {{ message.created_at | date:'medium' }}
+              </span>
+
+              <span
+                class="ms-3"
+                *ngIf="message.related_po_id"
+              >
+                <i class="fa-solid fa-box me-1"></i>
+                PO #{{ message.related_po_id }}
+              </span>
+
+              <span
+                class="ms-3"
+                *ngIf="message.related_procurement_id"
+              >
+                <i class="fa-solid fa-cart-shopping me-1"></i>
+                Request #{{ message.related_procurement_id }}
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <button
+            class="btn btn-sm btn-outline-primary"
+            type="button"
+            *ngIf="
+              !message.is_read &&
+              message.receiver_id === auth.currentUser()?.id
+            "
+            (click)="markRead(message)"
+          >
+            Mark Read
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- NOTIFICATIONS -->
+
+<div
+  class="card card-elevated"
+  *ngIf="!loading && activeTab === 'notifications'"
+>
+
+  <div class="card-header bg-transparent">
+
+    <h5 class="mb-0">
+      Notifications
+    </h5>
+
+  </div>
+
+
+  <div class="card-body p-0">
+
+    <div
+      *ngIf="!notifications.length"
+      class="text-center text-muted py-5"
+    >
+      No notifications found.
+    </div>
+
+
+    <div
+      class="list-group list-group-flush"
+      *ngIf="notifications.length"
+    >
+
+      <div
+        class="list-group-item"
+        *ngFor="let notification of notifications"
+        [ngClass]="notificationClass(notification)"
+      >
+
+        <div class="d-flex justify-content-between">
+
+          <div>
+
+            <strong>
+              {{ notification.title }}
+            </strong>
+
+            <div class="text-muted mt-1">
+              {{ notification.message || 'No additional details.' }}
+            </div>
+
+            <small class="text-muted">
+              {{ notification.created_at | date:'medium' }}
+            </small>
+
+          </div>
+
+          <span
+            class="badge bg-warning text-dark"
+            *ngIf="!notification.is_read"
+          >
+            Unread
+          </span>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ACTIVITY -->
+
+<div
+  class="card card-elevated"
+  *ngIf="!loading && activeTab === 'activity'"
+>
+
+  <div class="card-header bg-transparent">
+
+    <h5 class="mb-0">
+      Activity History
+    </h5>
+
+  </div>
+
+
+  <div class="card-body p-0">
+
+    <div
+      *ngIf="!activityLogs.length"
+      class="text-center text-muted py-5"
+    >
+      No activity records found.
+    </div>
+
+
+    <div
+      class="table-responsive"
+      *ngIf="activityLogs.length"
+    >
+
+      <table class="table table-hover align-middle mb-0">
+
+        <thead>
+
+          <tr>
+            <th>Action</th>
+            <th>Entity</th>
+            <th>Description</th>
+            <th>Date</th>
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          <tr
+            *ngFor="let log of activityLogs"
+          >
+
+            <td>
+              <span class="badge bg-primary">
+                {{ log.action }}
+              </span>
+            </td>
+
+            <td>
+              {{ log.entity_type || '-' }}
+              <span *ngIf="log.entity_id">
+                #{{ log.entity_id }}
+              </span>
+            </td>
+
+            <td>
+              {{ log.description || '-' }}
+            </td>
+
+            <td>
+              {{ log.created_at | date:'medium' }}
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+</div>

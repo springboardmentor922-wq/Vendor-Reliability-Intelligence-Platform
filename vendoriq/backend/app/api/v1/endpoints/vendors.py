@@ -120,9 +120,9 @@ def register_vendor(
     )
 
     for approver in approvers:
-        notify_user(
+        notify_event(
             db,
-            approver.id,
+            approver,
             "vendor_approval",
             "New Vendor Pending Approval",
             f"{vendor.company_name} has registered and is awaiting approval.",

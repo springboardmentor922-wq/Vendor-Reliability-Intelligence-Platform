@@ -7,7 +7,7 @@ export type UserRole =
   | 'auditor';
 
 export interface User {
-  id: number;
+  id: string;
   full_name: string;
   email: string;
   phone?: string;
@@ -25,10 +25,16 @@ export type VendorCategory =
   | 'logistics_partners'
   | 'maintenance_vendors';
 
-export type VendorStatus = 'pending' | 'approved' | 'rejected' | 'suspended' | 'active' | 'inactive';
+export type VendorStatus =
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+  | 'suspended'
+  | 'active'
+  | 'inactive';
 
 export interface VendorContact {
-  id?: number;
+  id?: string;
   vendor_id?: string;
   name: string;
   designation?: string;
@@ -39,6 +45,7 @@ export interface VendorContact {
 
 export interface Vendor {
   id: string;
+  user_id?: string;
   company_name: string;
   category: VendorCategory;
   registration_number?: string;
@@ -59,8 +66,20 @@ export interface Vendor {
   contacts: VendorContact[];
 }
 
-export type ProcurementStatus = 'pending' | 'approved' | 'rejected' | 'ordered' | 'delivered' | 'completed' | 'cancelled';
-export type ProcurementPriority = 'low' | 'medium' | 'high' | 'urgent';
+export type ProcurementStatus =
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+  | 'ordered'
+  | 'delivered'
+  | 'completed'
+  | 'cancelled';
+
+export type ProcurementPriority =
+  | 'low'
+  | 'medium'
+  | 'high'
+  | 'urgent';
 
 export interface ProcurementRequest {
   id: number;
@@ -75,14 +94,20 @@ export interface ProcurementRequest {
   priority: ProcurementPriority;
   required_date?: string;
   status: ProcurementStatus;
-  requested_by_id: number;
+  requested_by_id: string;
   approved_by_id?: string;
   approval_notes?: string;
   assigned_vendor_id?: string;
   created_at: string;
 }
 
-export type POStatus = 'pending' | 'approved' | 'ordered' | 'delivered' | 'completed' | 'cancelled';
+export type POStatus =
+  | 'pending'
+  | 'approved'
+  | 'ordered'
+  | 'delivered'
+  | 'completed'
+  | 'cancelled';
 
 export interface POItem {
   id?: number;
@@ -97,19 +122,23 @@ export interface PurchaseOrder {
   id: number;
   po_number: string;
   procurement_request_id?: number;
-  vendor_id: number;
+  vendor_id: string;
   status: POStatus;
   total_amount: number;
   order_date?: string;
   expected_delivery_date?: string;
   actual_delivery_date?: string;
   notes?: string;
-  created_by_id: number;
+  created_by_id: string;
   created_at: string;
   items: POItem[];
 }
 
-export type InvoiceStatus = 'pending' | 'paid' | 'overdue' | 'disputed';
+export type InvoiceStatus =
+  | 'pending'
+  | 'paid'
+  | 'overdue'
+  | 'disputed';
 
 export interface Invoice {
   id: number;
@@ -123,12 +152,17 @@ export interface Invoice {
   created_at: string;
 }
 
-export type ContractStatus = 'active' | 'expiring' | 'expired' | 'renewed' | 'terminated';
+export type ContractStatus =
+  | 'active'
+  | 'expiring'
+  | 'expired'
+  | 'renewed'
+  | 'terminated';
 
 export interface Contract {
   id: number;
   contract_number: string;
-  vendor_id: number;
+  vendor_id: string;
   title: string;
   description?: string;
   start_date: string;
@@ -136,14 +170,14 @@ export interface Contract {
   value: number;
   status: ContractStatus;
   file_path?: string;
-  created_by_id: number;
+  created_by_id: string;
   created_at: string;
 }
 
 export interface Message {
   id: number;
-  sender_id: number;
-  receiver_id?: number;
+  sender_id: string;
+  receiver_id?: string;
   vendor_id?: string;
   category: string;
   subject?: string;
@@ -156,8 +190,27 @@ export interface Message {
 }
 
 export interface DashboardSummary {
-  vendors: { total: number; pending: number; approved: number };
-  procurement: { total_requests: number; pending_requests: number; completed_requests: number; completion_rate: number };
-  purchase_orders: { total: number; active: number; total_value: number };
-  contracts: { total: number; expiring_soon: number };
+  vendors: {
+    total: number;
+    pending: number;
+    approved: number;
+  };
+
+  procurement: {
+    total_requests: number;
+    pending_requests: number;
+    completed_requests: number;
+    completion_rate: number;
+  };
+
+  purchase_orders: {
+    total: number;
+    active: number;
+    total_value: number;
+  };
+
+  contracts: {
+    total: number;
+    expiring_soon: number;
+  };
 }

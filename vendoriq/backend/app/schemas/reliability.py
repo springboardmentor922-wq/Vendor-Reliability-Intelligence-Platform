@@ -33,7 +33,8 @@ class VendorRankingEntry(BaseModel):
 
 
 class RiskSummary(BaseModel):
-    low: int
-    medium: int
-    high: int
-    not_yet_scored: int
+    total_vendors: int
+    low_risk: int
+    medium_risk: int
+    high_risk: int
+    critical_risk: int

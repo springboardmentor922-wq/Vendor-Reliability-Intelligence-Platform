@@ -1,940 +1,426 @@
-:root {
-  --brand-primary: #1e3a8a;
-  --brand-secondary: #2563eb;
-  --brand-accent: #0ea5e9;
-  --brand-bg: #f4f6f9;
-}
+:root{--brand-primary:#1e3a8a;--brand-secondary:#2563eb;--brand-accent:#06b6d4;--brand-bg:#f3f6fb;--ink-950:#0f172a;--ink-700:#334155;--ink-500:#64748b;--border:#e2e8f0;--surface:#fff;--shadow-sm:0 2px 8px rgba(15,23,42,.05);--shadow-md:0 8px 24px rgba(15,23,42,.08);--radius:14px}
+html,body{margin:0;padding:0;min-height:100%}body{background:radial-gradient(circle at top right,rgba(37,99,235,.055),transparent 30%),var(--brand-bg);color:var(--ink-950);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}*{box-sizing:border-box}
+.navbar-brand-vendoriq,.brand,.brand-name{color:var(--brand-primary)!important;font-weight:800;letter-spacing:-.02em}.brand{font-size:21px}.brand-name{font-size:21px}
+.app-header,.topbar{height:64px;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);box-shadow:0 2px 12px rgba(15,23,42,.045);z-index:1000}.app-header{position:fixed;top:0;left:0;right:0}.topbar{position:sticky;top:0}
+.app-layout{display:flex;min-height:100vh;padding-top:64px}.app-shell{min-height:100vh;display:flex;flex-direction:column}.app-body{display:flex;flex:1;min-height:calc(100vh - 64px)}
+.sidebar{width:250px;min-width:250px;background:linear-gradient(180deg,#0f172a 0%,#172554 52%,#1e3a8a 100%);border:0;min-height:calc(100vh - 64px);position:fixed;top:64px;left:0;bottom:0;overflow-y:auto;z-index:900;padding:16px 11px;box-shadow:8px 0 30px rgba(15,23,42,.1)}.app-body .sidebar{position:sticky;top:0;height:calc(100vh - 64px)}
+.sidebar .nav-link,.sidebar-link{display:flex;align-items:center;width:100%;padding:11px 13px;margin-bottom:5px;border-radius:11px;color:rgba(255,255,255,.72);text-decoration:none;font-size:14px;font-weight:500;position:relative;transition:.18s ease}.sidebar .nav-link:hover,.sidebar-link:hover{background:rgba(255,255,255,.095);color:#fff;transform:translateX(2px)}.sidebar .nav-link.active,.sidebar-link.active{background:linear-gradient(90deg,rgba(59,130,246,.30),rgba(59,130,246,.10));color:#fff;font-weight:700;box-shadow:inset 0 0 0 1px rgba(147,197,253,.12)}.sidebar .nav-link i,.sidebar-link i{width:23px;min-width:23px;text-align:center;margin-right:8px;color:#93c5fd}.sidebar .nav-link.active i,.sidebar-link.active i{color:#fff}
+.main-content{flex:1;min-width:0;margin-left:250px;padding:28px;min-height:calc(100vh - 64px);background:transparent}.app-body .main-content{margin-left:0}.page-title{font-weight:800;color:var(--ink-950);letter-spacing:-.025em}.text-muted{color:var(--ink-500)!important}
+.btn-brand{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff!important;border:0;border-radius:10px;padding:.58rem 1rem;font-weight:650;box-shadow:0 5px 14px rgba(37,99,235,.22)}.btn-brand:hover{background:linear-gradient(135deg,#1d4ed8,#1e40af);transform:translateY(-1px);box-shadow:0 8px 18px rgba(37,99,235,.28)}.btn{border-radius:9px;font-weight:600}.btn-outline-secondary{border-color:#cbd5e1;color:var(--ink-700);border-radius:9px}
+.card-elevated,.analytics-card,.analytics-kpi,.side-stat,.bottom-stat{border:1px solid var(--border);border-radius:var(--radius);background:rgba(255,255,255,.96);box-shadow:var(--shadow-sm);overflow:hidden}.card-elevated{transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}.card-elevated:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:#d7e0ec}.card-header{background:linear-gradient(180deg,#fff,#f8fafc);border-bottom:1px solid #edf2f7;font-weight:700;color:var(--ink-950)}
+.form-label{color:#334155;font-size:13px;font-weight:650;margin-bottom:6px}.form-control,.form-select{border:1px solid #d6dee9;border-radius:9px;min-height:40px;color:var(--ink-950);background:#fff}.form-control:focus,.form-select:focus{border-color:#60a5fa;box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+.table{--bs-table-bg:transparent;color:#334155;vertical-align:middle}.table thead th{color:#475569;background:#f8fafc;border-bottom:1px solid #dbe3ed;white-space:nowrap;font-size:12px;text-transform:uppercase;letter-spacing:.045em;font-weight:750}.table tbody td{border-color:#edf1f5;padding-top:12px;padding-bottom:12px}.table tbody tr{transition:background-color .15s ease}.table tbody tr:hover{background:#f8fbff}.badge-status,.badge,.status-badge{border-radius:999px;font-weight:650}
+.stat-card{border-radius:var(--radius);color:#fff;padding:1.25rem;border:0;box-shadow:var(--shadow-md);overflow:hidden;position:relative}.stat-card h3{font-weight:800;margin-bottom:0}.stat-card small{opacity:.82}.bg-grad-1{background:linear-gradient(135deg,#1e3a8a,#2563eb)}.bg-grad-2{background:linear-gradient(135deg,#047857,#10b981)}.bg-grad-3{background:linear-gradient(135deg,#c2410c,#f59e0b)}.bg-grad-4{background:linear-gradient(135deg,#6d28d9,#a855f7)}
+.analytics-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}.analytics-heading h4{font-weight:800;color:#0f172a;letter-spacing:-.02em}.analytics-kpi{min-height:120px;padding:20px;display:flex;align-items:center;gap:16px;transition:.2s ease}.analytics-kpi:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}.analytics-kpi span{display:block;color:#64748b;font-size:13px;margin-bottom:4px}.analytics-kpi strong{display:block;font-size:28px;line-height:1.1;color:#0f172a;font-weight:800}.analytics-kpi small{display:block;margin-top:5px;color:#64748b}.analytics-icon{width:52px;height:52px;flex:0 0 52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:21px}.icon-blue{background:#e8f0ff;color:#2563eb}.icon-green{background:#e8f8f0;color:#059669}.icon-red{background:#fff0f1;color:#dc2626}.icon-purple{background:#f2eaff;color:#7c3aed}
+.analytics-card{min-height:390px;padding:20px}.analytics-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}.analytics-card-header h5{margin:0;font-size:16px;font-weight:750;color:#172033}.analytics-card-header p{margin:5px 0 0;font-size:12px;color:#64748b}.chart-container{position:relative;width:100%;height:285px}.chart-large{height:320px}.analytics-side-panel{display:flex;flex-direction:column;gap:15px;height:100%}.side-stat{padding:20px;flex:1}.side-stat span{display:block;color:#64748b;font-size:13px}.side-stat strong{display:block;font-size:28px;color:#0f172a;margin-top:7px;font-weight:800}.bottom-stat{padding:22px;display:flex;align-items:center;gap:16px}.bottom-stat>i{width:48px;height:48px;flex:0 0 48px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:#eef2ff;color:#4f46e5;font-size:20px}.bottom-stat span{display:block;color:#64748b;font-size:13px}.bottom-stat strong{display:block;font-size:24px;color:#0f172a;font-weight:800}.dashboard-action{min-height:100px;padding:20px;transition:.2s ease}.dashboard-action:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}.dashboard-kpi{min-height:110px}
+/* Optional page theme helpers */
+.theme-admin{--module-accent:#7c3aed;--module-soft:#f3e8ff}.theme-procurement{--module-accent:#2563eb;--module-soft:#dbeafe}.theme-supply{--module-accent:#059669;--module-soft:#d1fae5}.theme-vendor{--module-accent:#0891b2;--module-soft:#cffafe}.theme-finance{--module-accent:#d97706;--module-soft:#fef3c7}.theme-auditor{--module-accent:#e11d48;--module-soft:#ffe4e6}.theme-risk{--module-accent:#dc2626;--module-soft:#fee2e2}.theme-contract{--module-accent:#7c3aed;--module-soft:#ede9fe}.theme-compliance{--module-accent:#ca8a04;--module-soft:#fef9c3}.theme-communication{--module-accent:#0891b2;--module-soft:#cffafe}.module-header{border-left:4px solid var(--module-accent,#2563eb);padding-left:14px}.module-accent{color:var(--module-accent,#2563eb)!important}.module-icon{width:44px;height:44px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;background:var(--module-soft,#dbeafe);color:var(--module-accent,#2563eb)}
+.message-card,.communication-card{border:1px solid var(--border);border-radius:14px;background:#fff;box-shadow:var(--shadow-sm);transition:.18s ease}.message-card:hover,.communication-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}.attachment-chip{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:9px;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:650}
+.alert{border-radius:11px}.modal-content{border:0;border-radius:16px;box-shadow:0 16px 40px rgba(15,23,42,.14);overflow:hidden}.modal-header{border-bottom:1px solid #edf2f7;background:linear-gradient(135deg,#f8fafc,#fff)}.modal-footer{border-top:1px solid #edf2f7}.progress{height:8px;border-radius:999px;background:#e8eef5}.progress-bar{border-radius:999px}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-track{background:#eef2f7}::-webkit-scrollbar-thumb{background:#c4cfdd;border-radius:10px}::-webkit-scrollbar-thumb:hover{background:#94a3b8}
+@media(max-width:992px){.sidebar{width:220px;min-width:220px}.main-content{margin-left:220px;padding:20px}}@media(max-width:768px){.sidebar{width:210px;min-width:210px}.main-content{margin-left:210px;padding:16px}.analytics-heading{flex-direction:column;align-items:flex-start;gap:12px}.analytics-card{min-height:350px}.chart-container{height:250px}.topbar-user>span:first-child{display:none}}@media(max-width:576px){.main-content{padding:12px}.analytics-kpi{padding:15px}.analytics-kpi strong{font-size:23px}.analytics-icon{width:44px;height:44px;flex-basis:44px}}
+/* ============================================================
+   VendorIQ — Premium Application Header
+   ============================================================ */
 
-body {
-  background-color: var(--brand-bg);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-}
-
-.navbar-brand-vendoriq {
-  font-weight: 700;
-  color: var(--brand-primary) !important;
-}
-
-.btn-brand {
-  background-color: var(--brand-secondary);
-  color: #fff;
-  border: none;
-}
-.btn-brand:hover {
-  background-color: var(--brand-primary);
-  color: #fff;
-}
-
-.card-elevated {
-  border: none;
-  border-radius: 0.75rem;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-}
-
-.page-title {
-  font-weight: 700;
-  color: var(--brand-primary);
-}
-
-.stat-card {
-  border-radius: 0.75rem;
-  color: #fff;
-  padding: 1.25rem;
-}
-.stat-card h3 { font-weight: 700; margin-bottom: 0; }
-.stat-card small { opacity: 0.85; }
-
-.bg-grad-1 { background: linear-gradient(135deg, #1e3a8a, #2563eb); }
-.bg-grad-2 { background: linear-gradient(135deg, #0f766e, #14b8a6); }
-.bg-grad-3 { background: linear-gradient(135deg, #b45309, #f59e0b); }
-.bg-grad-4 { background: linear-gradient(135deg, #7c3aed, #a855f7); }
-
-.badge-status {
-  text-transform: capitalize;
-  font-weight: 600;
-}
-
-.table thead th {
-  color: var(--brand-primary);
-  border-bottom-width: 2px;
-  white-space: nowrap;
-}
-
-.sidebar {
-  min-height: calc(100vh - 56px);
-  background: #fff;
-  border-right: 1px solid #e5e7eb;
-}
-.sidebar .nav-link {
-  color: #374151;
-  border-radius: 0.5rem;
-  margin-bottom: 2px;
-}
-.sidebar .nav-link.active, .sidebar .nav-link:hover {
-  background-color: #eef2ff;
-  color: var(--brand-primary);
-}
-
-/* =========================================================
-   VendorIQ Application Shell
-   ========================================================= */
-
-html,
-body {
-  margin: 0;
-  padding: 0;
-  min-height: 100%;
-}
-
-body {
-  background: #f4f6f9;
-}
-
-/* Top header */
-.app-header {
-  height: 64px;
-  background: #ffffff;
-  border-bottom: 1px solid #dee2e6;
-  position: fixed;
+.vendoriq-topbar {
+  height: 72px !important;
+  padding: 0 28px !important;
+  background: rgba(255, 255, 255, 0.97) !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: fixed !important;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 1000;
+  z-index: 1100;
 }
 
-.brand-name {
-  color: #21408f;
+/* ============================================================
+   BRAND
+   ============================================================ */
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.brand-logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: linear-gradient(
+    135deg,
+    #1e3a8a,
+    #2563eb
+  );
+
+  color: #ffffff;
+  font-size: 19px;
+
+  box-shadow:
+    0 6px 16px rgba(37, 99, 235, .22);
+}
+
+.topbar-brand .brand-name {
   font-size: 21px;
+  font-weight: 850;
+  line-height: 1.1;
+  color: #172554 !important;
 }
 
-/* Main two-column application layout */
-.app-layout {
-  display: flex;
-  min-height: 100vh;
-  padding-top: 64px;
-}
-
-/* Left sidebar */
-.sidebar {
-  width: 250px;
-  min-width: 250px;
-  background: #ffffff;
-  border-right: 1px solid #dee2e6;
-  min-height: calc(100vh - 64px);
-  position: fixed;
-  top: 64px;
-  left: 0;
-  bottom: 0;
-  overflow-y: auto;
-  z-index: 900;
-}
-
-/* Sidebar navigation */
-.sidebar .nav {
-  padding: 16px 10px;
-}
-
-.sidebar .nav-link {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  padding: 12px 14px;
-  margin-bottom: 4px;
-  border-radius: 8px;
-  color: #343a40;
-  text-decoration: none;
-  transition: background-color 0.15s ease, color 0.15s ease;
-}
-
-.sidebar .nav-link:hover {
-  background: #eef3ff;
-  color: #21408f;
-}
-
-.sidebar .nav-link.active {
-  background: #e8efff;
-  color: #21408f;
+.brand-subtitle {
+  margin-top: 2px;
+  font-size: 10px;
+  color: #64748b;
   font-weight: 600;
+  letter-spacing: .035em;
 }
 
-.sidebar .nav-link i {
-  width: 22px;
-  text-align: center;
-}
+/* ============================================================
+   TOP RIGHT USER AREA
+   ============================================================ */
 
-/* Right-side page content */
-.main-content {
-  flex: 1;
-  min-width: 0;
-  margin-left: 250px;
-  padding: 28px;
-  min-height: calc(100vh - 64px);
-  background: #f4f6f9;
-}
-
-/* Responsive layout */
-@media (max-width: 768px) {
-  .sidebar {
-    width: 210px;
-    min-width: 210px;
-  }
-
-  .main-content {
-    margin-left: 210px;
-    padding: 18px;
-  }
-}
-
-
-/* VendorIQ application shell */
-
-html,
-body {
-  margin: 0;
-  min-height: 100%;
-}
-
-body {
-  background: #f4f6f9;
-}
-
-.app-shell {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.topbar {
-  height: 64px;
+.vendoriq-topbar .topbar-user {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 24px;
-  background: #ffffff;
-  border-bottom: 1px solid #dee2e6;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
+  gap: 18px;
+  margin-left: auto;
 }
 
-.brand {
-  font-size: 20px;
+.topbar-user-info {
+  text-align: right;
+  padding-right: 17px;
+  border-right: 1px solid #e2e8f0;
+}
+
+.topbar-user-name {
+  color: #0f172a;
+  font-size: 15px;
+  line-height: 1.2;
+  font-weight: 750;
+}
+
+.topbar-role {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 4px;
+
+  color: #2563eb;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.topbar-role i {
+  font-size: 10px;
+}
+
+/* ============================================================
+   SIGNOUT BUTTON
+   ============================================================ */
+
+.topbar-signout {
+  height: 42px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  padding: 0 17px;
+
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+
+  background: #fff5f5;
+  color: #dc2626;
+
+  font-size: 13px;
+  font-weight: 750;
+
+  cursor: pointer;
+}
+
+.topbar-signout i {
+  font-size: 14px;
+}
+
+.topbar-signout:hover {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #ffffff;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 6px 15px rgba(220, 38, 38, .20);
+}
+
+/* ============================================================
+   SIDEBAR — UPDATED FOR 72PX HEADER
+   ============================================================ */
+
+.vendoriq-sidebar {
+  top: 72px !important;
+  height: calc(100vh - 72px) !important;
+  min-height: calc(100vh - 72px) !important;
+
+  padding: 18px 12px 14px !important;
+}
+
+/* ============================================================
+   SIDEBAR BRAND
+   ============================================================ */
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 9px 10px 17px;
+  margin-bottom: 8px;
+
+  border-bottom: 1px solid rgba(255,255,255,.10);
+}
+
+.sidebar-brand-icon {
+  width: 35px;
+  height: 35px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 10px;
+
+  background: rgba(96,165,250,.16);
+  color: #93c5fd;
+
+  font-size: 15px;
+}
+
+.sidebar-brand-title {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.sidebar-brand-subtitle {
+  color: rgba(255,255,255,.48);
+  font-size: 9px;
+  margin-top: 2px;
+  letter-spacing: .035em;
+}
+
+/* ============================================================
+   SIDEBAR SECTION
+   ============================================================ */
+
+.sidebar-section-title {
+  color: rgba(255,255,255,.38);
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: .12em;
+
+  padding:
+    13px 12px 8px;
+}
+
+/* ============================================================
+   SIDEBAR LINKS
+   ============================================================ */
+
+.vendoriq-sidebar .sidebar-link {
+  min-height: 44px;
+
+  padding: 10px 11px !important;
+
+  margin-bottom: 4px !important;
+
+  border-radius: 10px !important;
+
+  color: rgba(255,255,255,.67);
+
+  transition:
+    background .18s ease,
+    color .18s ease,
+    transform .18s ease;
+}
+
+.vendoriq-sidebar .sidebar-link:hover {
+  background: rgba(255,255,255,.09);
+  color: #ffffff;
+
+  transform: translateX(2px);
+}
+
+.vendoriq-sidebar .sidebar-link.active {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(59,130,246,.32),
+      rgba(59,130,246,.12)
+    );
+
+  color: #ffffff;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(147,197,253,.12);
+}
+
+.sidebar-link-icon {
+  width: 29px;
+  min-width: 29px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-link-icon i {
+  width: auto !important;
+  min-width: 0 !important;
+  margin-right: 0 !important;
+
+  color: #93c5fd;
+}
+
+.sidebar-link.active .sidebar-link-icon i {
+  color: #ffffff;
+}
+
+.sidebar-link-label {
+  flex: 1;
+  font-size: 13px;
+}
+
+.sidebar-active-arrow {
+  font-size: 9px;
+  color: #93c5fd;
+}
+
+/* ============================================================
+   SIDEBAR USER CARD
+   ============================================================ */
+
+.sidebar-user-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  margin: auto 3px 0;
+  padding: 12px 10px;
+
+  border-radius: 12px;
+
+  background: rgba(255,255,255,.075);
+  border: 1px solid rgba(255,255,255,.09);
+}
+
+.sidebar-user-avatar {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background:
+    linear-gradient(
+      135deg,
+      #60a5fa,
+      #2563eb
+    );
+
+  color: #ffffff;
+
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.sidebar-user-details {
+  min-width: 0;
+}
+
+.sidebar-user-name {
+  color: #ffffff;
+
+  font-size: 11px;
   font-weight: 700;
-  color: #24438f;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.topbar-user {
-  display: flex;
-  align-items: center;
-}
+.sidebar-user-role {
+  margin-top: 2px;
 
-.app-body {
-  display: flex;
-  flex: 1;
-  min-height: calc(100vh - 64px);
-}
+  color: #93c5fd;
 
-.sidebar {
-  width: 250px;
-  min-width: 250px;
-  background: #ffffff;
-  border-right: 1px solid #dee2e6;
-  padding: 18px 10px;
-}
-
-.sidebar-link {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  padding: 12px 14px;
-  margin-bottom: 4px;
-  border-radius: 8px;
-  color: #344054;
-  text-decoration: none;
-  transition: 0.15s ease;
-}
-
-.sidebar-link:hover {
-  background: #f1f5ff;
-  color: #24438f;
-}
-
-.sidebar-link.active {
-  background: #e9efff;
-  color: #24438f;
+  font-size: 10px;
   font-weight: 600;
 }
 
-.main-content {
-  flex: 1;
-  min-width: 0;
-  padding: 24px;
-  background: #f4f6f9;
+/* ============================================================
+   MAIN CONTENT — ACCOUNT FOR 72PX HEADER
+   ============================================================ */
+
+.app-layout {
+  padding-top: 72px !important;
 }
 
+.vendoriq-main {
+  min-height: calc(100vh - 72px);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
 @media (max-width: 768px) {
-  .sidebar {
-    width: 210px;
-    min-width: 210px;
+
+  .vendoriq-topbar {
+    height: 64px !important;
+    padding: 0 14px !important;
   }
 
-  .topbar {
-    padding: 0 12px;
-  }
-
-  .topbar-user > span:first-child {
+  .brand-subtitle {
     display: none;
   }
 
-  .main-content {
-    padding: 16px;
-  }
-}
-
-/* =========================================================
-   VENDORIQ ANALYTICS DASHBOARD
-   ========================================================= */
-
-.analytics-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.analytics-heading h4 {
-  font-weight: 700;
-  color: #1f2937;
-}
-
-.analytics-heading p {
-  font-size: 13px;
-}
-
-
-/* Analytics KPI */
-
-.analytics-kpi {
-  background: #ffffff;
-  border-radius: 14px;
-  padding: 20px;
-  min-height: 120px;
-
-  display: flex;
-  align-items: center;
-  gap: 16px;
-
-  border: 1px solid #e5e7eb;
-
-  box-shadow:
-    0 4px 12px rgba(15, 23, 42, 0.06);
-
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.analytics-kpi:hover {
-  transform: translateY(-2px);
-
-  box-shadow:
-    0 8px 20px rgba(15, 23, 42, 0.10);
-}
-
-.analytics-kpi span {
-  display: block;
-  color: #6b7280;
-  font-size: 13px;
-  margin-bottom: 4px;
-}
-
-.analytics-kpi strong {
-  display: block;
-  font-size: 28px;
-  line-height: 1.1;
-  color: #111827;
-}
-
-.analytics-kpi small {
-  display: block;
-  margin-top: 5px;
-  color: #6b7280;
-}
-
-
-/* Analytics Icons */
-
-.analytics-icon {
-  width: 52px;
-  height: 52px;
-
-  border-radius: 14px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  font-size: 21px;
-}
-
-.icon-blue {
-  background: #e8f0ff;
-  color: #2563eb;
-}
-
-.icon-green {
-  background: #e9f9f0;
-  color: #16a34a;
-}
-
-.icon-red {
-  background: #fff0f0;
-  color: #dc2626;
-}
-
-.icon-purple {
-  background: #f3eaff;
-  color: #7c3aed;
-}
-
-
-/* Chart Cards */
-
-.analytics-card {
-  background: #ffffff;
-
-  border-radius: 16px;
-
-  padding: 20px;
-
-  border: 1px solid #e5e7eb;
-
-  box-shadow:
-    0 4px 14px rgba(15, 23, 42, 0.06);
-
-  min-height: 390px;
-}
-
-.analytics-card-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-
-  margin-bottom: 12px;
-}
-
-.analytics-card-header h5 {
-  margin: 0;
-
-  font-size: 16px;
-  font-weight: 700;
-
-  color: #1f2937;
-}
-
-.analytics-card-header p {
-  margin: 5px 0 0;
-
-  font-size: 12px;
-
-  color: #6b7280;
-}
-
-
-/* Chart Area */
-
-.chart-container {
-  position: relative;
-
-  width: 100%;
-  height: 285px;
-}
-
-.chart-large {
-  height: 320px;
-}
-
-
-/* Side Statistics */
-
-.analytics-side-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-
-  height: 100%;
-}
-
-.side-stat {
-  background: #ffffff;
-
-  border: 1px solid #e5e7eb;
-
-  border-radius: 14px;
-
-  padding: 20px;
-
-  flex: 1;
-
-  box-shadow:
-    0 4px 12px rgba(15, 23, 42, 0.05);
-}
-
-.side-stat span {
-  display: block;
-
-  color: #6b7280;
-
-  font-size: 13px;
-}
-
-.side-stat span i {
-  margin-right: 7px;
-}
-
-.side-stat strong {
-  display: block;
-
-  font-size: 28px;
-
-  color: #111827;
-
-  margin-top: 7px;
-}
-
-.side-stat small {
-  color: #6b7280;
-}
-
-
-/* Bottom Statistics */
-
-.bottom-stat {
-  background: #ffffff;
-
-  border-radius: 14px;
-
-  border: 1px solid #e5e7eb;
-
-  padding: 22px;
-
-  display: flex;
-  align-items: center;
-
-  gap: 16px;
-
-  box-shadow:
-    0 4px 12px rgba(15, 23, 42, 0.05);
-}
-
-.bottom-stat > i {
-  width: 48px;
-  height: 48px;
-
-  border-radius: 12px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  background: #eef2ff;
-
-  color: #4f46e5;
-
-  font-size: 20px;
-}
-
-.bottom-stat span {
-  display: block;
-
-  color: #6b7280;
-
-  font-size: 13px;
-}
-
-.bottom-stat strong {
-  display: block;
-
-  font-size: 24px;
-
-  color: #111827;
-}
-
-.bottom-stat small {
-  color: #6b7280;
-}
-
-
-/* Quick Action Cards */
-
-.dashboard-action {
-  min-height: 100px;
-
-  padding: 20px;
-
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.dashboard-action:hover {
-  transform: translateY(-3px);
-
-  box-shadow:
-    0 8px 18px rgba(15, 23, 42, 0.10);
-}
-
-
-/* Main KPI */
-
-.dashboard-kpi {
-  min-height: 110px;
-}
-
-
-/* Responsive */
-
-@media (max-width: 768px) {
-
-  .analytics-heading {
-    flex-direction: column;
-
-    align-items: flex-start;
-
-    gap: 12px;
+  .topbar-user-info {
+    display: none;
   }
 
-  .analytics-card {
-    min-height: 350px;
+  .topbar-signout {
+    height: 38px;
+    padding: 0 12px;
   }
 
-  .chart-container {
-    height: 250px;
+  .topbar-signout span {
+    display: inline;
   }
 
-}
-
-
-/* =========================================================
-   VENDORIQ ANALYTICS DASHBOARD
-   ========================================================= */
-
-.analytics-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.analytics-heading h4 {
-  font-weight: 700;
-  color: #1f2937;
-}
-
-.analytics-heading p {
-  font-size: 13px;
-}
-
-
-/* Analytics KPI */
-
-.analytics-kpi {
-  background: #ffffff;
-  border-radius: 14px;
-  padding: 20px;
-  min-height: 120px;
-
-  display: flex;
-  align-items: center;
-  gap: 16px;
-
-  border: 1px solid #e5e7eb;
-
-  box-shadow:
-    0 4px 12px rgba(15, 23, 42, 0.06);
-
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.analytics-kpi:hover {
-  transform: translateY(-2px);
-
-  box-shadow:
-    0 8px 20px rgba(15, 23, 42, 0.10);
-}
-
-.analytics-kpi span {
-  display: block;
-  color: #6b7280;
-  font-size: 13px;
-  margin-bottom: 4px;
-}
-
-.analytics-kpi strong {
-  display: block;
-  font-size: 28px;
-  line-height: 1.1;
-  color: #111827;
-}
-
-.analytics-kpi small {
-  display: block;
-  margin-top: 5px;
-  color: #6b7280;
-}
-
-
-/* Analytics Icons */
-
-.analytics-icon {
-  width: 52px;
-  height: 52px;
-
-  border-radius: 14px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  font-size: 21px;
-}
-
-.icon-blue {
-  background: #e8f0ff;
-  color: #2563eb;
-}
-
-.icon-green {
-  background: #e9f9f0;
-  color: #16a34a;
-}
-
-.icon-red {
-  background: #fff0f0;
-  color: #dc2626;
-}
-
-.icon-purple {
-  background: #f3eaff;
-  color: #7c3aed;
-}
-
-
-/* Chart Cards */
-
-.analytics-card {
-  background: #ffffff;
-
-  border-radius: 16px;
-
-  padding: 20px;
-
-  border: 1px solid #e5e7eb;
-
-  box-shadow:
-    0 4px 14px rgba(15, 23, 42, 0.06);
-
-  min-height: 390px;
-}
-
-.analytics-card-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-
-  margin-bottom: 12px;
-}
-
-.analytics-card-header h5 {
-  margin: 0;
-
-  font-size: 16px;
-  font-weight: 700;
-
-  color: #1f2937;
-}
-
-.analytics-card-header p {
-  margin: 5px 0 0;
-
-  font-size: 12px;
-
-  color: #6b7280;
-}
-
-
-/* Chart Area */
-
-.chart-container {
-  position: relative;
-
-  width: 100%;
-  height: 285px;
-}
-
-.chart-large {
-  height: 320px;
-}
-
-
-/* Side Statistics */
-
-.analytics-side-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-
-  height: 100%;
-}
-
-.side-stat {
-  background: #ffffff;
-
-  border: 1px solid #e5e7eb;
-
-  border-radius: 14px;
-
-  padding: 20px;
-
-  flex: 1;
-
-  box-shadow:
-    0 4px 12px rgba(15, 23, 42, 0.05);
-}
-
-.side-stat span {
-  display: block;
-
-  color: #6b7280;
-
-  font-size: 13px;
-}
-
-.side-stat span i {
-  margin-right: 7px;
-}
-
-.side-stat strong {
-  display: block;
-
-  font-size: 28px;
-
-  color: #111827;
-
-  margin-top: 7px;
-}
-
-.side-stat small {
-  color: #6b7280;
-}
-
-
-/* Bottom Statistics */
-
-.bottom-stat {
-  background: #ffffff;
-
-  border-radius: 14px;
-
-  border: 1px solid #e5e7eb;
-
-  padding: 22px;
-
-  display: flex;
-  align-items: center;
-
-  gap: 16px;
-
-  box-shadow:
-    0 4px 12px rgba(15, 23, 42, 0.05);
-}
-
-.bottom-stat > i {
-  width: 48px;
-  height: 48px;
-
-  border-radius: 12px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  background: #eef2ff;
-
-  color: #4f46e5;
-
-  font-size: 20px;
-}
-
-.bottom-stat span {
-  display: block;
-
-  color: #6b7280;
-
-  font-size: 13px;
-}
-
-.bottom-stat strong {
-  display: block;
-
-  font-size: 24px;
-
-  color: #111827;
-}
-
-.bottom-stat small {
-  color: #6b7280;
-}
-
-
-/* Quick Action Cards */
-
-.dashboard-action {
-  min-height: 100px;
-
-  padding: 20px;
-
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.dashboard-action:hover {
-  transform: translateY(-3px);
-
-  box-shadow:
-    0 8px 18px rgba(15, 23, 42, 0.10);
-}
-
-
-/* Main KPI */
-
-.dashboard-kpi {
-  min-height: 110px;
-}
-
-
-/* Responsive */
-
-@media (max-width: 768px) {
-
-  .analytics-heading {
-    flex-direction: column;
-
-    align-items: flex-start;
-
-    gap: 12px;
+  .vendoriq-sidebar {
+    top: 64px !important;
+    height: calc(100vh - 64px) !important;
   }
 
-  .analytics-card {
-    min-height: 350px;
+  .vendoriq-main {
+    min-height: calc(100vh - 64px);
   }
-
-  .chart-container {
-    height: 250px;
-  }
-
 }
-

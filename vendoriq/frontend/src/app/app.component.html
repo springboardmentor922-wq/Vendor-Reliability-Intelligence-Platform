@@ -1,80 +1,195 @@
-<ng-container *ngIf="auth.isAuthenticated(); else authOnly">
+<!-- ============================================================
+     VendorIQ Application Shell
+     ============================================================ -->
 
-  <div class="app-shell">
+<div
+  class="app-shell"
+  *ngIf="auth.currentUser(); else authPages"
+>
 
-    <!-- TOPBAR -->
-    <header class="topbar">
+  <!-- ==========================================================
+       TOP HEADER
+       ========================================================== -->
 
-      <div class="brand">
-        <i class="fa-solid fa-boxes-stacked me-2"></i>
-        VendorIQ
+  <header class="topbar vendoriq-topbar">
+
+    <!-- BRAND -->
+    <div class="topbar-brand">
+
+      <div class="brand-logo">
+        <i class="fa-solid fa-shield-halved"></i>
       </div>
 
-      <div class="topbar-user">
+      <div class="brand-text">
+        <div class="brand-name">
+          VendorIQ
+        </div>
 
-        <span class="me-2">
-          {{ auth.currentUser()?.full_name }}
-        </span>
-
-        <span class="badge bg-secondary me-3">
-          {{ roleLabel }}
-        </span>
-
-        <button
-          type="button"
-          class="btn btn-outline-danger btn-sm"
-          (click)="logout()">
-
-          <i class="fa-solid fa-right-from-bracket me-1"></i>
-          Logout
-
-        </button>
-
+        <div class="brand-subtitle">
+          Vendor Intelligence Platform
+        </div>
       </div>
-
-    </header>
-
-
-    <div class="app-body">
-
-      <!-- SIDEBAR -->
-      <aside class="sidebar">
-
-        <a
-          *ngFor="let item of navItems()"
-          [routerLink]="item.path"
-          routerLinkActive="active"
-          [routerLinkActiveOptions]="{
-            exact: item.path === '/dashboard'
-          }"
-          class="sidebar-link">
-
-          <i class="fa-solid {{ item.icon }} me-2"></i>
-
-          <span>
-            {{ item.label }}
-          </span>
-
-        </a>
-
-      </aside>
-
-
-      <!-- MAIN CONTENT -->
-      <main class="main-content">
-
-        <router-outlet></router-outlet>
-
-      </main>
 
     </div>
 
+
+    <!-- TOP RIGHT USER AREA -->
+    <div class="topbar-user">
+
+      <div class="topbar-user-info">
+
+        <div class="topbar-user-name">
+          {{ auth.currentUser()?.full_name || 'User' }}
+        </div>
+
+        <div class="topbar-role">
+          <i class="fa-solid fa-circle-check me-1"></i>
+
+          {{ roleLabel(auth.currentUser()?.role) }}
+        </div>
+
+      </div>
+
+
+      <!-- SIGN OUT -->
+      <button
+        type="button"
+        class="topbar-signout"
+        (click)="logout()"
+        title="Sign out"
+      >
+        <i class="fa-solid fa-right-from-bracket"></i>
+        <span>Signout</span>
+      </button>
+
+    </div>
+
+  </header>
+
+
+  <!-- ==========================================================
+       APPLICATION BODY
+       ========================================================== -->
+
+  <div class="app-body">
+
+
+    <!-- ========================================================
+         SIDEBAR
+         ======================================================== -->
+
+    <aside class="sidebar vendoriq-sidebar">
+
+      <!-- SIDEBAR BRAND -->
+      <div class="sidebar-brand">
+
+        <div class="sidebar-brand-icon">
+          <i class="fa-solid fa-cubes"></i>
+        </div>
+
+        <div>
+          <div class="sidebar-brand-title">
+            VendorIQ
+          </div>
+
+          <div class="sidebar-brand-subtitle">
+            Management Console
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- NAVIGATION -->
+      <nav class="nav flex-column">
+
+        <div class="sidebar-section-title">
+          MAIN MENU
+        </div>
+
+        <a
+          *ngFor="let item of navItems()"
+          href="javascript:void(0)"
+          class="nav-link sidebar-link"
+          [class.active]="
+            router.url === item.path ||
+            router.url.startsWith(item.path + '/')
+          "
+          (click)="navigate(item.path)"
+        >
+
+          <span class="sidebar-link-icon">
+            <i
+              class="fa-solid"
+              [ngClass]="item.icon"
+            ></i>
+          </span>
+
+          <span class="sidebar-link-label">
+            {{ item.label }}
+          </span>
+
+          <i
+            *ngIf="
+              router.url === item.path ||
+              router.url.startsWith(item.path + '/')
+            "
+            class="fa-solid fa-chevron-right sidebar-active-arrow"
+          ></i>
+
+        </a>
+
+      </nav>
+
+
+      <!-- SIDEBAR USER CARD -->
+      <div class="sidebar-user-card">
+
+        <div class="sidebar-user-avatar">
+          {{
+            (auth.currentUser()?.full_name || 'U')
+              .charAt(0)
+              .toUpperCase()
+          }}
+        </div>
+
+        <div class="sidebar-user-details">
+
+          <div class="sidebar-user-name">
+            {{ auth.currentUser()?.full_name || 'User' }}
+          </div>
+
+          <div class="sidebar-user-role">
+            {{ roleLabel(auth.currentUser()?.role) }}
+          </div>
+
+        </div>
+
+      </div>
+
+    </aside>
+
+
+    <!-- ========================================================
+         MAIN CONTENT
+         ======================================================== -->
+
+    <main class="main-content vendoriq-main">
+
+      <router-outlet></router-outlet>
+
+    </main>
+
   </div>
 
-</ng-container>
+</div>
 
 
-<ng-template #authOnly>
+<!-- ============================================================
+     LOGIN / REGISTER PAGES
+     ============================================================ -->
+
+<ng-template #authPages>
 
   <router-outlet></router-outlet>
 

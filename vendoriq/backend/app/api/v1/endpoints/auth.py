@@ -6,18 +6,42 @@ from app.core.security import verify_password, get_password_hash, create_access_
 from app.core.deps import get_current_user
 from app.core.utils import log_activity
 from app.db.session_dep import get_db
-from app.models.user import User
+from app.models.user import User, UserRole
+from app.models.vendor import (
+    Vendor,
+    VendorCategory,
+    VendorStatus,
+)
 from app.schemas.token import Token
 from app.schemas.user import RegisterRequest, UserOut, LoginRequest
 
 router = APIRouter()
 
 
-@router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
-def register(payload: RegisterRequest, db: Session = Depends(get_db)):
-    existing = db.query(User).filter(User.email == payload.email).first()
+@router.post(
+    "/register",
+    response_model=UserOut,
+    status_code=status.HTTP_201_CREATED
+)
+def register(
+    payload: RegisterRequest,
+    db: Session = Depends(get_db)
+):
+    existing = (
+        db.query(User)
+        .filter(User.email == payload.email)
+        .first()
+    )
+
     if existing:
-        raise HTTPException(status_code=400, detail="A user with this email already exists")
+        raise HTTPException(
+            status_code=400,
+            detail="A user with this email already exists"
+        )
+
+    # ---------------------------------------------------------
+    # CREATE USER
+    # ---------------------------------------------------------
 
     user = User(
         full_name=payload.full_name,
@@ -27,10 +51,46 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         department=payload.department,
         role=payload.role,
     )
+
     db.add(user)
+    db.flush()
+
+    # ---------------------------------------------------------
+    # CREATE VENDOR PROFILE FOR VENDOR USERS
+    # ---------------------------------------------------------
+
+    if payload.role == UserRole.VENDOR:
+
+        vendor = Vendor(
+            user_id=user.id,
+            company_name=payload.full_name,
+            category=VendorCategory.SERVICE,
+            contact_person=payload.full_name,
+            email=payload.email,
+            phone=payload.phone or "Not provided",
+            status=VendorStatus.PENDING,
+            is_active=True,
+            rating=0.0,
+        )
+
+        db.add(vendor)
+
+    # ---------------------------------------------------------
+    # COMMIT EVERYTHING
+    # ---------------------------------------------------------
+
     db.commit()
     db.refresh(user)
-    log_activity(db, user.id, "user_registered", "user", user.id, f"User {user.email} registered")
+
+    log_activity(
+        db,
+        user.id,
+        "user_registered",
+        "user",
+        user.id,
+        f"User {user.email} registered"
+    )
+
     return user
 
 

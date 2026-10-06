@@ -1,0 +1,535 @@
+<div class="container-fluid py-4">
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="mb-1">
+        <i class="fa-solid fa-shield-halved me-2"></i>
+        Risk Review
+      </h3>
+
+      <p class="text-muted mb-0">
+        Monitor vendor reliability, procurement risk and risk trends.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="btn btn-outline-primary"
+      (click)="loadRiskReview()">
+
+      <i class="fa-solid fa-arrows-rotate me-1"></i>
+      Refresh
+    </button>
+  </div>
+
+
+  <!-- Loading -->
+  <div
+    class="text-center py-5"
+    *ngIf="loading">
+
+    <div class="spinner-border text-primary"></div>
+
+    <p class="text-muted mt-2">
+      Loading risk information...
+    </p>
+  </div>
+
+
+  <!-- Error -->
+  <div
+    class="alert alert-danger"
+    *ngIf="!loading && error">
+
+    <i class="fa-solid fa-circle-exclamation me-2"></i>
+    {{ error }}
+
+  </div>
+
+
+  <!-- Risk Review -->
+  <div
+    *ngIf="!loading && !error && riskData">
+
+    <!-- KPI CARDS -->
+    <div class="row g-3 mb-4">
+
+      <!-- Reliability -->
+      <div class="col-xl col-md-4">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <small class="text-muted">
+              Reliability
+            </small>
+
+            <h2
+              class="fw-bold mt-2 mb-0"
+              [ngClass]="scoreClass(averageReliability)">
+
+              {{ averageReliability | number:'1.0-2' }}
+
+            </h2>
+
+            <small class="text-muted">
+              Average reliability score
+            </small>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Low -->
+      <div class="col-xl col-md-4">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+
+            <small class="text-muted">
+              Low Risk
+            </small>
+
+            <h2 class="fw-bold mt-2 mb-0 text-success">
+              {{ lowRiskVendors.length }}
+            </h2>
+
+            <small class="text-muted">
+              {{ riskPercentage(lowRiskVendors.length) }}% of vendors
+            </small>
+
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Medium -->
+      <div class="col-xl col-md-4">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+
+            <small class="text-muted">
+              Medium Risk
+            </small>
+
+            <h2 class="fw-bold mt-2 mb-0 text-warning">
+              {{ mediumRiskVendors.length }}
+            </h2>
+
+            <small class="text-muted">
+              {{ riskPercentage(mediumRiskVendors.length) }}% of vendors
+            </small>
+
+          </div>
+        </div>
+      </div>
+
+
+      <!-- High -->
+      <div class="col-xl col-md-4">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+
+            <small class="text-muted">
+              High Risk
+            </small>
+
+            <h2 class="fw-bold mt-2 mb-0 text-danger">
+              {{ highRiskVendors.length }}
+            </h2>
+
+            <small class="text-muted">
+              {{ riskPercentage(highRiskVendors.length) }}% of vendors
+            </small>
+
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Trend -->
+      <div class="col-xl col-md-4">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+
+            <small class="text-muted">
+              Risk Trend
+            </small>
+
+            <div class="mt-2">
+
+              <span class="badge bg-success me-1">
+                {{ improvingCount }} Improving
+              </span>
+
+              <span class="badge bg-warning text-dark me-1">
+                {{ stableCount }} Stable
+              </span>
+
+              <span class="badge bg-danger">
+                {{ decliningCount }} Declining
+              </span>
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- RISK DISTRIBUTION -->
+    <div class="card shadow-sm border-0 mb-4">
+
+      <div class="card-header bg-white">
+        <h5 class="mb-0">
+          <i class="fa-solid fa-chart-pie me-2"></i>
+          Risk Distribution
+        </h5>
+      </div>
+
+      <div class="card-body">
+
+        <div class="table-responsive">
+
+          <table class="table table-hover align-middle mb-0">
+
+            <thead>
+              <tr>
+                <th>Risk Level</th>
+                <th>Vendors</th>
+                <th>Percentage</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              <tr>
+                <td>
+                  <span class="badge bg-success">
+                    Low
+                  </span>
+                </td>
+
+                <td>
+                  {{ lowRiskVendors.length }}
+                </td>
+
+                <td>
+                  {{ riskPercentage(lowRiskVendors.length) }}%
+                </td>
+
+                <td class="text-success">
+                  <i class="fa-solid fa-check me-1"></i>
+                  Low risk
+                </td>
+              </tr>
+
+
+              <tr>
+                <td>
+                  <span class="badge bg-warning text-dark">
+                    Medium
+                  </span>
+                </td>
+
+                <td>
+                  {{ mediumRiskVendors.length }}
+                </td>
+
+                <td>
+                  {{ riskPercentage(mediumRiskVendors.length) }}%
+                </td>
+
+                <td class="text-warning">
+                  <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                  Monitor
+                </td>
+              </tr>
+
+
+              <tr>
+                <td>
+                  <span class="badge bg-danger">
+                    High
+                  </span>
+                </td>
+
+                <td>
+                  {{ highRiskVendors.length }}
+                </td>
+
+                <td>
+                  {{ riskPercentage(highRiskVendors.length) }}%
+                </td>
+
+                <td class="text-danger">
+                  <i class="fa-solid fa-circle-exclamation me-1"></i>
+                  Attention required
+                </td>
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- VENDOR RELIABILITY -->
+    <div class="card shadow-sm border-0 mb-4">
+
+      <div class="card-header bg-white">
+
+        <h5 class="mb-0">
+          <i class="fa-solid fa-ranking-star me-2"></i>
+          Vendor Reliability
+        </h5>
+
+      </div>
+
+      <div class="card-body p-0">
+
+        <div class="table-responsive">
+
+          <table class="table table-hover align-middle mb-0">
+
+            <thead>
+              <tr>
+                <th>Vendor</th>
+                <th>Reliability Score</th>
+                <th>Risk Level</th>
+                <th>Trend</th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              <tr *ngFor="let vendor of allRiskVendors">
+
+                <td class="fw-semibold">
+                  {{ vendor.company_name }}
+                </td>
+
+                <td>
+                  <span
+                    class="fw-bold"
+                    [ngClass]="scoreClass(vendor.score)">
+
+                    {{ vendor.score }}
+
+                  </span>
+                </td>
+
+                <td>
+
+                  <span
+                    class="badge"
+                    [ngClass]="
+                      riskClass(
+                        lowRiskVendors.includes(vendor)
+                          ? 'low'
+                          : mediumRiskVendors.includes(vendor)
+                            ? 'medium'
+                            : 'high'
+                      )
+                    ">
+
+                    {{
+                      lowRiskVendors.includes(vendor)
+                        ? 'Low'
+                        : mediumRiskVendors.includes(vendor)
+                          ? 'Medium'
+                          : 'High'
+                    }}
+
+                  </span>
+
+                </td>
+
+                <td
+                  [ngClass]="trendClass(vendor.trend)">
+
+                  <i
+                    class="fa-solid me-1"
+                    [ngClass]="
+                      vendor.trend?.toLowerCase() === 'improving'
+                        ? 'fa-arrow-trend-up'
+                        : vendor.trend?.toLowerCase() === 'declining'
+                          ? 'fa-arrow-trend-down'
+                          : 'fa-minus'
+                    ">
+                  </i>
+
+                  {{ vendor.trend ?? 'Stable' }}
+
+                </td>
+
+              </tr>
+
+
+              <tr
+                *ngIf="totalRiskVendors === 0">
+
+                <td
+                  colspan="4"
+                  class="text-center text-muted py-4">
+
+                  No vendor reliability data available.
+
+                </td>
+
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- RISK TREND -->
+    <div class="card shadow-sm border-0 mb-4">
+
+      <div class="card-header bg-white">
+
+        <h5 class="mb-0">
+          <i class="fa-solid fa-chart-line me-2"></i>
+          Risk Trend
+        </h5>
+
+      </div>
+
+      <div class="card-body">
+
+        <div class="row g-3">
+
+          <div class="col-md-4">
+
+            <div class="border rounded p-3">
+
+              <small class="text-muted">
+                Improving
+              </small>
+
+              <h3 class="text-success fw-bold mb-0">
+                {{ improvingCount }}
+              </h3>
+
+            </div>
+
+          </div>
+
+
+          <div class="col-md-4">
+
+            <div class="border rounded p-3">
+
+              <small class="text-muted">
+                Stable
+              </small>
+
+              <h3 class="text-warning fw-bold mb-0">
+                {{ stableCount }}
+              </h3>
+
+            </div>
+
+          </div>
+
+
+          <div class="col-md-4">
+
+            <div class="border rounded p-3">
+
+              <small class="text-muted">
+                Declining
+              </small>
+
+              <h3 class="text-danger fw-bold mb-0">
+                {{ decliningCount }}
+              </h3>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- RISK ALERTS -->
+    <div class="card shadow-sm border-0 mb-4">
+
+      <div class="card-header bg-white">
+
+        <h5 class="mb-0">
+          <i class="fa-solid fa-bell me-2"></i>
+          Risk Alerts
+        </h5>
+
+      </div>
+
+      <div class="card-body">
+
+        <div
+          *ngIf="
+            riskData.alerts &&
+            riskData.alerts.length > 0
+          ">
+
+          <div
+            class="alert alert-warning mb-2"
+            *ngFor="let alert of riskData.alerts">
+
+            <i class="fa-solid fa-triangle-exclamation me-2"></i>
+
+            {{ alert }}
+
+          </div>
+
+        </div>
+
+
+        <div
+          class="alert alert-success mb-0"
+          *ngIf="
+            !riskData.alerts ||
+            riskData.alerts.length === 0
+          ">
+
+          <i class="fa-solid fa-check me-2"></i>
+
+          No active vendor risk alerts.
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- No Data -->
+  <div
+    class="alert alert-info"
+    *ngIf="
+      !loading &&
+      !error &&
+      !riskData
+    ">
+
+    No vendor risk information is currently available.
+
+  </div>
+
+</div>

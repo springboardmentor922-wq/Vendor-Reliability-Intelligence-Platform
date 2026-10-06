@@ -16,9 +16,15 @@ from app.models.user import User
 from app.models.vendor import Vendor, VendorStatus
 from app.models.procurement import ProcurementRequest, ProcurementStatus
 from app.models.purchase_order import PurchaseOrder, POStatus
-from app.models.contract import Contract, ContractStatus, Certification, CertificationStatus
+from app.models.contract import (
+    Contract,
+    ContractStatus,
+    Certification,
+    CertificationStatus,
+)
 from app.models.communication import Message
 from app.services import reliability_service, performance_service
+
 
 router = APIRouter()
 
@@ -32,11 +38,18 @@ def procurement_dashboard(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_analytics),
 ):
-    """Procurement dashboard with live procurement, PO,
-    vendor performance and delivery metrics."""
+    """Procurement dashboard with live metrics and detailed records."""
+
+    from datetime import datetime
+
+    # ========================================================
+    # PROCUREMENT REQUEST METRICS
+    # ========================================================
 
     total_requests = (
-        db.query(func.count(ProcurementRequest.id)).scalar() or 0
+        db.query(func.count(ProcurementRequest.id))
+        .scalar()
+        or 0
     )
 
     by_status = dict(
@@ -48,13 +61,23 @@ def procurement_dashboard(
         .all()
     )
 
-    completed = by_status.get(ProcurementStatus.COMPLETED, 0)
+    completed = by_status.get(
+        ProcurementStatus.COMPLETED,
+        0,
+    )
 
     completion_rate = (
-        round((completed / total_requests) * 100, 2)
+        round(
+            (completed / total_requests) * 100,
+            2,
+        )
         if total_requests
         else 0.0
     )
+
+    # ========================================================
+    # PROCUREMENT VALUE
+    # ========================================================
 
     procurement_value = (
         db.query(
@@ -62,19 +85,29 @@ def procurement_dashboard(
                 func.sum(PurchaseOrder.total_amount),
                 0.0,
             )
-        ).scalar()
+        )
+        .scalar()
         or 0.0
     )
 
+    # ========================================================
+    # PURCHASE ORDER METRICS
+    # ========================================================
+
     total_pos = (
-        db.query(func.count(PurchaseOrder.id)).scalar() or 0
+        db.query(func.count(PurchaseOrder.id))
+        .scalar()
+        or 0
     )
 
     active_pos = (
         db.query(func.count(PurchaseOrder.id))
         .filter(
             PurchaseOrder.status.in_(
-                [POStatus.APPROVED, POStatus.ORDERED]
+                [
+                    POStatus.APPROVED,
+                    POStatus.ORDERED,
+                ]
             )
         )
         .scalar()
@@ -84,7 +117,8 @@ def procurement_dashboard(
     pending_pos = (
         db.query(func.count(PurchaseOrder.id))
         .filter(
-            PurchaseOrder.status == POStatus.PENDING
+            PurchaseOrder.status
+            == POStatus.PENDING
         )
         .scalar()
         or 0
@@ -93,22 +127,25 @@ def procurement_dashboard(
     in_transit_pos = (
         db.query(func.count(PurchaseOrder.id))
         .filter(
-            PurchaseOrder.status == POStatus.ORDERED
+            PurchaseOrder.status
+            == POStatus.ORDERED
         )
         .scalar()
         or 0
     )
 
-    from datetime import datetime
-
     overdue_pos = (
         db.query(func.count(PurchaseOrder.id))
         .filter(
             PurchaseOrder.status.in_(
-                [POStatus.ORDERED, POStatus.APPROVED]
+                [
+                    POStatus.ORDERED,
+                    POStatus.APPROVED,
+                ]
             ),
             PurchaseOrder.expected_delivery_date.isnot(None),
-            PurchaseOrder.expected_delivery_date < datetime.utcnow(),
+            PurchaseOrder.expected_delivery_date
+            < datetime.utcnow(),
         )
         .scalar()
         or 0
@@ -120,15 +157,23 @@ def procurement_dashboard(
                 func.sum(PurchaseOrder.total_amount),
                 0.0,
             )
-        ).scalar()
+        )
+        .scalar()
         or 0.0
     )
+
+    # ========================================================
+    # DELIVERY METRICS
+    # ========================================================
 
     delivered_orders = (
         db.query(PurchaseOrder)
         .filter(
             PurchaseOrder.status.in_(
-                [POStatus.DELIVERED, POStatus.COMPLETED]
+                [
+                    POStatus.DELIVERED,
+                    POStatus.COMPLETED,
+                ]
             ),
             PurchaseOrder.actual_delivery_date.isnot(None),
             PurchaseOrder.expected_delivery_date.isnot(None),
@@ -139,7 +184,8 @@ def procurement_dashboard(
     on_time = sum(
         1
         for order in delivered_orders
-        if order.actual_delivery_date <= order.expected_delivery_date
+        if order.actual_delivery_date
+        <= order.expected_delivery_date
     )
 
     delayed = len(delivered_orders) - on_time
@@ -147,32 +193,59 @@ def procurement_dashboard(
     pending_delivery = (
         db.query(func.count(PurchaseOrder.id))
         .filter(
-            PurchaseOrder.status == POStatus.ORDERED
+            PurchaseOrder.status
+            == POStatus.ORDERED
         )
         .scalar()
         or 0
     )
 
+    delivery_rate = (
+        round(
+            (on_time / len(delivered_orders)) * 100,
+            2,
+        )
+        if delivered_orders
+        else 0.0
+    )
+
+    # ========================================================
+    # VENDOR PERFORMANCE
+    # ========================================================
+
     vendors = (
         db.query(Vendor)
         .filter(
             Vendor.status.in_(
-                [VendorStatus.APPROVED, VendorStatus.ACTIVE]
+                [
+                    VendorStatus.APPROVED,
+                    VendorStatus.ACTIVE,
+                ]
             )
         )
         .all()
     )
 
     scores = [
-        reliability_service.get_latest_score(db, vendor.id)
+        reliability_service.get_latest_score(
+            db,
+            vendor.id,
+        )
         for vendor in vendors
     ]
 
-    scores = [score for score in scores if score]
+    scores = [
+        score
+        for score in scores
+        if score
+    ]
 
     avg_perf = (
         round(
-            sum(score.score for score in scores)
+            sum(
+                score.score
+                for score in scores
+            )
             / len(scores),
             2,
         )
@@ -182,7 +255,10 @@ def procurement_dashboard(
 
     avg_quality = (
         round(
-            sum(score.quality_score for score in scores)
+            sum(
+                score.quality_score
+                for score in scores
+            )
             / len(scores),
             2,
         )
@@ -190,14 +266,7 @@ def procurement_dashboard(
         else 0.0
     )
 
-    avg_on_time_rate = (
-        round(
-            (on_time / len(delivered_orders)) * 100,
-            2,
-        )
-        if delivered_orders
-        else 0.0
-    )
+    avg_on_time_rate = delivery_rate
 
     response_values = [
         performance_service.compute_response_time_hours(
@@ -208,41 +277,655 @@ def procurement_dashboard(
     ]
 
     response_values = [
-        value for value in response_values
+        value
+        for value in response_values
         if value is not None
     ]
 
     avg_response = (
         round(
-            sum(response_values) / len(response_values),
+            sum(response_values)
+            / len(response_values),
             2,
         )
         if response_values
         else None
     )
 
-    cost_by_category = {}
+    issue_resolution_values = [
+        score.issue_resolution_score
+        for score in scores
+        if score.issue_resolution_score is not None
+    ]
 
-    for po in db.query(PurchaseOrder).all():
-
-        vendor = (
-            db.query(Vendor)
-            .filter(Vendor.id == po.vendor_id)
-            .first()
+    issue_resolution_rate = (
+        round(
+            sum(issue_resolution_values)
+            / len(issue_resolution_values),
+            2,
         )
+        if issue_resolution_values
+        else 0.0
+    )
+
+    # ========================================================
+    # PURCHASE ORDERS
+    # ========================================================
+
+    purchase_orders = (
+        db.query(PurchaseOrder)
+        .order_by(
+            PurchaseOrder.created_at.desc()
+        )
+        .all()
+    )
+
+    # ========================================================
+    # CACHES
+    # ========================================================
+
+    cost_by_category = {}
+    cost_by_vendor = {}
+    vendor_cache = {}
+    user_cache = {}
+
+    # ========================================================
+    # PROCUREMENT COST ANALYSIS
+    # ========================================================
+
+    for po in purchase_orders:
+
+        amount = float(
+            po.total_amount or 0.0
+        )
+
+        vendor = vendor_cache.get(
+            po.vendor_id
+        )
+
+        if vendor is None:
+            vendor = (
+                db.query(Vendor)
+                .filter(
+                    Vendor.id
+                    == po.vendor_id
+                )
+                .first()
+            )
+
+            vendor_cache[
+                po.vendor_id
+            ] = vendor
 
         category = (
             vendor.category.value
             if vendor
+            and vendor.category
             else "unknown"
         )
 
-        cost_by_category[category] = (
-            cost_by_category.get(category, 0.0)
-            + po.total_amount
+        vendor_name = (
+            vendor.company_name
+            if vendor
+            else f"Vendor #{po.vendor_id}"
         )
 
+        cost_by_category[
+            category
+        ] = (
+            cost_by_category.get(
+                category,
+                0.0,
+            )
+            + amount
+        )
+
+        cost_by_vendor[
+            vendor_name
+        ] = (
+            cost_by_vendor.get(
+                vendor_name,
+                0.0,
+            )
+            + amount
+        )
+
+    budget = (
+        db.query(
+            func.coalesce(
+                func.sum(
+                    ProcurementRequest.estimated_budget
+                ),
+                0.0,
+            )
+        )
+        .scalar()
+        or 0.0
+    )
+
+    actual_cost = float(
+        po_value or 0.0
+    )
+
+    cost_variance = (
+        float(budget)
+        - actual_cost
+    )
+
+    # ========================================================
+    # VENDOR PERFORMANCE RECORDS
+    # ========================================================
+
+    vendor_performance_records = []
+
+    for vendor in vendors:
+
+        score = (
+            reliability_service.get_latest_score(
+                db,
+                vendor.id,
+            )
+        )
+
+        response_time = (
+            performance_service.compute_response_time_hours(
+                db,
+                vendor.id,
+            )
+        )
+
+        vendor_deliveries = (
+            db.query(PurchaseOrder)
+            .filter(
+                PurchaseOrder.vendor_id
+                == vendor.id,
+                PurchaseOrder.status.in_(
+                    [
+                        POStatus.DELIVERED,
+                        POStatus.COMPLETED,
+                    ]
+                ),
+                PurchaseOrder.actual_delivery_date.isnot(None),
+                PurchaseOrder.expected_delivery_date.isnot(None),
+            )
+            .all()
+        )
+
+        vendor_on_time = sum(
+            1
+            for order in vendor_deliveries
+            if order.actual_delivery_date
+            <= order.expected_delivery_date
+        )
+
+        vendor_delivery_rate = (
+            round(
+                (
+                    vendor_on_time
+                    / len(vendor_deliveries)
+                )
+                * 100,
+                2,
+            )
+            if vendor_deliveries
+            else 0.0
+        )
+
+        vendor_user = None
+
+        if vendor.user_id:
+
+            vendor_user = user_cache.get(
+                vendor.user_id
+            )
+
+            if vendor_user is None:
+
+                vendor_user = (
+                    db.query(User)
+                    .filter(
+                        User.id
+                        == vendor.user_id
+                    )
+                    .first()
+                )
+
+                user_cache[
+                    vendor.user_id
+                ] = vendor_user
+
+        vendor_performance_records.append(
+            {
+                "vendor_id": str(
+                    vendor.id
+                ),
+                "company_name": vendor.company_name,
+                "category": (
+                    vendor.category.value
+                    if vendor.category
+                    else None
+                ),
+                "contact_person": vendor.contact_person,
+                "email": vendor.email,
+                "phone": vendor.phone,
+                "vendor_user": (
+                    vendor_user.full_name
+                    if vendor_user
+                    else None
+                ),
+                "vendor_user_email": (
+                    vendor_user.email
+                    if vendor_user
+                    else None
+                ),
+                "status": (
+                    vendor.status.value
+                    if vendor.status
+                    else None
+                ),
+                "performance_score": (
+                    round(
+                        score.score,
+                        2,
+                    )
+                    if score
+                    else 0.0
+                ),
+                "quality_rating": (
+                    round(
+                        score.quality_score,
+                        2,
+                    )
+                    if score
+                    else 0.0
+                ),
+                "on_time_delivery_rate": (
+                    vendor_delivery_rate
+                ),
+                "response_time_hours": (
+                    round(
+                        response_time,
+                        2,
+                    )
+                    if response_time
+                    is not None
+                    else None
+                ),
+                "issue_resolution_rate": (
+                    round(
+                        score.issue_resolution_score,
+                        2,
+                    )
+                    if (
+                        score
+                        and score.issue_resolution_score
+                        is not None
+                    )
+                    else 0.0
+                ),
+            }
+        )
+
+    # ========================================================
+    # PROCUREMENT COST RECORDS
+    # ========================================================
+
+    procurement_cost_records = []
+
+    for po in purchase_orders:
+
+        vendor = vendor_cache.get(
+            po.vendor_id
+        )
+
+        created_by = user_cache.get(
+            po.created_by_id
+        )
+
+        if created_by is None:
+
+            created_by = (
+                db.query(User)
+                .filter(
+                    User.id
+                    == po.created_by_id
+                )
+                .first()
+            )
+
+            user_cache[
+                po.created_by_id
+            ] = created_by
+
+        po_amount = float(
+            po.total_amount or 0.0
+        )
+
+        procurement_request = None
+
+        if po.procurement_request_id:
+
+            procurement_request = (
+                db.query(
+                    ProcurementRequest
+                )
+                .filter(
+                    ProcurementRequest.id
+                    == po.procurement_request_id
+                )
+                .first()
+            )
+
+        estimated_budget = (
+            float(
+                procurement_request.estimated_budget
+                or 0.0
+            )
+            if procurement_request
+            else 0.0
+        )
+
+        procurement_cost_records.append(
+            {
+                "po_id": po.id,
+                "po_number": po.po_number,
+                "vendor_id": (
+                    str(vendor.id)
+                    if vendor
+                    else None
+                ),
+                "vendor_name": (
+                    vendor.company_name
+                    if vendor
+                    else f"Vendor #{po.vendor_id}"
+                ),
+                "created_by_id": (
+                    str(created_by.id)
+                    if created_by
+                    else None
+                ),
+                "created_by": (
+                    created_by.full_name
+                    if created_by
+                    else None
+                ),
+                "created_by_email": (
+                    created_by.email
+                    if created_by
+                    else None
+                ),
+                "status": (
+                    po.status.value
+                    if po.status
+                    else None
+                ),
+                "amount": po_amount,
+                "budget": estimated_budget,
+                "variance": (
+                    estimated_budget
+                    - po_amount
+                ),
+                "order_date": (
+                    po.order_date.isoformat()
+                    if po.order_date
+                    else None
+                ),
+                "expected_delivery_date": (
+                    po.expected_delivery_date.isoformat()
+                    if po.expected_delivery_date
+                    else None
+                ),
+            }
+        )
+
+    # ========================================================
+    # PROCUREMENT REQUEST RECORDS
+    # ========================================================
+
+    procurement_requests = []
+
+    request_records = (
+        db.query(ProcurementRequest)
+        .order_by(
+            ProcurementRequest.created_at.desc()
+        )
+        .all()
+    )
+
+    for request in request_records:
+
+        requested_by = user_cache.get(
+            request.requested_by_id
+        )
+
+        if requested_by is None:
+
+            requested_by = (
+                db.query(User)
+                .filter(
+                    User.id
+                    == request.requested_by_id
+                )
+                .first()
+            )
+
+            user_cache[
+                request.requested_by_id
+            ] = requested_by
+
+        procurement_requests.append(
+            {
+                "id": request.id,
+                "request_number": request.request_number,
+                "title": request.title,
+                "description": request.description,
+                "department": request.department,
+                "category": request.category,
+                "quantity": request.quantity,
+                "unit": request.unit,
+                "estimated_budget": float(
+                    request.estimated_budget
+                    or 0.0
+                ),
+                "priority": (
+                    request.priority.value
+                    if request.priority
+                    else None
+                ),
+                "status": (
+                    request.status.value
+                    if request.status
+                    else None
+                ),
+                "requested_by_id": str(
+                    request.requested_by_id
+                ),
+                "requested_by": (
+                    requested_by.full_name
+                    if requested_by
+                    else None
+                ),
+                "requested_by_email": (
+                    requested_by.email
+                    if requested_by
+                    else None
+                ),
+                "approved_by_id": (
+                    str(
+                        request.approved_by_id
+                    )
+                    if request.approved_by_id
+                    else None
+                ),
+                "approval_notes": (
+                    request.approval_notes
+                ),
+                "assigned_vendor_id": (
+                    str(
+                        request.assigned_vendor_id
+                    )
+                    if request.assigned_vendor_id
+                    else None
+                ),
+                "required_date": (
+                    request.required_date.isoformat()
+                    if request.required_date
+                    else None
+                ),
+                "created_at": (
+                    request.created_at.isoformat()
+                    if request.created_at
+                    else None
+                ),
+            }
+        )
+
+    # ========================================================
+    # DELIVERY RECORDS
+    # ========================================================
+
+    delivery_records = []
+
+    for po in purchase_orders:
+
+        vendor = vendor_cache.get(
+            po.vendor_id
+        )
+
+        created_by = user_cache.get(
+            po.created_by_id
+        )
+
+        if created_by is None:
+
+            created_by = (
+                db.query(User)
+                .filter(
+                    User.id
+                    == po.created_by_id
+                )
+                .first()
+            )
+
+            user_cache[
+                po.created_by_id
+            ] = created_by
+
+        expected_date = (
+            po.expected_delivery_date
+        )
+
+        actual_date = (
+            po.actual_delivery_date
+        )
+
+        delay_days = None
+
+        if expected_date and actual_date:
+
+            delay_days = (
+                actual_date.date()
+                - expected_date.date()
+            ).days
+
+        elif (
+            expected_date
+            and po.status
+            in [
+                POStatus.PENDING,
+                POStatus.APPROVED,
+                POStatus.ORDERED,
+            ]
+        ):
+
+            delay_days = max(
+                0,
+                (
+                    datetime.utcnow().date()
+                    - expected_date.date()
+                ).days,
+            )
+
+        if expected_date and actual_date:
+
+            is_delayed = (
+                actual_date
+                > expected_date
+            )
+
+        elif (
+            expected_date
+            and po.status
+            in [
+                POStatus.PENDING,
+                POStatus.APPROVED,
+                POStatus.ORDERED,
+            ]
+        ):
+
+            is_delayed = (
+                datetime.utcnow()
+                > expected_date
+            )
+
+        else:
+
+            is_delayed = False
+
+        delivery_records.append(
+            {
+                "po_id": po.id,
+                "po_number": po.po_number,
+                "vendor_id": (
+                    str(vendor.id)
+                    if vendor
+                    else None
+                ),
+                "vendor_name": (
+                    vendor.company_name
+                    if vendor
+                    else f"Vendor #{po.vendor_id}"
+                ),
+                "created_by": (
+                    created_by.full_name
+                    if created_by
+                    else None
+                ),
+                "created_by_email": (
+                    created_by.email
+                    if created_by
+                    else None
+                ),
+                "amount": float(
+                    po.total_amount or 0.0
+                ),
+                "status": (
+                    po.status.value
+                    if po.status
+                    else None
+                ),
+                "expected_delivery_date": (
+                    expected_date.isoformat()
+                    if expected_date
+                    else None
+                ),
+                "actual_delivery_date": (
+                    actual_date.isoformat()
+                    if actual_date
+                    else None
+                ),
+                "delay_days": delay_days,
+                "is_delayed": is_delayed,
+            }
+        )
+
+    # ========================================================
+    # RESPONSE
+    # ========================================================
+
     return {
+        "procurement_requests": procurement_requests,
+
         "procurement_overview": {
             "total_requests": total_requests,
             "pending_requests": by_status.get(
@@ -272,26 +955,44 @@ def procurement_dashboard(
             "avg_quality_rating": avg_quality,
             "avg_on_time_delivery_rate": avg_on_time_rate,
             "avg_response_time_hours": avg_response,
+            "issue_resolution_rate": issue_resolution_rate,
         },
+
+        "vendor_performance_records": (
+            vendor_performance_records
+        ),
 
         "procurement_cost_analysis": {
             "total_cost": po_value,
             "cost_by_category": cost_by_category,
+            "cost_by_vendor": cost_by_vendor,
+            "budget": float(budget),
+            "actual_cost": actual_cost,
+            "cost_variance": cost_variance,
         },
 
+        "procurement_cost_records": (
+            procurement_cost_records
+        ),
+
         "delivery_status": {
-            "total_deliveries": len(delivered_orders),
+            "total_deliveries": len(
+                delivered_orders
+            ),
             "on_time_deliveries": on_time,
             "delayed_deliveries": delayed,
             "pending_deliveries": pending_delivery,
-            "delivery_rate": avg_on_time_rate,
+            "delivery_rate": delivery_rate,
         },
+
+        "delivery_records": delivery_records,
     }
 
 
 # ============================================================
-# VENDOR DASHBOARD
+# VENDOR DASHBOARD - CURRENT VENDOR
 # ============================================================
+
 @router.get("/vendor-dashboard/me")
 def vendor_dashboard_me(
     db: Session = Depends(get_db),
@@ -308,29 +1009,42 @@ def vendor_dashboard_me(
         vendor_id,
     )
 
-    latest_score = reliability_service.get_latest_score(
-        db,
-        vendor_id,
+    latest_score = (
+        reliability_service.get_latest_score(
+            db,
+            vendor_id,
+        )
     )
 
     contracts = (
         db.query(Contract)
-        .filter(Contract.vendor_id == vendor_id)
+        .filter(
+            Contract.vendor_id
+            == vendor_id
+        )
         .all()
     )
 
     contract_status_counts = {}
 
     for contract in contracts:
+
         status = contract.status.value
 
         contract_status_counts[status] = (
-            contract_status_counts.get(status, 0) + 1
+            contract_status_counts.get(
+                status,
+                0,
+            )
+            + 1
         )
 
     orders = (
         db.query(PurchaseOrder)
-        .filter(PurchaseOrder.vendor_id == vendor_id)
+        .filter(
+            PurchaseOrder.vendor_id
+            == vendor_id
+        )
         .all()
     )
 
@@ -342,15 +1056,23 @@ def vendor_dashboard_me(
     order_status_counts = {}
 
     for order in orders:
+
         status = order.status.value
 
         order_status_counts[status] = (
-            order_status_counts.get(status, 0) + 1
+            order_status_counts.get(
+                status,
+                0,
+            )
+            + 1
         )
 
     total_messages = (
         db.query(func.count(Message.id))
-        .filter(Message.vendor_id == vendor_id)
+        .filter(
+            Message.vendor_id
+            == vendor_id
+        )
         .scalar()
         or 0
     )
@@ -396,13 +1118,18 @@ def vendor_dashboard_me(
     }
 
 
+# ============================================================
+# VENDOR DASHBOARD
+# ============================================================
+
 @router.get("/vendor-dashboard/{vendor_id}")
 def vendor_dashboard(
     vendor_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Vendor dashboard.
+    """
+    Vendor dashboard.
 
     Administrators and authorized internal users can inspect
     vendor dashboards. Vendor users are restricted to their
@@ -411,7 +1138,9 @@ def vendor_dashboard(
 
     vendor = (
         db.query(Vendor)
-        .filter(Vendor.id == vendor_id)
+        .filter(
+            Vendor.id == vendor_id
+        )
         .first()
     )
 
@@ -421,13 +1150,16 @@ def vendor_dashboard(
             detail="Vendor not found",
         )
 
-    # Vendor users can only access their own vendor
     if current_user.role.value == "vendor":
 
         if vendor.user_id != current_user.id:
+
             raise HTTPException(
                 status_code=403,
-                detail="You can only access your own vendor dashboard",
+                detail=(
+                    "You can only access "
+                    "your own vendor dashboard"
+                ),
             )
 
     metrics = performance_service.get_vendor_metrics(
@@ -435,29 +1167,42 @@ def vendor_dashboard(
         vendor_id,
     )
 
-    latest_score = reliability_service.get_latest_score(
-        db,
-        vendor_id,
+    latest_score = (
+        reliability_service.get_latest_score(
+            db,
+            vendor_id,
+        )
     )
 
     contracts = (
         db.query(Contract)
-        .filter(Contract.vendor_id == vendor_id)
+        .filter(
+            Contract.vendor_id
+            == vendor_id
+        )
         .all()
     )
 
     contract_status_counts = {}
 
     for contract in contracts:
+
         status = contract.status.value
 
         contract_status_counts[status] = (
-            contract_status_counts.get(status, 0) + 1
+            contract_status_counts.get(
+                status,
+                0,
+            )
+            + 1
         )
 
     orders = (
         db.query(PurchaseOrder)
-        .filter(PurchaseOrder.vendor_id == vendor_id)
+        .filter(
+            PurchaseOrder.vendor_id
+            == vendor_id
+        )
         .all()
     )
 
@@ -473,12 +1218,19 @@ def vendor_dashboard(
         status = order.status.value
 
         order_status_counts[status] = (
-            order_status_counts.get(status, 0) + 1
+            order_status_counts.get(
+                status,
+                0,
+            )
+            + 1
         )
 
     total_messages = (
         db.query(func.count(Message.id))
-        .filter(Message.vendor_id == vendor_id)
+        .filter(
+            Message.vendor_id
+            == vendor_id
+        )
         .scalar()
         or 0
     )
@@ -536,12 +1288,16 @@ def admin_dashboard(
     """Administrator-only dashboard."""
 
     total_users = (
-        db.query(func.count(User.id)).scalar() or 0
+        db.query(func.count(User.id))
+        .scalar()
+        or 0
     )
 
     active_users = (
         db.query(func.count(User.id))
-        .filter(User.is_active.is_(True))
+        .filter(
+            User.is_active.is_(True)
+        )
         .scalar()
         or 0
     )
@@ -556,14 +1312,19 @@ def admin_dashboard(
     )
 
     total_vendors = (
-        db.query(func.count(Vendor.id)).scalar() or 0
+        db.query(func.count(Vendor.id))
+        .scalar()
+        or 0
     )
 
     active_vendors = (
         db.query(func.count(Vendor.id))
         .filter(
             Vendor.status.in_(
-                [VendorStatus.APPROVED, VendorStatus.ACTIVE]
+                [
+                    VendorStatus.APPROVED,
+                    VendorStatus.ACTIVE,
+                ]
             )
         )
         .scalar()
@@ -583,22 +1344,36 @@ def admin_dashboard(
 
     for vendor in db.query(Vendor).all():
 
-        latest = reliability_service.get_latest_score(
-            db,
-            vendor.id,
+        latest = (
+            reliability_service.get_latest_score(
+                db,
+                vendor.id,
+            )
         )
 
-        if latest and latest.risk_level.value == "high":
+        if (
+            latest
+            and latest.risk_level.value
+            == "high"
+        ):
             high_risk += 1
 
     total_requests = (
-        db.query(func.count(ProcurementRequest.id))
+        db.query(
+            func.count(
+                ProcurementRequest.id
+            )
+        )
         .scalar()
         or 0
     )
 
     pending_approvals = (
-        db.query(func.count(ProcurementRequest.id))
+        db.query(
+            func.count(
+                ProcurementRequest.id
+            )
+        )
         .filter(
             ProcurementRequest.status
             == ProcurementStatus.PENDING
@@ -608,7 +1383,9 @@ def admin_dashboard(
     )
 
     total_pos = (
-        db.query(func.count(PurchaseOrder.id))
+        db.query(
+            func.count(PurchaseOrder.id)
+        )
         .scalar()
         or 0
     )
@@ -616,7 +1393,9 @@ def admin_dashboard(
     procurement_value = (
         db.query(
             func.coalesce(
-                func.sum(PurchaseOrder.total_amount),
+                func.sum(
+                    PurchaseOrder.total_amount
+                ),
                 0.0,
             )
         )
@@ -625,13 +1404,17 @@ def admin_dashboard(
     )
 
     total_certs = (
-        db.query(func.count(Certification.id))
+        db.query(
+            func.count(Certification.id)
+        )
         .scalar()
         or 0
     )
 
     compliant_certs = (
-        db.query(func.count(Certification.id))
+        db.query(
+            func.count(Certification.id)
+        )
         .filter(
             Certification.status
             == CertificationStatus.VALID
@@ -641,7 +1424,9 @@ def admin_dashboard(
     )
 
     expired_certs = (
-        db.query(func.count(Certification.id))
+        db.query(
+            func.count(Certification.id)
+        )
         .filter(
             Certification.status
             == CertificationStatus.EXPIRED
@@ -651,7 +1436,9 @@ def admin_dashboard(
     )
 
     expiring_certs = (
-        db.query(func.count(Certification.id))
+        db.query(
+            func.count(Certification.id)
+        )
         .filter(
             Certification.status
             == CertificationStatus.EXPIRING
@@ -662,7 +1449,8 @@ def admin_dashboard(
 
     compliance_rate = (
         round(
-            (compliant_certs / total_certs) * 100,
+            (compliant_certs / total_certs)
+            * 100,
             2,
         )
         if total_certs
@@ -670,13 +1458,17 @@ def admin_dashboard(
     )
 
     total_contracts = (
-        db.query(func.count(Contract.id))
+        db.query(
+            func.count(Contract.id)
+        )
         .scalar()
         or 0
     )
 
     total_messages = (
-        db.query(func.count(Message.id))
+        db.query(
+            func.count(Message.id)
+        )
         .scalar()
         or 0
     )
@@ -685,10 +1477,14 @@ def admin_dashboard(
         "user_management": {
             "total": total_users,
             "active": active_users,
-            "inactive": total_users - active_users,
+            "inactive": (
+                total_users
+                - active_users
+            ),
             "by_role": {
                 key.value: value
-                for key, value in users_by_role.items()
+                for key, value
+                in users_by_role.items()
             },
         },
 
@@ -697,7 +1493,8 @@ def admin_dashboard(
             "active": active_vendors,
             "by_category": {
                 key.value: value
-                for key, value in vendors_by_category.items()
+                for key, value
+                in vendors_by_category.items()
             },
             "high_risk_vendors": high_risk,
         },
@@ -734,7 +1531,9 @@ def admin_dashboard(
 @router.get("/vendor-risk-dashboard")
 def vendor_risk_dashboard(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_operations_read),
+    current_user: User = Depends(
+        require_operations_read
+    ),
 ):
     """Vendor risk dashboard for authorized internal users."""
 
@@ -750,19 +1549,25 @@ def vendor_risk_dashboard(
 
     for vendor in vendors:
 
-        latest = reliability_service.get_latest_score(
-            db,
-            vendor.id,
+        latest = (
+            reliability_service.get_latest_score(
+                db,
+                vendor.id,
+            )
         )
 
         if not latest:
             continue
 
-        risk_level = latest.risk_level.value
+        risk_level = (
+            latest.risk_level.value
+        )
 
         if risk_level in risk_buckets:
 
-            risk_buckets[risk_level].append(
+            risk_buckets[
+                risk_level
+            ].append(
                 {
                     "vendor_id": vendor.id,
                     "company_name": vendor.company_name,
@@ -788,7 +1593,8 @@ def vendor_risk_dashboard(
     expiring_contracts = (
         db.query(Contract)
         .filter(
-            Contract.status == ContractStatus.EXPIRING
+            Contract.status
+            == ContractStatus.EXPIRING
         )
         .count()
     )
@@ -796,7 +1602,8 @@ def vendor_risk_dashboard(
     if expiring_contracts:
 
         alerts.append(
-            f"{expiring_contracts} contract(s) are expiring soon."
+            f"{expiring_contracts} contract(s) "
+            f"are expiring soon."
         )
 
     return {
@@ -816,7 +1623,10 @@ def procurement_spend(
 ):
     """Procurement spend analytics."""
 
-    pos = db.query(PurchaseOrder).all()
+    pos = (
+        db.query(PurchaseOrder)
+        .all()
+    )
 
     total_spend = sum(
         po.total_amount
@@ -828,11 +1638,15 @@ def procurement_spend(
     for po in pos:
 
         key = (
-            po.order_date or po.created_at
+            po.order_date
+            or po.created_at
         ).strftime("%Y-%m")
 
         by_month[key] = (
-            by_month.get(key, 0.0)
+            by_month.get(
+                key,
+                0.0,
+            )
             + po.total_amount
         )
 
@@ -842,7 +1656,10 @@ def procurement_spend(
 
         vendor = (
             db.query(Vendor)
-            .filter(Vendor.id == po.vendor_id)
+            .filter(
+                Vendor.id
+                == po.vendor_id
+            )
             .first()
         )
 
@@ -853,7 +1670,10 @@ def procurement_spend(
         )
 
         by_vendor[name] = (
-            by_vendor.get(name, 0.0)
+            by_vendor.get(
+                name,
+                0.0,
+            )
             + po.total_amount
         )
 
@@ -863,7 +1683,10 @@ def procurement_spend(
 
         vendor = (
             db.query(Vendor)
-            .filter(Vendor.id == po.vendor_id)
+            .filter(
+                Vendor.id
+                == po.vendor_id
+            )
             .first()
         )
 
@@ -874,34 +1697,46 @@ def procurement_spend(
         )
 
         by_category[category] = (
-            by_category.get(category, 0.0)
+            by_category.get(
+                category,
+                0.0,
+            )
             + po.total_amount
         )
 
     budget_total = sum(
         request.estimated_budget
-        for request in db.query(
-            ProcurementRequest
-        ).all()
+        for request in (
+            db.query(
+                ProcurementRequest
+            ).all()
+        )
     )
 
     return {
         "total_spend": total_spend,
+
         "spend_by_month": by_month,
+
         "spend_by_vendor": by_vendor,
+
         "spend_by_category": by_category,
 
         "budget_vs_actual": {
             "estimated_budget": budget_total,
             "actual_spend": total_spend,
-            "variance": budget_total - total_spend,
+            "variance": (
+                budget_total
+                - total_spend
+            ),
         },
 
         "purchase_volume": len(pos),
 
         "average_purchase_value": (
             round(
-                total_spend / len(pos),
+                total_spend
+                / len(pos),
                 2,
             )
             if pos
@@ -922,14 +1757,19 @@ def procurement_analytics(
     """Higher-level procurement analytics."""
 
     requests = (
-        db.query(ProcurementRequest).all()
+        db.query(
+            ProcurementRequest
+        )
+        .all()
     )
 
     pos = (
-        db.query(PurchaseOrder).all()
+        db.query(PurchaseOrder)
+        .all()
     )
 
     # Request -> PO cycle time
+
     cycle_times = []
 
     for po in pos:
@@ -938,7 +1778,9 @@ def procurement_analytics(
             continue
 
         request = (
-            db.query(ProcurementRequest)
+            db.query(
+                ProcurementRequest
+            )
             .filter(
                 ProcurementRequest.id
                 == po.procurement_request_id
@@ -967,15 +1809,14 @@ def procurement_analytics(
     )
 
     # PO processing time
+
     processing_times = [
         (
             po.actual_delivery_date
             - po.order_date
         ).total_seconds()
         / 3600.0
-
         for po in pos
-
         if po.order_date
         and po.actual_delivery_date
     ]
@@ -991,11 +1832,14 @@ def procurement_analytics(
     )
 
     # Supplier concentration
+
     spend_by_vendor = {}
 
     for po in pos:
 
-        spend_by_vendor[po.vendor_id] = (
+        spend_by_vendor[
+            po.vendor_id
+        ] = (
             spend_by_vendor.get(
                 po.vendor_id,
                 0.0,
@@ -1010,26 +1854,29 @@ def procurement_analytics(
     top_vendor_share = (
         round(
             (
-                max(spend_by_vendor.values())
+                max(
+                    spend_by_vendor.values()
+                )
                 / total_spend
-            ) * 100,
+            )
+            * 100,
             2,
         )
-        if spend_by_vendor and total_spend
+        if spend_by_vendor
+        and total_spend
         else 0.0
     )
 
     # Delivery performance
+
     delivered = [
         po
-
         for po in pos
-
-        if po.status.value in (
+        if po.status.value
+        in (
             "delivered",
             "completed",
         )
-
         and po.actual_delivery_date
         and po.expected_delivery_date
     ]
@@ -1043,7 +1890,8 @@ def procurement_analytics(
 
     delivery_rate = (
         round(
-            (on_time / len(delivered)) * 100,
+            (on_time / len(delivered))
+            * 100,
             2,
         )
         if delivered
@@ -1065,9 +1913,13 @@ def procurement_analytics(
     )
 
     return {
-        "avg_request_to_order_cycle_hours": avg_cycle_hours,
+        "avg_request_to_order_cycle_hours": (
+            avg_cycle_hours
+        ),
 
-        "avg_po_processing_hours": avg_po_processing_hours,
+        "avg_po_processing_hours": (
+            avg_po_processing_hours
+        ),
 
         "supplier_concentration_top_vendor_pct": (
             top_vendor_share
@@ -1075,11 +1927,17 @@ def procurement_analytics(
 
         "purchase_volume": len(pos),
 
-        "delivery_performance_rate": delivery_rate,
+        "delivery_performance_rate": (
+            delivery_rate
+        ),
 
         "request_completion_rate": (
             round(
-                (completed / len(requests)) * 100,
+                (
+                    completed
+                    / len(requests)
+                )
+                * 100,
                 2,
             )
             if requests
@@ -1088,7 +1946,11 @@ def procurement_analytics(
 
         "request_cancellation_rate": (
             round(
-                (cancelled / len(requests)) * 100,
+                (
+                    cancelled
+                    / len(requests)
+                )
+                * 100,
                 2,
             )
             if requests

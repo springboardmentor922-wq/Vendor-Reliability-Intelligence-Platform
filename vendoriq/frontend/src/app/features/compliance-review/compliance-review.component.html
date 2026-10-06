@@ -1,0 +1,685 @@
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+
+  <div>
+    <h3 class="page-title mb-0">
+      Compliance Review
+    </h3>
+
+    <p class="text-muted mb-0 small">
+      Review certification compliance, contracts, renewals and expiry risks.
+    </p>
+  </div>
+
+  <button
+    class="btn btn-outline-primary"
+    type="button"
+    (click)="loadCompliance()"
+    [disabled]="loading"
+  >
+    <i class="fa-solid fa-rotate me-1"></i>
+    Refresh
+  </button>
+
+</div>
+
+
+<!-- ERROR -->
+<div
+  class="alert alert-danger"
+  *ngIf="error"
+>
+  {{ error }}
+</div>
+
+
+<!-- LOADING -->
+<div
+  class="text-center py-5"
+  *ngIf="loading"
+>
+  <div class="spinner-border text-primary"></div>
+
+  <div class="text-muted mt-2">
+    Loading compliance information...
+  </div>
+</div>
+
+
+<div *ngIf="!loading">
+
+
+  <!-- =========================================================
+       COMPLIANCE SUMMARY
+       ========================================================= -->
+
+  <div class="row g-3 mb-4">
+
+    <!-- Compliance Rate -->
+    <div class="col-md-3">
+
+      <div class="card card-elevated h-100 p-3">
+
+        <small class="text-muted">
+          Compliance Rate
+        </small>
+
+        <h2 class="mb-1">
+          {{ complianceRate }}%
+        </h2>
+
+        <small class="text-muted">
+          Valid certifications / total certifications
+        </small>
+
+      </div>
+
+    </div>
+
+
+    <!-- Compliant -->
+    <div class="col-md-3">
+
+      <div class="card card-elevated h-100 p-3">
+
+        <small class="text-muted">
+          Compliant
+        </small>
+
+        <h2 class="text-success mb-1">
+          {{ compliantCount }}
+        </h2>
+
+        <small class="text-muted">
+          Valid certifications
+        </small>
+
+      </div>
+
+    </div>
+
+
+    <!-- Expired -->
+    <div class="col-md-3">
+
+      <div class="card card-elevated h-100 p-3">
+
+        <small class="text-muted">
+          Expired
+        </small>
+
+        <h2 class="text-danger mb-1">
+          {{ expiredCount }}
+        </h2>
+
+        <small class="text-muted">
+          Expired certifications
+        </small>
+
+      </div>
+
+    </div>
+
+
+    <!-- Expiring -->
+    <div class="col-md-3">
+
+      <div class="card card-elevated h-100 p-3">
+
+        <small class="text-muted">
+          Expiring
+        </small>
+
+        <h2 class="text-warning mb-1">
+          {{ expiringCount }}
+        </h2>
+
+        <small class="text-muted">
+          Certifications nearing expiry
+        </small>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- =========================================================
+       CERTIFICATION COMPLIANCE
+       ========================================================= -->
+
+  <div class="card card-elevated mb-4">
+
+    <div class="card-body">
+
+      <div
+        class="d-flex justify-content-between align-items-center mb-3"
+      >
+
+        <div>
+
+          <h5 class="mb-1">
+            <i class="fa-solid fa-certificate text-primary me-2"></i>
+            Certification Compliance
+          </h5>
+
+          <small class="text-muted">
+            Vendor certifications and compliance status
+          </small>
+
+        </div>
+
+        <span class="badge bg-primary">
+          {{ certifications.length }} Certifications
+        </span>
+
+      </div>
+
+
+      <div class="table-responsive">
+
+        <table class="table table-hover align-middle mb-0">
+
+          <thead>
+
+            <tr>
+
+              <th>
+                Certification
+              </th>
+
+              <th>
+                Vendor
+              </th>
+
+              <th>
+                Issuing Body
+              </th>
+
+              <th>
+                Expiry Date
+              </th>
+
+              <th>
+                Status
+              </th>
+
+            </tr>
+
+          </thead>
+
+
+          <tbody>
+
+            <tr
+              *ngFor="let certification of certifications"
+            >
+
+              <td>
+
+                <strong>
+                  {{ certification.name }}
+                </strong>
+
+              </td>
+
+
+              <td>
+                {{ certification.vendor_name }}
+              </td>
+
+
+              <td>
+                {{ certification.issuing_body || '—' }}
+              </td>
+
+
+              <td>
+                {{ formatDate(certification.expiry_date) }}
+              </td>
+
+
+              <td>
+
+                <span
+                  class="badge"
+                  [ngClass]="
+                    certificationStatusClass(
+                      certification.calculated_status
+                    )
+                  "
+                >
+                  {{
+                    formatStatus(
+                      certification.calculated_status
+                    )
+                  }}
+                </span>
+
+              </td>
+
+            </tr>
+
+
+            <tr
+              *ngIf="!certifications.length"
+            >
+
+              <td
+                colspan="5"
+                class="text-center text-muted py-5"
+              >
+
+                <i
+                  class="fa-solid fa-certificate fs-2 mb-2 d-block"
+                ></i>
+
+                No certification records found.
+
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- =========================================================
+       CONTRACT COMPLIANCE
+       ========================================================= -->
+
+  <div class="card card-elevated mb-4">
+
+    <div class="card-body">
+
+      <div class="d-flex justify-content-between align-items-center mb-3">
+
+        <div>
+
+          <h5 class="mb-1">
+
+            <i class="fa-solid fa-file-contract text-primary me-2"></i>
+
+            Contract Compliance
+
+          </h5>
+
+          <small class="text-muted">
+            Contract repository, validity and compliance status
+          </small>
+
+        </div>
+
+        <span class="badge bg-primary">
+          {{ contracts.length }} Contracts
+        </span>
+
+      </div>
+
+
+      <div class="table-responsive">
+
+        <table class="table table-hover align-middle mb-0">
+
+          <thead>
+
+            <tr>
+
+              <th>
+                Contract #
+              </th>
+
+              <th>
+                Vendor
+              </th>
+
+              <th>
+                Start Date
+              </th>
+
+              <th>
+                End Date
+              </th>
+
+              <th>
+                Value
+              </th>
+
+              <th>
+                Status
+              </th>
+
+            </tr>
+
+          </thead>
+
+
+          <tbody>
+
+            <tr
+              *ngFor="let contract of contracts"
+            >
+
+              <td>
+
+                <strong>
+                  {{ contract.contract_number }}
+                </strong>
+
+              </td>
+
+
+              <td>
+                {{ vendorName(contract.vendor_id) }}
+              </td>
+
+
+              <td>
+                {{ formatDate(contract.start_date) }}
+              </td>
+
+
+              <td>
+                {{ formatDate(contract.end_date) }}
+              </td>
+
+
+              <td>
+                ${{ contract.value | number:'1.0-0' }}
+              </td>
+
+
+              <td>
+
+                <span
+                  class="badge"
+                  [ngClass]="
+                    contractStatusClass(
+                      contract.status
+                    )
+                  "
+                >
+                  {{
+                    formatStatus(
+                      contract.status
+                    )
+                  }}
+                </span>
+
+              </td>
+
+            </tr>
+
+
+            <tr
+              *ngIf="!contracts.length"
+            >
+
+              <td
+                colspan="6"
+                class="text-center text-muted py-5"
+              >
+
+                <i
+                  class="fa-solid fa-file-contract fs-2 mb-2 d-block"
+                ></i>
+
+                No contract records found.
+
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- =========================================================
+       RENEWAL & EXPIRY TRACKING
+       ========================================================= -->
+
+  <div class="card card-elevated mb-4">
+
+    <div class="card-body">
+
+      <h5 class="mb-1">
+
+        <i class="fa-solid fa-calendar-check text-primary me-2"></i>
+
+        Renewal &amp; Expiry Tracking
+
+      </h5>
+
+      <small class="text-muted">
+        Monitor contract lifecycle and renewal requirements.
+      </small>
+
+
+      <div class="row g-3 mt-2">
+
+
+        <!-- Active -->
+        <div class="col-md-3">
+
+          <div class="border rounded p-3 h-100">
+
+            <small class="text-muted">
+              Active Contracts
+            </small>
+
+            <h3 class="text-success mb-0">
+              {{ activeContracts }}
+            </h3>
+
+            <small class="text-muted">
+              Currently active
+            </small>
+
+          </div>
+
+        </div>
+
+
+        <!-- Expiring -->
+        <div class="col-md-3">
+
+          <div class="border rounded p-3 h-100">
+
+            <small class="text-muted">
+              Expiring Soon
+            </small>
+
+            <h3 class="text-warning mb-0">
+              {{ expiringContracts }}
+            </h3>
+
+            <small class="text-muted">
+              Within 30 days
+            </small>
+
+          </div>
+
+        </div>
+
+
+        <!-- Expired -->
+        <div class="col-md-3">
+
+          <div class="border rounded p-3 h-100">
+
+            <small class="text-muted">
+              Expired
+            </small>
+
+            <h3 class="text-danger mb-0">
+              {{ expiredContracts }}
+            </h3>
+
+            <small class="text-muted">
+              Require attention
+            </small>
+
+          </div>
+
+        </div>
+
+
+        <!-- Renewal -->
+        <div class="col-md-3">
+
+          <div class="border rounded p-3 h-100">
+
+            <small class="text-muted">
+              Renewal Required
+            </small>
+
+            <h3 class="text-primary mb-0">
+              {{ renewalRequired }}
+            </h3>
+
+            <small class="text-muted">
+              Contracts approaching expiry
+            </small>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- =========================================================
+       COMPLIANCE ALERTS
+       ========================================================= -->
+
+  <div class="card card-elevated mb-4">
+
+    <div class="card-body">
+
+      <h5 class="mb-1">
+
+        <i class="fa-solid fa-bell text-primary me-2"></i>
+
+        Compliance Alerts
+
+      </h5>
+
+      <small class="text-muted">
+        Items requiring auditor attention.
+      </small>
+
+
+      <!-- No alerts -->
+
+      <div
+        class="alert alert-success mt-3 mb-0"
+        *ngIf="!hasComplianceAlerts"
+      >
+
+        <i class="fa-solid fa-circle-check me-2"></i>
+
+        No expired certifications,
+        no certifications expiring soon,
+        and no contracts requiring immediate renewal.
+
+      </div>
+
+
+      <!-- Certification expired -->
+
+      <div
+        class="alert alert-danger mt-3 mb-2"
+        *ngIf="expiredCount > 0"
+      >
+
+        <i class="fa-solid fa-triangle-exclamation me-2"></i>
+
+        <strong>
+          {{ expiredCount }}
+        </strong>
+
+        certification(s) have expired.
+
+      </div>
+
+
+      <!-- Certification expiring -->
+
+      <div
+        class="alert alert-warning mt-2 mb-2"
+        *ngIf="expiringCount > 0"
+      >
+
+        <i class="fa-solid fa-clock me-2"></i>
+
+        <strong>
+          {{ expiringCount }}
+        </strong>
+
+        certification(s) are expiring within 30 days.
+
+      </div>
+
+
+      <!-- Contract expired -->
+
+      <div
+        class="alert alert-danger mt-2 mb-2"
+        *ngIf="expiredContracts > 0"
+      >
+
+        <i class="fa-solid fa-file-circle-xmark me-2"></i>
+
+        <strong>
+          {{ expiredContracts }}
+        </strong>
+
+        contract(s) have expired.
+
+      </div>
+
+
+      <!-- Contract renewal -->
+
+      <div
+        class="alert alert-warning mt-2 mb-0"
+        *ngIf="expiringContracts > 0"
+      >
+
+        <i class="fa-solid fa-file-signature me-2"></i>
+
+        <strong>
+          {{ expiringContracts }}
+        </strong>
+
+        contract(s) require renewal attention.
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

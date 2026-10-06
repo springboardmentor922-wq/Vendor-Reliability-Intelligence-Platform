@@ -1,0 +1,256 @@
+<div class="container-fluid">
+
+  <!-- HEADER -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+      <h2 class="page-title mb-1">
+        Contract Status
+      </h2>
+
+      <p class="text-muted mb-0">
+        Monitor your contracts, renewal status and expiry dates.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="btn btn-outline-primary"
+      (click)="loadContracts()"
+      [disabled]="loading"
+    >
+      <i class="fa-solid fa-rotate me-1"></i>
+      Refresh
+    </button>
+
+  </div>
+
+
+  <!-- LOADING -->
+  <div
+    *ngIf="loading"
+    class="text-center py-5"
+  >
+    <div
+      class="spinner-border text-primary"
+      role="status"
+    ></div>
+
+    <p class="text-muted mt-3">
+      Loading contract information...
+    </p>
+  </div>
+
+
+  <!-- ERROR -->
+  <div
+    *ngIf="!loading && error"
+    class="alert alert-danger"
+  >
+    <i class="fa-solid fa-circle-exclamation me-2"></i>
+    {{ error }}
+  </div>
+
+
+  <!-- CONTENT -->
+  <div *ngIf="!loading && !error">
+
+    <!-- SUMMARY CARDS -->
+    <div class="row g-3 mb-4">
+
+      <div class="col-md-4">
+
+        <div class="card card-elevated h-100 p-3">
+
+          <div class="d-flex justify-content-between">
+
+            <div>
+              <div class="text-muted small">
+                Active Contracts
+              </div>
+
+              <div class="fs-3 fw-bold text-success">
+                {{ activeContracts }}
+              </div>
+            </div>
+
+            <div class="text-success fs-3">
+              <i class="fa-solid fa-circle-check"></i>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="col-md-4">
+
+        <div class="card card-elevated h-100 p-3">
+
+          <div class="d-flex justify-content-between">
+
+            <div>
+              <div class="text-muted small">
+                Expiring Contracts
+              </div>
+
+              <div class="fs-3 fw-bold text-warning">
+                {{ expiringContracts }}
+              </div>
+            </div>
+
+            <div class="text-warning fs-3">
+              <i class="fa-solid fa-clock"></i>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="col-md-4">
+
+        <div class="card card-elevated h-100 p-3">
+
+          <div class="d-flex justify-content-between">
+
+            <div>
+              <div class="text-muted small">
+                Expired Contracts
+              </div>
+
+              <div class="fs-3 fw-bold text-danger">
+                {{ expiredContracts }}
+              </div>
+            </div>
+
+            <div class="text-danger fs-3">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- CONTRACT TABLE -->
+    <div class="card card-elevated">
+
+      <div class="card-header bg-transparent">
+
+        <div class="d-flex justify-content-between align-items-center">
+
+          <div>
+            <h5 class="mb-0">
+              My Contracts
+            </h5>
+
+            <small class="text-muted">
+              Contract repository and status
+            </small>
+          </div>
+
+          <span class="badge bg-primary">
+            {{ contracts.length }} Contracts
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <div class="table-responsive">
+
+        <table class="table table-hover align-middle mb-0">
+
+          <thead>
+
+            <tr>
+              <th>Contract #</th>
+              <th>Title</th>
+              <th>Start Date</th>
+              <th>End Date</th>
+              <th>Value</th>
+              <th>Status</th>
+            </tr>
+
+          </thead>
+
+
+          <tbody>
+
+            <tr *ngFor="let contract of contracts">
+
+              <td>
+                <strong>
+                  {{ contract.contract_number }}
+                </strong>
+              </td>
+
+              <td>
+                {{ contract.title }}
+              </td>
+
+              <td>
+                {{ contract.start_date | date:'mediumDate' }}
+              </td>
+
+              <td>
+                {{ contract.end_date | date:'mediumDate' }}
+              </td>
+
+              <td>
+                ${{ contract.value | number:'1.0-0' }}
+              </td>
+
+              <td>
+
+                <span
+                  class="badge"
+                  [ngClass]="statusClass(contract.status)"
+                >
+                  {{ contract.status }}
+                </span>
+
+              </td>
+
+            </tr>
+
+
+            <tr *ngIf="contracts.length === 0">
+
+              <td
+                colspan="6"
+                class="text-center text-muted py-5"
+              >
+
+                <i
+                  class="fa-solid fa-file-contract fs-2 mb-3 d-block"
+                ></i>
+
+                No contracts found.
+
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+

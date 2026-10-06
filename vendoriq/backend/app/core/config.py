@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     FIRST_ADMIN_EMAIL: str = os.getenv("FIRST_ADMIN_EMAIL", "admin@vendoriq.com")
     FIRST_ADMIN_PASSWORD: str = os.getenv("FIRST_ADMIN_PASSWORD", "Admin@123")
     FIRST_ADMIN_NAME: str = os.getenv("FIRST_ADMIN_NAME", "System Administrator")
+    SMTP_PORT: int = 587
+    SMTP_USE_TLS: bool = True
 
     class Config:
         env_file = ".env"

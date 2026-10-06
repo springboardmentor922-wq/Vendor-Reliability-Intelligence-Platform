@@ -1,0 +1,461 @@
+<div class="container-fluid">
+
+  <!-- HEADER -->
+  <div
+    class="d-flex justify-content-between align-items-center mb-4"
+  >
+
+    <div>
+
+      <h2 class="page-title mb-1">
+        Order History
+      </h2>
+
+      <p class="text-muted mb-0">
+        View your purchase orders, delivery status and order history.
+      </p>
+
+    </div>
+
+    <button
+      type="button"
+      class="btn btn-outline-primary"
+      (click)="loadOrderHistory()"
+      [disabled]="loading"
+    >
+
+      <i class="fa-solid fa-rotate me-1"></i>
+
+      Refresh
+
+    </button>
+
+  </div>
+
+
+  <!-- LOADING -->
+  <div
+    *ngIf="loading"
+    class="text-center py-5"
+  >
+
+    <div
+      class="spinner-border text-primary"
+      role="status"
+    ></div>
+
+    <p class="text-muted mt-3">
+      Loading order history...
+    </p>
+
+  </div>
+
+
+  <!-- ERROR -->
+  <div
+    *ngIf="!loading && error"
+    class="alert alert-danger"
+  >
+
+    <i
+      class="fa-solid fa-circle-exclamation me-2"
+    ></i>
+
+    {{ error }}
+
+  </div>
+
+
+  <!-- CONTENT -->
+  <div
+    *ngIf="!loading && !error"
+  >
+
+    <!-- SUMMARY -->
+    <div class="row g-3 mb-4">
+
+      <!-- TOTAL -->
+      <div class="col-md-6 col-xl-2">
+
+        <div
+          class="card card-elevated h-100 p-3"
+        >
+
+          <div class="text-muted small">
+            Total Orders
+          </div>
+
+          <div class="fs-3 fw-bold">
+            {{ totalOrders }}
+          </div>
+
+          <div class="text-muted small mt-1">
+            All purchase orders
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- PENDING -->
+      <div class="col-md-6 col-xl-2">
+
+        <div
+          class="card card-elevated h-100 p-3"
+        >
+
+          <div class="text-muted small">
+            Pending
+          </div>
+
+          <div class="fs-3 fw-bold text-warning">
+            {{ pendingOrders }}
+          </div>
+
+          <div class="text-muted small mt-1">
+            Awaiting processing
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- ORDERED -->
+      <div class="col-md-6 col-xl-2">
+
+        <div
+          class="card card-elevated h-100 p-3"
+        >
+
+          <div class="text-muted small">
+            Ordered
+          </div>
+
+          <div class="fs-3 fw-bold text-primary">
+            {{ orderedOrders }}
+          </div>
+
+          <div class="text-muted small mt-1">
+            Active orders
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- DELIVERED -->
+      <div class="col-md-6 col-xl-2">
+
+        <div
+          class="card card-elevated h-100 p-3"
+        >
+
+          <div class="text-muted small">
+            Delivered
+          </div>
+
+          <div class="fs-3 fw-bold text-success">
+            {{ deliveredOrders }}
+          </div>
+
+          <div class="text-muted small mt-1">
+            Completed orders
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- CANCELLED -->
+      <div class="col-md-6 col-xl-2">
+
+        <div
+          class="card card-elevated h-100 p-3"
+        >
+
+          <div class="text-muted small">
+            Cancelled
+          </div>
+
+          <div class="fs-3 fw-bold text-danger">
+            {{ cancelledOrders }}
+          </div>
+
+          <div class="text-muted small mt-1">
+            Cancelled orders
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- VALUE -->
+      <div class="col-md-6 col-xl-2">
+
+        <div
+          class="card card-elevated h-100 p-3"
+        >
+
+          <div class="text-muted small">
+            Order Value
+          </div>
+
+          <div class="fs-5 fw-bold text-success">
+            ${{ totalOrderValue | number:'1.0-0' }}
+          </div>
+
+          <div class="text-muted small mt-1">
+            Total procurement value
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ORDER HISTORY -->
+    <div class="card card-elevated">
+
+      <div
+        class="card-header bg-transparent"
+      >
+
+        <div
+          class="d-flex justify-content-between align-items-center"
+        >
+
+          <div>
+
+            <h5 class="mb-0">
+              Purchase Order History
+            </h5>
+
+            <small class="text-muted">
+              Orders associated with your vendor account
+            </small>
+
+          </div>
+
+          <span class="badge bg-primary">
+            {{ orders.length }} Orders
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <div class="table-responsive">
+
+        <table
+          class="table table-hover align-middle mb-0"
+        >
+
+          <thead>
+
+            <tr>
+
+              <th>PO Number</th>
+
+              <th>Order Date</th>
+
+              <th>Order Value</th>
+
+              <th>Expected Delivery</th>
+
+              <th>Actual Delivery</th>
+
+              <th>Status</th>
+
+              <th>Delivery</th>
+
+            </tr>
+
+          </thead>
+
+
+          <tbody>
+
+            <tr
+              *ngFor="let order of orders"
+            >
+
+              <!-- PO NUMBER -->
+              <td>
+
+                <strong>
+                  {{ order.po_number }}
+                </strong>
+
+              </td>
+
+
+              <!-- ORDER DATE -->
+              <td>
+
+                <span
+                  *ngIf="order.order_date"
+                >
+                  {{
+                    order.order_date
+                      | date:'mediumDate'
+                  }}
+                </span>
+
+                <span
+                  *ngIf="!order.order_date"
+                  class="text-muted"
+                >
+                  —
+                </span>
+
+              </td>
+
+
+              <!-- VALUE -->
+              <td>
+
+                <strong>
+                  ${{ order.total_amount
+                    | number:'1.0-0' }}
+                </strong>
+
+              </td>
+
+
+              <!-- EXPECTED DELIVERY -->
+              <td>
+
+                <span
+                  *ngIf="order.expected_delivery_date"
+                >
+                  {{
+                    order.expected_delivery_date
+                      | date:'mediumDate'
+                  }}
+                </span>
+
+                <span
+                  *ngIf="!order.expected_delivery_date"
+                  class="text-muted"
+                >
+                  Not scheduled
+                </span>
+
+              </td>
+
+
+              <!-- ACTUAL DELIVERY -->
+              <td>
+
+                <span
+                  *ngIf="order.actual_delivery_date"
+                >
+                  {{
+                    order.actual_delivery_date
+                      | date:'mediumDate'
+                  }}
+                </span>
+
+                <span
+                  *ngIf="!order.actual_delivery_date"
+                  class="text-muted"
+                >
+                  —
+                </span>
+
+              </td>
+
+
+              <!-- STATUS -->
+              <td>
+
+                <span
+                  class="badge"
+                  [ngClass]="
+                    statusClass(order.status)
+                  "
+                >
+                  {{
+                    statusLabel(order.status)
+                  }}
+                </span>
+
+              </td>
+
+
+              <!-- DELIVERY -->
+              <td>
+
+                <span
+                  [class.text-success]="
+                    order.actual_delivery_date
+                  "
+                  [class.text-muted]="
+                    !order.actual_delivery_date
+                  "
+                >
+
+                  <i
+                    class="fa-solid"
+                    [ngClass]="
+                      order.actual_delivery_date
+                        ? 'fa-circle-check'
+                        : 'fa-truck'
+                    "
+                  ></i>
+
+                  {{ trackDelivery(order) }}
+
+                </span>
+
+              </td>
+
+            </tr>
+
+
+            <!-- EMPTY -->
+            <tr
+              *ngIf="orders.length === 0"
+            >
+
+              <td
+                colspan="7"
+                class="text-center text-muted py-5"
+              >
+
+                <i
+                  class="fa-solid fa-box-open fs-2 mb-3 d-block"
+                ></i>
+
+                <strong>
+                  No order history found
+                </strong>
+
+                <div class="small mt-1">
+                  Purchase orders associated with your
+                  vendor account will appear here.
+                </div>
+
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

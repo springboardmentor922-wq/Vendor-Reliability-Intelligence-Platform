@@ -1,0 +1,486 @@
+<div class="container-fluid py-4">
+
+  <!-- PAGE HEADER -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+      <h3 class="mb-1">
+        <i class="fa-solid fa-chart-line me-2"></i>
+        Procurement Cost Analysis
+      </h3>
+
+      <p class="text-muted mb-0">
+        Review procurement spending, budgets, purchase values and cost variance.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="btn btn-outline-primary"
+      (click)="loadCostAnalysis()">
+
+      <i class="fa-solid fa-arrows-rotate me-1"></i>
+      Refresh
+
+    </button>
+
+  </div>
+
+  <!-- LOADING -->
+  <div
+    class="text-center py-5"
+    *ngIf="loading">
+
+    <div class="spinner-border text-primary"></div>
+
+    <p class="text-muted mt-2 mb-0">
+      Loading procurement cost records...
+    </p>
+
+  </div>
+
+  <!-- ERROR -->
+  <div
+    class="alert alert-danger"
+    *ngIf="error">
+
+    <i class="fa-solid fa-circle-exclamation me-2"></i>
+
+    {{ error }}
+
+  </div>
+
+  <!-- EMPTY -->
+  <div
+    class="alert alert-info"
+    *ngIf="!loading && !error && records.length === 0">
+
+    <i class="fa-solid fa-circle-info me-2"></i>
+
+    No procurement cost records found.
+
+  </div>
+
+  <!-- SUMMARY CARDS -->
+  <div
+    class="row g-3 mb-4"
+    *ngIf="!loading && records.length > 0">
+
+    <!-- TOTAL PURCHASE COST -->
+    <div class="col-md-3">
+
+      <div class="card shadow-sm border-0 h-100">
+
+        <div class="card-body">
+
+          <small class="text-muted">
+            Total Purchase Cost
+          </small>
+
+          <h3 class="mb-0">
+            ₹{{ totalCost | number:'1.2-2' }}
+          </h3>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- TOTAL BUDGET -->
+    <div class="col-md-3">
+
+      <div class="card shadow-sm border-0 h-100">
+
+        <div class="card-body">
+
+          <small class="text-muted">
+            Total Budget
+          </small>
+
+          <h3 class="mb-0">
+            ₹{{ totalBudget | number:'1.2-2' }}
+          </h3>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- TOTAL VARIANCE -->
+    <div class="col-md-3">
+
+      <div class="card shadow-sm border-0 h-100">
+
+        <div class="card-body">
+
+          <small class="text-muted">
+            Total Variance
+          </small>
+
+          <h3
+            class="mb-0"
+            [ngClass]="varianceClass(totalVariance)">
+
+            ₹{{ totalVariance | number:'1.2-2' }}
+
+          </h3>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- PURCHASE ORDERS -->
+    <div class="col-md-3">
+
+      <div class="card shadow-sm border-0 h-100">
+
+        <div class="card-body">
+
+          <small class="text-muted">
+            Purchase Orders
+          </small>
+
+          <h3 class="mb-0">
+            {{ records.length }}
+          </h3>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- RECORDS TABLE -->
+  <div
+    class="card shadow-sm border-0"
+    *ngIf="!loading && records.length > 0">
+
+    <div class="card-header bg-white py-3">
+
+      <h5 class="mb-0">
+
+        <i class="fa-solid fa-table me-2"></i>
+
+        Procurement Cost Records
+
+      </h5>
+
+    </div>
+
+    <div class="table-responsive">
+
+      <table class="table table-hover align-middle mb-0">
+
+        <thead class="table-light">
+
+          <tr>
+
+            <th>PO Number</th>
+
+            <th>Vendor</th>
+
+            <th>Created By</th>
+
+            <th>Status</th>
+
+            <th>Amount</th>
+
+            <th>Budget</th>
+
+            <th>Variance</th>
+
+            <th>Order Date</th>
+
+            <th>Expected Delivery</th>
+
+            <th>Actions</th>
+
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          <ng-container *ngFor="let record of records">
+
+            <!-- RECORD -->
+            <tr>
+
+              <!-- PO NUMBER -->
+              <td>
+
+                <strong>
+                  {{ record.po_number || 'N/A' }}
+                </strong>
+
+              </td>
+
+              <!-- VENDOR -->
+              <td>
+
+                <strong>
+                  {{ record.vendor_name || 'N/A' }}
+                </strong>
+
+              </td>
+
+              <!-- CREATED BY -->
+              <td>
+
+                <div>
+                  {{ record.created_by || 'N/A' }}
+                </div>
+
+                <small class="text-muted">
+                  {{ record.created_by_email || '' }}
+                </small>
+
+              </td>
+
+              <!-- STATUS -->
+              <td>
+
+                <span
+                  class="badge"
+                  [ngClass]="statusClass(record.status)">
+
+                  {{ record.status || 'Unknown' }}
+
+                </span>
+
+              </td>
+
+              <!-- AMOUNT -->
+              <td>
+
+                <strong>
+                  ₹{{ record.amount | number:'1.2-2' }}
+                </strong>
+
+              </td>
+
+              <!-- BUDGET -->
+              <td>
+
+                ₹{{ record.budget | number:'1.2-2' }}
+
+              </td>
+
+              <!-- VARIANCE -->
+              <td>
+
+                <strong
+                  [ngClass]="varianceClass(record.variance || 0)">
+
+                  ₹{{ record.variance | number:'1.2-2' }}
+
+                </strong>
+
+              </td>
+
+              <!-- ORDER DATE -->
+              <td>
+
+                {{ record.order_date
+                  ? (record.order_date | date:'dd MMM yyyy')
+                  : 'N/A'
+                }}
+
+              </td>
+
+              <!-- EXPECTED DELIVERY -->
+              <td>
+
+                {{ record.expected_delivery_date
+                  ? (record.expected_delivery_date | date:'dd MMM yyyy')
+                  : 'N/A'
+                }}
+
+              </td>
+
+              <!-- ACTIONS -->
+              <td>
+
+                <div class="d-flex gap-2">
+
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary"
+                    (click)="viewDetails(record)">
+
+                    <i class="fa-solid fa-eye me-1"></i>
+                    View
+
+                  </button>
+
+                  <a
+                    routerLink="/purchase-orders"
+                    class="btn btn-sm btn-outline-success">
+
+                    <i class="fa-solid fa-file-invoice me-1"></i>
+                    PO
+
+                  </a>
+
+                </div>
+
+              </td>
+
+            </tr>
+
+            <!-- DETAILS -->
+            <tr
+              *ngIf="
+                selectedRecord?.po_id === record.po_id
+              ">
+
+              <td
+                colspan="10"
+                class="bg-light">
+
+                <div class="p-3">
+
+                  <h6 class="mb-3">
+
+                    <i class="fa-solid fa-file-invoice-dollar me-2"></i>
+
+                    Purchase Order Cost Details
+
+                  </h6>
+
+                  <div class="row g-3">
+
+                    <div class="col-md-3">
+
+                      <strong>PO Number</strong>
+
+                      <div>
+                        {{ record.po_number || 'N/A' }}
+                      </div>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                      <strong>Vendor</strong>
+
+                      <div>
+                        {{ record.vendor_name || 'N/A' }}
+                      </div>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                      <strong>Status</strong>
+
+                      <div>
+                        {{ record.status || 'N/A' }}
+                      </div>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                      <strong>Purchase Amount</strong>
+
+                      <div>
+                        ₹{{ record.amount | number:'1.2-2' }}
+                      </div>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                      <strong>Budget</strong>
+
+                      <div>
+                        ₹{{ record.budget | number:'1.2-2' }}
+                      </div>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                      <strong>Variance</strong>
+
+                      <div
+                        [ngClass]="varianceClass(record.variance || 0)">
+
+                        ₹{{ record.variance | number:'1.2-2' }}
+
+                      </div>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                      <strong>Created By</strong>
+
+                      <div>
+                        {{ record.created_by || 'N/A' }}
+                      </div>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                      <strong>Created By Email</strong>
+
+                      <div>
+                        {{ record.created_by_email || 'N/A' }}
+                      </div>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                      <strong>Order Date</strong>
+
+                      <div>
+                        {{ record.order_date
+                          ? (record.order_date | date:'dd MMM yyyy')
+                          : 'N/A'
+                        }}
+                      </div>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                      <strong>Expected Delivery</strong>
+
+                      <div>
+                        {{ record.expected_delivery_date
+                          ? (record.expected_delivery_date | date:'dd MMM yyyy')
+                          : 'N/A'
+                        }}
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </td>
+
+            </tr>
+
+          </ng-container>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+</div>

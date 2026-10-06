@@ -1,0 +1,580 @@
+<div class="container-fluid py-4">
+
+  <!-- HEADER -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+      <h2 class="fw-bold mb-1">
+        <i class="fas fa-truck me-2"></i>
+        Delivery Status
+      </h2>
+
+      <p class="text-muted mb-0">
+        Track purchase order deliveries, delays and delivery performance.
+      </p>
+    </div>
+
+    <button
+      class="btn btn-outline-primary"
+      (click)="loadDeliveryStatus()"
+      [disabled]="loading">
+
+      <i class="fas fa-sync-alt me-2"></i>
+      Refresh
+    </button>
+
+  </div>
+
+
+  <!-- LOADING -->
+  <div
+    *ngIf="loading"
+    class="text-center py-5">
+
+    <div
+      class="spinner-border text-primary"
+      role="status">
+    </div>
+
+    <p class="text-muted mt-3 mb-0">
+      Loading delivery records...
+    </p>
+
+  </div>
+
+
+  <!-- ERROR -->
+  <div
+    *ngIf="!loading && error"
+    class="alert alert-danger">
+
+    <i class="fas fa-exclamation-circle me-2"></i>
+    {{ error }}
+
+    <button
+      class="btn btn-sm btn-outline-danger ms-3"
+      (click)="loadDeliveryStatus()">
+
+      Retry
+    </button>
+
+  </div>
+
+
+  <!-- CONTENT -->
+  <div *ngIf="!loading && !error">
+
+    <!-- SUMMARY CARDS -->
+    <div class="row g-3 mb-4">
+
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+
+            <div class="d-flex justify-content-between align-items-center">
+
+              <div>
+                <p class="text-muted mb-1">
+                  Total Deliveries
+                </p>
+
+                <h3 class="fw-bold mb-0">
+                  {{ totalDeliveries }}
+                </h3>
+              </div>
+
+              <i class="fas fa-boxes fa-2x text-primary"></i>
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+
+            <div class="d-flex justify-content-between align-items-center">
+
+              <div>
+                <p class="text-muted mb-1">
+                  On-Time Deliveries
+                </p>
+
+                <h3 class="fw-bold text-success mb-0">
+                  {{ onTimeDeliveries }}
+                </h3>
+              </div>
+
+              <i class="fas fa-check-circle fa-2x text-success"></i>
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+
+            <div class="d-flex justify-content-between align-items-center">
+
+              <div>
+                <p class="text-muted mb-1">
+                  Delayed Deliveries
+                </p>
+
+                <h3 class="fw-bold text-danger mb-0">
+                  {{ delayedDeliveries }}
+                </h3>
+              </div>
+
+              <i class="fas fa-exclamation-triangle fa-2x text-danger"></i>
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+
+            <div class="d-flex justify-content-between align-items-center">
+
+              <div>
+                <p class="text-muted mb-1">
+                  Delivery Rate
+                </p>
+
+                <h3 class="fw-bold text-primary mb-0">
+                  {{ deliveryRate }}%
+                </h3>
+              </div>
+
+              <i class="fas fa-chart-line fa-2x text-primary"></i>
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- EMPTY STATE -->
+    <div
+      *ngIf="records.length === 0"
+      class="card border-0 shadow-sm">
+
+      <div class="card-body text-center py-5">
+
+        <i class="fas fa-truck fa-3x text-muted mb-3"></i>
+
+        <h5>
+          No delivery records found
+        </h5>
+
+        <p class="text-muted mb-0">
+          There are currently no purchase order delivery records available.
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <!-- DELIVERY RECORDS -->
+    <div
+      *ngIf="records.length > 0"
+      class="card border-0 shadow-sm">
+
+      <div class="card-header bg-white py-3">
+
+        <div class="d-flex justify-content-between align-items-center">
+
+          <div>
+            <h5 class="fw-bold mb-1">
+              Delivery Records
+            </h5>
+
+            <small class="text-muted">
+              Purchase order delivery tracking
+            </small>
+          </div>
+
+          <span class="badge bg-primary">
+            {{ records.length }} Records
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <div class="table-responsive">
+
+        <table class="table table-hover align-middle mb-0">
+
+          <thead class="table-light">
+
+            <tr>
+
+              <th>PO Number</th>
+
+              <th>Vendor</th>
+
+              <th>Created By</th>
+
+              <th>Amount</th>
+
+              <th>Status</th>
+
+              <th>Expected Delivery</th>
+
+              <th>Actual Delivery</th>
+
+              <th>Delivery Status</th>
+
+              <th>Delay</th>
+
+              <th>Action</th>
+
+            </tr>
+
+          </thead>
+
+
+          <tbody>
+
+            <ng-container *ngFor="let record of records">
+
+              <tr>
+
+                <td>
+                  <strong>
+                    {{ record.po_number || 'N/A' }}
+                  </strong>
+                </td>
+
+
+                <td>
+                  {{ record.vendor_name || 'N/A' }}
+                </td>
+
+
+                <td>
+
+                  <div>
+                    {{ record.created_by || 'N/A' }}
+                  </div>
+
+                  <small class="text-muted">
+                    {{ record.created_by_email || '' }}
+                  </small>
+
+                </td>
+
+
+                <td>
+                  <strong>
+                    ₹{{ record.amount | number:'1.2-2' }}
+                  </strong>
+                </td>
+
+
+                <td>
+
+                  <span
+                    class="badge"
+                    [ngClass]="statusClass(record.status)">
+
+                    {{ record.status || 'N/A' }}
+
+                  </span>
+
+                </td>
+
+
+                <td>
+                  {{
+                    record.expected_delivery_date
+                      ? (record.expected_delivery_date | date:'dd MMM yyyy')
+                      : 'N/A'
+                  }}
+                </td>
+
+
+                <td>
+                  {{
+                    record.actual_delivery_date
+                      ? (record.actual_delivery_date | date:'dd MMM yyyy')
+                      : 'Not Delivered'
+                  }}
+                </td>
+
+
+                <td>
+
+                  <span
+                    [ngClass]="deliveryClass(record)">
+
+                    <i
+                      class="fas"
+                      [ngClass]="
+                        record.is_delayed
+                          ? 'fa-exclamation-circle'
+                          : record.actual_delivery_date
+                            ? 'fa-check-circle'
+                            : 'fa-clock'
+                      ">
+                    </i>
+
+                    {{ deliveryLabel(record) }}
+
+                  </span>
+
+                </td>
+
+
+                <td>
+
+                  <span
+                    *ngIf="record.is_delayed"
+                    class="text-danger fw-semibold">
+
+                    {{ record.delay_days || 0 }} days
+
+                  </span>
+
+                  <span
+                    *ngIf="!record.is_delayed"
+                    class="text-success">
+
+                    0 days
+
+                  </span>
+
+                </td>
+
+
+                <td>
+
+                  <button
+                    class="btn btn-sm btn-outline-primary"
+                    (click)="viewDetails(record)">
+
+                    <i class="fas fa-eye me-1"></i>
+
+                    {{
+                      selectedRecord?.po_id === record.po_id
+                        ? 'Hide'
+                        : 'View'
+                    }}
+
+                  </button>
+
+                </td>
+
+              </tr>
+
+
+              <!-- DETAILS -->
+              <tr
+                *ngIf="selectedRecord?.po_id === record.po_id">
+
+                <td
+                  colspan="10"
+                  class="bg-light">
+
+                  <div class="p-3">
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+
+                      <h6 class="fw-bold mb-0">
+                        <i class="fas fa-truck me-2"></i>
+                        Delivery Details
+                      </h6>
+
+                      <a
+                        routerLink="/purchase-orders"
+                        class="btn btn-sm btn-outline-primary">
+
+                        <i class="fas fa-file-alt me-1"></i>
+                        View Purchase Orders
+
+                      </a>
+
+                    </div>
+
+
+                    <div class="row g-3">
+
+                      <div class="col-md-3">
+
+                        <div class="border rounded p-3 bg-white h-100">
+
+                          <small class="text-muted">
+                            Purchase Order
+                          </small>
+
+                          <div class="fw-semibold mt-1">
+                            {{ record.po_number || 'N/A' }}
+                          </div>
+
+                        </div>
+
+                      </div>
+
+
+                      <div class="col-md-3">
+
+                        <div class="border rounded p-3 bg-white h-100">
+
+                          <small class="text-muted">
+                            Vendor
+                          </small>
+
+                          <div class="fw-semibold mt-1">
+                            {{ record.vendor_name || 'N/A' }}
+                          </div>
+
+                        </div>
+
+                      </div>
+
+
+                      <div class="col-md-3">
+
+                        <div class="border rounded p-3 bg-white h-100">
+
+                          <small class="text-muted">
+                            Expected Delivery
+                          </small>
+
+                          <div class="fw-semibold mt-1">
+
+                            {{
+                              record.expected_delivery_date
+                                ? (record.expected_delivery_date | date:'dd MMM yyyy')
+                                : 'N/A'
+                            }}
+
+                          </div>
+
+                        </div>
+
+                      </div>
+
+
+                      <div class="col-md-3">
+
+                        <div class="border rounded p-3 bg-white h-100">
+
+                          <small class="text-muted">
+                            Actual Delivery
+                          </small>
+
+                          <div class="fw-semibold mt-1">
+
+                            {{
+                              record.actual_delivery_date
+                                ? (record.actual_delivery_date | date:'dd MMM yyyy')
+                                : 'Not Delivered'
+                            }}
+
+                          </div>
+
+                        </div>
+
+                      </div>
+
+
+                      <div class="col-md-4">
+
+                        <div class="border rounded p-3 bg-white">
+
+                          <small class="text-muted">
+                            Delivery Status
+                          </small>
+
+                          <div
+                            class="fw-semibold mt-1"
+                            [ngClass]="deliveryClass(record)">
+
+                            {{ deliveryLabel(record) }}
+
+                          </div>
+
+                        </div>
+
+                      </div>
+
+
+                      <div class="col-md-4">
+
+                        <div class="border rounded p-3 bg-white">
+
+                          <small class="text-muted">
+                            Delay
+                          </small>
+
+                          <div class="fw-semibold mt-1">
+
+                            {{
+                              record.is_delayed
+                                ? (record.delay_days || 0) + ' days'
+                                : 'No Delay'
+                            }}
+
+                          </div>
+
+                        </div>
+
+                      </div>
+
+
+                      <div class="col-md-4">
+
+                        <div class="border rounded p-3 bg-white">
+
+                          <small class="text-muted">
+                            Order Amount
+                          </small>
+
+                          <div class="fw-semibold mt-1">
+                            ₹{{ record.amount | number:'1.2-2' }}
+                          </div>
+
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                </td>
+
+              </tr>
+
+            </ng-container>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

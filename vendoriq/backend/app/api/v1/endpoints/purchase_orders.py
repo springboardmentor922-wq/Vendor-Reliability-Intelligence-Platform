@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.deps import get_current_user, require_procurement_team, require_finance
-from app.core.utils import generate_code, log_activity, notify_user
+from app.core.utils import generate_code, log_activity
 from app.services.notification_service import notify_event
 from app.db.session_dep import get_db
 from app.models.user import User
@@ -72,9 +72,33 @@ def create_purchase_order(
     db.commit()
     db.refresh(po)
 
-    log_activity(db, current_user.id, "purchase_order_created", "purchase_order", po.id, po.po_number)
+    log_activity(
+        db,
+        current_user.id,
+        "purchase_order_created",
+        "purchase_order",
+        po.id,
+        po.po_number,
+    )
+
     if vendor.user_id:
-        notify_user(db, vendor.user_id, "procurement_alert", f"New Purchase Order {po.po_number}", "A new PO has been issued to you.", "purchase_order", po.id)
+        vendor_user = (
+            db.query(User)
+            .filter(User.id == vendor.user_id)
+            .first()
+        )
+
+        if vendor_user:
+            notify_event(
+                db,
+                vendor_user,
+                "procurement_alert",
+                f"New Purchase Order {po.po_number}",
+                "A new PO has been issued to you.",
+                "purchase_order",
+                po.id,
+            )
+
     return po
 
 
@@ -143,11 +167,39 @@ def update_po_status(
     db.commit()
     db.refresh(po)
 
-    log_activity(db, current_user.id, "po_status_updated", "purchase_order", po.id, f"{po.po_number} -> {payload.status.value}")
+    log_activity(
+        db,
+        current_user.id,
+        "po_status_updated",
+        "purchase_order",
+        po.id,
+        f"{po.po_number} -> {payload.status.value}",
+    )
 
-    vendor = db.query(Vendor).filter(Vendor.id == po.vendor_id).first()
+    vendor = (
+        db.query(Vendor)
+        .filter(Vendor.id == po.vendor_id)
+        .first()
+    )
+
     if vendor and vendor.user_id:
-        notify_user(db, vendor.user_id, "delivery_alert", f"PO {po.po_number} status: {payload.status.value}", None, "purchase_order", po.id)
+        vendor_user = (
+            db.query(User)
+            .filter(User.id == vendor.user_id)
+            .first()
+        )
+
+        if vendor_user:
+            notify_event(
+                db,
+                vendor_user,
+                "delivery_alert",
+                f"PO {po.po_number} status: {payload.status.value}",
+                f"Your purchase order {po.po_number} status is now {payload.status.value}.",
+                "purchase_order",
+                po.id,
+            )
+
     return po
 
 

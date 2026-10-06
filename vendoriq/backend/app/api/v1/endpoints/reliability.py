@@ -284,6 +284,10 @@ def get_vendor_reliability_ranking(
 # RISK SUMMARY
 # ============================================================
 
+# ============================================================
+# RISK SUMMARY
+# ============================================================
+
 @router.get(
     "/risk-summary",
     response_model=RiskSummary,
@@ -302,39 +306,45 @@ def get_risk_summary(
     - auditor
     """
 
-    scores = (
-        db.query(ReliabilityScore)
-        .join(
-            Vendor,
-            Vendor.id == ReliabilityScore.vendor_id,
+    vendors = db.query(Vendor).all()
+
+    low = 0
+    medium = 0
+    high = 0
+    critical = 0
+
+    for vendor in vendors:
+
+        latest_score = (
+            db.query(ReliabilityScore)
+            .filter(
+                ReliabilityScore.vendor_id == vendor.id
+            )
+            .order_by(
+                ReliabilityScore.calculated_at.desc()
+            )
+            .first()
         )
-        .all()
-    )
 
-    total = len(scores)
+        if not latest_score:
+            continue
 
-    low_risk = 0
-    medium_risk = 0
-    high_risk = 0
-    critical_risk = 0
+        if latest_score.risk_level == RiskLevel.LOW:
+            low += 1
 
-    for score in scores:
-        if score.risk_level == RiskLevel.LOW:
-            low_risk += 1
+        elif latest_score.risk_level == RiskLevel.MEDIUM:
+            medium += 1
 
-        elif score.risk_level == RiskLevel.MEDIUM:
-            medium_risk += 1
+        elif latest_score.risk_level == RiskLevel.HIGH:
+            high += 1
 
-        elif score.risk_level == RiskLevel.HIGH:
-            high_risk += 1
-
-        elif score.risk_level == RiskLevel.CRITICAL:
-            critical_risk += 1
+        else:
+            critical += 1
 
     return RiskSummary(
-        total_vendors=total,
-        low_risk=low_risk,
-        medium_risk=medium_risk,
-        high_risk=high_risk,
-        critical_risk=critical_risk,
+        total_vendors=len(vendors),
+        low_risk=low,
+        medium_risk=medium,
+        high_risk=high,
+        critical_risk=critical,
     )

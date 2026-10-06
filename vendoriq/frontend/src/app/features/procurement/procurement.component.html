@@ -1,127 +1,611 @@
+<!-- ========================================================= -->
+<!-- HEADER                                                    -->
+<!-- ========================================================= -->
+
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+
   <div>
-    <h3 class="page-title mb-0">Procurement Management</h3>
-    <p class="text-muted mb-0 small">Requests, approval workflow &amp; vendor assignment</p>
+    <h3 class="page-title mb-0">
+      {{ isAuditor ? 'Procurement Review' : 'Procurement Management' }}
+    </h3>
+
+    <p class="text-muted mb-0 small">
+      {{
+        isAuditor
+          ? 'Review procurement requests, purchase orders, spending and completion.'
+          : 'Requests, approval workflow & vendor assignment'
+      }}
+    </p>
   </div>
-  <button class="btn btn-brand" (click)="toggleForm()">
-    <i class="fa-solid fa-plus me-1"></i>{{ showForm ? 'Cancel' : 'New Request' }}
+
+  <!-- Existing Procurement Manager/Admin functionality -->
+  <button
+    *ngIf="!isAuditor"
+    class="btn btn-brand"
+    (click)="toggleForm()"
+  >
+    <i class="fa-solid fa-plus me-1"></i>
+    {{ showForm ? 'Cancel' : 'New Request' }}
   </button>
+
 </div>
 
-<div class="card card-elevated p-3 mb-3" *ngIf="showForm">
-  <h6 class="mb-3">New Procurement Request</h6>
-  <form [formGroup]="form" (ngSubmit)="submit()">
-    <div class="row g-3">
-      <div class="col-md-8">
-        <label class="form-label">Title</label>
-        <input class="form-control" formControlName="title" />
+
+<!-- ========================================================= -->
+<!-- AUDITOR PROCUREMENT REVIEW                                -->
+<!-- ========================================================= -->
+
+<div
+  *ngIf="isAuditor"
+  class="row g-3 mb-4"
+>
+
+  <!-- REQUESTS -->
+
+  <div class="col-md-6 col-xl">
+    <div class="card card-elevated h-100 p-3">
+
+      <div class="text-muted small">
+        Requests
       </div>
+
+      <div class="fs-3 fw-bold mt-1">
+        {{ totalRequests }}
+      </div>
+
+      <div class="text-muted small mt-1">
+        Total procurement requests
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- PURCHASE ORDERS -->
+
+  <div class="col-md-6 col-xl">
+    <div class="card card-elevated h-100 p-3">
+
+      <div class="text-muted small">
+        POs
+      </div>
+
+      <div class="fs-3 fw-bold mt-1">
+        {{ totalPOs }}
+      </div>
+
+      <div class="text-muted small mt-1">
+        Total purchase orders
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- PROCUREMENT VALUE -->
+
+  <div class="col-md-6 col-xl">
+    <div class="card card-elevated h-100 p-3">
+
+      <div class="text-muted small">
+        Procurement Value
+      </div>
+
+      <div class="fs-3 fw-bold mt-1">
+        ${{ procurementValue | number:'1.0-0' }}
+      </div>
+
+      <div class="text-muted small mt-1">
+        Total requested budget
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- PENDING -->
+
+  <div class="col-md-6 col-xl">
+    <div class="card card-elevated h-100 p-3">
+
+      <div class="text-muted small">
+        Pending
+      </div>
+
+      <div class="fs-3 fw-bold mt-1">
+        {{ pendingRequests }}
+      </div>
+
+      <div class="text-muted small mt-1">
+        Requests awaiting approval
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- COMPLETION RATE -->
+
+  <div class="col-md-6 col-xl">
+    <div class="card card-elevated h-100 p-3">
+
+      <div class="text-muted small">
+        Completion Rate
+      </div>
+
+      <div class="fs-3 fw-bold mt-1">
+        {{ completionRate }}%
+      </div>
+
+      <div class="text-muted small mt-1">
+        Completed requests
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- NEW PROCUREMENT REQUEST FORM                              -->
+<!-- EXISTING ROLES ONLY                                       -->
+<!-- ========================================================= -->
+
+<div
+  class="card card-elevated p-3 mb-3"
+  *ngIf="showForm && !isAuditor"
+>
+
+  <h6 class="mb-3">
+    New Procurement Request
+  </h6>
+
+  <form
+    [formGroup]="form"
+    (ngSubmit)="submit()"
+  >
+
+    <div class="row g-3">
+
+      <div class="col-md-8">
+        <label class="form-label">
+          Title
+        </label>
+
+        <input
+          class="form-control"
+          formControlName="title"
+        />
+      </div>
+
+
       <div class="col-md-4">
-        <label class="form-label">Priority</label>
-        <select class="form-select" formControlName="priority">
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
-          <option value="urgent">Urgent</option>
+        <label class="form-label">
+          Priority
+        </label>
+
+        <select
+          class="form-select"
+          formControlName="priority"
+        >
+          <option value="low">
+            Low
+          </option>
+
+          <option value="medium">
+            Medium
+          </option>
+
+          <option value="high">
+            High
+          </option>
+
+          <option value="urgent">
+            Urgent
+          </option>
         </select>
       </div>
+
+
       <div class="col-12">
-        <label class="form-label">Description</label>
-        <textarea class="form-control" rows="2" formControlName="description"></textarea>
+        <label class="form-label">
+          Description
+        </label>
+
+        <textarea
+          class="form-control"
+          rows="2"
+          formControlName="description"
+        ></textarea>
       </div>
+
+
       <div class="col-md-3">
-        <label class="form-label">Department</label>
-        <input class="form-control" formControlName="department" />
+        <label class="form-label">
+          Department
+        </label>
+
+        <input
+          class="form-control"
+          formControlName="department"
+        />
       </div>
+
+
       <div class="col-md-3">
-        <label class="form-label">Category</label>
-        <input class="form-control" formControlName="category" />
+        <label class="form-label">
+          Category
+        </label>
+
+        <input
+          class="form-control"
+          formControlName="category"
+        />
       </div>
+
+
       <div class="col-md-2">
-        <label class="form-label">Quantity</label>
-        <input type="number" class="form-control" formControlName="quantity" />
+        <label class="form-label">
+          Quantity
+        </label>
+
+        <input
+          type="number"
+          class="form-control"
+          formControlName="quantity"
+        />
       </div>
+
+
       <div class="col-md-2">
-        <label class="form-label">Unit</label>
-        <input class="form-control" formControlName="unit" />
+        <label class="form-label">
+          Unit
+        </label>
+
+        <input
+          class="form-control"
+          formControlName="unit"
+        />
       </div>
+
+
       <div class="col-md-2">
-        <label class="form-label">Est. Budget ($)</label>
-        <input type="number" class="form-control" formControlName="estimated_budget" />
+        <label class="form-label">
+          Est. Budget ($)
+        </label>
+
+        <input
+          type="number"
+          class="form-control"
+          formControlName="estimated_budget"
+        />
       </div>
+
+
       <div class="col-md-4">
-        <label class="form-label">Required Date</label>
-        <input type="date" class="form-control" formControlName="required_date" />
+        <label class="form-label">
+          Required Date
+        </label>
+
+        <input
+          type="date"
+          class="form-control"
+          formControlName="required_date"
+        />
       </div>
+
     </div>
-    <button class="btn btn-brand mt-3" type="submit" [disabled]="form.invalid || submitting">
-      <span *ngIf="submitting" class="spinner-border spinner-border-sm me-2"></span>Submit Request
+
+
+    <button
+      class="btn btn-brand mt-3"
+      type="submit"
+      [disabled]="form.invalid || submitting"
+    >
+
+      <span
+        *ngIf="submitting"
+        class="spinner-border spinner-border-sm me-2"
+      ></span>
+
+      Submit Request
+
     </button>
+
   </form>
+
 </div>
+
+
+<!-- ========================================================= -->
+<!-- STATUS FILTER                                             -->
+<!-- ========================================================= -->
 
 <div class="card card-elevated p-3 mb-3">
+
   <div class="row g-2 align-items-end">
+
     <div class="col-md-4">
-      <label class="form-label small">Status</label>
-      <select class="form-select form-select-sm" [(ngModel)]="statusFilter" (change)="load()">
-        <option value="">All Statuses</option>
-        <option *ngFor="let s of statuses" [value]="s">{{ s }}</option>
+
+      <label class="form-label small">
+        Status
+      </label>
+
+      <select
+        class="form-select form-select-sm"
+        [(ngModel)]="statusFilter"
+        (change)="load()"
+      >
+
+        <option value="">
+          All Statuses
+        </option>
+
+        <option
+          *ngFor="let s of statuses"
+          [value]="s"
+        >
+          {{ s }}
+        </option>
+
       </select>
+
     </div>
+
   </div>
+
 </div>
 
-<div class="alert alert-danger" *ngIf="error">{{ error }}</div>
-<div class="text-center py-5" *ngIf="loading"><div class="spinner-border text-primary"></div></div>
 
-<div class="card card-elevated" *ngIf="!loading">
+<!-- ========================================================= -->
+<!-- ERROR                                                     -->
+<!-- ========================================================= -->
+
+<div
+  class="alert alert-danger"
+  *ngIf="error"
+>
+  {{ error }}
+</div>
+
+
+<!-- ========================================================= -->
+<!-- LOADING                                                   -->
+<!-- ========================================================= -->
+
+<div
+  class="text-center py-5"
+  *ngIf="loading"
+>
+  <div class="spinner-border text-primary"></div>
+</div>
+
+
+<!-- ========================================================= -->
+<!-- PROCUREMENT TABLE                                         -->
+<!-- ========================================================= -->
+
+<div
+  class="card card-elevated"
+  *ngIf="!loading"
+>
+
   <div class="table-responsive">
+
     <table class="table table-hover align-middle mb-0">
+
       <thead>
+
         <tr>
-          <th>Request #</th>
-          <th>Title</th>
-          <th>Priority</th>
-          <th>Budget</th>
-          <th>Status</th>
-          <th>Assign Vendor</th>
-          <th>Reliability / Recommendation</th>
-          <th class="text-end">Actions</th>
+
+          <th>
+            Request #
+          </th>
+
+          <th>
+            Title
+          </th>
+
+          <th>
+            Priority
+          </th>
+
+          <th>
+            Budget
+          </th>
+
+          <th>
+            Status
+          </th>
+
+          <!-- Auditor: read-only assigned vendor -->
+          <th>
+            Assigned Vendor
+          </th>
+
+          <!-- Existing role functionality -->
+          <th *ngIf="!isAuditor">
+            Reliability / Recommendation
+          </th>
+
+          <!-- Existing role functionality -->
+          <th
+            *ngIf="!isAuditor"
+            class="text-end"
+          >
+            Actions
+          </th>
+
         </tr>
+
       </thead>
+
+
       <tbody>
+
         <tr *ngFor="let r of requests">
-          <td><small class="text-muted">{{ r.request_number }}</small></td>
+
           <td>
-            <strong>{{ r.title }}</strong><br />
-            <small class="text-muted">{{ r.department }}</small>
+            <small class="text-muted">
+              {{ r.request_number }}
+            </small>
           </td>
-          <td class="text-capitalize">{{ r.priority }}</td>
-          <td>${{ r.estimated_budget | number:'1.0-0' }}</td>
-          <td><span class="badge badge-status" [ngClass]="statusBadgeClass(r.status)">{{ r.status }}</span></td>
+
+
           <td>
+
+            <strong>
+              {{ r.title }}
+            </strong>
+
+            <br />
+
+            <small class="text-muted">
+              {{ r.department }}
+            </small>
+
+          </td>
+
+
+          <td class="text-capitalize">
+            {{ r.priority }}
+          </td>
+
+
+          <td>
+            ${{ r.estimated_budget | number:'1.0-0' }}
+          </td>
+
+
+          <td>
+
+            <span
+              class="badge badge-status"
+              [ngClass]="statusBadgeClass(r.status)"
+            >
+              {{ r.status }}
+            </span>
+
+          </td>
+
+
+          <!-- ================================================= -->
+          <!-- AUDITOR: READ ONLY                                -->
+          <!-- ================================================= -->
+
+          <td>
+
+            <span *ngIf="isAuditor">
+
+              {{
+                r.assigned_vendor_id
+                  ? 'Vendor #' + r.assigned_vendor_id
+                  : 'Not assigned'
+              }}
+
+            </span>
+
+
+            <!-- Existing Procurement Manager functionality -->
             <select
+              *ngIf="!isAuditor"
               class="form-select form-select-sm"
               style="min-width: 150px"
-              [disabled]="r.status !== 'approved' && r.status !== 'ordered'"
-              (change)="assignVendor(r, $any($event.target).value)"
+              [disabled]="
+                r.status !== 'approved' &&
+                r.status !== 'ordered'
+              "
+              (change)="
+                assignVendor(
+                  r,
+                  $any($event.target).value
+                )
+              "
             >
-              <option value="">{{ r.assigned_vendor_id ? 'Vendor #' + r.assigned_vendor_id : 'Select vendor' }}</option>
-              <option *ngFor="let v of vendors" [value]="v.id">{{ v.company_name }}</option>
+
+              <option value="">
+
+                {{
+                  r.assigned_vendor_id
+                    ? 'Vendor #' + r.assigned_vendor_id
+                    : 'Select vendor'
+                }}
+
+              </option>
+
+
+              <option
+                *ngFor="let v of vendors"
+                [value]="v.id"
+              >
+                {{ v.company_name }}
+              </option>
+
             </select>
+
           </td>
-          <td class="text-end">
-            <ng-container *ngIf="canApprove() && r.status === 'pending'">
-              <button class="btn btn-sm btn-success me-1" (click)="approve(r, 'approved')">Approve</button>
-              <button class="btn btn-sm btn-outline-danger" (click)="approve(r, 'rejected')">Reject</button>
+
+
+          <!-- ================================================= -->
+          <!-- EXISTING APPROVAL FUNCTIONALITY                  -->
+          <!-- ================================================= -->
+
+          <td *ngIf="!isAuditor">
+
+            <ng-container
+              *ngIf="
+                canApprove() &&
+                r.status === 'pending'
+              "
+            >
+
+              <button
+                class="btn btn-sm btn-success me-1"
+                (click)="approve(r, 'approved')"
+              >
+                Approve
+              </button>
+
+
+              <button
+                class="btn btn-sm btn-outline-danger"
+                (click)="approve(r, 'rejected')"
+              >
+                Reject
+              </button>
+
             </ng-container>
+
           </td>
+
+
+          <!-- ACTIONS -->
+
+          <td
+            *ngIf="!isAuditor"
+            class="text-end"
+          >
+          </td>
+
         </tr>
+
+
         <tr *ngIf="!requests.length">
-          <td colspan="8" class="text-center text-muted py-4">No procurement requests found.</td>
+
+          <td
+            [attr.colspan]="isAuditor ? 6 : 8"
+            class="text-center text-muted py-4"
+          >
+            No procurement requests found.
+          </td>
+
         </tr>
+
       </tbody>
+
     </table>
+
   </div>
+
 </div>

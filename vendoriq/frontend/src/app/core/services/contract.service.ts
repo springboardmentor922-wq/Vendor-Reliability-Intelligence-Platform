@@ -10,7 +10,7 @@ export class ContractService {
 
   constructor(private http: HttpClient) {}
 
-  list(params: { vendor_id?: number; status_filter?: string } = {}): Observable<Contract[]> {
+  list(params: { vendor_id?: string; status_filter?: string } = {}): Observable<Contract[]>{
     let query = '';
     const entries = Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '');
     if (entries.length) {

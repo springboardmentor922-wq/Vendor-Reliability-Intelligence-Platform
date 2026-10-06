@@ -3,6 +3,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import Response
+from pathlib import Path
 from sqlalchemy.orm import Session
 
 from app.core.deps import (
@@ -62,16 +63,20 @@ def _return_report(
     report_format: str,
     filename: str,
 ) -> Any:
-    """
-    Return the generated report in the requested format.
-    """
-
     if report_format == "json":
         return report
 
+    report_path = Path(report)
+
+    if not report_path.exists():
+        raise HTTPException(
+            status_code=500,
+            detail="Report file was not generated",
+        )
+
     if report_format == "xlsx":
         return Response(
-            content=report,
+            content=report_path.read_bytes(),
             media_type=(
                 "application/vnd.openxmlformats-officedocument."
                 "spreadsheetml.sheet"
@@ -85,7 +90,7 @@ def _return_report(
 
     if report_format == "pdf":
         return Response(
-            content=report,
+            content=report_path.read_bytes(),
             media_type="application/pdf",
             headers={
                 "Content-Disposition": (
@@ -98,7 +103,6 @@ def _return_report(
         status_code=400,
         detail="Unsupported report format",
     )
-
 
 # ============================================================
 # VENDOR PERFORMANCE REPORT
