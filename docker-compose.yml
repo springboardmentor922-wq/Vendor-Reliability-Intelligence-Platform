@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgres:16
+    container_name: vendor_intelligence_db
+    environment:
+      POSTGRES_DB: vendor_intelligence
+      POSTGRES_USER: vendor_admin
+      POSTGRES_PASSWORD: vendor_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - vendor_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vendor_admin -d vendor_intelligence"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  vendor_pgdata:
