@@ -1,0 +1,286 @@
+<div class="container-fluid py-4">
+
+  <!-- PAGE TITLE -->
+  <div class="mb-4">
+    <h2>Vendor Reliability</h2>
+    <p class="text-muted">
+      Monitor vendor reliability scores, risk levels and supplier rankings.
+    </p>
+  </div>
+
+  <!-- RISK SUMMARY -->
+  <div class="row g-4 mb-4">
+
+    <!-- LOW RISK -->
+    <div class="col-md-4">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <h6 class="text-muted">Low Risk</h6>
+          <h2>{{ riskSummary['LOW'] || 0 }}</h2>
+          <p class="mb-0 text-muted">
+            Vendors with low procurement risk
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- MEDIUM RISK -->
+    <div class="col-md-4">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <h6 class="text-muted">Medium Risk</h6>
+          <h2>{{ riskSummary['MEDIUM'] || 0 }}</h2>
+          <p class="mb-0 text-muted">
+            Vendors requiring monitoring
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- HIGH RISK -->
+    <div class="col-md-4">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <h6 class="text-muted">High Risk</h6>
+          <h2>{{ riskSummary['HIGH'] || 0 }}</h2>
+          <p class="mb-0 text-muted">
+            Vendors requiring review
+          </p>
+        </div>
+      </div>
+
+  </div>
+<pre>{{ riskSummary | json }}</pre>
+
+
+  <!-- VENDOR RANKING -->
+  <div class="card shadow-sm border-0">
+
+    <div class="card-body">
+
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h4 class="mb-1">Vendor Ranking</h4>
+          <p class="text-muted mb-0">
+            Vendors ranked according to their reliability score.
+          </p>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+
+        <table class="table table-hover align-middle">
+
+          <thead>
+            <tr>
+              <th>Vendor</th>
+              <th>Reliability Score</th>
+              <th>Risk Level</th>
+              <th>Delivery</th>
+              <th>Quality</th>
+              <th>Communication</th>
+              <th>Contract Compliance</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            <tr *ngFor="let vendor of ranking">
+
+              <td>
+                <strong>
+                  {{ vendor.vendor_name || ('Vendor ' + vendor.vendor_id) }}
+                </strong>
+              </td>
+
+              <td>
+                <strong>
+                  {{ vendor.overall_score || 0 }}
+                </strong>
+              </td>
+
+              <td>
+                <span
+                  class="badge"
+                  [ngClass]="{
+                    'bg-success':
+                      (vendor.risk_level || '').toUpperCase() === 'LOW',
+
+                    'bg-warning text-dark':
+                      (vendor.risk_level || '').toUpperCase() === 'MEDIUM',
+
+                    'bg-danger':
+                      (vendor.risk_level || '').toUpperCase() === 'HIGH'
+                  }">
+
+                  {{ vendor.risk_level || 'N/A' }}
+
+                </span>
+              </td>
+
+              <td>
+                {{ vendor.delivery_score || vendor.delivery || 0 }}
+              </td>
+
+              <td>
+                {{ vendor.quality_score || vendor.quality || 0 }}
+              </td>
+
+              <td>
+                {{ vendor.communication_score || vendor.communication || 0 }}
+              </td>
+
+              <td>
+                {{ vendor.contract_compliance_score ||
+                   vendor.contract_compliance || 0 }}
+              </td>
+
+            </tr>
+
+            <tr *ngIf="ranking.length === 0">
+              <td colspan="7" class="text-center text-muted py-4">
+                No vendor reliability data available.
+              </td>
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- RELIABILITY SCORES -->
+  <div class="card shadow-sm border-0 mt-4">
+
+    <div class="card-body">
+
+      <h4 class="mb-3">Reliability Scores</h4>
+
+      <div class="table-responsive">
+
+        <table class="table table-bordered align-middle">
+
+          <thead>
+            <tr>
+              <th>Vendor</th>
+              <th>Score</th>
+              <th>Risk Level</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            <tr *ngFor="let score of reliabilityScores">
+
+              <td>
+                {{ score.vendor_name || ('Vendor ' + score.vendor_id) }}
+              </td>
+
+              <td>
+                {{ score.overall_score || 0 }}
+            </td>
+
+              <td>
+                {{ score.risk_level || 'N/A' }}
+              </td>
+
+            </tr>
+
+            <tr *ngIf="reliabilityScores.length === 0">
+              <td colspan="3" class="text-center text-muted py-3">
+                No reliability scores available.
+              </td>
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </div>
+         <!-- PROCUREMENT RECOMMENDATIONS -->
+<div class="card shadow-sm border-0 mt-4">
+
+  <div class="card-body">
+
+    <h4 class="mb-3">Procurement Recommendations</h4>
+
+    <div class="table-responsive">
+
+      <table class="table table-bordered align-middle">
+
+        <thead>
+          <tr>
+            <th>Vendor</th>
+            <th>Reliability Score</th>
+            <th>Risk Score</th>
+            <th>Recommendation</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <tr *ngFor="let recommendation of recommendations">
+
+            <td>
+              Vendor {{ recommendation.vendor_id }}
+            </td>
+
+            <td>
+              {{ recommendation.reliability_score || 0 }}
+            </td>
+
+            <td>
+              {{ recommendation.risk_score || 0 }}
+            </td>
+
+            <td>
+              <span
+                class="badge"
+                [ngClass]="{
+                  'bg-success':
+                    recommendation.recommendation === 'PREFERRED',
+
+                  'bg-warning text-dark':
+                    recommendation.recommendation === 'APPROVED_WITH_MONITORING',
+
+                  'bg-danger':
+                    recommendation.recommendation === 'LIMITED_USE' ||
+                    recommendation.recommendation === 'AVOID_FOR_NEW_ORDERS'
+                }">
+                {{ recommendation.recommendation }}
+              </span>
+            </td>
+
+            <td>
+              {{ recommendation.reason }}
+            </td>
+
+          </tr>
+
+          <tr *ngIf="recommendations.length === 0">
+            <td colspan="5" class="text-center text-muted py-3">
+              No procurement recommendations available.
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+</div>
+
+</div>

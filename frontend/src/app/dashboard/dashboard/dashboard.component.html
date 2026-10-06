@@ -1,0 +1,211 @@
+<nav class="navbar">
+  <div class="brand">
+    Vendor Intel
+  </div>
+
+  <div class="nav-menu">
+    <a routerLink="/dashboard" class="nav-item">Dashboard</a>
+    <a routerLink="/vendors" class="nav-item">Vendors</a>
+    <a routerLink="/vendor-approval" class="nav-item">Vendor Approval</a>
+    <a routerLink="/contracts" class="nav-item">Contracts</a>
+    <a routerLink="/communications" class="nav-item">Communication</a>
+    <a routerLink="/procurement" class="nav-item">Procurement</a>
+    <a routerLink="/purchase-orders" class="nav-item">POs</a>
+    <a routerLink="/performance" class="nav-item">Performance</a>
+    <a routerLink="/analytics" class="nav-item">Analytics</a>
+    <a routerLink="/reports" class="nav-item">Reports</a>
+    <a routerLink="/notifications" class="nav-item">Notifications</a>
+  </div>
+
+  <div class="user-area">
+    <span class="user-pill">
+      {{ currentUser?.full_name || 'User' }}
+    </span>
+
+    <button (click)="logout()" class="logout-btn">
+      Logout
+    </button>
+  </div>
+</nav>
+
+<div class="dashboard-container p-3 p-md-4">
+
+  <div class="light-card p-4 mb-4 welcome-hero bg-white border rounded-3 shadow-sm">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <h1 class="fs-2 fw-bold text-dark m-0">
+            Welcome, {{ currentUser?.full_name || 'User' }}
+          </h1>
+
+          <span class="role-badge" [ngClass]="currentUser?.role || ''">
+            {{ currentUser?.role }}
+          </span>
+        </div>
+
+        <p class="text-secondary m-0">
+          Procurement Reliability Intelligence & Operational Risk Platform
+        </p>
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+
+        <div class="milestone-badge p-2 px-3 rounded-3 border bg-light d-flex align-items-center gap-2">
+          <i class="material-icons-outlined text-primary fs-5">verified</i>
+          <span class="small text-secondary fw-medium">
+            Milestone 1 Core Foundation
+          </span>
+        </div>
+
+        <button
+          (click)="logout()"
+          class="btn btn-outline-danger d-flex align-items-center gap-1 py-2 px-3 rounded-3">
+          <i class="material-icons-outlined fs-5">logout</i>
+          <span class="fw-semibold small">Logout</span>
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="light-card p-3 p-md-4 bg-white border rounded-3 shadow-sm h-100">
+        <div class="d-flex justify-content-between align-items-start">
+
+          <div>
+            <span class="text-secondary small fw-semibold text-uppercase tracking-wider">
+              Total Vendors
+            </span>
+
+            <h2 class="fs-1 fw-bold text-dark mt-2 mb-1">
+              {{ metrics.totalVendors }}
+            </h2>
+
+            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 small">
+              Active Network
+            </span>
+          </div>
+
+          <div class="metric-icon-box bg-indigo-subtle">
+            <i class="material-icons-outlined text-indigo">storefront</i>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="light-card p-3 p-md-4 bg-white border rounded-3 shadow-sm h-100">
+        <div class="d-flex justify-content-between align-items-start">
+
+          <div>
+            <span class="text-secondary small fw-semibold text-uppercase tracking-wider">
+              Active Purchase Orders
+            </span>
+
+            <h2 class="fs-1 fw-bold text-dark mt-2 mb-1">
+              {{ metrics.activePurchaseOrders }}
+            </h2>
+
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-1 small">
+              In Fulfillment
+            </span>
+          </div>
+
+          <div class="metric-icon-box bg-blue-subtle">
+            <i class="material-icons-outlined text-primary">shopping_cart</i>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="light-card p-3 p-md-4 bg-white border rounded-3 shadow-sm h-100">
+        <div class="d-flex justify-content-between align-items-start">
+
+          <div>
+            <span class="text-secondary small fw-semibold text-uppercase tracking-wider">
+              Pending Approvals
+            </span>
+
+            <h2 class="fs-1 fw-bold text-dark mt-2 mb-1">
+              {{ metrics.pendingApprovals }}
+            </h2>
+
+            <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-2 py-1 small">
+              Awaiting Review
+            </span>
+          </div>
+
+          <div class="metric-icon-box bg-amber-subtle">
+            <i class="material-icons-outlined text-warning">assignment_late</i>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="light-card p-3 p-md-4 bg-white border rounded-3 shadow-sm h-100">
+        <div class="d-flex justify-content-between align-items-start">
+
+          <div>
+            <span class="text-secondary small fw-semibold text-uppercase tracking-wider">
+              Reliability Score
+            </span>
+
+            <h2 class="fs-1 fw-bold text-dark mt-2 mb-1">
+              {{ metrics.reliabilityScore }}
+            </h2>
+
+            <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2 py-1 small">
+              Platform Average
+            </span>
+          </div>
+
+          <div class="metric-icon-box bg-teal-subtle">
+            <i class="material-icons-outlined text-info">speed</i>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="light-card p-4 bg-white border rounded-3 shadow-sm mb-4">
+
+    <div class="d-flex align-items-center gap-3 mb-3">
+
+      <div class="p-2 bg-primary-subtle text-primary rounded-3">
+        <i class="material-icons-outlined fs-3">architecture</i>
+      </div>
+
+      <div>
+        <h3 class="fs-5 fw-bold text-dark m-0">
+          Milestone 1 Authenticated Landing Page
+        </h3>
+
+        <p class="text-secondary small m-0">
+          Authentication, User Management, JWT authorization & PostgreSQL setup complete.
+        </p>
+      </div>
+
+    </div>
+
+    <div class="p-3 bg-light border rounded-3 text-secondary small">
+      <i class="material-icons-outlined me-1 align-middle text-primary">
+        info
+      </i>
+
+      Vendor Management, Procurement Workflows, Purchase Order lifecycle,
+      AI Reliability Scoring, Analytics, and Reports modules will be functional
+      in subsequent milestones.
+    </div>
+
+  </div>
+
+</div>

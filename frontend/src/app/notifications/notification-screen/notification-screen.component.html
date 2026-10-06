@@ -1,0 +1,164 @@
+<div class="page">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div>
+      <div class="eyebrow">SYSTEM ACTIVITY</div>
+      <h1>Notifications</h1>
+      <p>Track approvals, procurement events, contract alerts and compliance updates.</p>
+    </div>
+
+    <div class="notification-summary">
+      <span class="summary-item">
+        <strong>{{ unreadCount }}</strong>
+        Unread
+      </span>
+
+      <span class="summary-item">
+        <strong>{{ readCount }}</strong>
+        Read
+      </span>
+    </div>
+  </div>
+
+
+  <!-- NOTIFICATION LIST -->
+  <div class="notification-card">
+
+    <div class="section-heading">
+      <div>
+        <h2>Notification Center</h2>
+        <p>Recent system notifications and important activity.</p>
+      </div>
+
+      <div class="notification-count">
+        {{ notifications.length }} notifications
+      </div>
+    </div>
+
+
+    <div class="notification-list">
+
+      <!-- NOTIFICATION ITEM -->
+      <div
+        class="notification-item"
+        *ngFor="let item of notifications"
+        [class.unread]="item.status === 'UNREAD'">
+
+        <div
+          class="notification-icon"
+          [ngClass]="getNotificationClass(item.notification_type)">
+
+          <span *ngIf="item.notification_type === 'CONTRACT_EXPIRY'">
+            CT
+          </span>
+
+          <span *ngIf="item.notification_type === 'COMPLIANCE_ISSUE'">
+            CO
+          </span>
+
+          <span *ngIf="item.notification_type === 'VENDOR_APPROVAL'">
+            VA
+          </span>
+
+          <span *ngIf="item.notification_type === 'PROCUREMENT_APPROVAL'">
+            PA
+          </span>
+
+          <span *ngIf="item.notification_type === 'PURCHASE_ORDER'">
+            PO
+          </span>
+
+          <span *ngIf="item.notification_type === 'DELIVERY_UPDATE'">
+            DE
+          </span>
+
+          <span *ngIf="item.notification_type !== 'CONTRACT_EXPIRY'
+              && item.notification_type !== 'COMPLIANCE_ISSUE'
+              && item.notification_type !== 'VENDOR_APPROVAL'
+              && item.notification_type !== 'PROCUREMENT_APPROVAL'
+              && item.notification_type !== 'PURCHASE_ORDER'
+              && item.notification_type !== 'DELIVERY_UPDATE'">
+            NT
+          </span>
+
+        </div>
+
+
+        <div class="notification-content">
+
+          <div class="notification-top">
+
+            <div>
+              <h3>{{ item.title }}</h3>
+
+              <span class="notification-type">
+                {{ item.notification_type }}
+              </span>
+            </div>
+
+            <span
+              class="notification-status"
+              [class.unread-status]="item.status === 'UNREAD'">
+
+              {{ item.status }}
+
+            </span>
+
+          </div>
+
+
+          <p class="notification-message">
+            {{ item.message }}
+          </p>
+
+
+          <div class="notification-meta">
+
+            <span *ngIf="item.related_record">
+              Related: {{ item.related_record }}
+            </span>
+
+            <span *ngIf="item.created_at">
+              {{ item.created_at | date:'dd MMM yyyy, hh:mm a' }}
+            </span>
+
+          </div>
+
+
+          <button
+            *ngIf="item.status === 'UNREAD'"
+            class="read-btn"
+            (click)="markAsRead(item.id)">
+
+            Mark as Read
+
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- EMPTY STATE -->
+      <div
+        class="empty-notifications"
+        *ngIf="notifications.length === 0">
+
+        <div class="empty-icon">
+          NT
+        </div>
+
+        <strong>No notifications</strong>
+
+        <span>
+          New approvals, procurement events and compliance alerts will appear here.
+        </span>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

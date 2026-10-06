@@ -1,0 +1,218 @@
+<div class="communication-page">
+
+  <div class="page-header">
+    <div>
+      <h1>Communication Center</h1>
+      <p>Procurement discussions, messaging and communication history</p>
+    </div>
+
+    <button class="primary-btn" (click)="showForm = !showForm">
+      + New Communication
+    </button>
+  </div>
+
+  <div class="summary-grid">
+
+    <div class="summary-card">
+      <span>Total Communications</span>
+      <strong>{{ totalMessages }}</strong>
+    </div>
+
+    <div class="summary-card unread-card">
+      <span>Unread</span>
+      <strong>{{ unreadMessages }}</strong>
+    </div>
+
+    <div class="summary-card">
+      <span>Read</span>
+      <strong>{{ readMessages }}</strong>
+    </div>
+
+    <div class="summary-card">
+      <span>Discussions</span>
+      <strong>{{ discussionMessages }}</strong>
+    </div>
+
+  </div>
+
+  <div class="communication-form" *ngIf="showForm">
+
+    <div class="section-title">
+      <h2>New Communication</h2>
+      <span>Send a message or record a procurement discussion</span>
+    </div>
+
+    <div class="form-grid">
+
+      <div class="form-group">
+        <label>Sender</label>
+        <input
+          type="text"
+          [(ngModel)]="communication.sender"
+          placeholder="Sender name">
+      </div>
+
+      <div class="form-group">
+        <label>Receiver</label>
+        <input
+          type="text"
+          [(ngModel)]="communication.receiver"
+          placeholder="Receiver name">
+      </div>
+
+      <div class="form-group">
+        <label>Communication Type</label>
+        <select [(ngModel)]="communication.communication_type">
+          <option value="MESSAGE">Message</option>
+          <option value="DISCUSSION">Discussion</option>
+          <option value="SYSTEM">System</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Related Record</label>
+        <input
+          type="text"
+          [(ngModel)]="communication.related_record"
+          placeholder="Example: PO-002 / CON-001">
+      </div>
+
+      <div class="form-group full-width">
+        <label>Subject</label>
+        <input
+          type="text"
+          [(ngModel)]="communication.subject"
+          placeholder="Communication subject">
+      </div>
+
+      <div class="form-group full-width">
+        <label>Message</label>
+        <textarea
+          rows="4"
+          [(ngModel)]="communication.message"
+          placeholder="Enter communication details">
+        </textarea>
+      </div>
+
+      <div class="form-group full-width">
+        <label>Attachment / Document Reference</label>
+        <input
+          type="text"
+          [(ngModel)]="communication.attachment"
+          placeholder="Example: PO-002-REFERENCE">
+      </div>
+
+    </div>
+
+    <div class="form-actions">
+      <button
+        class="secondary-btn"
+        (click)="showForm = false">
+        Cancel
+      </button>
+
+      <button
+        class="primary-btn"
+        (click)="sendMessage()">
+        Send Communication
+      </button>
+    </div>
+
+  </div>
+
+  <div class="history-section">
+
+    <div class="section-header">
+      <div>
+        <h2>Communication History</h2>
+        <p>Recent messages and procurement discussions</p>
+      </div>
+    </div>
+
+    <div
+      class="empty-state"
+      *ngIf="communications.length === 0">
+
+      <strong>No communications yet</strong>
+      <span>Create the first communication using the button above.</span>
+
+    </div>
+
+    <div
+      class="communication-list"
+      *ngIf="communications.length > 0">
+
+      <div
+        class="communication-item"
+        *ngFor="let item of communications">
+
+        <div class="communication-icon"
+             [ngClass]="getCommunicationClass(item.communication_type)">
+          {{ item.communication_type === 'DISCUSSION' ? 'D' : 'M' }}
+        </div>
+
+        <div class="communication-content">
+
+          <div class="communication-top">
+
+            <div>
+              <h3>{{ item.subject }}</h3>
+
+              <div class="meta-row">
+                <span>{{ item.sender }}</span>
+                <span>→</span>
+                <span>{{ item.receiver }}</span>
+              </div>
+            </div>
+
+            <span
+              class="status-badge"
+              [class.unread]="item.status === 'UNREAD'"
+              [class.read]="item.status === 'READ'">
+              {{ item.status }}
+            </span>
+
+          </div>
+
+          <p class="message">
+            {{ item.message }}
+          </p>
+
+          <div class="record-row">
+
+            <span
+              class="type-badge"
+              [ngClass]="getCommunicationClass(item.communication_type)">
+              {{ item.communication_type }}
+            </span>
+
+            <span *ngIf="item.related_record">
+              Related: {{ item.related_record }}
+            </span>
+
+            <span *ngIf="item.attachment">
+              Document: {{ item.attachment }}
+            </span>
+
+            <span *ngIf="item.created_at">
+              {{ item.created_at | date:'dd MMM yyyy, hh:mm a' }}
+            </span>
+
+          </div>
+
+        </div>
+
+        <button
+          class="read-btn"
+          *ngIf="item.status === 'UNREAD'"
+          (click)="markAsRead(item.id)">
+          Mark as Read
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

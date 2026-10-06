@@ -1,0 +1,144 @@
+/* NAVBAR */
+
+.navbar {
+  min-height: 72px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  padding: 10px 20px;
+  gap: 15px;
+  font-family: Arial, sans-serif;
+}
+
+.brand {
+  font-size: 22px;
+  font-weight: 700;
+  color: #4f46e5;
+  white-space: nowrap;
+  margin-right: 10px;
+}
+
+.nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.nav-item {
+  text-decoration: none;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 9px 8px;
+  border-radius: 6px;
+}
+
+.nav-item:hover {
+  background: #eef2ff;
+  color: #4f46e5;
+}
+
+.user-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.user-pill {
+  background: #f3f4f6;
+  color: #374151;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.logout-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 9px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.logout-btn:hover {
+  background: #dc2626;
+}
+
+
+/* DASHBOARD */
+
+.dashboard-container {
+  background-color: #f8fafc;
+  min-height: calc(100vh - 64px);
+}
+
+.welcome-hero {
+  border-left: 4px solid #4f46e5 !important;
+}
+
+.metric-icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.metric-icon-box i {
+  font-size: 26px;
+}
+
+.bg-indigo-subtle {
+  background-color: #e0e7ff;
+}
+
+.text-indigo {
+  color: #4f46e5;
+}
+
+.bg-blue-subtle {
+  background-color: #dbeafe;
+}
+
+.bg-amber-subtle {
+  background-color: #fef3c7;
+}
+
+.bg-teal-subtle {
+  background-color: #e0f2fe;
+}
+
+.tracking-wider {
+  letter-spacing: 0.5px;
+}
+
+
+/* SMALL SCREEN */
+
+@media (max-width: 900px) {
+  .navbar {
+    padding: 8px 12px;
+  }
+
+  .brand {
+    font-size: 18px;
+  }
+
+  .nav-item {
+    font-size: 12px;
+    padding: 8px 6px;
+  }
+
+  .user-pill {
+    display: none;
+  }
+}

@@ -1,0 +1,82 @@
+<div class="activity-page">
+
+  <div class="page-header">
+    <div>
+      <h1>Activity Log</h1>
+      <p>System activity and procurement traceability history</p>
+    </div>
+  </div>
+
+  <div class="summary-grid">
+
+    <div class="summary-card">
+      <span>Total Activities</span>
+      <strong>{{ totalActivities }}</strong>
+    </div>
+
+    <div class="summary-card">
+      <span>Action Types</span>
+      <strong>{{ actionCount }}</strong>
+    </div>
+
+  </div>
+
+  <div class="activity-section">
+
+    <div class="section-header">
+      <div>
+        <h2>Activity History</h2>
+        <p>User actions and related records</p>
+      </div>
+    </div>
+
+    <div
+      class="empty-state"
+      *ngIf="activities.length === 0">
+
+      <strong>No activity records found</strong>
+      <span>System activity will appear here.</span>
+
+    </div>
+
+    <div
+      class="activity-list"
+      *ngIf="activities.length > 0">
+
+      <div
+        class="activity-item"
+        *ngFor="let activity of activities">
+
+        <div class="activity-icon">
+          A
+        </div>
+
+        <div class="activity-content">
+
+          <div class="activity-main">
+            <h3>{{ activity.action }}</h3>
+
+            <p>
+              User:
+              <strong>{{ activity.user }}</strong>
+            </p>
+
+            <p *ngIf="activity.related_record">
+              Related Record:
+              <strong>{{ activity.related_record }}</strong>
+            </p>
+          </div>
+
+          <div class="activity-time">
+            {{ activity.created_at | date:'dd MMM yyyy, hh:mm a' }}
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

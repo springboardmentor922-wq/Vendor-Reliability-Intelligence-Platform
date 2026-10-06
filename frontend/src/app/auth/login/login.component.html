@@ -1,0 +1,64 @@
+<div class="login-wrapper d-flex align-items-center justify-content-center min-vh-100 p-3">
+  <div class="light-card login-card p-4 p-md-5 bg-white rounded-3 shadow-sm border">
+    <div class="text-center mb-4">
+      <div class="brand-badge mb-2">
+        <i class="material-icons-outlined brand-icon">verified_user</i>
+      </div>
+      <h2 class="fw-bold fs-3 text-dark mb-1">Vendor Intel Platform</h2>
+      <p class="text-secondary small">Sign in to your procurement risk management account</p>
+    </div>
+
+    <!-- Alert Notifications -->
+    <div *ngIf="successMessage" class="alert alert-success d-flex align-items-center py-2 px-3 mb-4 rounded-3" role="alert">
+      <i class="material-icons-outlined me-2 fs-5">check_circle</i>
+      <span class="small">{{ successMessage }}</span>
+    </div>
+
+    <div *ngIf="errorMessage" class="alert alert-danger d-flex align-items-center py-2 px-3 mb-4 rounded-3" role="alert">
+      <i class="material-icons-outlined me-2 fs-5">error_outline</i>
+      <span class="small">{{ errorMessage }}</span>
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="d-flex flex-column gap-3">
+      <!-- Email Field -->
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>Email Address</mat-label>
+        <input matInput type="email" formControlName="email" placeholder="user@company.com" autocomplete="username">
+        <mat-icon matPrefix class="text-secondary me-2">email</mat-icon>
+        <mat-error *ngIf="loginForm.get('email')?.hasError('required')">Email is required</mat-error>
+        <mat-error *ngIf="loginForm.get('email')?.hasError('email')">Please enter a valid email address</mat-error>
+      </mat-form-field>
+
+      <!-- Password Field -->
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>Password</mat-label>
+        <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password" placeholder="••••••••" autocomplete="current-password">
+        <mat-icon matPrefix class="text-secondary me-2">lock</mat-icon>
+        <button type="button" mat-icon-button matSuffix (click)="hidePassword = !hidePassword" [attr.aria-label]="'Hide password'">
+          <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        <mat-error *ngIf="loginForm.get('password')?.hasError('required')">Password is required</mat-error>
+        <mat-error *ngIf="loginForm.get('password')?.hasError('minlength')">Password must be at least 6 characters</mat-error>
+      </mat-form-field>
+
+      <!-- Action Row -->
+      <div class="d-flex justify-content-end align-items-center mb-1">
+        <a href="#" (click)="onForgotPasswordPlaceholder($event)" class="forgot-link text-decoration-none small text-muted">
+          Forgot password?
+        </a>
+      </div>
+
+      <!-- Submit Button -->
+      <button mat-raised-button color="primary" type="submit" class="w-100 py-2 btn-login rounded-3" [disabled]="isLoading">
+        <mat-spinner *ngIf="isLoading" diameter="20" class="me-2 d-inline-block"></mat-spinner>
+        <span>{{ isLoading ? 'Authenticating...' : 'Sign In' }}</span>
+      </button>
+
+      <!-- Footer Link -->
+      <div class="text-center mt-3 pt-2 border-top">
+        <span class="text-muted small">Don't have an account? </span>
+        <a routerLink="/register" class="text-primary text-decoration-none fw-semibold small">Register Account</a>
+      </div>
+    </form>
+  </div>
+</div>

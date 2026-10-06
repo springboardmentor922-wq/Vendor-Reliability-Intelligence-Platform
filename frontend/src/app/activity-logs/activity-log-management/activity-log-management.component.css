@@ -1,0 +1,161 @@
+.activity-page {
+  padding: 28px;
+  background: #f5f7fa;
+  min-height: calc(100vh - 70px);
+  color: #1f2937;
+}
+
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  color: #172033;
+}
+
+.page-header p {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 22px;
+  max-width: 520px;
+}
+
+.summary-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 18px;
+}
+
+.summary-card span {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.summary-card strong {
+  font-size: 25px;
+  color: #172033;
+}
+
+.activity-section {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 22px;
+}
+
+.section-header {
+  margin-bottom: 18px;
+}
+
+.section-header h2 {
+  margin: 0;
+  color: #172033;
+  font-size: 18px;
+}
+
+.section-header p {
+  margin: 5px 0 0;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.activity-item {
+  display: flex;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #e3e8ee;
+  border-radius: 9px;
+  background: #fbfcfd;
+}
+
+.activity-icon {
+  min-width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: #e8eef4;
+  color: #34516b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.activity-content {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.activity-main h3 {
+  margin: 0 0 7px;
+  color: #172033;
+  font-size: 14px;
+}
+
+.activity-main p {
+  margin: 4px 0;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.activity-main strong {
+  color: #334155;
+}
+
+.activity-time {
+  color: #7a8796;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 45px 20px;
+  color: #64748b;
+}
+
+.empty-state strong {
+  color: #334155;
+  margin-bottom: 5px;
+}
+
+.empty-state span {
+  font-size: 12px;
+}
+
+@media (max-width: 700px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .activity-content {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .activity-time {
+    white-space: normal;
+  }
+}

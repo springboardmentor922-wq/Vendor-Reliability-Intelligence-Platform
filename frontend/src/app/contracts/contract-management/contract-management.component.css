@@ -1,0 +1,551 @@
+.page {
+  min-height: 100vh;
+  background: #f4f6f9;
+  padding: 32px;
+  font-family: Arial, sans-serif;
+  color: #172033;
+}
+
+/* HEADER */
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 28px;
+}
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  color: #64748b;
+  margin-bottom: 7px;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 700;
+  color: #142033;
+}
+
+.page-header p {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+/* BUTTONS */
+
+.primary-btn {
+  border: none;
+  background: #17324d;
+  color: white;
+  padding: 11px 18px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.primary-btn:hover {
+  background: #10283e;
+}
+
+.primary-btn span {
+  font-size: 18px;
+  line-height: 12px;
+}
+
+.secondary-btn {
+  background: white;
+  color: #475569;
+  border: 1px solid #d6dce4;
+  padding: 10px 18px;
+  border-radius: 7px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* KPI CARDS */
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.kpi-card {
+  background: white;
+  border: 1px solid #e1e6ec;
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  box-shadow: 0 2px 5px rgba(15, 23, 42, 0.03);
+}
+
+.kpi-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.kpi-icon.navy {
+  background: #e8eef4;
+  color: #17324d;
+}
+
+.kpi-icon.green {
+  background: #e7f3ee;
+  color: #287052;
+}
+
+.kpi-icon.amber {
+  background: #f8f0df;
+  color: #9a6a16;
+}
+
+.kpi-icon.red {
+  background: #f8e9e9;
+  color: #a34a4a;
+}
+
+.kpi-card span {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+
+.kpi-card strong {
+  display: block;
+  font-size: 24px;
+  color: #172033;
+}
+
+.kpi-card small {
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+/* ATTENTION */
+
+.attention-card {
+  background: #fffdf7;
+  border: 1px solid #eadfca;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.attention-title {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.attention-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #f3e7c9;
+  color: #8c681f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.attention-title h3 {
+  margin: 0 0 4px;
+  font-size: 14px;
+}
+
+.attention-title p {
+  margin: 0;
+  color: #7b8491;
+  font-size: 12px;
+}
+
+.attention-count {
+  font-size: 22px;
+  font-weight: 700;
+  color: #806020;
+}
+
+.attention-count span {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* CARDS */
+
+.form-card,
+.repository-card {
+  background: white;
+  border: 1px solid #e1e6ec;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+  margin-bottom: 22px;
+}
+
+.form-card {
+  padding: 24px;
+}
+
+.repository-card {
+  overflow: hidden;
+}
+
+/* SECTION HEADER */
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 22px;
+}
+
+.section-heading h2 {
+  margin: 0;
+  font-size: 18px;
+  color: #172033;
+}
+
+.section-heading p {
+  margin: 6px 0 0;
+  color: #7a8491;
+  font-size: 12px;
+}
+
+.close-btn {
+  border: none;
+  background: #f1f3f6;
+  color: #64748b;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.repository-heading {
+  padding: 24px 24px 18px;
+  margin-bottom: 0;
+}
+
+.repository-info {
+  font-size: 12px;
+  color: #64748b;
+  background: #f4f6f8;
+  padding: 7px 11px;
+  border-radius: 6px;
+}
+
+/* FORM */
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 17px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 7px;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #d5dce5;
+  border-radius: 6px;
+  padding: 10px 11px;
+  font-size: 13px;
+  color: #172033;
+  background: white;
+  outline: none;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: #6f8498;
+  box-shadow: 0 0 0 2px rgba(23, 50, 77, 0.06);
+}
+
+.field textarea {
+  min-height: 85px;
+  resize: vertical;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+/* TABLE */
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  min-width: 1050px;
+  border-collapse: collapse;
+}
+
+thead {
+  background: #f7f8fa;
+}
+
+th {
+  padding: 13px 16px;
+  text-align: left;
+  font-size: 10px;
+  letter-spacing: 0.6px;
+  font-weight: 700;
+  color: #718096;
+  border-top: 1px solid #e7ebef;
+  border-bottom: 1px solid #e7ebef;
+  white-space: nowrap;
+}
+
+td {
+  padding: 15px 16px;
+  border-bottom: 1px solid #edf0f3;
+  font-size: 12px;
+  color: #475569;
+  white-space: nowrap;
+}
+
+tbody tr:hover {
+  background: #fafbfc;
+}
+
+/* CONTRACT */
+
+.contract-name {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.contract-name strong {
+  color: #1e344b;
+  font-size: 12px;
+}
+
+.contract-name span {
+  color: #94a3b8;
+  font-size: 10px;
+}
+
+.vendor-id {
+  color: #475569;
+}
+
+/* BADGES */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 9px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.compliance {
+  background: #e8f2ed;
+  color: #286b4d;
+}
+
+.compliance.warning {
+  background: #f8f0df;
+  color: #8a661d;
+}
+
+.compliance.danger {
+  background: #f7e7e7;
+  color: #9c4545;
+}
+
+.status {
+  background: #e8eef4;
+  color: #34516b;
+}
+
+.status.terminated {
+  background: #f0f0f1;
+  color: #727983;
+}
+
+/* ACTION */
+
+.terminate-btn {
+  border: 1px solid #d9bcbc;
+  background: white;
+  color: #9c5050;
+  padding: 6px 10px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.terminate-btn:hover {
+  background: #faf1f1;
+}
+
+.terminated-text {
+  color: #9aa1aa;
+  font-size: 11px;
+}
+
+/* EMPTY STATE */
+
+.empty-state {
+  text-align: center;
+  padding: 55px 20px;
+}
+
+.empty-state > * {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.empty-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  background: #edf1f5;
+  color: #52677b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.empty-state strong {
+  font-size: 13px;
+  color: #334155;
+  margin-bottom: 6px;
+}
+
+.empty-state span {
+  color: #94a3b8;
+  font-size: 11px;
+  margin-bottom: 16px;
+}
+
+.empty-btn {
+  border: 1px solid #cfd7df;
+  background: white;
+  color: #36516b;
+  padding: 8px 13px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 1100px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .page {
+    padding: 18px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .full-width {
+    grid-column: auto;
+  }
+
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+/* EXPIRY STATUS */
+
+.expiry-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.badge.expiry {
+  width: fit-content;
+  background: #e8eef4;
+  color: #34516b;
+}
+
+.badge.expiry.expiring {
+  background: #f8f0df;
+  color: #8a661d;
+}
+
+.badge.expiry.expired {
+  background: #f7e7e7;
+  color: #9c4545;
+}
+
+.badge.expiry.terminated-expiry {
+  background: #f0f0f1;
+  color: #727983;
+}
+
+.expiry-cell small {
+  color: #94a3b8;
+  font-size: 10px;
+}

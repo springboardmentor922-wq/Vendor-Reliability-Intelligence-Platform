@@ -1,0 +1,40 @@
+.register-wrapper {
+  background-color: #f8fafc;
+}
+
+.register-card {
+  width: 100%;
+  max-width: 480px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+}
+
+.brand-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: #e0e7ff;
+  color: #4f46e5;
+}
+
+.brand-icon {
+  font-size: 32px;
+  color: #4f46e5;
+}
+
+.btn-register {
+  height: 44px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  background-color: #4f46e5 !important;
+  color: #ffffff !important;
+}
+
+.btn-register:hover {
+  background-color: #4338ca !important;
+}

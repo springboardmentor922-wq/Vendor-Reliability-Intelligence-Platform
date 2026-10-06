@@ -1,0 +1,680 @@
+<div class="page">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div>
+      <div class="eyebrow">COMPLIANCE & GOVERNANCE</div>
+      <h1>Contract & Compliance</h1>
+      <p>Manage vendor contracts, renewals, certifications and compliance status.</p>
+    </div>
+
+    <div class="header-actions">
+      <button class="secondary-btn" (click)="showCertificationForm = !showCertificationForm">
+        <span>+</span>
+        Add Certification
+      </button>
+
+      <button class="primary-btn" (click)="showForm = !showForm">
+        <span>+</span>
+        Add Contract
+      </button>
+    </div>
+  </div>
+
+  <!-- CONTRACT KPIs -->
+  <div class="kpi-grid">
+
+    <div class="kpi-card">
+      <div class="kpi-icon navy">CT</div>
+      <div>
+        <span>Total Contracts</span>
+        <strong>{{ totalContracts }}</strong>
+        <small>Registered contracts</small>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon green">AC</div>
+      <div>
+        <span>Active Contracts</span>
+        <strong>{{ activeContracts }}</strong>
+        <small>Currently active</small>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon amber">EX</div>
+      <div>
+        <span>Expiring Soon</span>
+        <strong>{{ expiringSoon }}</strong>
+        <small>Within 30 days</small>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon red">CO</div>
+      <div>
+        <span>Non-Compliant</span>
+        <strong>{{ nonCompliant }}</strong>
+        <small>Needs attention</small>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ATTENTION -->
+  <div
+    class="attention-card"
+    *ngIf="expiringSoon > 0 || nonCompliant > 0 || expiringCertifications > 0 || expiredCertifications > 0">
+
+    <div class="attention-title">
+      <div class="attention-icon">!</div>
+
+      <div>
+        <h3>Attention Required</h3>
+        <p>
+          Review contracts and certifications approaching expiry or requiring compliance action.
+        </p>
+      </div>
+    </div>
+
+    <div class="attention-count">
+      {{ expiringSoon + nonCompliant + expiringCertifications + expiredCertifications }}
+      <span>items</span>
+    </div>
+
+  </div>
+
+  <!-- CONTRACT FORM -->
+  <div class="form-card" *ngIf="showForm">
+
+    <div class="section-heading">
+      <div>
+        <h2>Create Contract</h2>
+        <p>Add a new vendor contract to the repository.</p>
+      </div>
+
+      <button class="close-btn" (click)="showForm = false">×</button>
+    </div>
+
+    <div class="form-grid">
+
+      <div class="field">
+        <label>Vendor ID</label>
+        <input
+          type="number"
+          [(ngModel)]="contract.vendor_id"
+          placeholder="Enter vendor ID">
+      </div>
+
+      <div class="field">
+        <label>Contract Number</label>
+        <input
+          type="text"
+          [(ngModel)]="contract.contract_number"
+          placeholder="e.g. CON-001">
+      </div>
+
+      <div class="field">
+        <label>Contract Type</label>
+
+        <select [(ngModel)]="contract.contract_type">
+          <option value="">Select contract type</option>
+          <option value="SUPPLY">Supply</option>
+          <option value="SERVICE">Service</option>
+          <option value="MAINTENANCE">Maintenance</option>
+          <option value="LOGISTICS">Logistics</option>
+          <option value="IT">Information Technology</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Contract Value</label>
+
+        <input
+          type="number"
+          [(ngModel)]="contract.contract_value"
+          placeholder="Enter contract value">
+      </div>
+
+      <div class="field">
+        <label>Start Date</label>
+
+        <input
+          type="date"
+          [(ngModel)]="contract.start_date">
+      </div>
+
+      <div class="field">
+        <label>End Date</label>
+
+        <input
+          type="date"
+          [(ngModel)]="contract.end_date">
+      </div>
+
+      <div class="field">
+        <label>Renewal Date</label>
+
+        <input
+          type="date"
+          [(ngModel)]="contract.renewal_date">
+      </div>
+
+      <div class="field">
+        <label>Compliance Status</label>
+
+        <select [(ngModel)]="contract.compliance_status">
+          <option value="COMPLIANT">Compliant</option>
+          <option value="PENDING_REVIEW">Pending Review</option>
+          <option value="NON_COMPLIANT">Non-Compliant</option>
+        </select>
+      </div>
+
+      <div class="field full-width">
+        <label>Document Reference</label>
+
+        <input
+          type="text"
+          [(ngModel)]="contract.document"
+          placeholder="Enter document name or reference">
+      </div>
+
+      <div class="field full-width">
+        <label>Terms & Conditions</label>
+
+        <textarea
+          [(ngModel)]="contract.terms"
+          placeholder="Enter contract terms and conditions">
+        </textarea>
+      </div>
+
+    </div>
+
+    <div class="form-actions">
+
+      <button
+        class="secondary-btn"
+        (click)="showForm = false">
+        Cancel
+      </button>
+
+      <button
+        class="primary-btn"
+        (click)="createContract()">
+        Save Contract
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- CERTIFICATION FORM -->
+  <div class="form-card" *ngIf="showCertificationForm">
+
+    <div class="section-heading">
+
+      <div>
+        <div class="eyebrow">CERTIFICATION MANAGEMENT</div>
+        <h2>Add Certification</h2>
+        <p>Register a vendor certification and track its validity.</p>
+      </div>
+
+      <button
+        class="close-btn"
+        (click)="showCertificationForm = false">
+        ×
+      </button>
+
+    </div>
+
+    <div class="form-grid">
+
+      <div class="field">
+        <label>Vendor ID</label>
+
+        <input
+          type="number"
+          [(ngModel)]="certification.vendor_id"
+          placeholder="Enter vendor ID">
+      </div>
+
+      <div class="field">
+        <label>Certification Name</label>
+
+        <input
+          type="text"
+          [(ngModel)]="certification.certification_name"
+          placeholder="e.g. ISO 9001">
+      </div>
+
+      <div class="field">
+        <label>Certificate Number</label>
+
+        <input
+          type="text"
+          [(ngModel)]="certification.certificate_number"
+          placeholder="e.g. CERT-001">
+      </div>
+
+      <div class="field">
+        <label>Issue Date</label>
+
+        <input
+          type="date"
+          [(ngModel)]="certification.issue_date">
+      </div>
+
+      <div class="field">
+        <label>Expiry Date</label>
+
+        <input
+          type="date"
+          [(ngModel)]="certification.expiry_date">
+      </div>
+
+      <div class="field">
+        <label>Document Reference</label>
+
+        <input
+          type="text"
+          [(ngModel)]="certification.document"
+          placeholder="e.g. ISO-9001-CERT">
+      </div>
+
+    </div>
+
+    <div class="form-actions">
+
+      <button
+        class="secondary-btn"
+        (click)="showCertificationForm = false">
+        Cancel
+      </button>
+
+      <button
+        class="primary-btn"
+        (click)="createCertification()">
+        Save Certification
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- CONTRACT REPOSITORY -->
+  <div class="repository-card">
+
+    <div class="section-heading repository-heading">
+
+      <div>
+        <div class="eyebrow">CONTRACT REPOSITORY</div>
+        <h2>Vendor Contracts</h2>
+        <p>Track contract lifecycle, renewal and compliance information.</p>
+      </div>
+
+      <div class="repository-info">
+        {{ totalContracts }} contracts
+      </div>
+
+    </div>
+
+    <div class="table-container">
+
+      <table>
+
+        <thead>
+          <tr>
+            <th>CONTRACT</th>
+            <th>VENDOR</th>
+            <th>TYPE</th>
+            <th>VALUE</th>
+            <th>END DATE</th>
+            <th>EXPIRY</th>
+            <th>RENEWAL</th>
+            <th>COMPLIANCE</th>
+            <th>STATUS</th>
+            <th>ACTION</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <tr *ngFor="let item of contracts">
+
+            <td>
+              <div class="contract-name">
+                <strong>{{ item.contract_number }}</strong>
+                <span>ID #{{ item.id }}</span>
+              </div>
+            </td>
+
+            <td>
+              <span class="vendor-id">
+                Vendor {{ item.vendor_id }}
+              </span>
+            </td>
+
+            <td>
+              {{ item.contract_type || '—' }}
+            </td>
+
+            <td>
+
+              <strong *ngIf="item.contract_value">
+                ₹{{ item.contract_value | number }}
+              </strong>
+
+              <span *ngIf="!item.contract_value">
+                —
+              </span>
+
+            </td>
+
+            <td>
+              {{ item.end_date || '—' }}
+            </td>
+
+            <td>
+
+              <div class="expiry-cell">
+
+                <span
+                  class="badge expiry"
+                  [class.expiring]="item.expiry_status === 'EXPIRING_SOON'"
+                  [class.expired]="item.expiry_status === 'EXPIRED'"
+                  [class.terminated-expiry]="item.expiry_status === 'TERMINATED'">
+
+                  {{ item.expiry_status }}
+
+                </span>
+
+                <small *ngIf="item.expiry_status !== 'TERMINATED'">
+
+                  <span *ngIf="item.days_remaining > 0">
+                    {{ item.days_remaining }} days left
+                  </span>
+
+                  <span *ngIf="item.days_remaining === 0">
+                    Expires today
+                  </span>
+
+                  <span *ngIf="item.days_remaining < 0">
+                    Expired {{ -item.days_remaining }} days ago
+                  </span>
+
+                </small>
+
+              </div>
+
+            </td>
+
+            <td>
+              {{ item.renewal_date || '—' }}
+            </td>
+
+            <td>
+
+              <span
+                class="badge compliance"
+                [class.warning]="item.compliance_status === 'PENDING_REVIEW'"
+                [class.danger]="item.compliance_status === 'NON_COMPLIANT'">
+
+                {{ item.compliance_status || '—' }}
+
+              </span>
+
+            </td>
+
+            <td>
+
+              <span
+                class="badge status"
+                [class.terminated]="item.status === 'TERMINATED'">
+
+                {{ item.status }}
+
+              </span>
+
+            </td>
+
+            <td>
+
+              <button
+                *ngIf="item.status !== 'TERMINATED'"
+                class="terminate-btn"
+                (click)="terminateContract(item.id)">
+
+                Terminate
+
+              </button>
+
+              <span
+                class="terminated-text"
+                *ngIf="item.status === 'TERMINATED'">
+
+                Closed
+
+              </span>
+
+            </td>
+
+          </tr>
+
+          <tr *ngIf="contracts.length === 0">
+
+            <td colspan="10" class="empty-state">
+
+              <div class="empty-icon">CT</div>
+
+              <strong>No contracts found</strong>
+
+              <span>
+                Add your first vendor contract to start tracking compliance.
+              </span>
+
+              <button
+                class="empty-btn"
+                (click)="showForm = true">
+
+                + Add Contract
+
+              </button>
+
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+
+  <!-- CERTIFICATION REPOSITORY -->
+  <div class="repository-card certification-repository">
+
+    <div class="section-heading repository-heading">
+
+      <div>
+        <div class="eyebrow">CERTIFICATION REPOSITORY</div>
+        <h2>Vendor Certifications</h2>
+        <p>Track certification validity, expiry and supporting documents.</p>
+      </div>
+
+      <div class="repository-info">
+        {{ totalCertifications }} certifications
+      </div>
+
+    </div>
+
+
+    <!-- CERTIFICATION SUMMARY -->
+
+    <div class="cert-summary">
+
+      <div class="cert-summary-item">
+        <span>Valid</span>
+        <strong>{{ validCertifications }}</strong>
+      </div>
+
+      <div class="cert-summary-item warning-summary">
+        <span>Expiring Soon</span>
+        <strong>{{ expiringCertifications }}</strong>
+      </div>
+
+      <div class="cert-summary-item danger-summary">
+        <span>Expired</span>
+        <strong>{{ expiredCertifications }}</strong>
+      </div>
+
+    </div>
+
+
+    <div class="table-container">
+
+      <table>
+
+        <thead>
+
+          <tr>
+            <th>CERTIFICATION</th>
+            <th>VENDOR</th>
+            <th>CERTIFICATE NO.</th>
+            <th>ISSUE DATE</th>
+            <th>EXPIRY DATE</th>
+            <th>VALIDITY</th>
+            <th>DOCUMENT</th>
+            <th>STATUS</th>
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          <tr *ngFor="let item of certifications">
+
+            <td>
+
+              <div class="contract-name">
+
+                <strong>
+                  {{ item.certification_name }}
+                </strong>
+
+                <span>
+                  ID #{{ item.id }}
+                </span>
+
+              </div>
+
+            </td>
+
+            <td>
+              <span class="vendor-id">
+                Vendor {{ item.vendor_id }}
+              </span>
+            </td>
+
+            <td>
+              {{ item.certificate_number }}
+            </td>
+
+            <td>
+              {{ item.issue_date }}
+            </td>
+
+            <td>
+              {{ item.expiry_date }}
+            </td>
+
+            <td>
+
+              <div class="expiry-cell">
+
+                <span
+                  class="badge expiry"
+                  [class.expiring]="item.expiry_status === 'EXPIRING_SOON'"
+                  [class.expired]="item.expiry_status === 'EXPIRED'">
+
+                  {{ item.expiry_status }}
+
+                </span>
+
+                <small *ngIf="item.days_remaining > 0">
+                  {{ item.days_remaining }} days left
+                </small>
+
+                <small *ngIf="item.days_remaining === 0">
+                  Expires today
+                </small>
+
+                <small *ngIf="item.days_remaining < 0">
+                  Expired {{ -item.days_remaining }} days ago
+                </small>
+
+              </div>
+
+            </td>
+
+            <td>
+              {{ item.document || '—' }}
+            </td>
+
+            <td>
+
+              <select
+                class="status-select"
+                [ngModel]="item.status"
+                (ngModelChange)="updateCertificationStatus(item.id, $event)">
+
+                <option value="VALID">Valid</option>
+                <option value="PENDING_REVIEW">Pending Review</option>
+                <option value="EXPIRED">Expired</option>
+                <option value="SUSPENDED">Suspended</option>
+
+              </select>
+
+            </td>
+
+          </tr>
+
+
+          <tr *ngIf="certifications.length === 0">
+
+            <td colspan="8" class="empty-state">
+
+              <div class="empty-icon">CF</div>
+
+              <strong>No certifications found</strong>
+
+              <span>
+                Add vendor certifications to start compliance tracking.
+              </span>
+
+              <button
+                class="empty-btn"
+                (click)="showCertificationForm = true">
+
+                + Add Certification
+
+              </button>
+
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+</div>
