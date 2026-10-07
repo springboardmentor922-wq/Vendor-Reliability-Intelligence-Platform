@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VendorIQ - Project Presentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #090e17;
+      --surface-dark: #0f172a;
+      --card-bg: rgba(15, 23, 42, 0.75);
+      --card-border: rgba(52, 211, 153, 0.2);
+      --primary: #10b981;
+      --primary-light: #34d399;
+      --accent-amber: #f59e0b;
+      --accent-cyan: #06b6d4;
+      --accent-purple: #8b5cf6;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    /* Ambient Background Elements */
+    .bg-grid {
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(rgba(52, 211, 153, 0.12) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+      z-index: 1;
+      mask-image: radial-gradient(circle at center, black 40%, transparent 90%);
+    }
+
+    .aurora-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      pointer-events: none;
+      z-index: 1;
+      animation: drift 18s ease-in-out infinite alternate;
+    }
+
+    .orb-1 {
+      top: -10%;
+      left: 15%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.18) 0%, transparent 70%);
+    }
+
+    .orb-2 {
+      bottom: -15%;
+      right: 15%;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(6, 182, 212, 0.15) 0%, transparent 70%);
+      animation-duration: 22s;
+    }
+
+    .orb-3 {
+      top: 40%;
+      right: 35%;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 70%);
+      animation-duration: 26s;
+    }
+
+    @keyframes drift {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(40px, -30px) scale(1.1); }
+      100% { transform: translate(-30px, 40px) scale(0.95); }
+    }
+
+    /* Presentation Screen Canvas (16:9 Aspect Ratio) */
+    .deck-container {
+      position: relative;
+      width: 94vw;
+      max-width: 1400px;
+      height: 82vh;
+      max-height: 787px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 40px rgba(16, 185, 129, 0.1);
+      overflow: hidden;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Slide Header Bar */
+    .slide-topbar {
+      height: 56px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      font-size: 13px;
+      color: var(--text-dim);
+      z-index: 20;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      color: #ffffff;
+      font-size: 15px;
+      letter-spacing: -0.01em;
+    }
+
+    .logo-badge {
+      width: 26px;
+      height: 26px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    /* Slides Viewport */
+    .slides-viewport {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 40px 56px;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(60px) scale(0.98);
+      transition: all 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(0) scale(1);
+    }
+
+    .slide.previous {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(-60px) scale(0.98);
+    }
+
+    /* Slide Header */
+    .slide-header {
+      margin-bottom: 24px;
+    }
+
+    .slide-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+      color: var(--primary-light);
+      font-size: 11.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+      animation: fadeInDown 0.6s ease forwards;
+    }
+
+    .slide-title {
+      font-size: 32px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      animation: fadeInLeft 0.6s 0.1s ease forwards;
+    }
+
+    .slide-subtitle {
+      font-size: 15px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      animation: fadeInLeft 0.6s 0.2s ease forwards;
+    }
+
+    /* Slide Content Layouts */
+    .slide-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    /* Interactive Cards */
+    .feature-card {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 24px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--primary);
+      opacity: 0.8;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(52, 211, 153, 0.35);
+      background: rgba(30, 41, 59, 0.85);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .card-icon-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--primary-light);
+      margin-bottom: 14px;
+    }
+
+    .card-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 8px;
+    }
+
+    .card-desc {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    /* Workflow Stepper */
+    .workflow-timeline {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 12px;
+      position: relative;
+      margin-top: 15px;
+    }
+
+    .step-node {
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 16px 14px;
+      text-align: center;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .step-node:hover {
+      border-color: var(--primary-light);
+      transform: translateY(-3px);
+    }
+
+    .step-number {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid var(--primary-light);
+      color: var(--primary-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 800;
+      margin: 0 auto 10px auto;
+    }
+
+    .step-role {
+      font-size: 13px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+
+    .step-action {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* Metric Counter Badge */
+    .metric-badge {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--primary-light);
+      letter-spacing: -0.03em;
+      margin-bottom: 4px;
+    }
+
+    /* Bottom Control Bar */
+    .slide-bottombar {
+      height: 64px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      z-index: 20;
+      background: rgba(10, 15, 28, 0.8);
+    }
+
+    .progress-track {
+      flex: 1;
+      max-width: 400px;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 999px;
+      margin: 0 24px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #10b981, #06b6d4);
+      width: 10%;
+      transition: width 0.4s ease;
+      border-radius: 999px;
+    }
+
+    .controls-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-nav {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text-main);
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-nav:hover {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: var(--primary-light);
+      color: #ffffff;
+    }
+
+    .btn-nav:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .btn-primary-action {
+      background: #10b981;
+      border: none;
+      color: #042f2e;
+      font-weight: 700;
+    }
+
+    .btn-primary-action:hover {
+      background: #34d399;
+      color: #042f2e;
+    }
+
+    .indicator-pill {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.02em;
+    }
+
+    /* Staggered Animations */
+    @keyframes fadeInLeft {
+      from { opacity: 0; transform: translateX(-24px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .anim-fade-up {
+      animation: fadeInUp 0.6s ease forwards;
+    }
+
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    .delay-4 { animation-delay: 0.4s; }
+
+    /* Title Slide Specific Styling */
+    .title-slide-content {
+      text-align: center;
+      max-width: 820px;
+      margin: 0 auto;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 999px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(52, 211, 153, 0.35);
+      color: #6ee7b7;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      margin-bottom: 22px;
+    }
+
+    .main-heading {
+      font-size: 48px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #34d399 0%, #06b6d4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .meta-box {
+      margin-top: 36px;
+      padding: 16px 28px;
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 32px;
+      font-size: 13.5px;
+    }
+
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      text-align: left;
+    }
+
+    .meta-label {
+      color: var(--text-dim);
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .meta-val {
+      color: #ffffff;
+      font-weight: 700;
+    }
+
+    /* Fullscreen Mode */
+    :fullscreen .deck-container {
+      width: 100vw;
+      height: 100vh;
+      max-width: none;
+      max-height: none;
+      border-radius: 0;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Backdrop -->
+  <div class="bg-grid"></div>
+  <div class="aurora-orb orb-1"></div>
+  <div class="aurora-orb orb-2"></div>
+  <div class="aurora-orb orb-3"></div>
+
+  <!-- Main Presentation Canvas -->
+  <div class="deck-container" id="presentationContainer">
+
+    <!-- Top Status Bar -->
+    <div class="slide-topbar">
+      <div class="brand-logo">
+        <div class="logo-badge">V</div>
+        <span>VendorIQ Enterprise Platform</span>
+      </div>
+      <div>
+        <span id="slideCategory">Predictive Vendor Intelligence</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+        <span>Interactive Slide Deck</span>
+      </div>
+    </div>
+
+    <!-- Slides Viewport -->
+    <div class="slides-viewport">
+
+      <!-- ========================================== -->
+      <!-- SLIDE 1: INTRODUCTION                      -->
+      <!-- ========================================== -->
+      <div class="slide active" data-slide="1" data-cat="Project Introduction">
+        <div class="slide-body">
+          <div class="title-slide-content">
+            <div class="hero-badge">ENTERPRISE SUPPLY CHAIN INTELLIGENCE</div>
+            <h1 class="main-heading">
+              VendorIQ: Predictive Vendor Reliability & <br>
+              <span class="gradient-text">Procurement Risk Platform</span>
+            </h1>
+            <p style="font-size: 16px; color: var(--text-muted); line-height: 1.6; max-width: 680px; margin: 0 auto;">
+              An end-to-end multi-role enterprise web application engineered to forecast supplier delivery risks, automate requisition lifecycles, and enforce compliance governance.
+            </p>
+
+            <div class="meta-box">
+              <div class="meta-item">
+                <span class="meta-label">Presented By</span>
+                <span class="meta-val">Aryan Singh</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Architecture</span>
+                <span class="meta-val">FastAPI + React 18 + ML Engine</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Version</span>
+                <span class="meta-val">Production Release v1.0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- SLIDE 2: OVERVIEW OF THE PROJECT           -->
+      <!-- ========================================== -->
+      <div class="slide" data-slide="2" data-cat="Project Overview">
+        <div class="slide-header">
+          <div class="slide-tag">Executive Summary</div>
+          <h2 class="slide-title">Overview of the Platform</h2>
+          <p class="slide-subtitle">Addressing systemic visibility and latency problems in enterprise procurement.</p>
+        </div>
+        <div class="slide-body">
+          <div class="grid-3">
+            <div class="feature-card anim-fade-up delay-1">
+              <div class="card-icon-pill">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+              <h3 class="card-title">The Industry Problem</h3>
+              <p class="card-desc">Modern supply chains suffer from delayed dispatches, vendor opacity, untracked contractual risks, and siloed communication across internal departments.</p>
+            </div>
+
+            <div class="feature-card anim-fade-up delay-2">
+              <div class="card-icon-pill">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              </div>
+              <h3 class="card-title">Predictive Intelligence</h3>
+              <p class="card-desc">VendorIQ calculates dynamic multi-factor supplier reliability scores (0-100) and predicts delivery delays before purchase orders are issued.</p>
+            </div>
+
+            <div class="feature-card anim-fade-up delay-3">
+              <div class="card-icon-pill">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+              <h3 class="card-title">6-Role Governance</h3>
+              <p class="card-desc">Seamless integration across Administrators, Procurement Managers, Supply Chain Officers, Suppliers, Finance, and Compliance Auditors.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- SLIDE 3: WHAT ARE THE OUTCOMES             -->
+      <!-- ========================================== -->
+      <div class="slide" data-slide="3" data-cat="Deliverables & Outcomes">
+        <div class="slide-header">
+          <div class="slide-tag">Measurable Value</div>
+          <h2 class="slide-title">Quantifiable Outcomes & Achievements</h2>
+          <p class="slide-subtitle">Concrete milestones achieved across technical architecture and operational efficiency.</p>
+        </div>
+        <div class="slide-body">
+          <div class="grid-4">
+            <div class="feature-card anim-fade-up delay-1">
+              <div class="metric-badge">40%+</div>
+              <h3 class="card-title">Delay Risk Mitigation</h3>
+              <p class="card-desc">Early warning ML forecasts allow procurement managers to buffer order schedules or select secondary vetted suppliers.</p>
+            </div>
+
+            <div class="feature-card anim-fade-up delay-2">
+              <div class="metric-badge">100%</div>
+              <h3 class="card-title">Traceable PO Lifecycle</h3>
+              <p class="card-desc">Total audit trail from initial internal requisition through direct purchase orders, dispatch tracking, and invoice clearance.</p>
+            </div>
+
+            <div class="feature-card anim-fade-up delay-3">
+              <div class="metric-badge">6-Factor</div>
+              <h3 class="card-title">Multi-Metric Reliability</h3>
+              <p class="card-desc">Transparent scoring based on delivery speed (25%), quality (25%), compliance (15%), resolution (15%), volume (10%), and responsiveness (10%).</p>
+            </div>
+
+            <div class="feature-card anim-fade-up delay-4">
+              <div class="metric-badge">Real-Time</div>
+              <h3 class="card-title">Cross-Role Operations</h3>
+              <p class="card-desc">Instant cross-role operational messaging, structured tax invoice PDF generation, and automated compliance alert telemetry.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- SLIDE 4: TECH STACK IMPLEMENTATION         -->
+      <!-- ========================================== -->
+      <div class="slide" data-slide="4" data-cat="Engineering Architecture">
+        <div class="slide-header">
+          <div class="slide-tag">Technology Choices</div>
+          <h2 class="slide-title">Tech Stack Implementation</h2>
+          <p class="slide-subtitle">Engineered with modern, high-performance, and scalable software frameworks.</p>
+        </div>
+        <div class="slide-body">
+          <div class="grid-4">
+            <div class="feature-card anim-fade-up delay-1">
+              <div class="card-icon-pill" style="background: rgba(6, 182, 212, 0.15); color: #06b6d4;">UI</div>
+              <h3 class="card-title">Frontend Framework</h3>
+              <p class="card-desc">
+                &bull; <strong>React 18 & Vite</strong> for ultra-fast SPA rendering<br>
+                &bull; <strong>Custom SVG Chart Engine</strong> (Radar, Dual-Axis, Donut charts)<br>
+                &bull; <strong>Pure Glassmorphic CSS</strong> with zero UI bloat
+              </p>
+            </div>
+
+            <div class="feature-card anim-fade-up delay-2">
+              <div class="card-icon-pill" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">API</div>
+              <h3 class="card-title">Backend Architecture</h3>
+              <p class="card-desc">
+                &bull; <strong>Python FastAPI</strong> asynchronous endpoints<br>
+                &bull; <strong>SQLAlchemy ORM</strong> relational persistence<br>
+                &bull; <strong>Pydantic v2</strong> rigorous contract schemas<br>
+                &bull; <strong>JWT + RBAC</strong> role security
+              </p>
+            </div>
+
+            <div class="feature-card anim-fade-up delay-3">
+              <div class="card-icon-pill" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">ML</div>
+              <h3 class="card-title">Predictive Intelligence</h3>
+              <p class="card-desc">
+                &bull; <strong>Scikit-Learn ML Models</strong> for delivery delay prediction<br>
+                &bull; <strong>Joblib Serialization</strong> for sub-50ms inference<br>
+                &bull; <strong>Dynamic Risk Heuristics</strong> and mitigation generator
+              </p>
+            </div>
+
+            <div class="feature-card anim-fade-up delay-4">
+              <div class="card-icon-pill" style="background: rgba(139, 92, 246, 0.15); color: #8b5cf6;">OPS</div>
+              <h3 class="card-title">DevOps & Tooling</h3>
+              <p class="card-desc">
+                &bull; <strong>Docker & Docker Compose</strong> multi-container setup<br>
+                &bull; <strong>Nginx</strong> production asset reverse proxy<br>
+                &bull; <strong>Modular Seed & Test Pipeline</strong> for verification
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- SLIDE 5: SYSTEM ARCHITECTURE & WORKFLOW   -->
+      <!-- ========================================== -->
+      <div class="slide" data-slide="5" data-cat="Operational Workflow">
+        <div class="slide-header">
+          <div class="slide-tag">End-to-End Operational Lifecycle</div>
+          <h2 class="slide-title">System Workflow Across Roles</h2>
+          <p class="slide-subtitle">How internal teams and external suppliers seamlessly interact through the platform.</p>
+        </div>
+        <div class="slide-body">
+          <div class="workflow-timeline">
+            <div class="step-node anim-fade-up delay-1">
+              <div class="step-number">1</div>
+              <div class="step-role">Department</div>
+              <div class="step-action">Raises internal Requisition with items, urgency, and category.</div>
+            </div>
+
+            <div class="step-node anim-fade-up delay-2">
+              <div class="step-number">2</div>
+              <div class="step-role">Procurement</div>
+              <div class="step-action">Reviews request, checks vendor reliability radar, and issues PO.</div>
+            </div>
+
+            <div class="step-node anim-fade-up delay-3">
+              <div class="step-number">3</div>
+              <div class="step-role">Vendor Portal</div>
+              <div class="step-action">Supplier reviews assigned PO, commits schedule, and dispatches shipment.</div>
+            </div>
+
+            <div class="step-node anim-fade-up delay-4">
+              <div class="step-number">4</div>
+              <div class="step-role">ML Risk Engine</div>
+              <div class="step-action">Calculates delivery delay probability and triggers supply chain alerts.</div>
+            </div>
+
+            <div class="step-node anim-fade-up delay-5">
+              <div class="step-number">5</div>
+              <div class="step-role">Finance</div>
+              <div class="step-action">Performs 3-way matching, reviews tax invoice, and generates official PDF.</div>
+            </div>
+
+            <div class="step-node anim-fade-up delay-6">
+              <div class="step-number">6</div>
+              <div class="step-role">Auditor</div>
+              <div class="step-action">Monitors immutable audit logs, compliance events, and security access.</div>
+            </div>
+          </div>
+
+          <div style="margin-top: 24px; padding: 16px 20px; background: rgba(16, 185, 129, 0.08); border: 1px dashed rgba(52, 211, 153, 0.3); border-radius: 12px; display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 13.5px; color: var(--text-main);">
+              <strong>Unified Messaging Backbone:</strong> Dedicated cross-departmental operations channel connects Procurement, Supply Chain, and Finance teams in real time.
+            </span>
+            <span style="font-size: 12px; font-weight: 700; color: var(--primary-light); text-transform: uppercase;">Zero Data Silos</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- SLIDE 6: LEARNING PROCESS                  -->
+      <!-- ========================================== -->
+      <div class="slide" data-slide="6" data-cat="Growth & Insights">
+        <div class="slide-header">
+          <div class="slide-tag">Technical Evolution</div>
+          <h2 class="slide-title">Key Learnings & Skill Acquisition</h2>
+          <p class="slide-subtitle">Significant technical and architectural growth gained throughout project development.</p>
+        </div>
+        <div class="slide-body">
+          <div class="grid-3">
+            <div class="feature-card anim-fade-up delay-1">
+              <div class="card-icon-pill">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+              </div>
+              <h3 class="card-title">Production Full-Stack Design</h3>
+              <p class="card-desc">Mastered orchestrating a reactive React client with an asynchronous FastAPI backend, managing robust session states and token renewals.</p>
+            </div>
+
+            <div class="feature-card anim-fade-up delay-2">
+              <div class="card-icon-pill">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              </div>
+              <h3 class="card-title">Applied ML in Business Logic</h3>
+              <p class="card-desc">Gained practical knowledge in translating transactional supply chain records into ML feature vectors for real-time risk classification.</p>
+            </div>
+
+            <div class="feature-card anim-fade-up delay-3">
+              <div class="card-icon-pill">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <h3 class="card-title">Enterprise Security & RBAC</h3>
+              <p class="card-desc">Implemented strict role-level authorization filters preventing unauthorized privilege escalation across supplier and auditor contexts.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- SLIDE 7: CHALLENGES & SOLUTIONS            -->
+      <!-- ========================================== -->
+      <div class="slide" data-slide="7" data-cat="Problem Solving">
+        <div class="slide-header">
+          <div class="slide-tag">Engineering Resilience</div>
+          <h2 class="slide-title">Technical Challenges & Solutions</h2>
+          <p class="slide-subtitle">Obstacles encountered during development and how they were systematically resolved.</p>
+        </div>
+        <div class="slide-body">
+          <div class="grid-2">
+            <div class="feature-card anim-fade-up delay-1">
+              <div style="font-size: 12px; font-weight: 700; color: #f43f5e; text-transform: uppercase; margin-bottom: 6px;">Challenge 1: Cold Start Supplier Data</div>
+              <h3 class="card-title">Sparse Historical Metrics</h3>
+              <p class="card-desc">
+                <strong>Problem:</strong> Newly registered vendors had zero completed orders, skewing the reliability formula.<br>
+                <strong>Solution:</strong> Developed Bayesian baseline defaults weighted by ISO certifications and compliance filings until order history matures.
+              </p>
+            </div>
+
+            <div class="feature-card anim-fade-up delay-2">
+              <div style="font-size: 12px; font-weight: 700; color: #f43f5e; text-transform: uppercase; margin-bottom: 6px;">Challenge 2: Complex State Synchronization</div>
+              <h3 class="card-title">Multi-Role Order State Integrity</h3>
+              <p class="card-desc">
+                <strong>Problem:</strong> Concurrent updates could cause illegal transitions (e.g. delivered orders reverting to pending).<br>
+                <strong>Solution:</strong> Created a strict backend finite state machine (FSM) enforcing valid status transitions across all procurement routes.
+              </p>
+            </div>
+
+            <div class="feature-card anim-fade-up delay-3">
+              <div style="font-size: 12px; font-weight: 700; color: #f43f5e; text-transform: uppercase; margin-bottom: 6px;">Challenge 3: Low-Latency Inference</div>
+              <h3 class="card-title">Predictive Execution Speed</h3>
+              <p class="card-desc">
+                <strong>Problem:</strong> Running ML inference on high-volume procurement dashboard requests risked blocking API throughput.<br>
+                <strong>Solution:</strong> Serialized pre-computed models with Joblib and implemented lightweight feature caching for sub-50ms query times.
+              </p>
+            </div>
+
+            <div class="feature-card anim-fade-up delay-4">
+              <div style="font-size: 12px; font-weight: 700; color: #f43f5e; text-transform: uppercase; margin-bottom: 6px;">Challenge 4: Professional UI Standards</div>
+              <h3 class="card-title">Clean Visual System</h3>
+              <p class="card-desc">
+                <strong>Problem:</strong> Maintaining enterprise-grade look and feel without third-party chart libraries bloat.<br>
+                <strong>Solution:</strong> Built custom pure SVG telemetry graphs, responsive glassmorphism containers, and typography inspired by modern enterprise design.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- SLIDE 8: FUTURE ENHANCEMENTS               -->
+      <!-- ========================================== -->
+      <div class="slide" data-slide="8" data-cat="Roadmap">
+        <div class="slide-header">
+          <div class="slide-tag">Strategic Roadmap</div>
+          <h2 class="slide-title">Future Enhancements & Scalability</h2>
+          <p class="slide-subtitle">Key features planned for enterprise evolution and production scaling.</p>
+        </div>
+        <div class="slide-body">
+          <div class="grid-4">
+            <div class="feature-card anim-fade-up delay-1">
+              <div class="card-icon-pill" style="color: #38bdf8; background: rgba(56, 189, 248, 0.15);">IoT</div>
+              <h3 class="card-title">IoT Telemetry & GPS</h3>
+              <p class="card-desc">Real-time integration with shipping container RFID sensors and GPS gateways for automated geofenced delivery tracking.</p>
+            </div>
+
+            <div class="feature-card anim-fade-up delay-2">
+              <div class="card-icon-pill" style="color: #a855f7; background: rgba(168, 85, 247, 0.15);">ERP</div>
+              <h3 class="card-title">Enterprise Connectors</h3>
+              <p class="card-desc">Pre-built REST & webhook connectors for SAP S/4HANA, Oracle NetSuite, and Microsoft Dynamics 365.</p>
+            </div>
+
+            <div class="feature-card anim-fade-up delay-3">
+              <div class="card-icon-pill" style="color: #f59e0b; background: rgba(245, 158, 11, 0.15);">ESC</div>
+              <h3 class="card-title">Smart Contract Escrow</h3>
+              <p class="card-desc">Automated milestone disbursement upon digital delivery confirmation with penalty auto-deductions for SLA delays.</p>
+            </div>
+
+            <div class="feature-card anim-fade-up delay-4">
+              <div class="card-icon-pill" style="color: #10b981; background: rgba(16, 185, 129, 0.15);">LLM</div>
+              <h3 class="card-title">AI Contract Copilot</h3>
+              <p class="card-desc">Large Language Model integration for automated vendor legal contract auditing, liability clause extraction, and RFQ quote comparison.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- SLIDE 9: CONCLUSION                        -->
+      <!-- ========================================== -->
+      <div class="slide" data-slide="9" data-cat="Closing Summary">
+        <div class="slide-header">
+          <div class="slide-tag">Project Summary</div>
+          <h2 class="slide-title">Conclusion</h2>
+          <p class="slide-subtitle">Transforming procurement from a reactive cost center into an intelligent operational edge.</p>
+        </div>
+        <div class="slide-body">
+          <div class="grid-3">
+            <div class="feature-card anim-fade-up delay-1">
+              <div class="card-icon-pill">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </div>
+              <h3 class="card-title">Complete Solution Delivered</h3>
+              <p class="card-desc">VendorIQ successfully delivers all functional milestones: multi-role governance, predictive intelligence, automated procurement lifecycles, and audit compliance.</p>
+            </div>
+
+            <div class="feature-card anim-fade-up delay-2">
+              <div class="card-icon-pill">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              </div>
+              <h3 class="card-title">Proactive Risk Culture</h3>
+              <p class="card-desc">By predicting supplier delivery delays before orders are dispatched, the platform shifts supply chain teams from firefighting to proactive optimization.</p>
+            </div>
+
+            <div class="feature-card anim-fade-up delay-3">
+              <div class="card-icon-pill">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              </div>
+              <h3 class="card-title">Enterprise-Ready Architecture</h3>
+              <p class="card-desc">Built with high-throughput asynchronous Python FastAPI, reactive React frontends, and modular microservices ready for enterprise deployment.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- SLIDE 10: THANK YOU                        -->
+      <!-- ========================================== -->
+      <div class="slide" data-slide="10" data-cat="Q & A">
+        <div class="slide-body">
+          <div class="title-slide-content">
+            <div class="hero-badge">PROJECT SUBMISSION COMPLETED</div>
+            <h1 class="main-heading" style="font-size: 52px;">
+              Thank You!
+            </h1>
+            <p style="font-size: 18px; color: var(--text-muted); line-height: 1.6; margin-bottom: 28px;">
+              Open for Questions, Technical Demonstrations, and Feedback.
+            </p>
+
+            <div style="display: flex; justify-content: center; gap: 16px; margin-bottom: 32px;">
+              <div style="padding: 12px 24px; background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; font-size: 13.5px;">
+                <span style="color: var(--text-dim); display: block; font-size: 11px; text-transform: uppercase;">GitHub Submission</span>
+                <span style="font-weight: 700; color: #ffffff;">Vendor-Reliability-Intelligence-Platform</span>
+              </div>
+              <div style="padding: 12px 24px; background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; font-size: 13.5px;">
+                <span style="color: var(--text-dim); display: block; font-size: 11px; text-transform: uppercase;">Lead Developer</span>
+                <span style="font-weight: 700; color: #ffffff;">Aryan Singh</span>
+              </div>
+            </div>
+
+            <button onclick="goToSlide(1)" class="btn-nav btn-primary-action" style="margin: 0 auto; padding: 12px 28px; font-size: 14px;">
+              Replay Presentation
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bottom Controls & Progress Bar -->
+    <div class="slide-bottombar">
+      <div class="controls-group">
+        <span class="indicator-pill" id="slideIndicator">Slide 1 of 10</span>
+      </div>
+
+      <div class="progress-track">
+        <div class="progress-bar-fill" id="progressBar"></div>
+      </div>
+
+      <div class="controls-group">
+        <button class="btn-nav" id="prevBtn" onclick="prevSlide()" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          Previous
+        </button>
+        <button class="btn-nav" id="nextBtn" onclick="nextSlide()">
+          Next
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button class="btn-nav" id="fullscreenBtn" onclick="toggleFullscreen()" title="Toggle Fullscreen (F)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 10;
+
+    const slides = document.querySelectorAll('.slide');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const slideIndicator = document.getElementById('slideIndicator');
+    const slideCategory = document.getElementById('slideCategory');
+    const progressBar = document.getElementById('progressBar');
+    const container = document.getElementById('presentationContainer');
+
+    function updateSlide() {
+      slides.forEach((slide) => {
+        const slideNum = parseInt(slide.getAttribute('data-slide'));
+        slide.classList.remove('active', 'previous');
+        if (slideNum === currentSlide) {
+          slide.classList.add('active');
+          const cat = slide.getAttribute('data-cat') || 'VendorIQ Platform';
+          slideCategory.textContent = cat;
+        } else if (slideNum < currentSlide) {
+          slide.classList.add('previous');
+        }
+      });
+
+      // Update Indicators
+      slideIndicator.textContent = `Slide ${currentSlide} of ${totalSlides}`;
+      progressBar.style.width = `${(currentSlide / totalSlides) * 100}%`;
+
+      // Buttons State
+      prevBtn.disabled = (currentSlide === 1);
+      nextBtn.disabled = (currentSlide === totalSlides);
+      if (currentSlide === totalSlides) {
+        nextBtn.style.opacity = '0.4';
+      } else {
+        nextBtn.style.opacity = '1';
+      }
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides) {
+        currentSlide++;
+        updateSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) {
+        currentSlide--;
+        updateSlide();
+      }
+    }
+
+    function goToSlide(num) {
+      if (num >= 1 && num <= totalSlides) {
+        currentSlide = num;
+        updateSlide();
+      }
+    }
+
+    // Keyboard Shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'Backspace' || e.key === 'PageUp') {
+        prevSlide();
+      } else if (e.key === 'f' || e.key === 'F') {
+        toggleFullscreen();
+      } else if (e.key >= '1' && e.key <= '9') {
+        goToSlide(parseInt(e.key));
+      } else if (e.key === '0') {
+        goToSlide(10);
+      }
+    });
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        container.requestFullscreen().catch(err => {
+          console.error(`Error attempting to enable fullscreen: ${err.message}`);
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    // Initialize
+    updateSlide();
+  </script>
+</body>
+</html>
