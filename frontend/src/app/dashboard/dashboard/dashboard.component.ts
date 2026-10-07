@@ -343,7 +343,7 @@ import { AuthService } from '../../core/services/auth.service';
                   <div class="kpi-icon teal-soft">★</div>
                 </div>
 
-                <strong>94.8%</strong>
+                <strong>{{ reliabilityScore }}%</strong>
 
                 <div class="kpi-bottom">
                   <span class="positive">↑ 4%</span>
@@ -2363,37 +2363,49 @@ import { AuthService } from '../../core/services/auth.service';
 
 export class DashboardComponent {
 
- userName = 'prasanna';
-userRole = 'VENDOR';
-vendorCount = 0;
-purchaseOrderCount = 0;
-reliabilityScore = 0;
-pendingApprovalCount = 0;
-deliveryScore = 0;
-expiringContracts = 0;
-recentActivities: any[] = [];
-searchText = '';
-searchResults: any[] = [];
+  userName = 'prasanna';
+  userRole = 'VENDOR';
+
+  vendorCount = 0;
+  purchaseOrderCount = 0;
+  reliabilityScore = 0;
+  pendingApprovalCount = 0;
+
+  deliveryScore = 0;
+  qualityScore = 0;
+  complianceScore = 0;
+
+  expiringContracts = 0;
+
+  // Dashboard analytics
+  totalPurchaseOrders = 0;
+  completedPurchaseOrders = 0;
+  pendingPurchaseOrders = 0;
+  approvedPurchaseOrders = 0;
+  orderedPurchaseOrders = 0;
+
+  totalRequisitions = 0;
+  totalProcurementValue = 0;
+
+  approvedVendorCount = 0;
+  underReviewVendorCount = 0;
+
+  recentActivities: any[] = [];
+
+  searchText = '';
+  searchResults: any[] = [];
 
   constructor(
-  private authService: AuthService,
-  private router: Router,
-  private http: HttpClient
-) {}
+    private authService: AuthService,
+    private router: Router,
+    private http: HttpClient
+  ) {}
 
   ngOnInit(): void {
- this.loadVendorCount();
-this.loadPurchaseOrderCount();
-this.loadPendingApprovalCount();
-this.loadExpiringContractCount();
-this.loadReliabilityScore();
-this.loadRecentActivities();
-
 
     const user = localStorage.getItem('user');
 
     if (user) {
-
       try {
 
         const data = JSON.parse(user);
@@ -2416,213 +2428,595 @@ this.loadRecentActivities();
         );
 
       }
-
     }
 
+    this.loadVendorCount();
+    this.loadPurchaseOrderData();
+    this.loadPendingApprovalCount();
+    this.loadExpiringContractCount();
+    this.loadReliabilityScore();
+    this.loadProcurementData();
+    this.loadRecentActivities();
   }
- loadVendorCount(): void {
-  this.http.get<any[]>('http://localhost:8000/api/vendors/').subscribe({
-    next: (vendors) => {
-      this.vendorCount = vendors.length;
-    },
-    error: (error) => {
-      console.error('Error loading vendor count:', error);
-    }
-  });
-}
-loadPurchaseOrderCount(): void {
-  this.http.get<any[]>('http://localhost:8000/api/purchase-orders/').subscribe({
-    next: (orders) => {
-      this.purchaseOrderCount = orders.filter(
-        order =>
-          order.status === 'PENDING' ||
-          order.status === 'APPROVED' ||
-          order.status === 'ORDERED'
-      ).length;
-    },
-    error: (error) => {
-      console.error('Error loading purchase order count:', error);
-    }
-  });
-}
-loadPendingApprovalCount(): void {
-  this.http.get<any[]>('http://localhost:8000/api/vendor-approvals/').subscribe({
-    next: (approvals) => {
-      this.pendingApprovalCount = approvals.filter(
-        approval => approval.status === 'PENDING'
-      ).length;
-    },
-    error: (error) => {
-      console.error('Error loading pending approval count:', error);
-    }
-  });
-}
 
-loadExpiringContractCount(): void {
-  this.http.get<any[]>('http://localhost:8000/api/contracts/').subscribe({
-    next: (contracts) => {
-      this.expiringContracts = contracts.filter(
-        contract => contract.expiry_status === 'EXPIRING_SOON'
-      ).length;
-    },
-    error: (error) => {
-      console.error('Error loading contract count:', error);
-    }
-  });
-}
 
-loadReliabilityScore(): void {
-  this.http.get<any[]>('http://localhost:8000/api/reliability/ranking').subscribe({
-    next: (records) => {
-      if (records && records.length > 0) {
-        const total = records.reduce(
-          (sum, record) => sum + (record.overall_score || 0),
-          0
+  // =========================
+  // VENDOR DATA
+  // =========================
+
+  loadVendorCount(): void {
+
+    this.http.get<any[]>(
+      'http://localhost:8000/api/vendors/'
+    ).subscribe({
+
+      next: (vendors) => {
+
+        this.vendorCount = vendors.length;
+
+      },
+
+      error: (error) => {
+
+        console.error(
+          'Error loading vendor count:',
+          error
         );
 
-        this.reliabilityScore =
-          Math.round((total / records.length) * 10) / 10;
-      } else {
-        this.reliabilityScore = 0;
       }
-    },
-    error: (error) => {
-      console.error('Error loading reliability score:', error);
+
+    });
+  }
+
+
+  // =========================
+  // PURCHASE ORDER DATA
+  // =========================
+
+  loadPurchaseOrderData(): void {
+
+    this.http.get<any[]>(
+      'http://localhost:8000/api/purchase-orders/'
+    ).subscribe({
+
+      next: (orders) => {
+
+        this.totalPurchaseOrders = orders.length;
+
+        this.pendingPurchaseOrders =
+          orders.filter(
+            order => order.status === 'PENDING'
+          ).length;
+
+        this.approvedPurchaseOrders =
+          orders.filter(
+            order => order.status === 'APPROVED'
+          ).length;
+
+        this.orderedPurchaseOrders =
+          orders.filter(
+            order => order.status === 'ORDERED'
+          ).length;
+
+        this.completedPurchaseOrders =
+          orders.filter(
+            order => order.status === 'COMPLETED'
+          ).length;
+
+        this.purchaseOrderCount =
+          this.pendingPurchaseOrders +
+          this.approvedPurchaseOrders +
+          this.orderedPurchaseOrders;
+
+      },
+
+      error: (error) => {
+
+        console.error(
+          'Error loading purchase orders:',
+          error
+        );
+
+      }
+
+    });
+  }
+
+
+  // =========================
+  // VENDOR APPROVAL DATA
+  // =========================
+
+  loadPendingApprovalCount(): void {
+
+    this.http.get<any[]>(
+      'http://localhost:8000/api/vendor-approvals/'
+    ).subscribe({
+
+      next: (approvals) => {
+
+        this.pendingApprovalCount =
+          approvals.filter(
+            approval =>
+              approval.status === 'PENDING'
+          ).length;
+
+        this.approvedVendorCount =
+          approvals.filter(
+            approval =>
+              approval.status === 'APPROVED'
+          ).length;
+
+        this.underReviewVendorCount =
+          approvals.filter(
+            approval =>
+              approval.status === 'UNDER_REVIEW'
+          ).length;
+
+      },
+
+      error: (error) => {
+
+        console.error(
+          'Error loading vendor approvals:',
+          error
+        );
+
+      }
+
+    });
+  }
+
+
+  // =========================
+  // CONTRACT DATA
+  // =========================
+
+  loadExpiringContractCount(): void {
+
+    this.http.get<any[]>(
+      'http://localhost:8000/api/contracts/'
+    ).subscribe({
+
+      next: (contracts) => {
+
+        this.expiringContracts =
+          contracts.filter(
+            contract =>
+              contract.expiry_status === 'EXPIRING_SOON'
+          ).length;
+
+      },
+
+      error: (error) => {
+
+        console.error(
+          'Error loading contract count:',
+          error
+        );
+
+      }
+
+    });
+  }
+
+
+  // =========================
+  // RELIABILITY DATA
+  // =========================
+
+  loadReliabilityScore(): void {
+
+    this.http.get<any[]>(
+      'http://localhost:8000/api/reliability/ranking'
+    ).subscribe({
+
+      next: (records) => {
+
+        if (
+          records &&
+          records.length > 0
+        ) {
+
+          const reliabilityTotal =
+            records.reduce(
+              (sum, record) =>
+                sum +
+                Number(
+                  record.overall_score ||
+                  record.reliability_score ||
+                  0
+                ),
+              0
+            );
+
+          this.reliabilityScore =
+            Math.round(
+              (reliabilityTotal /
+                records.length) * 10
+            ) / 10;
+
+
+          const deliveryTotal =
+            records.reduce(
+              (sum, record) =>
+                sum +
+                Number(
+                  record.delivery_score || 0
+                ),
+              0
+            );
+
+
+          const qualityTotal =
+            records.reduce(
+              (sum, record) =>
+                sum +
+                Number(
+                  record.quality_score || 0
+                ),
+              0
+            );
+
+
+          const complianceTotal =
+            records.reduce(
+              (sum, record) =>
+                sum +
+                Number(
+                  record.contract_compliance_score || 0
+                ),
+              0
+            );
+
+
+          this.deliveryScore =
+            Math.round(
+              deliveryTotal /
+              records.length
+            );
+
+
+          this.qualityScore =
+            Math.round(
+              qualityTotal /
+              records.length
+            );
+
+
+          this.complianceScore =
+            Math.round(
+              complianceTotal /
+              records.length
+            );
+
+        } else {
+
+          this.reliabilityScore = 0;
+          this.deliveryScore = 0;
+          this.qualityScore = 0;
+          this.complianceScore = 0;
+
+        }
+
+      },
+
+      error: (error) => {
+
+        console.error(
+          'Error loading reliability score:',
+          error
+        );
+
+      }
+
+    });
+  }
+
+
+  // =========================
+  // PROCUREMENT DATA
+  // =========================
+
+  loadProcurementData(): void {
+
+    this.http.get<any[]>(
+      'http://localhost:8000/api/procurements/'
+    ).subscribe({
+
+      next: (procurements) => {
+
+        this.totalRequisitions =
+          procurements.length;
+
+      },
+
+      error: (error) => {
+
+        console.error(
+          'Error loading procurement data:',
+          error
+        );
+
+        this.totalRequisitions = 0;
+
+      }
+
+    });
+
+
+    this.http.get<any[]>(
+      'http://localhost:8000/api/purchase-orders/'
+    ).subscribe({
+
+      next: (orders) => {
+
+        this.totalProcurementValue =
+          orders.reduce(
+            (total, order) => {
+
+              const value =
+                Number(
+                  order.total_amount ??
+                  order.total_value ??
+                  order.amount ??
+                  order.value ??
+                  0
+                );
+
+              return total + value;
+
+            },
+            0
+          );
+
+      },
+
+      error: (error) => {
+
+        console.error(
+          'Error loading procurement value:',
+          error
+        );
+
+        this.totalProcurementValue = 0;
+
+      }
+
+    });
+  }
+
+
+  // =========================
+  // RECENT ACTIVITY
+  // =========================
+
+  loadRecentActivities(): void {
+
+    this.http.get<any[]>(
+      'http://localhost:8000/api/activity-logs/'
+    ).subscribe({
+
+      next: (activities) => {
+
+        this.recentActivities =
+          activities.slice(0, 5);
+
+      },
+
+      error: (error) => {
+
+        console.error(
+          'Error loading recent activities:',
+          error
+        );
+
+      }
+
+    });
+  }
+
+
+  // =========================
+  // ROLE BASED ACCESS
+  // =========================
+
+  canView(module: string): boolean {
+
+    const role = this.userRole;
+
+
+    if (
+      role === 'ADMINISTRATOR' ||
+      role === 'PROCUREMENT_MANAGER'
+    ) {
+
+      return true;
+
     }
-  });
-}
 
 
-loadRecentActivities(): void {
-  this.http.get<any[]>('http://localhost:8000/api/activity-logs/').subscribe({
-    next: (activities) => {
-      this.recentActivities = activities.slice(0, 5);
-    },
-    error: (error) => {
-      console.error('Error loading recent activities:', error);
+    if (
+      role === 'SUPPLY_CHAIN_MANAGER'
+    ) {
+
+      return [
+        'dashboard',
+        'vendors',
+        'vendor-approval',
+        'procurement',
+        'purchase-orders',
+        'contracts',
+        'communication',
+        'performance',
+        'reliability',
+        'analytics',
+        'reports',
+        'notifications'
+      ].includes(module);
+
     }
-  });
-}
-canView(module: string): boolean {
 
-  const role = this.userRole;
 
-  if (role === 'ADMINISTRATOR' || role === 'PROCUREMENT_MANAGER') {
-    return true;
+    if (
+      role === 'FINANCE_OFFICER'
+    ) {
+
+      return [
+        'dashboard',
+        'vendors',
+        'procurement',
+        'purchase-orders',
+        'contracts',
+        'communication',
+        'performance',
+        'reliability',
+        'analytics',
+        'reports',
+        'notifications'
+      ].includes(module);
+
+    }
+
+
+    if (
+      role === 'AUDITOR'
+    ) {
+
+      return [
+        'dashboard',
+        'vendors',
+        'vendor-approval',
+        'procurement',
+        'purchase-orders',
+        'contracts',
+        'communication',
+        'performance',
+        'reliability',
+        'analytics',
+        'reports',
+        'notifications'
+      ].includes(module);
+
+    }
+
+
+    if (
+      role === 'VENDOR'
+    ) {
+
+      return [
+        'dashboard',
+        'vendors',
+        'contracts',
+        'communication',
+        'performance',
+        'reliability',
+        'analytics',
+        'reports',
+        'notifications'
+      ].includes(module);
+
+    }
+
+
+    return false;
   }
 
-  if (role === 'SUPPLY_CHAIN_MANAGER') {
-    return [
-      'dashboard',
-      'vendors',
-      'vendor-approval',
-      'procurement',
-      'purchase-orders',
-      'contracts',
-      'communication',
-      'performance',
-      'reliability',
-      'analytics',
-      'reports',
-      'notifications'
-    ].includes(module);
-  }
 
-  if (role === 'FINANCE_OFFICER') {
-    return [
-      'dashboard',
-      'vendors',
-      'procurement',
-      'purchase-orders',
-      'contracts',
-      'communication',
-      'performance',
-      'reliability',
-      'analytics',
-      'reports',
-      'notifications'
-    ].includes(module);
-  }
+  // =========================
+  // GLOBAL SEARCH
+  // =========================
 
-  if (role === 'AUDITOR') {
-    return [
-      'dashboard',
-      'vendors',
-      'vendor-approval',
-      'procurement',
-      'purchase-orders',
-      'contracts',
-      'communication',
-      'performance',
-      'reliability',
-      'analytics',
-      'reports',
-      'notifications'
-    ].includes(module);
-  }
+  globalSearch(): void {
 
-  if (role === 'VENDOR') {
-    return [
-      'dashboard',
-      'vendors',
-      'contracts',
-      'communication',
-      'performance',
-      'reliability',
-      'analytics',
-      'reports',
-      'notifications'
-    ].includes(module);
-  }
+    const search =
+      this.searchText
+        .trim()
+        .toLowerCase();
 
-  return false;
-}
 
-globalSearch(): void {
+    if (!search) {
 
-  const search = this.searchText.trim().toLowerCase();
+      this.searchResults = [];
 
-  if (!search) {
+      return;
+
+    }
+
+
     this.searchResults = [];
-    return;
+
+
+    this.http.get<any[]>(
+      'http://localhost:8000/api/vendors/'
+    ).subscribe({
+
+      next: (vendors) => {
+
+        const matches =
+          vendors
+            .filter(vendor =>
+              (
+                vendor.vendor_name || ''
+              )
+                .toLowerCase()
+                .includes(search)
+            )
+            .slice(0, 5)
+            .map(vendor => ({
+
+              name:
+                vendor.vendor_name,
+
+              type:
+                'Vendor',
+
+              route:
+                '/vendors'
+
+            }));
+
+
+        this.searchResults =
+          matches;
+
+      },
+
+      error: (error) => {
+
+        console.error(
+          'Search error:',
+          error
+        );
+
+      }
+
+    });
   }
 
-  this.searchResults = [];
 
-  this.http.get<any[]>(
-    'http://localhost:8000/api/vendors/'
-  ).subscribe({
-    next: (vendors) => {
+  // =========================
+  // SEARCH RESULT
+  // =========================
 
-      const matches = vendors
-        .filter(vendor =>
-          (vendor.vendor_name || '').toLowerCase().includes(search)
-        )
-        .slice(0, 5)
-        .map(vendor => ({
-          name: vendor.vendor_name,
-          type: 'Vendor',
-          route: '/vendors'
-        }));
+  openSearchResult(
+    result: any
+  ): void {
 
-      this.searchResults = matches;
+    this.searchText = '';
 
-    },
-    error: (error) => {
-      console.error('Search error:', error);
-    }
-  });
+    this.searchResults = [];
 
-}
+    this.router.navigate([
+      result.route
+    ]);
+  }
 
-openSearchResult(result: any): void {
 
-  this.searchText = '';
-  this.searchResults = [];
-
-  this.router.navigate([result.route]);
-
-}
+  // =========================
+  // LOGOUT
+  // =========================
 
   logout(): void {
 
