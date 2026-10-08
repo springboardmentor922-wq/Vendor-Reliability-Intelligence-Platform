@@ -1,8 +1,17 @@
-from sqlalchemy import Column, Integer, String, Text, Float, Date, DateTime, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, Text, Float, Date, DateTime, Boolean, ForeignKey, Enum as SQLEnum
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.database import Base
 from app.models.enums import RequestStatus, POStatus, InvoiceStatus
+
+class CompanyTreasury(Base):
+    __tablename__ = "company_treasury"
+
+    id = Column(Integer, primary_key=True, index=True)
+    available_balance = Column(Float, nullable=False, default=25000000.0)
+    total_budget = Column(Float, nullable=False, default=50000000.0)
+    currency = Column(String(10), default="INR")
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 class ProcurementRequest(Base):
     __tablename__ = "procurement_requests"
@@ -16,7 +25,17 @@ class ProcurementRequest(Base):
     needed_by = Column(Date, nullable=True)
     priority = Column(String(50), nullable=True, default="Medium")
     category = Column(String(100), nullable=True)
+    specifications = Column(Text, nullable=True)
+    budget_amount = Column(Float, nullable=True, default=0.0)
+    location = Column(String(255), nullable=True)
     justification = Column(Text, nullable=True)
+    assigned_vendor_id = Column(Integer, ForeignKey("vendors.id", ondelete="SET NULL"), nullable=True)
+    is_multi_vendor = Column(Boolean, nullable=False, default=False)
+    accepted_vendor_id = Column(Integer, ForeignKey("vendors.id", ondelete="SET NULL"), nullable=True)
+    vendor_accepted_at = Column(DateTime, nullable=True)
+    finance_status = Column(String(50), nullable=False, default="pending")
+    finance_approved_by_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    finance_notes = Column(Text, nullable=True)
     requested_by_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     status = Column(SQLEnum(RequestStatus), nullable=False, default=RequestStatus.PENDING)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
@@ -25,6 +44,9 @@ class ProcurementRequest(Base):
     # Relationships
     requested_by = relationship("User", back_populates="procurement_requests", foreign_keys=[requested_by_id])
     purchase_orders = relationship("PurchaseOrder", back_populates="procurement_request")
+    assigned_vendor = relationship("Vendor", foreign_keys=[assigned_vendor_id])
+    accepted_vendor = relationship("Vendor", foreign_keys=[accepted_vendor_id])
+    finance_approved_by = relationship("User", foreign_keys=[finance_approved_by_id])
 
 
 class PurchaseOrder(Base):

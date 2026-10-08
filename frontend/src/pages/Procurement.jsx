@@ -30,6 +30,9 @@ const REQUEST_STATUS_PILLS = [
   { label: 'All', value: '' },
   { label: 'Draft', value: 'draft' },
   { label: 'Submitted', value: 'submitted' },
+  { label: 'Assigned', value: 'assigned' },
+  { label: 'Vendor Accepted', value: 'vendor_accepted' },
+  { label: 'Finance Approved', value: 'finance_approved' },
   { label: 'Approved', value: 'approved' },
   { label: 'Rejected', value: 'rejected' }
 ];
@@ -48,6 +51,7 @@ const PO_STATUS_PILLS = [
   { label: 'Pending', value: 'pending' },
   { label: 'Approved', value: 'approved' },
   { label: 'Ordered', value: 'ordered' },
+  { label: 'In Transit', value: 'in_transit' },
   { label: 'Delivered', value: 'delivered' },
   { label: 'Completed', value: 'completed' },
   { label: 'Cancelled', value: 'cancelled' }
@@ -98,8 +102,15 @@ export const Procurement = () => {
     needed_by: '',
     priority: 'Medium',
     category: 'raw_material',
-    justification: ''
+    justification: '',
+    budget_amount: '',
+    specifications: '',
+    location: '',
+    is_multi_vendor: false,
+    assigned_vendor_id: ''
   });
+
+  const [treasury, setTreasury] = useState(null);
 
   // Direct Purchase Order Form State
   const [poForm, setPOForm] = useState({
@@ -125,16 +136,21 @@ export const Procurement = () => {
     setLoading(true);
     setError('');
     try {
-      const [reqData, poData, invData, venData] = await Promise.all([
+      const promises = [
         api.getProcurementRequests(),
         api.getPurchaseOrders(),
         api.getInvoices(),
         api.getVendors()
-      ]);
+      ];
+      if (['Administrator', 'Procurement Manager', 'Finance Officer'].includes(user?.role)) {
+        promises.push(api.getCompanyTreasury().catch(() => null));
+      }
+      const [reqData, poData, invData, venData, treasuryData] = await Promise.all(promises);
       setRequests(reqData || []);
       setOrders(poData || []);
       setInvoices(invData || []);
       setVendors(venData || []);
+      if (treasuryData) setTreasury(treasuryData);
     } catch (err) {
       setError(err.message || 'Failed to load procurement data');
     } finally {
@@ -188,7 +204,12 @@ export const Procurement = () => {
         needed_by: requestForm.needed_by || undefined,
         priority: requestForm.priority,
         category: requestForm.category,
-        justification: requestForm.justification
+        justification: requestForm.justification,
+        budget_amount: requestForm.budget_amount ? Number(requestForm.budget_amount) : undefined,
+        specifications: requestForm.specifications || undefined,
+        location: requestForm.location || undefined,
+        is_multi_vendor: Boolean(requestForm.is_multi_vendor),
+        assigned_vendor_id: (!requestForm.is_multi_vendor && requestForm.assigned_vendor_id) ? Number(requestForm.assigned_vendor_id) : undefined
       });
       setIsRequestModalOpen(false);
       setRequestForm({
@@ -199,9 +220,15 @@ export const Procurement = () => {
         needed_by: '',
         priority: 'Medium',
         category: 'raw_material',
-        justification: ''
+        justification: '',
+        budget_amount: '',
+        specifications: '',
+        location: '',
+        is_multi_vendor: false,
+        assigned_vendor_id: ''
       });
       loadAllData();
+      alert('Procurement request created successfully!');
     } catch (err) {
       alert('Error creating request: ' + err.message);
     }
@@ -213,6 +240,38 @@ export const Procurement = () => {
       loadAllData();
     } catch (err) {
       alert('Error updating request status: ' + err.message);
+    }
+  };
+
+  const handleVendorAccept = async (reqId) => {
+    try {
+      await api.vendorAcceptRequest(reqId);
+      alert('Requisition accepted successfully! A payment authorization request has been routed to the Finance Manager.');
+      loadAllData();
+    } catch (err) {
+      alert('Error accepting requisition: ' + err.message);
+    }
+  };
+
+  const handleFinanceApprove = async (reqId) => {
+    try {
+      const res = await api.financeApproveRequest(reqId);
+      alert(`Payment authorization approved! Purchase Order ${res.purchase_order?.po_number || ''} and Contract generated. Supplier notified.`);
+      loadAllData();
+    } catch (err) {
+      alert('Finance authorization failed: ' + err.message);
+    }
+  };
+
+  const handleFinanceReject = async (reqId) => {
+    const reason = prompt('Please enter the reason for rejecting payment authorization:');
+    if (reason === null) return;
+    try {
+      await api.financeRejectRequest(reqId, reason);
+      alert('Payment authorization rejected.');
+      loadAllData();
+    } catch (err) {
+      alert('Error rejecting payment: ' + err.message);
     }
   };
 
@@ -329,6 +388,9 @@ export const Procurement = () => {
     if (s === 'approved') {
       return { label: 'Approved', dot: '#0284c7', bg: '#e0f2fe', text: '#0369a1' };
     }
+    if (s === 'in_transit') {
+      return { label: 'In Transit', dot: '#d97706', bg: '#fef3c7', text: '#b45309' };
+    }
     if (s === 'ordered') {
       return { label: 'Ordered', dot: '#8b5cf6', bg: '#f3e8ff', text: '#6b21a8' };
     }
@@ -354,6 +416,9 @@ export const Procurement = () => {
 
   const getRequestStatusBadge = (status) => {
     const s = (status || 'draft').toLowerCase();
+    if (s === 'finance_approved') return { label: 'Finance Approved', dotColor: '#10b981', bg: '#ecfdf5', text: '#047857', border: '#a7f3d0' };
+    if (s === 'vendor_accepted') return { label: 'Vendor Accepted', dotColor: '#8b5cf6', bg: '#f5f3ff', text: '#6d28d9', border: '#ddd6fe' };
+    if (s === 'assigned') return { label: 'Assigned', dotColor: '#3b82f6', bg: '#eff6ff', text: '#1d4ed8', border: '#bfdbfe' };
     if (s === 'approved') return { label: 'Approved', dotColor: '#10b981', bg: '#ecfdf5', text: '#065f46', border: '#a7f3d0' };
     if (s === 'submitted' || s === 'pending') return { label: 'Submitted', dotColor: '#f59e0b', bg: '#fffbeb', text: '#92400e', border: '#fde68a' };
     if (s === 'draft') return { label: 'Draft', dotColor: '#6b7280', bg: '#f3f4f6', text: '#374151', border: '#e5e7eb' };
@@ -513,7 +578,7 @@ export const Procurement = () => {
                 }}
               >
                 <span>+</span>
-                <span>Purchase order</span>
+                <span>New Procurement Acquisition</span>
               </button>
 
               <button
@@ -533,12 +598,45 @@ export const Procurement = () => {
                 }}
               >
                 <span>+</span>
-                <span>New request</span>
+                <span>New Procurement Request</span>
               </button>
             </>
           )}
         </div>
       </div>
+
+      {treasury && ['Administrator', 'Procurement Manager', 'Finance Officer'].includes(user?.role) && (
+        <div style={{
+          backgroundColor: '#f8fafc',
+          border: '1px solid #e2e8f0',
+          borderRadius: '8px',
+          padding: '12px 18px',
+          marginBottom: '18px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '12px'
+        }}>
+          <div>
+            <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Company Treasury Status
+            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginTop: '2px' }}>
+              <span style={{ fontSize: '14px', color: '#1e293b' }}>
+                Available Balance: <strong style={{ color: '#0f766e', fontSize: '15px' }}>{formatCurrency(treasury.available_balance)}</strong>
+              </span>
+              <span style={{ color: '#cbd5e1' }}>|</span>
+              <span style={{ fontSize: '13px', color: '#64748b' }}>
+                Total Allocated Budget: <strong>{formatCurrency(treasury.total_budget)}</strong>
+              </span>
+            </div>
+          </div>
+          <span style={{ fontSize: '12px', color: '#047857', backgroundColor: '#ecfdf5', padding: '4px 10px', borderRadius: '12px', fontWeight: 600, border: '1px solid #a7f3d0' }}>
+            Live Liquidity Verified
+          </span>
+        </div>
+      )}
 
       {error && <div className="alert alert-danger" style={{ marginBottom: '16px' }}>{error}</div>}
 
@@ -719,7 +817,7 @@ export const Procurement = () => {
                             <div style={{ fontWeight: 700, color: '#111827', fontSize: '14px' }}>
                               {req.title}
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '3px', flexWrap: 'wrap' }}>
                               <span style={{ fontSize: '11.5px', color: '#6b7280', fontFamily: 'monospace' }}>
                                 {reqCode}
                               </span>
@@ -734,7 +832,53 @@ export const Procurement = () => {
                                   {getCategoryLabel(req.category)}
                                 </span>
                               )}
+                              {req.budget_amount && (
+                                <span style={{
+                                  fontSize: '11px',
+                                  padding: '1px 7px',
+                                  borderRadius: '8px',
+                                  backgroundColor: '#ecfdf5',
+                                  color: '#047857',
+                                  fontWeight: 700
+                                }}>
+                                  Budget: {formatCurrency(req.budget_amount)}
+                                </span>
+                              )}
+                              {req.is_multi_vendor && (
+                                <span style={{
+                                  fontSize: '10.5px',
+                                  padding: '1px 6px',
+                                  borderRadius: '8px',
+                                  backgroundColor: '#fffbeb',
+                                  color: '#b45309',
+                                  fontWeight: 600
+                                }}>
+                                  Multi-Vendor Broadcast
+                                </span>
+                              )}
+                              {req.assigned_vendor_id && (
+                                <span style={{
+                                  fontSize: '10.5px',
+                                  padding: '1px 6px',
+                                  borderRadius: '8px',
+                                  backgroundColor: '#eff6ff',
+                                  color: '#1d4ed8',
+                                  fontWeight: 600
+                                }}>
+                                  Vendor Assigned
+                                </span>
+                              )}
                             </div>
+                            {req.specifications && (
+                              <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '3px' }}>
+                                Specs: {req.specifications}
+                              </div>
+                            )}
+                            {req.location && (
+                              <div style={{ fontSize: '11.5px', color: '#9ca3af', marginTop: '1px' }}>
+                                Delivery to: {req.location}
+                              </div>
+                            )}
                           </td>
 
                           {/* DEPARTMENT */}
@@ -794,6 +938,62 @@ export const Procurement = () => {
                           {/* ACTIONS */}
                           <td style={{ padding: '14px 18px', textAlign: 'right' }}>
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', flexWrap: 'wrap' }}>
+                              {/* Vendor Acceptance Action */}
+                              {user?.role === 'Vendor' && (req.status === 'assigned' || (['pending', 'submitted'].includes(req.status) && req.is_multi_vendor)) && (
+                                <button
+                                  onClick={() => handleVendorAccept(req.id)}
+                                  style={{
+                                    padding: '5px 12px',
+                                    fontSize: '11.5px',
+                                    fontWeight: 700,
+                                    backgroundColor: '#0f3b33',
+                                    color: '#ffffff',
+                                    border: 'none',
+                                    borderRadius: '5px',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  Accept / Approve
+                                </button>
+                              )}
+
+                              {/* Finance Manager Payment Authorization Action */}
+                              {['Finance Officer', 'Administrator'].includes(user?.role) && req.status === 'vendor_accepted' && (
+                                <>
+                                  <button
+                                    onClick={() => handleFinanceApprove(req.id)}
+                                    style={{
+                                      padding: '5px 12px',
+                                      fontSize: '11.5px',
+                                      fontWeight: 700,
+                                      backgroundColor: '#ecfdf5',
+                                      color: '#047857',
+                                      border: '1px solid #a7f3d0',
+                                      borderRadius: '5px',
+                                      cursor: 'pointer'
+                                    }}
+                                    title="Verify treasury balance and authorize payment"
+                                  >
+                                    Approve Payment
+                                  </button>
+                                  <button
+                                    onClick={() => handleFinanceReject(req.id)}
+                                    style={{
+                                      padding: '5px 10px',
+                                      fontSize: '11.5px',
+                                      fontWeight: 600,
+                                      backgroundColor: '#fef2f2',
+                                      color: '#991b1b',
+                                      border: '1px solid #fecaca',
+                                      borderRadius: '5px',
+                                      cursor: 'pointer'
+                                    }}
+                                  >
+                                    Reject
+                                  </button>
+                                </>
+                              )}
+
                               {isSubmitted && canManageProcurement && (
                                 <>
                                   <button
@@ -877,7 +1077,19 @@ export const Procurement = () => {
                                 </>
                               )}
 
-                              {isApproved && !canManageProcurement && (
+                              {req.status === 'vendor_accepted' && user?.role === 'Vendor' && (
+                                <span style={{ fontSize: '11.5px', color: '#6d28d9', fontWeight: 600, padding: '4px 6px' }}>
+                                  Accepted &bull; Awaiting Finance
+                                </span>
+                              )}
+
+                              {req.status === 'finance_approved' && (
+                                <span style={{ fontSize: '11.5px', color: '#047857', fontWeight: 600, padding: '4px 6px' }}>
+                                  Payment Approved &bull; PO Awarded
+                                </span>
+                              )}
+
+                              {isApproved && !canManageProcurement && user?.role !== 'Vendor' && (
                                 <span style={{ fontSize: '12px', color: '#6b7280', padding: '4px 8px' }}>
                                   Approved &bull; Ready
                                 </span>
@@ -1132,7 +1344,7 @@ export const Procurement = () => {
                   Update Order Lifecycle Status
                 </div>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {['approved', 'ordered', 'delivered', 'completed', 'cancelled'].map(st => (
+                  {['approved', 'ordered', 'in_transit', 'delivered', 'completed', 'cancelled'].map(st => (
                     <button
                       key={st}
                       type="button"
@@ -1149,7 +1361,7 @@ export const Procurement = () => {
                         cursor: selectedPOForDetail.status === st ? 'default' : 'pointer'
                       }}
                     >
-                      {st.charAt(0).toUpperCase() + st.slice(1)}
+                      {st === 'in_transit' ? 'In Transit' : (st.charAt(0).toUpperCase() + st.slice(1))}
                     </button>
                   ))}
                 </div>
@@ -1373,12 +1585,134 @@ export const Procurement = () => {
               </div>
             </div>
 
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                  Budget / Amount (₹) *
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="e.g. 250000"
+                  value={requestForm.budget_amount}
+                  onChange={(e) => setRequestForm({ ...requestForm, budget_amount: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '9px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid #d1d5db',
+                    fontSize: '13.5px'
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                  Delivery Location / Facility
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Pune Central Warehouse - Bay 4"
+                  value={requestForm.location}
+                  onChange={(e) => setRequestForm({ ...requestForm, location: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '9px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid #d1d5db',
+                    fontSize: '13.5px'
+                  }}
+                />
+              </div>
+            </div>
+
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
-                Justification
+                Required Specifications
               </label>
               <textarea
-                rows="3"
+                rows="2"
+                placeholder="Technical specifications, grade, compliance standards (e.g. ISO 9001 certified, Grade 316L stainless steel)..."
+                value={requestForm.specifications}
+                onChange={(e) => setRequestForm({ ...requestForm, specifications: e.target.value })}
+                style={{
+                  width: '100%',
+                  padding: '9px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '13.5px',
+                  resize: 'vertical'
+                }}
+              />
+            </div>
+
+            {/* Vendor Assignment Strategy */}
+            <div style={{ backgroundColor: '#f9fafb', padding: '14px 16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#111827', marginBottom: '8px' }}>
+                Vendor Assignment Strategy
+              </label>
+
+              <div style={{ display: 'flex', gap: '16px', marginBottom: '10px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', cursor: 'pointer' }}>
+                  <input
+                    type="radio"
+                    name="vendor_strategy"
+                    checked={!requestForm.is_multi_vendor}
+                    onChange={() => setRequestForm({ ...requestForm, is_multi_vendor: false })}
+                  />
+                  Single Vendor Assignment
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', cursor: 'pointer' }}>
+                  <input
+                    type="radio"
+                    name="vendor_strategy"
+                    checked={requestForm.is_multi_vendor}
+                    onChange={() => setRequestForm({ ...requestForm, is_multi_vendor: true, assigned_vendor_id: '' })}
+                  />
+                  Multiple Vendors (Category Broadcast)
+                </label>
+              </div>
+
+              {!requestForm.is_multi_vendor ? (
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#4b5563', marginBottom: '4px' }}>
+                    Select Assigned Supplier (Filtered by {getCategoryLabel(requestForm.category)})
+                  </label>
+                  <select
+                    value={requestForm.assigned_vendor_id}
+                    onChange={(e) => setRequestForm({ ...requestForm, assigned_vendor_id: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      border: '1px solid #d1d5db',
+                      fontSize: '13px',
+                      backgroundColor: '#ffffff'
+                    }}
+                  >
+                    <option value="">-- Select an active vendor to assign --</option>
+                    {activeVendors
+                      .filter(v => !requestForm.category || v.category === requestForm.category)
+                      .map(v => (
+                        <option key={v.id} value={v.id}>
+                          {v.company_name} [{getCategoryLabel(v.category)}] - Reliability: {v.reliability_score || 0}%
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              ) : (
+                <div style={{ fontSize: '12px', color: '#047857', backgroundColor: '#ecfdf5', padding: '8px 12px', borderRadius: '6px' }}>
+                  All approved vendors registered in the <strong>{getCategoryLabel(requestForm.category)}</strong> category will receive an immediate requisition notification.
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                Business Justification
+              </label>
+              <textarea
+                rows="2"
                 placeholder="Business justification for this purchase requisition..."
                 value={requestForm.justification}
                 onChange={(e) => setRequestForm({ ...requestForm, justification: e.target.value })}

@@ -171,8 +171,8 @@ export const Vendors = () => {
     if (s === 'approved' || s === 'active') {
       return { label: 'Active', dotColor: '#10b981', bg: '#ecfdf5', text: '#065f46', border: '#a7f3d0' };
     }
-    if (s === 'pending') {
-      return { label: 'Pending', dotColor: '#f59e0b', bg: '#fffbeb', text: '#92400e', border: '#fde68a' };
+    if (s === 'pending' || s === 'pending_approval') {
+      return { label: 'Pending Approval', dotColor: '#f59e0b', bg: '#fffbeb', text: '#92400e', border: '#fde68a' };
     }
     if (s === 'inactive') {
       return { label: 'Inactive', dotColor: '#6b7280', bg: '#f3f4f6', text: '#374151', border: '#e5e7eb' };
@@ -613,7 +613,7 @@ export const Vendors = () => {
                               Edit
                             </button>
                           )}
-                          {user?.role === 'Administrator' && v.status === 'pending' && (
+                          {user?.role === 'Administrator' && (v.status === 'pending' || v.status === 'pending_approval') && (
                             <>
                               <button
                                 onClick={() => handleStatusChange(v.id, 'approved')}

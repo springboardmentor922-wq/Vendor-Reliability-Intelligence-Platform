@@ -14,13 +14,16 @@ class VendorMetrics(BaseModel):
     delayed_orders: int
     on_time_delivery_rate: float
     average_quality_rating: float
+    rating: Optional[float] = 0.0
     average_response_hours: float
     issue_resolution_hours: float
     order_completion_rate: float
     total_spend: float
     active_contracts: int
+    completed_contracts: Optional[int] = 0
     active_certifications: int
     reliability_score: float
+    reliability_index: Optional[float] = 0.0
     risk_level: str
     supplier_tier: str
     performance_trend: str

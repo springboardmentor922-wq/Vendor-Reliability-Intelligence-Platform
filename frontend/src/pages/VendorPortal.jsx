@@ -43,6 +43,9 @@ export const VendorPortal = () => {
   const [regSuccess, setRegSuccess] = useState('');
   const [regError, setRegError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [registeredVendor, setRegisteredVendor] = useState(null);
+  const [approvalSubmitting, setApprovalSubmitting] = useState(false);
+  const [approvalSent, setApprovalSent] = useState(false);
 
   const [formData, setFormData] = useState({
     company_name: '',
@@ -104,8 +107,10 @@ export const VendorPortal = () => {
     setRegSuccess('');
 
     try {
-      await api.publicRegisterVendor(formData);
-      setRegSuccess(`Registration submitted successfully for ${formData.company_name}! Your request has been forwarded to the Administrator for approval. Upon approval, your supplier account will be initialized with a reliability score and rating of 0.0.`);
+      const res = await api.publicRegisterVendor(formData);
+      setRegisteredVendor(res.vendor);
+      setApprovalSent(false);
+      setRegSuccess(`Registration details recorded for ${formData.company_name}! Status set to PENDING_APPROVAL.`);
       setFormData({
         company_name: '',
         category: 'raw_material',
@@ -123,6 +128,20 @@ export const VendorPortal = () => {
       setRegError(err.message || 'Registration failed');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleSubmitForApproval = async (vendorId) => {
+    if (!vendorId) return;
+    setApprovalSubmitting(true);
+    try {
+      await api.submitVendorApproval(vendorId);
+      setApprovalSent(true);
+      alert('Approval request submitted successfully to the Administrator! You will be notified once reviewed.');
+    } catch (err) {
+      alert(err.message || 'Error submitting for approval');
+    } finally {
+      setApprovalSubmitting(false);
     }
   };
 
@@ -655,6 +674,53 @@ export const VendorPortal = () => {
             {regSuccess && (
               <div className="alert alert-success">
                 {regSuccess}
+              </div>
+            )}
+            {registeredVendor && (
+              <div style={{
+                backgroundColor: '#fffbeb',
+                border: '1.5px solid #fde68a',
+                borderRadius: '8px',
+                padding: '14px 16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '14px', fontWeight: 700, color: '#92400e' }}>
+                    {registeredVendor.company_name}
+                  </span>
+                  <span style={{ fontSize: '11px', fontWeight: 700, backgroundColor: '#fef3c7', color: '#b45309', padding: '2px 8px', borderRadius: '4px', border: '1px solid #fde68a' }}>
+                    PENDING_APPROVAL
+                  </span>
+                </div>
+                <div style={{ fontSize: '12.5px', color: '#78350f' }}>
+                  Your profile has been created with pending status. Click below to submit an official onboarding request to the Administrator.
+                </div>
+                {!approvalSent ? (
+                  <button
+                    type="button"
+                    onClick={() => handleSubmitForApproval(registeredVendor.id)}
+                    disabled={approvalSubmitting}
+                    style={{
+                      alignSelf: 'flex-start',
+                      backgroundColor: '#0f3b33',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '6px',
+                      padding: '7px 14px',
+                      fontSize: '12.5px',
+                      fontWeight: 600,
+                      cursor: approvalSubmitting ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    {approvalSubmitting ? 'Submitting...' : 'Submit for Approval'}
+                  </button>
+                ) : (
+                  <div style={{ fontSize: '12.5px', color: '#047857', fontWeight: 600 }}>
+                    Official approval request submitted to Administrator. Initial reliability index will be 0.0 upon activation.
+                  </div>
+                )}
               </div>
             )}
             {regError && (

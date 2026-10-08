@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List, Optional, Union
 from datetime import date, datetime
 from app.models.enums import RequestStatus, POStatus, InvoiceStatus
 from app.schemas.auth import UserResponse
@@ -10,22 +10,32 @@ class ProcurementRequestCreate(BaseModel):
     description: Optional[str] = None
     department: Optional[str] = "Production"
     requested_by_name: Optional[str] = None
-    quantity: Optional[str] = None
+    quantity: Optional[Union[str, int]] = None
     needed_by: Optional[date] = None
     priority: Optional[str] = "Medium"
     category: Optional[str] = None
+    specifications: Optional[str] = None
+    budget_amount: Optional[float] = 0.0
+    location: Optional[str] = None
     justification: Optional[str] = None
+    assigned_vendor_id: Optional[int] = None
+    is_multi_vendor: Optional[bool] = False
 
 class ProcurementRequestUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     department: Optional[str] = None
     requested_by_name: Optional[str] = None
-    quantity: Optional[str] = None
+    quantity: Optional[Union[str, int]] = None
     needed_by: Optional[date] = None
     priority: Optional[str] = None
     category: Optional[str] = None
+    specifications: Optional[str] = None
+    budget_amount: Optional[float] = None
+    location: Optional[str] = None
     justification: Optional[str] = None
+    assigned_vendor_id: Optional[int] = None
+    is_multi_vendor: Optional[bool] = None
 
 class ProcurementRequestStatusUpdate(BaseModel):
     status: RequestStatus
@@ -40,12 +50,34 @@ class ProcurementRequestResponse(BaseModel):
     needed_by: Optional[date] = None
     priority: Optional[str] = "Medium"
     category: Optional[str] = None
+    specifications: Optional[str] = None
+    budget_amount: Optional[float] = 0.0
+    location: Optional[str] = None
     justification: Optional[str] = None
+    assigned_vendor_id: Optional[int] = None
+    is_multi_vendor: Optional[bool] = False
+    accepted_vendor_id: Optional[int] = None
+    vendor_accepted_at: Optional[datetime] = None
+    finance_status: Optional[str] = "pending"
+    finance_approved_by_id: Optional[int] = None
+    finance_notes: Optional[str] = None
     requested_by_id: int
     status: RequestStatus
     created_at: datetime
     updated_at: datetime
     requested_by: Optional[UserResponse] = None
+    assigned_vendor: Optional[VendorResponse] = None
+    accepted_vendor: Optional[VendorResponse] = None
+
+    class Config:
+        from_attributes = True
+
+class CompanyTreasuryResponse(BaseModel):
+    id: int
+    available_balance: float
+    total_budget: float
+    currency: str = "INR"
+    updated_at: datetime
 
     class Config:
         from_attributes = True

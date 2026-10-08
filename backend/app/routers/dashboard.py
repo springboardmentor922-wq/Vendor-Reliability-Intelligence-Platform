@@ -29,8 +29,8 @@ def get_dashboard_stats(
     if role == UserRole.ADMINISTRATOR:
         total_users = db.query(User).count()
         total_vendors = db.query(Vendor).count()
-        pending_vendors = db.query(Vendor).filter(Vendor.status == VendorStatus.PENDING).count()
-        approved_vendors = db.query(Vendor).filter(Vendor.status == VendorStatus.APPROVED).count()
+        pending_vendors = db.query(Vendor).filter(Vendor.status.in_([VendorStatus.PENDING, VendorStatus.PENDING_APPROVAL])).count()
+        approved_vendors = db.query(Vendor).filter(Vendor.status.in_([VendorStatus.APPROVED, VendorStatus.ACTIVE])).count()
         total_orders = db.query(PurchaseOrder).count()
         total_invoices = db.query(Invoice).count()
         total_contracts = db.query(Contract).count()
@@ -126,7 +126,7 @@ def get_dashboard_stats(
         if not risk_donut:
             risk_donut = [{"name": "Low Risk", "value": 1, "pct": 100, "color": "#10b981"}]
 
-        pending_vendor_list = db.query(Vendor).filter(Vendor.status == VendorStatus.PENDING).order_by(Vendor.id.desc()).all()
+        pending_vendor_list = db.query(Vendor).filter(Vendor.status.in_([VendorStatus.PENDING, VendorStatus.PENDING_APPROVAL])).order_by(Vendor.id.desc()).all()
         pending_vendor_requests = [
             {
                 "id": pv.id,

@@ -18,6 +18,7 @@ class VendorCategory(str, enum.Enum):
 
 class VendorStatus(str, enum.Enum):
     PENDING = "pending"
+    PENDING_APPROVAL = "pending_approval"
     APPROVED = "approved"
     ACTIVE = "active"
     INACTIVE = "inactive"
@@ -28,6 +29,9 @@ class RequestStatus(str, enum.Enum):
     DRAFT = "draft"
     SUBMITTED = "submitted"
     PENDING = "pending"
+    ASSIGNED = "assigned"
+    VENDOR_ACCEPTED = "vendor_accepted"
+    FINANCE_APPROVED = "finance_approved"
     APPROVED = "approved"
     REJECTED = "rejected"
     IN_PROGRESS = "in_progress"
@@ -37,6 +41,7 @@ class POStatus(str, enum.Enum):
     PENDING = "pending"
     APPROVED = "approved"
     ORDERED = "ordered"
+    IN_TRANSIT = "in_transit"
     DELIVERED = "delivered"
     COMPLETED = "completed"
     CANCELLED = "cancelled"
@@ -58,4 +63,6 @@ class NotificationType(str, enum.Enum):
     VENDOR_APPROVAL = "vendor_approval"
     CONTRACT_EXPIRY = "contract_expiry"
     COMPLIANCE_ALERT = "compliance_alert"
+    PAYMENT_REQUEST = "payment_request"
+    PAYMENT_APPROVED = "payment_approved"
     GENERAL = "general"

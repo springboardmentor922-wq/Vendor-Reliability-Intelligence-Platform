@@ -80,26 +80,30 @@ def compute_vendor_intelligence(vendor: Vendor, db: Session) -> Dict[str, Any]:
     certs = db.query(Certification).filter(Certification.vendor_id == vendor.id).all()
     active_certs = len(certs)
 
-    # Initial reliability score for new vendor with 0 orders and 0 performance history is 0.0
-    if total_orders == 0 and not perf_records:
+    # Initial reliability score for new vendor with 0 delivered orders and 0 performance history is strictly 0.0
+    if (total_orders == 0 or len(delivered_orders) == 0) and not perf_records:
         return {
             "vendor_id": vendor.id,
             "company_name": vendor.company_name,
             "category": vendor.category.value if hasattr(vendor.category, "value") else str(vendor.category),
             "status": vendor.status.value if hasattr(vendor.status, "value") else str(vendor.status),
-            "total_orders": 0,
+            "total_orders": total_orders,
             "delivered_orders": 0,
+            "completed_contracts": 0,
             "on_time_orders": 0,
             "delayed_orders": 0,
             "on_time_delivery_rate": 0.0,
             "average_quality_rating": 0.0,
+            "rating": 0.0,
             "average_response_hours": 0.0,
             "issue_resolution_hours": 0.0,
             "order_completion_rate": 0.0,
             "total_spend": 0.0,
             "active_contracts": active_contracts,
+            "completed_contracts": 0,
             "active_certifications": active_certs,
             "reliability_score": 0.0,
+            "reliability_index": 0.0,
             "risk_level": "Unrated (New)",
             "supplier_tier": "New Vendor (Score: 0)",
             "performance_trend": "Pending First Order",
@@ -240,13 +244,16 @@ def compute_vendor_intelligence(vendor: Vendor, db: Session) -> Dict[str, Any]:
         "delayed_orders": delayed_count,
         "on_time_delivery_rate": on_time_rate,
         "average_quality_rating": avg_quality,
+        "rating": avg_quality,
         "average_response_hours": avg_response,
         "issue_resolution_hours": avg_resolution,
         "order_completion_rate": completion_rate,
         "total_spend": round(total_spend, 2),
         "active_contracts": active_contracts,
+        "completed_contracts": len(delivered_orders),
         "active_certifications": active_certs,
         "reliability_score": reliability_score,
+        "reliability_index": reliability_score,
         "risk_level": risk_level,
         "supplier_tier": supplier_tier,
         "performance_trend": trend,

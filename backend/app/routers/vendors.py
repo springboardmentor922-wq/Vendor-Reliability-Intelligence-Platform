@@ -81,25 +81,72 @@ def public_vendor_registration(vendor_in: VendorCreate, db: Session = Depends(ge
         gst_number=vendor_in.gst_number,
         payment_terms=vendor_in.payment_terms or "Net 15",
         notes=vendor_in.notes or "Registered via Public Vendor Portal Gateway",
-        status=VendorStatus.PENDING,
+        status=VendorStatus.PENDING_APPROVAL,
         approved_by_id=None
     )
     db.add(new_vendor)
     db.commit()
     db.refresh(new_vendor)
 
-    # Send approval request notification to all administrators
+    # Send approval request notification to all administrators (avoiding duplicates)
     admins = db.query(User).filter(User.role == UserRole.ADMINISTRATOR).all()
     for admin in admins:
-        db.add(Notification(
-            user_id=admin.id,
-            type=NotificationType.VENDOR_APPROVAL,
-            message=f"New vendor onboarding request: '{new_vendor.company_name}' requires Admin approval.",
-            is_read=False
-        ))
+        existing = db.query(Notification).filter(
+            Notification.user_id == admin.id,
+            Notification.type == NotificationType.VENDOR_APPROVAL,
+            Notification.message.contains(f"'{new_vendor.company_name}'"),
+            Notification.is_read == False
+        ).first()
+        if not existing:
+            db.add(Notification(
+                user_id=admin.id,
+                type=NotificationType.VENDOR_APPROVAL,
+                message=f"New vendor onboarding request: '{new_vendor.company_name}' requires Admin approval.",
+                is_read=False
+            ))
     db.commit()
 
     return new_vendor
+
+@router.post("/{vendor_id}/submit-approval")
+def submit_vendor_for_approval(vendor_id: int, db: Session = Depends(get_db)):
+    """
+    Vendor action: Explicitly submit an onboarding profile for Administrator approval.
+    Sets status to PENDING_APPROVAL and dispatches a single notification to Administrators.
+    """
+    vendor = db.query(Vendor).filter(Vendor.id == vendor_id).first()
+    if not vendor:
+        raise HTTPException(status_code=404, detail="Vendor not found")
+
+    if vendor.status in [VendorStatus.APPROVED, VendorStatus.ACTIVE]:
+        return {"message": "Vendor is already active and approved.", "status": vendor.status.value, "vendor_id": vendor.id}
+
+    vendor.status = VendorStatus.PENDING_APPROVAL
+    vendor.updated_at = datetime.utcnow()
+    db.commit()
+
+    admins = db.query(User).filter(User.role == UserRole.ADMINISTRATOR).all()
+    for admin in admins:
+        existing = db.query(Notification).filter(
+            Notification.user_id == admin.id,
+            Notification.type == NotificationType.VENDOR_APPROVAL,
+            Notification.message.contains(f"'{vendor.company_name}'"),
+            Notification.is_read == False
+        ).first()
+        if not existing:
+            db.add(Notification(
+                user_id=admin.id,
+                type=NotificationType.VENDOR_APPROVAL,
+                message=f"Vendor Approval Request: '{vendor.company_name}' submitted for approval. Please review.",
+                is_read=False
+            ))
+    db.commit()
+    db.refresh(vendor)
+    return {
+        "message": f"Submitted vendor '{vendor.company_name}' for approval. Administrator notified.",
+        "status": vendor.status.value,
+        "vendor_id": vendor.id
+    }
 
 @router.get("", response_model=List[VendorResponse])
 def get_vendors(
@@ -243,7 +290,7 @@ def update_vendor_status(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vendor not found")
 
     # If approving or rejecting a pending vendor:
-    if vendor.status == VendorStatus.PENDING:
+    if vendor.status in [VendorStatus.PENDING, VendorStatus.PENDING_APPROVAL]:
         # Strictly restricted to Administrator
         if current_user.role != UserRole.ADMINISTRATOR:
             raise HTTPException(

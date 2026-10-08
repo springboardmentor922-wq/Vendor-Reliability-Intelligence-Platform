@@ -27,6 +27,9 @@ export const Dashboard = () => {
   const [approvalLoadingId, setApprovalLoadingId] = useState(null);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [isPdfOpen, setIsPdfOpen] = useState(false);
+  const [treasury, setTreasury] = useState(null);
+  const [pendingPaymentReqs, setPendingPaymentReqs] = useState([]);
+  const [actionMsg, setActionMsg] = useState(null);
 
   const loadStatsAndUsers = async () => {
     setLoading(true);
@@ -37,10 +40,57 @@ export const Dashboard = () => {
         const users = await api.getUsers();
         setStaffUsers(users || []);
       }
+      if (['Finance Officer', 'Administrator'].includes(user?.role)) {
+        try {
+          const [tData, reqs] = await Promise.all([
+            api.getCompanyTreasury().catch(() => null),
+            api.getProcurementRequests('vendor_accepted').catch(() => [])
+          ]);
+          if (tData) setTreasury(tData);
+          setPendingPaymentReqs(reqs || []);
+        } catch {
+          // ignore
+        }
+      }
     } catch (err) {
       setError(err.message || 'Failed to load dashboard metrics');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleApprovePayment = async (reqId) => {
+    setActionMsg(null);
+    try {
+      const res = await api.financeApproveRequest(reqId);
+      setActionMsg({ type: 'success', text: `Payment authorized! Purchase order ${res.purchase_order?.po_number || ''} and Contract active.` });
+      await loadStatsAndUsers();
+    } catch (err) {
+      setActionMsg({ type: 'error', text: err.message || 'Payment approval failed' });
+    }
+  };
+
+  const handleRejectPayment = async (reqId) => {
+    setActionMsg(null);
+    const reason = prompt('Reason for payment rejection:');
+    if (reason === null) return;
+    try {
+      await api.financeRejectRequest(reqId, reason);
+      setActionMsg({ type: 'success', text: 'Payment authorization rejected.' });
+      await loadStatsAndUsers();
+    } catch (err) {
+      setActionMsg({ type: 'error', text: err.message || 'Payment rejection failed' });
+    }
+  };
+
+  const handleSupplyChainStatus = async (orderId, status) => {
+    setActionMsg(null);
+    try {
+      await api.updatePurchaseOrderStatus(orderId, { status });
+      setActionMsg({ type: 'success', text: `Order status updated to ${status}.` });
+      await loadStatsAndUsers();
+    } catch (err) {
+      setActionMsg({ type: 'error', text: err.message || 'Order update failed' });
     }
   };
 
@@ -471,6 +521,69 @@ export const Dashboard = () => {
       {/* --- PROCUREMENT MANAGER DASHBOARD --- */}
       {role === 'Procurement Manager' && (
         <>
+          {/* Workflow Action Bar */}
+          <div style={{
+            backgroundColor: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderRadius: '8px',
+            padding: '14px 20px',
+            marginBottom: '20px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '14px'
+          }}>
+            <div>
+              <div style={{ fontSize: '14.5px', fontWeight: 800, color: '#0f172a' }}>
+                Procurement Operations Hub
+              </div>
+              <div style={{ fontSize: '12.5px', color: '#64748b' }}>
+                Choose an action to initiate purchasing operations:
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              <Link
+                to="/procurement?tab=orders"
+                style={{
+                  backgroundColor: '#ffffff',
+                  color: '#334155',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '6px',
+                  padding: '8px 16px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <span>Option A:</span>
+                <strong>New Procurement Acquisition</strong>
+              </Link>
+              <Link
+                to="/procurement?tab=requests"
+                style={{
+                  backgroundColor: '#0f3b33',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '8px 16px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <span>Option B:</span>
+                <strong>New Procurement Request</strong>
+              </Link>
+            </div>
+          </div>
+
           {/* Key Performance Indicators */}
           <div className="stats-grid">
             <StatCard label="Total Purchase Orders" value={metrics.total_orders || 124} helpText="↑ 12% vs last month" color="#0284c7" />
@@ -801,6 +914,7 @@ export const Dashboard = () => {
                       <th>Amount</th>
                       <th>Expected Delivery</th>
                       <th>Status</th>
+                      <th>Delivery Tracking Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -811,6 +925,49 @@ export const Dashboard = () => {
                         <td>₹{order.total_amount?.toLocaleString()}</td>
                         <td>{order.expected_delivery_date}</td>
                         <td><StatusBadge status={order.status} /></td>
+                        <td>
+                          {['pending', 'approved', 'ordered'].includes((order.status || '').toLowerCase()) && (
+                            <button
+                              type="button"
+                              onClick={() => handleSupplyChainStatus(order.id, 'in_transit')}
+                              style={{
+                                backgroundColor: '#fef3c7',
+                                color: '#92400e',
+                                border: '1px solid #fde68a',
+                                borderRadius: '5px',
+                                padding: '4px 10px',
+                                fontSize: '11.5px',
+                                fontWeight: 700,
+                                cursor: 'pointer'
+                              }}
+                            >
+                              Mark In Transit &rarr;
+                            </button>
+                          )}
+                          {(order.status || '').toLowerCase() === 'in_transit' && (
+                            <button
+                              type="button"
+                              onClick={() => handleSupplyChainStatus(order.id, 'delivered')}
+                              style={{
+                                backgroundColor: '#ecfdf5',
+                                color: '#047857',
+                                border: '1px solid #a7f3d0',
+                                borderRadius: '5px',
+                                padding: '4px 10px',
+                                fontSize: '11.5px',
+                                fontWeight: 700,
+                                cursor: 'pointer'
+                              }}
+                            >
+                              Mark Delivered &rarr;
+                            </button>
+                          )}
+                          {(order.status || '').toLowerCase() === 'delivered' && (
+                            <span style={{ fontSize: '11.5px', color: '#059669', fontWeight: 600 }}>
+                              Delivered &bull; Invoice Auto-Generated
+                            </span>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -824,7 +981,7 @@ export const Dashboard = () => {
       {/* --- VENDOR DASHBOARD --- */}
       {role === 'Vendor' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {data?.vendor_info?.status === 'pending' && (
+          {(data?.vendor_info?.status === 'pending' || data?.vendor_info?.status === 'pending_approval') && (
             <div style={{
               background: '#fffbeb',
               border: '1px solid #fde68a',
@@ -1305,6 +1462,138 @@ export const Dashboard = () => {
       {/* --- FINANCE OFFICER DASHBOARD --- */}
       {role === 'Finance Officer' && (
         <>
+          {actionMsg && (
+            <div className={`alert ${actionMsg.type === 'success' ? 'alert-success' : 'alert-danger'}`} style={{ marginBottom: '16px' }}>
+              {actionMsg.text}
+            </div>
+          )}
+
+          {treasury && (
+            <div style={{
+              backgroundColor: '#f8fafc',
+              border: '1.5px solid #0f766e',
+              borderRadius: '8px',
+              padding: '14px 20px',
+              marginBottom: '20px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '12px'
+            }}>
+              <div>
+                <span style={{ fontSize: '11px', fontWeight: 800, color: '#0f766e', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Live Corporate Treasury Liquidity
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '4px' }}>
+                  <span style={{ fontSize: '15px', color: '#0f172a' }}>
+                    Available Balance: <strong style={{ color: '#0f766e', fontSize: '17px' }}>₹{Number(treasury.available_balance || 0).toLocaleString()}</strong>
+                  </span>
+                  <span style={{ color: '#cbd5e1' }}>|</span>
+                  <span style={{ fontSize: '13.5px', color: '#64748b' }}>
+                    Total Budget: <strong>₹{Number(treasury.total_budget || 0).toLocaleString()}</strong>
+                  </span>
+                </div>
+              </div>
+              <span className="badge badge-approved" style={{ fontSize: '12px', padding: '4px 10px' }}>
+                Balance Verification Enforced
+              </span>
+            </div>
+          )}
+
+          {/* Pending Payment Requests awaiting Finance approval */}
+          {pendingPaymentReqs.length > 0 && (
+            <div className="card" style={{ marginBottom: '22px', border: '1.5px solid #f59e0b' }}>
+              <div className="card-header" style={{ backgroundColor: '#fffbeb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h2 className="card-title" style={{ color: '#92400e', fontSize: '15px', fontWeight: 800 }}>
+                    Payment Authorizations Awaiting Approval ({pendingPaymentReqs.length})
+                  </h2>
+                  <div style={{ fontSize: '12px', color: '#b45309' }}>
+                    Accepted supplier requisitions ready for balance check and PO contract issuance.
+                  </div>
+                </div>
+                <span className="badge badge-warning">Awaiting Finance Action</span>
+              </div>
+              <div className="card-body" style={{ padding: 0 }}>
+                <div className="table-responsive">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Requisition</th>
+                        <th>Category</th>
+                        <th>Requested Amount</th>
+                        <th>Available Balance</th>
+                        <th>Balance Check</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pendingPaymentReqs.map(pr => {
+                        const hasEnoughBalance = (treasury?.available_balance || 0) >= (pr.budget_amount || 0);
+                        return (
+                          <tr key={pr.id}>
+                            <td>
+                              <strong>{pr.title}</strong>
+                              <div style={{ fontSize: '11px', color: '#64748b' }}>REQ-{String(pr.id).padStart(4, '0')} &bull; {pr.department}</div>
+                            </td>
+                            <td>{pr.category?.replace('_', ' ')}</td>
+                            <td><strong style={{ color: '#0f172a' }}>₹{Number(pr.budget_amount || 0).toLocaleString()}</strong></td>
+                            <td>₹{Number(treasury?.available_balance || 0).toLocaleString()}</td>
+                            <td>
+                              {hasEnoughBalance ? (
+                                <span className="badge badge-approved" style={{ fontSize: '11px' }}>Sufficient Liquidity</span>
+                              ) : (
+                                <span className="badge badge-rejected" style={{ fontSize: '11px' }}>Insufficient Balance</span>
+                              )}
+                            </td>
+                            <td>
+                              <div style={{ display: 'flex', gap: '6px' }}>
+                                <button
+                                  type="button"
+                                  onClick={() => handleApprovePayment(pr.id)}
+                                  disabled={!hasEnoughBalance}
+                                  style={{
+                                    backgroundColor: hasEnoughBalance ? '#047857' : '#9ca3af',
+                                    color: '#ffffff',
+                                    border: 'none',
+                                    borderRadius: '5px',
+                                    padding: '5px 10px',
+                                    fontSize: '11.5px',
+                                    fontWeight: 700,
+                                    cursor: hasEnoughBalance ? 'pointer' : 'not-allowed'
+                                  }}
+                                >
+                                  Approve Payment
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRejectPayment(pr.id)}
+                                  style={{
+                                    backgroundColor: '#ffffff',
+                                    color: '#b91c1c',
+                                    border: '1px solid #fecaca',
+                                    borderRadius: '5px',
+                                    padding: '5px 8px',
+                                    fontSize: '11.5px',
+                                    fontWeight: 600,
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  Reject
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="stats-grid">
             <StatCard label="Total Invoiced" value={`₹${(metrics.total_invoiced || 0).toLocaleString()}`} helpText="Cumulative billed amount" color="#0284c7" />
             <StatCard label="Pending Payment" value={`₹${(metrics.pending_amount || 0).toLocaleString()}`} helpText={`${metrics.pending_count || 0} unpaid invoices`} color="#d97706" />

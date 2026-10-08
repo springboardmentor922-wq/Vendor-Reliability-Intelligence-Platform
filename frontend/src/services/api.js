@@ -65,13 +65,18 @@ export const api = {
   createVendor: (vendorData) => request('/vendors', { method: 'POST', body: JSON.stringify(vendorData) }),
   updateVendor: (id, vendorData) => request(`/vendors/${id}`, { method: 'PUT', body: JSON.stringify(vendorData) }),
   updateVendorStatus: (id, statusData) => request(`/vendors/${id}/status`, { method: 'PATCH', body: JSON.stringify(statusData) }),
+  submitVendorApproval: (vendorId) => request(`/vendors/${vendorId}/submit-approval`, { method: 'POST' }),
 
-  // Procurement Requests
+  // Procurement Requests & Treasury
+  getCompanyTreasury: () => request('/procurement/treasury'),
   getProcurementRequests: (status) => request(`/procurement/requests${status ? `?status=${status}` : ''}`),
   getPublicOpenRequests: (category) => request(`/procurement/public-open-requests${category ? `?category=${category}` : ''}`),
   acquireProcurementRequest: (reqId, vendorId) => request(`/procurement/requests/${reqId}/acquire?vendor_id=${vendorId}`, { method: 'POST' }),
   createProcurementRequest: (data) => request('/procurement/requests', { method: 'POST', body: JSON.stringify(data) }),
   updateProcurementRequestStatus: (id, statusData) => request(`/procurement/requests/${id}/status`, { method: 'PATCH', body: JSON.stringify(statusData) }),
+  vendorAcceptRequest: (reqId) => request(`/procurement/requests/${reqId}/vendor-accept`, { method: 'POST' }),
+  financeApproveRequest: (reqId) => request(`/procurement/requests/${reqId}/finance-approve`, { method: 'POST' }),
+  financeRejectRequest: (reqId, reason) => request(`/procurement/requests/${reqId}/finance-reject?reason=${encodeURIComponent(reason || '')}`, { method: 'POST' }),
 
   // Purchase Orders
   getPurchaseOrders: (params = {}) => {
