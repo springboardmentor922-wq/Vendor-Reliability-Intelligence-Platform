@@ -1678,27 +1678,38 @@ export const Procurement = () => {
                   <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#4b5563', marginBottom: '4px' }}>
                     Select Assigned Supplier (Filtered by {getCategoryLabel(requestForm.category)})
                   </label>
-                  <select
-                    value={requestForm.assigned_vendor_id}
-                    onChange={(e) => setRequestForm({ ...requestForm, assigned_vendor_id: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      borderRadius: '6px',
-                      border: '1px solid #d1d5db',
-                      fontSize: '13px',
-                      backgroundColor: '#ffffff'
-                    }}
-                  >
-                    <option value="">-- Select an active vendor to assign --</option>
-                    {activeVendors
-                      .filter(v => !requestForm.category || v.category === requestForm.category)
-                      .map(v => (
-                        <option key={v.id} value={v.id}>
-                          {v.company_name} [{getCategoryLabel(v.category)}] - Reliability: {v.reliability_score || 0}%
-                        </option>
-                      ))}
-                  </select>
+                  {(() => {
+                    const matchingVendors = activeVendors.filter(v => !requestForm.category || v.category === requestForm.category);
+                    return (
+                      <select
+                        value={requestForm.assigned_vendor_id}
+                        onChange={(e) => setRequestForm({ ...requestForm, assigned_vendor_id: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          borderRadius: '6px',
+                          border: '1px solid #d1d5db',
+                          fontSize: '13px',
+                          backgroundColor: '#ffffff'
+                        }}
+                      >
+                        {matchingVendors.length === 0 ? (
+                          <option value="" disabled>
+                            -- No active vendors registered under '{getCategoryLabel(requestForm.category)}' --
+                          </option>
+                        ) : (
+                          <>
+                            <option value="">-- Select an active vendor to assign ({matchingVendors.length} eligible in category) --</option>
+                            {matchingVendors.map(v => (
+                              <option key={v.id} value={v.id}>
+                                {v.company_name} [{getCategoryLabel(v.category)}] &bull; Reliability: {v.reliability_score || 0}%
+                              </option>
+                            ))}
+                          </>
+                        )}
+                      </select>
+                    );
+                  })()}
                 </div>
               ) : (
                 <div style={{ fontSize: '12px', color: '#047857', backgroundColor: '#ecfdf5', padding: '8px 12px', borderRadius: '6px' }}>

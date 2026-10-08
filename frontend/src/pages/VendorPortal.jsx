@@ -635,21 +635,23 @@ export const VendorPortal = () => {
                       <button
                         onClick={() => {
                           setSelectedReqForAcquire(req);
-                          setAcquireVendorId('');
+                          const matchingUserVendor = vendors.find(v => v.id === user?.vendor_id && v.category === req.category);
+                          setAcquireVendorId(matchingUserVendor ? String(matchingUserVendor.id) : '');
                           setAcquireStatus({ error: '', success: '', loading: false });
                         }}
                         style={{
-                          backgroundColor: '#0f3b33',
+                          backgroundColor: '#2563eb',
                           color: '#ffffff',
                           border: 'none',
                           borderRadius: '6px',
                           padding: '7px 14px',
                           fontSize: '12.5px',
                           fontWeight: 600,
-                          cursor: 'pointer'
+                          cursor: 'pointer',
+                          boxShadow: '0 2px 4px rgba(37, 99, 235, 0.25)'
                         }}
                       >
-                        Acquire Requisition →
+                        Avail / Acquire Requisition &rarr;
                       </button>
                     </div>
                   </div>
@@ -971,47 +973,45 @@ export const VendorPortal = () => {
               </div>
 
               {/* Category Governance Notice */}
-              <div className="alert alert-warning" style={{ fontSize: '12.5px' }}>
-                <strong>Procurement Governance Rule:</strong> To acquire this requisition, you must represent an active supplier registered under the <strong>{getCategoryLabel(selectedReqForAcquire.category)}</strong> category.
+              <div className="alert alert-info" style={{ fontSize: '12.5px', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', color: '#1e40af' }}>
+                <strong>Category Matching Active:</strong> Showing only verified suppliers registered under the <strong>{getCategoryLabel(selectedReqForAcquire.category)}</strong> category.
               </div>
 
-              {/* Select Supplier */}
+              {/* Select Supplier - Only Matching Category Vendors */}
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px' }}>
-                  Select Your Supplier Company *
+                  Select Your Supplier Company ({getCategoryLabel(selectedReqForAcquire.category)} only) *
                 </label>
-                <select
-                  className="form-select"
-                  value={acquireVendorId}
-                  onChange={(e) => {
-                    setAcquireVendorId(e.target.value);
-                    setAcquireStatus({ error: '', success: '', loading: false });
-                  }}
-                  required
-                >
-                  <option value="">-- Choose your registered supplier --</option>
-                  {vendors.map((v) => {
-                    const isSameCategory = v.category === selectedReqForAcquire.category;
-                    return (
-                      <option key={v.id} value={v.id}>
-                        {v.company_name} [{getCategoryLabel(v.category)}] {isSameCategory ? '(Eligible)' : '(Category Mismatch)'}
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-
-              {acquireVendorId && (() => {
-                const chosen = vendors.find(v => String(v.id) === String(acquireVendorId));
-                if (chosen && chosen.category !== selectedReqForAcquire.category) {
+                {(() => {
+                  const eligibleVendors = vendors.filter(v => v.category === selectedReqForAcquire.category);
                   return (
-                    <div style={{ fontSize: '12px', color: 'var(--danger)', fontWeight: 600 }}>
-                      Cannot acquire: {chosen.company_name} is in '{getCategoryLabel(chosen.category)}', which does not match required category '{getCategoryLabel(selectedReqForAcquire.category)}'.
-                    </div>
+                    <select
+                      className="form-select"
+                      value={acquireVendorId}
+                      onChange={(e) => {
+                        setAcquireVendorId(e.target.value);
+                        setAcquireStatus({ error: '', success: '', loading: false });
+                      }}
+                      required
+                    >
+                      {eligibleVendors.length === 0 ? (
+                        <option value="" disabled>
+                          -- No suppliers found in category '{getCategoryLabel(selectedReqForAcquire.category)}' --
+                        </option>
+                      ) : (
+                        <>
+                          <option value="">-- Choose your registered supplier ({eligibleVendors.length} eligible) --</option>
+                          {eligibleVendors.map((v) => (
+                            <option key={v.id} value={v.id}>
+                              {v.company_name} [Verified Supplier &bull; {getCategoryLabel(v.category)}]
+                            </option>
+                          ))}
+                        </>
+                      )}
+                    </select>
                   );
-                }
-                return null;
-              })()}
+                })()}
+              </div>
             </div>
 
             <div className="modal-footer">
@@ -1027,17 +1027,18 @@ export const VendorPortal = () => {
                 disabled={
                   acquireStatus.loading ||
                   !acquireVendorId ||
-                  vendors.find(v => String(v.id) === String(acquireVendorId))?.category !== selectedReqForAcquire.category
+                  !vendors.some(v => String(v.id) === String(acquireVendorId) && v.category === selectedReqForAcquire.category)
                 }
                 style={{
-                  backgroundColor: '#0f3b33',
+                  backgroundColor: '#2563eb',
                   color: '#ffffff',
                   border: 'none',
                   borderRadius: '6px',
                   padding: '9px 18px',
                   fontSize: '13.5px',
                   fontWeight: 600,
-                  cursor: acquireStatus.loading ? 'not-allowed' : 'pointer'
+                  cursor: (acquireStatus.loading || !acquireVendorId) ? 'not-allowed' : 'pointer',
+                  boxShadow: '0 2px 4px rgba(37, 99, 235, 0.25)'
                 }}
               >
                 {acquireStatus.loading ? 'Processing Order...' : 'Confirm Acquisition (Generate PO)'}

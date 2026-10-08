@@ -69,8 +69,9 @@ export const Vendors = () => {
     setLoading(true);
     setError('');
     try {
+      const activeCategory = (linkedReqId && initialCategory) ? initialCategory : categoryFilter;
       const data = await api.getVendors({
-        category: categoryFilter || undefined,
+        category: activeCategory || undefined,
         status: statusFilter === 'active' ? 'approved' : (statusFilter || undefined),
         search: search || undefined
       });
@@ -203,6 +204,10 @@ export const Vendors = () => {
   };
 
   const filteredVendors = vendors.filter(v => {
+    // If arriving from a requisition, strictly restrict to matching category
+    if (linkedReqId && initialCategory && v.category !== initialCategory) {
+      return false;
+    }
     if (search.trim()) {
       const q = search.toLowerCase();
       const code = `vn-${String(v.id).padStart(4, '0')}`;
