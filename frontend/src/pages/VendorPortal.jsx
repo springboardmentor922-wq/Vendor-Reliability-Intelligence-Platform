@@ -274,7 +274,7 @@ export const VendorPortal = () => {
               setIsRegisterOpen(true);
             }}
             style={{
-              backgroundColor: '#0f3b33',
+              backgroundColor: '#2563eb',
               color: '#ffffff',
               border: 'none',
               borderRadius: '7px',
@@ -285,11 +285,11 @@ export const VendorPortal = () => {
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              boxShadow: '0 1px 2px rgba(15, 59, 51, 0.2)'
+              boxShadow: '0 2px 4px rgba(37, 99, 235, 0.25)'
             }}
           >
             <span>+</span>
-            <span>Register vendor</span>
+            <span>Register Vendor</span>
           </button>
         </div>
       </div>
@@ -306,7 +306,7 @@ export const VendorPortal = () => {
             fontSize: '13.5px',
             fontWeight: 600,
             border: activePortalTab === 'directory' ? 'none' : '1px solid var(--border-color)',
-            backgroundColor: activePortalTab === 'directory' ? '#0f3b33' : 'var(--bg-surface)',
+            backgroundColor: activePortalTab === 'directory' ? '#2563eb' : 'var(--bg-surface)',
             color: activePortalTab === 'directory' ? '#ffffff' : 'var(--text-primary)',
             cursor: 'pointer',
             display: 'flex',
@@ -336,7 +336,7 @@ export const VendorPortal = () => {
             fontSize: '13.5px',
             fontWeight: 600,
             border: activePortalTab === 'requisitions' ? 'none' : '1px solid var(--border-color)',
-            backgroundColor: activePortalTab === 'requisitions' ? '#0f3b33' : 'var(--bg-surface)',
+            backgroundColor: activePortalTab === 'requisitions' ? '#2563eb' : 'var(--bg-surface)',
             color: activePortalTab === 'requisitions' ? '#ffffff' : 'var(--text-primary)',
             cursor: 'pointer',
             display: 'flex',

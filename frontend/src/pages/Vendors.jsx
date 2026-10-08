@@ -254,128 +254,285 @@ export const Vendors = () => {
         </div>
       )}
 
-      {/* Page Header & Registration Action */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '22px' }}>
-        <div>
-          <h1 style={{ fontSize: '26px', fontWeight: 800, color: '#111827', margin: '0 0 6px 0', letterSpacing: '-0.02em' }}>
-            Vendor Management
-          </h1>
-          <p style={{ fontSize: '14px', color: '#6b7280', margin: 0 }}>
-            Directory of onboarded suppliers, risk profiles, and status tracking.
-          </p>
-        </div>
-        <button
-          onClick={() => setIsRegisterOpen(true)}
-          style={{
+      {/* Page Header Card matching Screenshot */}
+      <div style={{
+        backgroundColor: '#ffffff',
+        border: '1px solid #e2e8f0',
+        borderRadius: '12px',
+        padding: '20px 24px',
+        marginBottom: '20px',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '16px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{
+            width: '46px',
+            height: '46px',
+            borderRadius: '10px',
             backgroundColor: '#2563eb',
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: '7px',
-            padding: '10px 18px',
-            fontSize: '13.5px',
-            fontWeight: 600,
-            cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
-            boxShadow: '0 1px 2px rgba(37, 99, 235, 0.2)'
-          }}
-        >
-          <span>+</span>
-          <span>Register vendor</span>
-        </button>
+            justifyContent: 'center',
+            color: '#ffffff',
+            boxShadow: '0 4px 10px rgba(37, 99, 235, 0.25)'
+          }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+          </div>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <h1 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
+                Vendor Management &amp; Categorical Directory
+              </h1>
+              <span style={{
+                fontSize: '11px',
+                fontWeight: 700,
+                backgroundColor: '#eff6ff',
+                color: '#2563eb',
+                border: '1px solid #bfdbfe',
+                padding: '2px 8px',
+                borderRadius: '6px'
+              }}>
+                {vendors.length} Vendors Registered
+              </span>
+            </div>
+            <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0 0' }}>
+              Switch partitions, track approval stages, oversee contracts, and monitor real-time reliability metrics.
+            </p>
+          </div>
+        </div>
+
+        {/* Action Controls */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <form onSubmit={handleSearchSubmit} style={{ position: 'relative', width: '260px' }}>
+            <div style={{
+              position: 'absolute',
+              left: '12px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: '#94a3b8',
+              display: 'flex',
+              alignItems: 'center',
+              pointerEvents: 'none'
+            }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              placeholder="Search vendors, contacts, tax ID..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 12px 8px 34px',
+                fontSize: '13px',
+                borderRadius: '7px',
+                border: '1px solid #cbd5e1',
+                backgroundColor: '#f8fafc',
+                color: '#1e293b',
+                outline: 'none'
+              }}
+            />
+          </form>
+
+          <button
+            onClick={() => window.print()}
+            style={{
+              padding: '8px 14px',
+              fontSize: '12.5px',
+              fontWeight: 600,
+              borderRadius: '7px',
+              border: '1px solid #cbd5e1',
+              backgroundColor: '#ffffff',
+              color: '#475569',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="6 9 6 2 18 2 18 9" />
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+              <rect x="6" y="14" width="12" height="8" />
+            </svg>
+            <span>Print</span>
+          </button>
+
+          <button
+            onClick={() => {
+              const csvContent = "data:text/csv;charset=utf-8," + ["ID,Company Name,Category,Status,Email"].concat(
+                vendors.map(v => `${v.id},"${v.company_name}","${v.category}","${v.status}","${v.email}"`)
+              ).join("\n");
+              const encodedUri = encodeURI(csvContent);
+              const link = document.createElement("a");
+              link.setAttribute("href", encodedUri);
+              link.setAttribute("download", "vendors_directory.csv");
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            }}
+            style={{
+              padding: '8px 14px',
+              fontSize: '12.5px',
+              fontWeight: 600,
+              borderRadius: '7px',
+              border: '1px solid #cbd5e1',
+              backgroundColor: '#ffffff',
+              color: '#475569',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            <span>Export</span>
+          </button>
+
+          <button
+            onClick={() => setIsRegisterOpen(true)}
+            style={{
+              backgroundColor: '#2563eb',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '7px',
+              padding: '8px 16px',
+              fontSize: '13px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              boxShadow: '0 2px 4px rgba(37, 99, 235, 0.25)'
+            }}
+          >
+            <span>+</span>
+            <span>Register Vendor</span>
+          </button>
+        </div>
       </div>
 
       {error && <div className="alert alert-danger" style={{ marginBottom: '16px' }}>{error}</div>}
 
-      {/* Search Bar */}
-      <div style={{ marginBottom: '16px' }}>
-        <form onSubmit={handleSearchSubmit} style={{ position: 'relative' }}>
-          <div style={{
-            position: 'absolute',
-            left: '14px',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            color: '#9ca3af',
-            display: 'flex',
-            alignItems: 'center',
-            pointerEvents: 'none'
-          }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-          </div>
-          <input
-            type="text"
-            placeholder="Search by vendor name, contact, or ID..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '11px 16px 11px 42px',
-              fontSize: '14px',
-              borderRadius: '8px',
-              border: '1px solid #e5e7eb',
-              backgroundColor: '#ffffff',
-              color: '#1f2937',
-              outline: 'none',
-              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)'
-            }}
-          />
-        </form>
+      {/* VENDOR CATEGORIES (SWAP PARTITIONS) */}
+      <div style={{ marginBottom: '14px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+          <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+            VENDOR CATEGORIES (SWAP PARTITIONS)
+          </span>
+          <span style={{ fontSize: '12px', color: '#64748b' }}>
+            Viewing: {categoryFilter ? (CATEGORIES.find(c => c.value === categoryFilter)?.label || categoryFilter) : 'All'} ({vendors.length} of {vendors.length})
+          </span>
+        </div>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          {CATEGORIES.map((cat) => {
+            const isActive = categoryFilter === cat.value;
+            const count = cat.value ? vendors.filter(v => v.category === cat.value).length : vendors.length;
+            return (
+              <button
+                key={cat.value || 'all'}
+                onClick={() => setCategoryFilter(cat.value)}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: '6px',
+                  fontSize: '12.5px',
+                  fontWeight: isActive ? 700 : 500,
+                  border: isActive ? '1px solid #2563eb' : '1px solid #cbd5e1',
+                  backgroundColor: isActive ? '#2563eb' : '#ffffff',
+                  color: isActive ? '#ffffff' : '#334155',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: isActive ? '0 2px 6px rgba(37, 99, 235, 0.25)' : 'none',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <span>{cat.label === 'All' ? 'All Categories' : cat.label}</span>
+                <span style={{
+                  fontSize: '11px',
+                  padding: '1px 6px',
+                  borderRadius: '10px',
+                  backgroundColor: isActive ? 'rgba(255, 255, 255, 0.25)' : '#f1f5f9',
+                  color: isActive ? '#ffffff' : '#64748b',
+                  fontWeight: 700
+                }}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Category Filters */}
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
-        {CATEGORIES.map((cat) => {
-          const isActive = categoryFilter === cat.value;
-          return (
-            <button
-              key={cat.value || 'all'}
-              onClick={() => setCategoryFilter(cat.value)}
-              style={{
-                padding: '6px 14px',
-                borderRadius: '20px',
-                fontSize: '13px',
-                fontWeight: isActive ? 600 : 500,
-                border: isActive ? '1px solid #2563eb' : '1px solid #e5e7eb',
-                backgroundColor: isActive ? '#eff6ff' : '#ffffff',
-                color: isActive ? '#1d4ed8' : '#4b5563',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              {cat.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Status Filters */}
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '22px' }}>
-        {STATUS_PILLS.map((st) => {
-          const isActive = statusFilter === st.value;
-          return (
-            <button
-              key={st.value || 'all'}
-              onClick={() => setStatusFilter(st.value)}
-              style={{
-                padding: '5px 13px',
-                borderRadius: '16px',
-                fontSize: '12.5px',
-                fontWeight: isActive ? 600 : 500,
-                border: isActive ? '1px solid #2563eb' : '1px solid #e5e7eb',
-                backgroundColor: isActive ? '#eff6ff' : '#ffffff',
-                color: isActive ? '#1d4ed8' : '#4b5563',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              {st.label}
-            </button>
-          );
-        })}
+      {/* Filter by Status */}
+      <div style={{ marginBottom: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+          <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+            Filter by Status:
+          </span>
+          <span style={{ fontSize: '12px', color: '#64748b' }}>
+            Showing {vendors.length} matches
+          </span>
+        </div>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          {STATUS_PILLS.map((st) => {
+            const isActive = statusFilter === st.value;
+            const count = st.value ? (
+              st.value === 'active'
+                ? vendors.filter(v => v.status === 'approved' || v.status === 'active').length
+                : vendors.filter(v => v.status === st.value).length
+            ) : vendors.length;
+            return (
+              <button
+                key={st.value || 'all'}
+                onClick={() => setStatusFilter(st.value)}
+                style={{
+                  padding: '5px 12px',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: isActive ? 700 : 500,
+                  border: isActive ? '1px solid #1e40af' : '1px solid #e2e8f0',
+                  backgroundColor: isActive ? '#1e3a8a' : '#f8fafc',
+                  color: isActive ? '#ffffff' : '#475569',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <span>{st.label}</span>
+                <span style={{
+                  fontSize: '10.5px',
+                  padding: '0 5px',
+                  borderRadius: '8px',
+                  backgroundColor: isActive ? 'rgba(255, 255, 255, 0.2)' : '#e2e8f0',
+                  color: isActive ? '#ffffff' : '#64748b',
+                  fontWeight: 700
+                }}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Vendors Directory Table */}

@@ -138,8 +138,84 @@ export const Navbar = () => {
 
   return (
     <header className="top-navbar">
-      {/* Quick Role Switcher - hidden on Vendor Portal to keep it authentic */}
-      {!isVendorPortal ? (
+      {user?.role === 'Vendor' ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            backgroundColor: '#064e3b',
+            border: '1px solid #059669',
+            padding: '4px 12px',
+            borderRadius: '20px',
+            fontSize: '12px',
+            color: '#a7f3d0',
+            fontWeight: 600
+          }}>
+            <span style={{ color: '#34d399', fontSize: '9px' }}>●</span>
+            <span>Supplier: {user?.full_name || 'Apex Industrial Materials Corp.'} ({user?.vendor_id ? `VID-${String(user.vendor_id).padStart(3, '0')}` : 'VID-001'})</span>
+          </div>
+
+          <Link
+            to="/vendor-portal"
+            style={{
+              padding: '5px 12px',
+              borderRadius: '6px',
+              backgroundColor: '#f1f5f9',
+              border: '1px solid #cbd5e1',
+              color: '#334155',
+              fontSize: '12px',
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              textDecoration: 'none'
+            }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="2" y1="12" x2="22" y2="12" />
+            </svg>
+            <span>Overview Portal</span>
+          </Link>
+
+          <button
+            onClick={() => alert('Dataset Import: Ready to sync supplier catalog with ERP/inventory systems.')}
+            style={{
+              padding: '5px 12px',
+              borderRadius: '6px',
+              backgroundColor: '#f1f5f9',
+              border: '1px solid #cbd5e1',
+              color: '#334155',
+              fontSize: '12px',
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer'
+            }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            <span>Upload Dataset</span>
+          </button>
+
+          <span style={{
+            fontSize: '11px',
+            fontWeight: 700,
+            backgroundColor: '#eff6ff',
+            color: '#2563eb',
+            border: '1px solid #bfdbfe',
+            padding: '2px 8px',
+            borderRadius: '4px'
+          }}>
+            ROLE VIEW: Vendor
+          </span>
+        </div>
+      ) : !isVendorPortal ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-secondary)' }}>
             Quick Role Switcher:
@@ -167,9 +243,8 @@ export const Navbar = () => {
         </div>
       ) : (
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          
           <span style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--text-primary)' }}>
-            Vendor & Supplier Public Directory
+            Vendor &amp; Supplier Public Directory
           </span>
           <span
             className="badge"
