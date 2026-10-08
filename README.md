@@ -1,11 +1,7 @@
 # VendorIQ — Predictive Vendor Intelligence & Supplier Risk Management Platform
 
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.110.0-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Tests](https://img.shields.io/badge/Pytest-13%2F13%20Passed-brightgreen.svg?logo=pytest&logoColor=white)](https://docs.pytest.org/)
-[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker&logoColor=white)](https://www.docker.com/)
-[![Database](https://img.shields.io/badge/Database-SQLite%20%2F%20PostgreSQL-4479A1.svg?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
-[![Theme](https://img.shields.io/badge/Theme-Terracotta%20%26%20Mocha%20Brown-ea580c.svg)](#design-system)
+Deployed Link : https://vendor-reliability-intelligence-pla.vercel.app/
+
 
 **VendorIQ** is an enterprise-grade full-stack supplier intelligence, automated performance evaluation, and procurement risk management system. It bridges historical supply chain delivery analytics with live warehouse dock receiving workflows, autonomous multi-metric scoring, and role-based access control (RBAC).
 
