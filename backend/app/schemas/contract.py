@@ -34,6 +34,15 @@ class ContractCreate(BaseModel):
     end_date: date
     file_path: Optional[str] = None
 
+class ContractInvoiceSummary(BaseModel):
+    id: int
+    invoice_number: str
+    amount: float
+    status: str
+    created_at: datetime
+    due_date: Optional[date] = None
+    purchase_order_id: Optional[int] = None
+
 class ContractResponse(BaseModel):
     id: int
     contract_number: str
@@ -46,6 +55,8 @@ class ContractResponse(BaseModel):
     created_at: datetime
     vendor: Optional[VendorResponse] = None
     certifications: List[CertificationResponse] = []
+    total_purchase_amount: Optional[float] = 0.0
+    invoices: Optional[List[ContractInvoiceSummary]] = []
 
     class Config:
         from_attributes = True

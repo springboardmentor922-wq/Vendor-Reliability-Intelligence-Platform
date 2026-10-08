@@ -5,6 +5,7 @@ from datetime import datetime, date, timedelta
 import uuid
 from app.database import get_db
 from app.models.contract import Contract, Certification
+from app.models.procurement import PurchaseOrder, Invoice
 from app.models.vendor import Vendor
 from app.models.user import User
 from app.models.enums import UserRole, ContractStatus
@@ -49,6 +50,32 @@ def get_contracts(
 
     contracts = query.order_by(Contract.id.desc()).all()
     refresh_contract_expiries(contracts, db)
+
+    # Attach total purchase amount and contract invoices for each contract
+    for c in contracts:
+        c_suffix = c.contract_number.split("-")[-1] if "-" in c.contract_number else ""
+        all_vendor_pos = db.query(PurchaseOrder).filter(PurchaseOrder.vendor_id == c.vendor_id).all()
+        matching_pos = [po for po in all_vendor_pos if c_suffix and c_suffix in (po.po_number or "")]
+        if not matching_pos and (len(all_vendor_pos) == 1 or len(contracts) == 1):
+            matching_pos = all_vendor_pos
+
+        c_total_purchase = sum(float(p.total_amount or 0.0) for p in matching_pos) if matching_pos else 0.0
+        po_ids = [p.id for p in matching_pos]
+        matching_invoices = db.query(Invoice).filter(Invoice.purchase_order_id.in_(po_ids)).all() if po_ids else []
+
+        c.total_purchase_amount = c_total_purchase
+        c.invoices = [
+            {
+                "id": inv.id,
+                "invoice_number": inv.invoice_number,
+                "amount": float(inv.amount or 0.0),
+                "status": inv.status.value if hasattr(inv.status, "value") else str(inv.status),
+                "created_at": inv.created_at,
+                "due_date": inv.due_date,
+                "purchase_order_id": inv.purchase_order_id
+            }
+            for inv in matching_invoices
+        ]
 
     if status_filter:
         contracts = [c for c in contracts if c.status == status_filter]

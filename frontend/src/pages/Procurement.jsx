@@ -57,6 +57,15 @@ const PO_STATUS_PILLS = [
   { label: 'Cancelled', value: 'cancelled' }
 ];
 
+// Commercial Invoice status filter options
+const INVOICE_STATUS_PILLS = [
+  { label: 'All', value: '' },
+  { label: 'Paid', value: 'paid' },
+  { label: 'Approved', value: 'approved' },
+  { label: 'Pending', value: 'pending' },
+  { label: 'Overdue', value: 'overdue' }
+];
+
 const PAYMENT_TERMS_OPTIONS = ['Net 15', 'Net 30', 'Net 45', 'Net 60'];
 
 export const Procurement = () => {
@@ -64,9 +73,11 @@ export const Procurement = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  // Active Tab: 'requests' | 'orders'
+  // Active Tab: 'requests' | 'orders' | 'invoices'
   const tabParam = searchParams.get('tab');
-  const [activeTab, setActiveTab] = useState(tabParam === 'requests' ? 'requests' : 'orders');
+  const [activeTab, setActiveTab] = useState(
+    tabParam === 'requests' ? 'requests' : tabParam === 'invoices' ? 'invoices' : 'orders'
+  );
 
   // Search filter query
   const [globalSearch, setGlobalSearch] = useState('');
@@ -84,6 +95,7 @@ export const Procurement = () => {
   const [requestStatusFilter, setRequestStatusFilter] = useState('');
   const [requestPriorityFilter, setRequestPriorityFilter] = useState('');
   const [poStatusFilter, setPOStatusFilter] = useState('');
+  const [invoiceStatusFilter, setInvoiceStatusFilter] = useState('');
 
   // Modals state
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
@@ -172,6 +184,8 @@ export const Procurement = () => {
       setActiveTab('orders');
     } else if (tab === 'requests') {
       setActiveTab('requests');
+    } else if (tab === 'invoices') {
+      setActiveTab('invoices');
     }
 
     if (directVendorId) {
@@ -347,7 +361,7 @@ export const Procurement = () => {
       await api.createInvoice({
         purchase_order_id: Number(invoiceForm.purchase_order_id),
         amount: Number(invoiceForm.amount),
-        due_date: invoiceForm.due_date
+        due_date: invoiceForm.due_date || undefined
       });
       setIsInvoiceModalOpen(false);
       setInvoiceForm({ purchase_order_id: '', amount: '', due_date: '' });
@@ -355,6 +369,15 @@ export const Procurement = () => {
       alert('Invoice created successfully!');
     } catch (err) {
       alert('Error generating invoice: ' + err.message);
+    }
+  };
+
+  const handleUpdateInvoiceStatus = async (invoiceId, newStatus) => {
+    try {
+      await api.updateInvoiceStatus(invoiceId, { status: newStatus });
+      loadAllData();
+    } catch (err) {
+      alert('Error updating invoice status: ' + err.message);
     }
   };
 
@@ -403,6 +426,15 @@ export const Procurement = () => {
     if (s === 'cancelled') {
       return { label: 'Cancelled', dot: '#ef4444', bg: '#fee2e2', text: '#991b1b' };
     }
+    return { label: s.charAt(0).toUpperCase() + s.slice(1), dot: '#6b7280', bg: '#f3f4f6', text: '#374151' };
+  };
+
+  const getInvoiceStatusBadge = (status) => {
+    const s = (status || 'pending').toLowerCase();
+    if (s === 'paid') return { label: 'Paid', dot: '#10b981', bg: '#ecfdf5', text: '#065f46' };
+    if (s === 'approved') return { label: 'Approved', dot: '#3b82f6', bg: '#eff6ff', text: '#1e40af' };
+    if (s === 'pending') return { label: 'Pending Payment', dot: '#f59e0b', bg: '#fffbeb', text: '#92400e' };
+    if (s === 'overdue') return { label: 'Overdue', dot: '#ef4444', bg: '#fef2f2', text: '#991b1b' };
     return { label: s.charAt(0).toUpperCase() + s.slice(1), dot: '#6b7280', bg: '#f3f4f6', text: '#374151' };
   };
 
@@ -486,6 +518,22 @@ export const Procurement = () => {
     if (poStatusFilter) {
       const s = (po.status || 'pending').toLowerCase();
       if (s !== poStatusFilter) return false;
+    }
+    return true;
+  });
+
+  const filteredInvoices = invoices.filter(inv => {
+    if (globalSearch.trim()) {
+      const q = globalSearch.toLowerCase();
+      const invNum = (inv.invoice_number || '').toLowerCase();
+      const poCode = (inv.purchase_order?.po_number || '').toLowerCase();
+      const vendorName = (inv.purchase_order?.vendor?.company_name || '').toLowerCase();
+      const match = invNum.includes(q) || poCode.includes(q) || vendorName.includes(q);
+      if (!match) return false;
+    }
+    if (invoiceStatusFilter) {
+      const s = (inv.status || 'pending').toLowerCase();
+      if (s !== invoiceStatusFilter) return false;
     }
     return true;
   });
@@ -643,7 +691,10 @@ export const Procurement = () => {
       {/* Navigation Tabs */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '22px' }}>
         <button
-          onClick={() => setActiveTab('requests')}
+          onClick={() => {
+            setActiveTab('requests');
+            setSearchParams({ tab: 'requests' });
+          }}
           style={{
             padding: '7px 16px',
             borderRadius: '6px',
@@ -656,11 +707,14 @@ export const Procurement = () => {
             transition: 'all 0.15s ease'
           }}
         >
-          Requests
+          Requests ({requests.length})
         </button>
 
         <button
-          onClick={() => setActiveTab('orders')}
+          onClick={() => {
+            setActiveTab('orders');
+            setSearchParams({ tab: 'orders' });
+          }}
           style={{
             padding: '7px 16px',
             borderRadius: '6px',
@@ -673,7 +727,27 @@ export const Procurement = () => {
             transition: 'all 0.15s ease'
           }}
         >
-          Purchase orders
+          Purchase orders ({orders.length})
+        </button>
+
+        <button
+          onClick={() => {
+            setActiveTab('invoices');
+            setSearchParams({ tab: 'invoices' });
+          }}
+          style={{
+            padding: '7px 16px',
+            borderRadius: '6px',
+            fontSize: '13.5px',
+            fontWeight: 600,
+            border: activeTab === 'invoices' ? 'none' : '1px solid #e5e7eb',
+            backgroundColor: activeTab === 'invoices' ? '#0f3b33' : '#ffffff',
+            color: activeTab === 'invoices' ? '#ffffff' : '#4b5563',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          Commercial Invoices ({invoices.length})
         </button>
       </div>
 
@@ -1262,6 +1336,266 @@ export const Procurement = () => {
                           {/* DELIVERY DATE */}
                           <td style={{ padding: '14px 18px', fontSize: '13px', color: '#4b5563' }}>
                             {formatDate(po.expected_delivery_date)}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* TAB 3: COMMERCIAL INVOICES                                                */}
+      {/* ========================================================================= */}
+      {activeTab === 'invoices' && (
+        <div>
+          {/* Status Filter Pills & Quick Actions */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '12px', marginBottom: '18px' }}>
+            <div>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+                INVOICE STATUS
+              </div>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {INVOICE_STATUS_PILLS.map((st) => {
+                  const isActive = invoiceStatusFilter === st.value;
+                  return (
+                    <button
+                      key={st.value || 'all'}
+                      onClick={() => setInvoiceStatusFilter(st.value)}
+                      style={{
+                        padding: '4px 14px',
+                        borderRadius: '20px',
+                        fontSize: '12.5px',
+                        fontWeight: isActive ? 600 : 500,
+                        border: isActive ? '1.5px solid #1f2937' : '1px solid #e5e7eb',
+                        backgroundColor: '#ffffff',
+                        color: isActive ? '#111827' : '#4b5563',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      {st.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {canManageFinance && (
+              <button
+                onClick={() => {
+                  setInvoiceForm({ purchase_order_id: '', amount: '', due_date: '' });
+                  setIsInvoiceModalOpen(true);
+                }}
+                style={{
+                  backgroundColor: '#0f3b33',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '7px 14px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <span>+</span>
+                <span>Record Tax Invoice</span>
+              </button>
+            )}
+          </div>
+
+          {/* Invoices Table */}
+          <div style={{
+            backgroundColor: '#ffffff',
+            border: '1px solid #e5e7eb',
+            borderRadius: '10px',
+            overflow: 'hidden',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
+          }}>
+            <div className="table-responsive" style={{ margin: 0 }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+                    <th style={{ padding: '12px 18px', fontSize: '11px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      INVOICE #
+                    </th>
+                    <th style={{ padding: '12px 18px', fontSize: '11px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      PURCHASE ORDER REF
+                    </th>
+                    <th style={{ padding: '12px 18px', fontSize: '11px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      SUPPLIER / VENDOR
+                    </th>
+                    <th style={{ padding: '12px 18px', fontSize: '11px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      TOTAL BILLED AMOUNT
+                    </th>
+                    <th style={{ padding: '12px 18px', fontSize: '11px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      PAYMENT STATUS
+                    </th>
+                    <th style={{ padding: '12px 18px', fontSize: '11px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      DUE DATE
+                    </th>
+                    <th style={{ padding: '12px 18px', fontSize: '11px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>
+                      ACTIONS
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan="7" style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+                        Loading commercial invoices...
+                      </td>
+                    </tr>
+                  ) : filteredInvoices.length === 0 ? (
+                    <tr>
+                      <td colSpan="7" style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+                        No commercial invoices recorded.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredInvoices.map((inv) => {
+                      const po = inv.purchase_order || {};
+                      const vendor = po.vendor || vendors.find(v => v.id === po.vendor_id);
+                      const statusBadge = getInvoiceStatusBadge(inv.status);
+
+                      return (
+                        <tr
+                          key={inv.id}
+                          style={{
+                            borderBottom: '1px solid #f3f4f6',
+                            transition: 'background-color 0.15s ease'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fafafa'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
+                        >
+                          {/* INVOICE # */}
+                          <td style={{ padding: '14px 18px' }}>
+                            <div style={{ fontWeight: 700, color: '#111827', fontSize: '13.5px' }}>
+                              {inv.invoice_number}
+                            </div>
+                            <div style={{ fontSize: '11.5px', color: '#6b7280', marginTop: '1px' }}>
+                              Issued: {formatDate(inv.created_at || inv.created_date)}
+                            </div>
+                          </td>
+
+                          {/* PO REF */}
+                          <td style={{ padding: '14px 18px', fontSize: '13px' }}>
+                            {po.po_number ? (
+                              <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#2563eb', backgroundColor: '#eff6ff', padding: '3px 8px', borderRadius: '4px' }}>
+                                {po.po_number}
+                              </span>
+                            ) : (
+                              <span style={{ color: '#9ca3af' }}>N/A</span>
+                            )}
+                          </td>
+
+                          {/* SUPPLIER */}
+                          <td style={{ padding: '14px 18px', fontSize: '13.5px', color: '#1f2937' }}>
+                            <strong>{vendor ? vendor.company_name : `Vendor #${po.vendor_id || 'N/A'}`}</strong>
+                            {vendor?.category && (
+                              <div style={{ fontSize: '11.5px', color: '#6b7280' }}>
+                                {getCategoryLabel(vendor.category)}
+                              </div>
+                            )}
+                          </td>
+
+                          {/* TOTAL BILLED AMOUNT */}
+                          <td style={{ padding: '14px 18px' }}>
+                            <div style={{ fontWeight: 700, color: '#0f766e', fontSize: '14px' }}>
+                              {formatCurrency(inv.amount)}
+                            </div>
+                            <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                              Incl. 18% GST Breakdown
+                            </div>
+                          </td>
+
+                          {/* PAYMENT STATUS */}
+                          <td style={{ padding: '14px 18px' }}>
+                            <span style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '3px 10px',
+                              borderRadius: '14px',
+                              fontSize: '12px',
+                              fontWeight: 600,
+                              backgroundColor: statusBadge.bg,
+                              color: statusBadge.text
+                            }}>
+                              <span style={{
+                                width: '6px',
+                                height: '6px',
+                                borderRadius: '50%',
+                                backgroundColor: statusBadge.dot
+                              }} />
+                              {statusBadge.label}
+                            </span>
+                          </td>
+
+                          {/* DUE DATE */}
+                          <td style={{ padding: '14px 18px', fontSize: '13px', color: '#4b5563' }}>
+                            {formatDate(inv.due_date)}
+                            {inv.paid_date && (
+                              <div style={{ fontSize: '11px', color: '#059669', fontWeight: 600 }}>
+                                Paid on {formatDate(inv.paid_date)}
+                              </div>
+                            )}
+                          </td>
+
+                          {/* ACTIONS */}
+                          <td style={{ padding: '14px 18px', textAlign: 'right' }}>
+                            <div style={{ display: 'inline-flex', gap: '8px', alignItems: 'center' }}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedInvoiceForPDF(inv);
+                                  setIsPdfModalOpen(true);
+                                }}
+                                style={{
+                                  backgroundColor: '#0f3b33',
+                                  color: '#ffffff',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  padding: '6px 12px',
+                                  fontSize: '12px',
+                                  fontWeight: 600,
+                                  cursor: 'pointer',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '5px'
+                                }}
+                                title="Open and download printable tax invoice PDF"
+                              >
+                                <span>📄 View / Print PDF</span>
+                              </button>
+
+                              {canManageFinance && inv.status !== 'paid' && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateInvoiceStatus(inv.id, 'paid')}
+                                  style={{
+                                    backgroundColor: '#ecfdf5',
+                                    color: '#065f46',
+                                    border: '1px solid #a7f3d0',
+                                    borderRadius: '6px',
+                                    padding: '5px 10px',
+                                    fontSize: '12px',
+                                    fontWeight: 600,
+                                    cursor: 'pointer'
+                                  }}
+                                  title="Mark this invoice as fully paid"
+                                >
+                                  Mark Paid
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );
@@ -2023,6 +2357,123 @@ export const Procurement = () => {
               }}
             >
               Create order
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ========================================================================= */}
+      {/* MODAL: CREATE INVOICE                                                     */}
+      {/* ========================================================================= */}
+      <Modal
+        isOpen={isInvoiceModalOpen}
+        onClose={() => setIsInvoiceModalOpen(false)}
+        title="Record Commercial Tax Invoice"
+        subtitle="Issue or register an official supplier tax invoice against an existing Purchase Order."
+      >
+        <form onSubmit={handleCreateInvoice}>
+          <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                Select Purchase Order *
+              </label>
+              <select
+                value={invoiceForm.purchase_order_id}
+                onChange={(e) => {
+                  const poId = e.target.value;
+                  const poObj = orders.find(o => String(o.id) === String(poId));
+                  const poAmt = poObj ? ((poObj.items || []).reduce((s, it) => s + (Number(it.quantity || 0) * Number(it.unit_price || 0)), Number(poObj.total_amount) || 0)) : '';
+                  setInvoiceForm({
+                    ...invoiceForm,
+                    purchase_order_id: poId,
+                    amount: poAmt || invoiceForm.amount
+                  });
+                }}
+                required
+                style={{
+                  width: '100%',
+                  padding: '9px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '13.5px',
+                  backgroundColor: '#ffffff'
+                }}
+              >
+                <option value="">-- Choose Purchase Order --</option>
+                {orders.map((po) => {
+                  const ven = vendors.find(v => v.id === po.vendor_id);
+                  return (
+                    <option key={po.id} value={po.id}>
+                      {getPOCode(po)} &bull; {ven ? ven.company_name : `Vendor #${po.vendor_id}`} ({formatCurrency(po.total_amount)})
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                Invoice Total Amount (₹) *
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="e.g. 50000"
+                value={invoiceForm.amount}
+                onChange={(e) => setInvoiceForm({ ...invoiceForm, amount: e.target.value })}
+                required
+                style={{
+                  width: '100%',
+                  padding: '9px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '13.5px'
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                Payment Due Date
+              </label>
+              <input
+                type="date"
+                value={invoiceForm.due_date}
+                onChange={(e) => setInvoiceForm({ ...invoiceForm, due_date: e.target.value })}
+                style={{
+                  width: '100%',
+                  padding: '9px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '13.5px'
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', padding: '14px 24px', backgroundColor: '#f9fafb' }}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => setIsInvoiceModalOpen(false)}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              style={{
+                backgroundColor: '#0f3b33',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '6px',
+                padding: '9px 18px',
+                fontSize: '13.5px',
+                fontWeight: 600,
+                cursor: 'pointer'
+              }}
+            >
+              Generate Commercial Invoice
             </button>
           </div>
         </form>

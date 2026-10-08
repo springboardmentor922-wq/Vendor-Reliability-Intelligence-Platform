@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { StatusBadge } from '../components/StatusBadge';
 import { Modal } from '../components/Modal';
+import { InvoicePDFModal } from '../components/InvoicePDFModal';
 
 export const Contracts = () => {
   const { user } = useAuth();
@@ -16,6 +17,8 @@ export const Contracts = () => {
   // Modals
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
   const [isCertModalOpen, setIsCertModalOpen] = useState(false);
+  const [selectedInvoiceForPDF, setSelectedInvoiceForPDF] = useState(null);
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
 
   // Forms
   const [contractForm, setContractForm] = useState({
@@ -98,6 +101,50 @@ export const Contracts = () => {
     }
   };
 
+  const handleViewContractInvoice = async (contract, invoiceSummary) => {
+    try {
+      let fullInvoice = null;
+      if (invoiceSummary?.id) {
+        try {
+          const allInvoices = await api.getInvoices();
+          fullInvoice = allInvoices.find(inv => inv.id === invoiceSummary.id || inv.invoice_number === invoiceSummary.invoice_number);
+        } catch (e) {
+          console.warn('Could not fetch full invoice from API:', e);
+        }
+      }
+
+      if (!fullInvoice) {
+        const totalAmt = invoiceSummary?.amount || Number(contract.total_purchase_amount || 0);
+        fullInvoice = {
+          id: invoiceSummary?.id || `contract-${contract.id}`,
+          invoice_number: invoiceSummary?.invoice_number || `INV-${contract.contract_number}`,
+          amount: totalAmt,
+          status: invoiceSummary?.status || (totalAmt > 0 ? 'paid' : 'pending'),
+          created_at: invoiceSummary?.created_at || contract.start_date || new Date().toISOString(),
+          due_date: invoiceSummary?.due_date || contract.end_date || new Date().toISOString(),
+          purchase_order: {
+            po_number: `PO-${contract.contract_number}`,
+            order_date: contract.start_date,
+            vendor: contract.vendor || { company_name: 'Registered Supplier', email: 'supplier@vendoriq.internal' },
+            items: [
+              {
+                id: 1,
+                item_name: `Aggregated Contract Purchases & Deliverables (${contract.title})`,
+                quantity: 1,
+                unit_price: (totalAmt / 1.18).toFixed(2)
+              }
+            ]
+          }
+        };
+      }
+
+      setSelectedInvoiceForPDF(fullInvoice);
+      setIsPdfModalOpen(true);
+    } catch (err) {
+      console.error('Error opening contract invoice:', err);
+    }
+  };
+
   return (
     <div>
       <div className="page-header">
@@ -148,14 +195,16 @@ export const Contracts = () => {
                     <th>Supplier</th>
                     <th>Agreement Title</th>
                     <th>Term (Start - End)</th>
+                    <th>Total Purchases</th>
                     <th>Status</th>
+                    <th>Invoice</th>
                     <th>Repository Link</th>
                   </tr>
                 </thead>
                 <tbody>
                   {contracts.length === 0 ? (
                     <tr>
-                      <td colSpan="6" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>
+                      <td colSpan="8" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>
                         No contracts found.
                       </td>
                     </tr>
@@ -175,7 +224,64 @@ export const Contracts = () => {
                         <td>
                           {c.start_date} &rarr; <strong>{c.end_date}</strong>
                         </td>
+                        <td>
+                          <span style={{ fontWeight: 700, color: '#0f766e', fontSize: '13px' }}>
+                            ₹{Number(c.total_purchase_amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        </td>
                         <td><StatusBadge status={c.status} /></td>
+                        <td>
+                          {c.invoices && c.invoices.length > 0 ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              {c.invoices.map((inv) => (
+                                <button
+                                  key={inv.id}
+                                  type="button"
+                                  onClick={() => handleViewContractInvoice(c, inv)}
+                                  className="btn btn-secondary"
+                                  style={{
+                                    padding: '3px 8px',
+                                    fontSize: '11px',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    backgroundColor: '#f0fdf4',
+                                    color: '#166534',
+                                    border: '1px solid #bbf7d0',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer'
+                                  }}
+                                  title={`View Tax Invoice ${inv.invoice_number}`}
+                                >
+                                  📄 {inv.invoice_number}
+                                </button>
+                              ))}
+                            </div>
+                          ) : Number(c.total_purchase_amount) > 0 ? (
+                            <button
+                              type="button"
+                              onClick={() => handleViewContractInvoice(c, null)}
+                              className="btn btn-secondary"
+                              style={{
+                                padding: '3px 8px',
+                                fontSize: '11px',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                backgroundColor: '#f0fdf4',
+                                color: '#166534',
+                                border: '1px solid #bbf7d0',
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                              }}
+                              title="View Total Purchases Tax Invoice"
+                            >
+                              📄 View Invoice
+                            </button>
+                          ) : (
+                            <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>No billings yet</span>
+                          )}
+                        </td>
                         <td>
                           {c.file_path ? (
                             <span style={{ fontSize: '12px', color: 'var(--primary)', fontFamily: 'monospace' }}>
@@ -420,6 +526,12 @@ export const Contracts = () => {
           </div>
         </form>
       </Modal>
+
+      <InvoicePDFModal
+        isOpen={isPdfModalOpen}
+        onClose={() => setIsPdfModalOpen(false)}
+        invoice={selectedInvoiceForPDF}
+      />
     </div>
   );
 };
