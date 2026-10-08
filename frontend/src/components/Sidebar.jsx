@@ -30,6 +30,9 @@ export const Sidebar = () => {
       loadNotifications();
       const interval = setInterval(loadNotifications, 30000);
       return () => clearInterval(interval);
+    } else {
+      setNotifications([]);
+      setIsNotifDrawerOpen(false);
     }
   }, [user]);
 
@@ -186,171 +189,178 @@ export const Sidebar = () => {
             </span>
           </NavLink>
 
-          {/* 2. Vendor Management */}
-          <NavLink
-            to="/vendors"
-            className={({ isActive }) => `sidebar-nav-btn ${isActive ? 'active' : ''}`}
-            style={({ isActive }) => ({
-              display: 'flex',
-              alignItems: 'center',
-              padding: '9.5px 12px',
-              borderRadius: '8px',
-              fontSize: '13.5px',
-              fontWeight: isActive ? 600 : 500,
-              color: isActive ? '#ffffff' : '#94a3b8',
-              backgroundColor: isActive ? '#2563eb' : 'transparent',
-              boxShadow: isActive ? '0 2px 8px rgba(37, 99, 235, 0.35)' : 'none',
-              textDecoration: 'none',
-              transition: 'all 0.15s ease'
-            })}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-              </svg>
-              <span>Vendor Management</span>
-            </div>
-          </NavLink>
-
-          {/* 3. Orders & Invoices */}
-          <NavLink
-            to="/procurement?tab=orders"
-            className={({ isActive }) => `sidebar-nav-btn ${isActive || location.pathname.startsWith('/procurement') ? 'active' : ''}`}
-            style={({ isActive }) => {
-              const active = isActive || location.pathname.startsWith('/procurement');
-              return {
+          {/* 2. Vendor Management - Internal Staff Only */}
+          {user && !isVendor && (
+            <NavLink
+              to="/vendors"
+              className={({ isActive }) => `sidebar-nav-btn ${isActive ? 'active' : ''}`}
+              style={({ isActive }) => ({
                 display: 'flex',
                 alignItems: 'center',
                 padding: '9.5px 12px',
                 borderRadius: '8px',
                 fontSize: '13.5px',
-                fontWeight: active ? 600 : 500,
-                color: active ? '#ffffff' : '#94a3b8',
-                backgroundColor: active ? '#2563eb' : 'transparent',
-                boxShadow: active ? '0 2px 8px rgba(37, 99, 235, 0.35)' : 'none',
+                fontWeight: isActive ? 600 : 500,
+                color: isActive ? '#ffffff' : '#94a3b8',
+                backgroundColor: isActive ? '#2563eb' : 'transparent',
+                boxShadow: isActive ? '0 2px 8px rgba(37, 99, 235, 0.35)' : 'none',
                 textDecoration: 'none',
                 transition: 'all 0.15s ease'
-              };
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <path d="M16 10a4 4 0 0 1-8 0" />
-              </svg>
-              <span>Orders &amp; Invoices</span>
-            </div>
-          </NavLink>
+              })}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+                <span>Vendor Management</span>
+              </div>
+            </NavLink>
+          )}
 
-          {/* 4. Contracts & Compliance */}
-          <NavLink
-            to="/contracts"
-            className={({ isActive }) => `sidebar-nav-btn ${isActive ? 'active' : ''}`}
-            style={({ isActive }) => ({
-              display: 'flex',
-              alignItems: 'center',
-              padding: '9.5px 12px',
-              borderRadius: '8px',
-              fontSize: '13.5px',
-              fontWeight: isActive ? 600 : 500,
-              color: isActive ? '#ffffff' : '#94a3b8',
-              backgroundColor: isActive ? '#2563eb' : 'transparent',
-              boxShadow: isActive ? '0 2px 8px rgba(37, 99, 235, 0.35)' : 'none',
-              textDecoration: 'none',
-              transition: 'all 0.15s ease'
-            })}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="8" y2="17" />
-                <polyline points="10 9 9 9 8 9" />
-              </svg>
-              <span>Contracts &amp; Compliance</span>
-            </div>
-          </NavLink>
+          {/* Authenticated Workspace Options (Vendors & Staff) */}
+          {user && (
+            <>
+              {/* 3. Orders & Invoices */}
+              <NavLink
+                to="/procurement?tab=orders"
+                className={({ isActive }) => `sidebar-nav-btn ${isActive || location.pathname.startsWith('/procurement') ? 'active' : ''}`}
+                style={({ isActive }) => {
+                  const active = isActive || location.pathname.startsWith('/procurement');
+                  return {
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '9.5px 12px',
+                    borderRadius: '8px',
+                    fontSize: '13.5px',
+                    fontWeight: active ? 600 : 500,
+                    color: active ? '#ffffff' : '#94a3b8',
+                    backgroundColor: active ? '#2563eb' : 'transparent',
+                    boxShadow: active ? '0 2px 8px rgba(37, 99, 235, 0.35)' : 'none',
+                    textDecoration: 'none',
+                    transition: 'all 0.15s ease'
+                  };
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                    <path d="M16 10a4 4 0 0 1-8 0" />
+                  </svg>
+                  <span>Orders &amp; Invoices</span>
+                </div>
+              </NavLink>
 
-          {/* 5. Communication Hub */}
-          <NavLink
-            to="/messages"
-            className={({ isActive }) => `sidebar-nav-btn ${isActive ? 'active' : ''}`}
-            style={({ isActive }) => ({
-              display: 'flex',
-              alignItems: 'center',
-              padding: '9.5px 12px',
-              borderRadius: '8px',
-              fontSize: '13.5px',
-              fontWeight: isActive ? 600 : 500,
-              color: isActive ? '#ffffff' : '#94a3b8',
-              backgroundColor: isActive ? '#2563eb' : 'transparent',
-              boxShadow: isActive ? '0 2px 8px rgba(37, 99, 235, 0.35)' : 'none',
-              textDecoration: 'none',
-              transition: 'all 0.15s ease'
-            })}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-              </svg>
-              <span>Communication Hub</span>
-            </div>
-          </NavLink>
+              {/* 4. Contracts & Compliance */}
+              <NavLink
+                to="/contracts"
+                className={({ isActive }) => `sidebar-nav-btn ${isActive ? 'active' : ''}`}
+                style={({ isActive }) => ({
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '9.5px 12px',
+                  borderRadius: '8px',
+                  fontSize: '13.5px',
+                  fontWeight: isActive ? 600 : 500,
+                  color: isActive ? '#ffffff' : '#94a3b8',
+                  backgroundColor: isActive ? '#2563eb' : 'transparent',
+                  boxShadow: isActive ? '0 2px 8px rgba(37, 99, 235, 0.35)' : 'none',
+                  textDecoration: 'none',
+                  transition: 'all 0.15s ease'
+                })}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                    <polyline points="10 9 9 9 8 9" />
+                  </svg>
+                  <span>Contracts &amp; Compliance</span>
+                </div>
+              </NavLink>
 
-          {/* 6. Notifications */}
-          <button
-            type="button"
-            onClick={() => setIsNotifDrawerOpen(!isNotifDrawerOpen)}
-            className={`sidebar-nav-btn ${isNotifDrawerOpen ? 'active' : ''}`}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '9.5px 12px',
-              borderRadius: '8px',
-              fontSize: '13.5px',
-              fontWeight: isNotifDrawerOpen ? 600 : 500,
-              color: isNotifDrawerOpen ? '#ffffff' : '#94a3b8',
-              backgroundColor: isNotifDrawerOpen ? '#2563eb' : 'transparent',
-              boxShadow: isNotifDrawerOpen ? '0 2px 8px rgba(37, 99, 235, 0.35)' : 'none',
-              border: 'none',
-              cursor: 'pointer',
-              width: '100%',
-              textAlign: 'left',
-              fontFamily: 'inherit',
-              transition: 'all 0.15s ease'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-              </svg>
-              <span>Notifications</span>
-            </div>
-            {unreadCount > 0 && (
-              <span style={{
-                fontSize: '10.5px',
-                fontWeight: 700,
-                padding: '1px 6px',
-                borderRadius: '9999px',
-                backgroundColor: '#ef4444',
-                color: '#ffffff',
-                minWidth: '18px',
-                textAlign: 'center'
-              }}>
-                {unreadCount}
-              </span>
-            )}
-          </button>
+              {/* 5. Communication Hub */}
+              <NavLink
+                to="/messages"
+                className={({ isActive }) => `sidebar-nav-btn ${isActive ? 'active' : ''}`}
+                style={({ isActive }) => ({
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '9.5px 12px',
+                  borderRadius: '8px',
+                  fontSize: '13.5px',
+                  fontWeight: isActive ? 600 : 500,
+                  color: isActive ? '#ffffff' : '#94a3b8',
+                  backgroundColor: isActive ? '#2563eb' : 'transparent',
+                  boxShadow: isActive ? '0 2px 8px rgba(37, 99, 235, 0.35)' : 'none',
+                  textDecoration: 'none',
+                  transition: 'all 0.15s ease'
+                })}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                  <span>Communication Hub</span>
+                </div>
+              </NavLink>
 
-          {/* Role-specific additions for non-vendor users */}
-          {!isVendor && (
+              {/* 6. Notifications */}
+              <button
+                type="button"
+                onClick={() => setIsNotifDrawerOpen(!isNotifDrawerOpen)}
+                className={`sidebar-nav-btn ${isNotifDrawerOpen ? 'active' : ''}`}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '9.5px 12px',
+                  borderRadius: '8px',
+                  fontSize: '13.5px',
+                  fontWeight: isNotifDrawerOpen ? 600 : 500,
+                  color: isNotifDrawerOpen ? '#ffffff' : '#94a3b8',
+                  backgroundColor: isNotifDrawerOpen ? '#2563eb' : 'transparent',
+                  boxShadow: isNotifDrawerOpen ? '0 2px 8px rgba(37, 99, 235, 0.35)' : 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  width: '100%',
+                  textAlign: 'left',
+                  fontFamily: 'inherit',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                  </svg>
+                  <span>Notifications</span>
+                </div>
+                {unreadCount > 0 && (
+                  <span style={{
+                    fontSize: '10.5px',
+                    fontWeight: 700,
+                    padding: '1px 6px',
+                    borderRadius: '9999px',
+                    backgroundColor: '#ef4444',
+                    color: '#ffffff',
+                    minWidth: '18px',
+                    textAlign: 'center'
+                  }}>
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+            </>
+          )}
+
+          {/* Role-specific additions: Enterprise Operations for Authenticated Non-Vendor Staff Only */}
+          {user && !isVendor && (
             <>
               <div style={{
                 padding: '16px 12px 6px 12px',
@@ -502,6 +512,44 @@ export const Sidebar = () => {
               )}
             </>
           )}
+
+          {/* When no user is signed in: show a clean sign-in shortcut */}
+          {!user && (
+            <div style={{
+              marginTop: '16px',
+              padding: '14px 12px',
+              borderRadius: '8px',
+              backgroundColor: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px'
+            }}>
+              <div style={{ fontSize: '11px', color: '#94a3b8', lineHeight: 1.4 }}>
+                Existing vendor or enterprise team member?
+              </div>
+              <Link
+                to="/login"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  padding: '7px 12px',
+                  borderRadius: '6px',
+                  backgroundColor: '#2563eb',
+                  color: '#ffffff',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  boxShadow: '0 2px 6px rgba(37, 99, 235, 0.35)'
+                }}
+              >
+                <span>Sign In to Platform</span>
+                <span>&rarr;</span>
+              </Link>
+            </div>
+          )}
         </nav>
 
         {/* Footer */}
@@ -528,7 +576,7 @@ export const Sidebar = () => {
       </aside>
 
       {/* Interactive Sliding Notification Drawer */}
-      {isNotifDrawerOpen && (
+      {user && isNotifDrawerOpen && (
         <div style={{
           position: 'fixed',
           top: 0,
