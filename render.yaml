@@ -35,3 +35,4 @@ databases:
     databaseName: vendoriq
     user: vendoriq_user
     plan: free
+
