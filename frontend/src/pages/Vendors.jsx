@@ -96,7 +96,7 @@ export const Vendors = () => {
     try {
       await api.createVendor({
         ...formData,
-        status: 'approved'
+        status: 'pending'
       });
       setIsRegisterOpen(false);
       setFormData({
@@ -111,6 +111,7 @@ export const Vendors = () => {
         payment_terms: 'Net 30',
         notes: ''
       });
+      alert('Vendor registration submitted. New vendors require Administrator approval before activation.');
       loadVendors();
     } catch (err) {
       alert('Error registering vendor: ' + err.message);
@@ -156,7 +157,9 @@ export const Vendors = () => {
   };
 
   const getReliabilityInfo = (score) => {
-    const num = Math.round(Number(score) || 85);
+    const raw = Number(score);
+    const num = isNaN(raw) ? 0 : Math.round(raw);
+    if (num === 0) return { score: 0, label: 'Unrated (New)', color: '#64748b', barColor: '#94a3b8' };
     if (num >= 85) return { score: num, label: 'Excellent', color: '#10b981', barColor: '#10b981' };
     if (num >= 70) return { score: num, label: 'Good', color: '#2563eb', barColor: '#3b82f6' };
     if (num >= 50) return { score: num, label: 'Moderate', color: '#d97706', barColor: '#f59e0b' };
@@ -610,22 +613,41 @@ export const Vendors = () => {
                               Edit
                             </button>
                           )}
-                          {canManageVendors && v.status === 'pending' && (
-                            <button
-                              onClick={() => handleStatusChange(v.id, 'approved')}
-                              style={{
-                                padding: '4px 8px',
-                                fontSize: '11.5px',
-                                fontWeight: 600,
-                                backgroundColor: '#ecfdf5',
-                                color: '#047857',
-                                border: '1px solid #a7f3d0',
-                                borderRadius: '5px',
-                                cursor: 'pointer'
-                              }}
-                            >
-                              Approve
-                            </button>
+                          {user?.role === 'Administrator' && v.status === 'pending' && (
+                            <>
+                              <button
+                                onClick={() => handleStatusChange(v.id, 'approved')}
+                                style={{
+                                  padding: '4px 8px',
+                                  fontSize: '11.5px',
+                                  fontWeight: 600,
+                                  backgroundColor: '#ecfdf5',
+                                  color: '#047857',
+                                  border: '1px solid #a7f3d0',
+                                  borderRadius: '5px',
+                                  cursor: 'pointer'
+                                }}
+                                title="Approve vendor with initial score 0.0"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                onClick={() => handleStatusChange(v.id, 'rejected')}
+                                style={{
+                                  padding: '4px 8px',
+                                  fontSize: '11.5px',
+                                  fontWeight: 600,
+                                  backgroundColor: '#fef2f2',
+                                  color: '#b91c1c',
+                                  border: '1px solid #fecaca',
+                                  borderRadius: '5px',
+                                  cursor: 'pointer'
+                                }}
+                                title="Reject vendor registration"
+                              >
+                                Reject
+                              </button>
+                            </>
                           )}
                         </div>
                       </td>

@@ -4,7 +4,8 @@ from typing import List
 from app.database import get_db
 from app.models.user import User
 from app.models.vendor import Vendor
-from app.models.enums import UserRole, VendorStatus, VendorCategory
+from app.models.notification import Notification
+from app.models.enums import UserRole, VendorStatus, VendorCategory, NotificationType
 from app.schemas.auth import Token, UserRegister, UserLogin, UserResponse
 from app.core.security import hash_password, verify_password, create_access_token
 from app.core.dependencies import get_current_user, require_roles
@@ -42,12 +43,22 @@ def register(user_in: UserRegister, db: Session = Depends(get_db)):
                 phone=user_in.phone,
                 address=user_in.address,
                 gst_number=user_in.gst_number,
-                notes=user_in.notes or "Self-registered supplier onboarding. Pending review & approval by Procurement.",
+                notes=user_in.notes or "Self-registered supplier onboarding. Pending Admin approval.",
                 approved_by_id=None
             )
             db.add(new_vendor)
             db.flush()
             assigned_vendor_id = new_vendor.id
+
+            # Notify all administrators to approve new vendor
+            admins = db.query(User).filter(User.role == UserRole.ADMINISTRATOR).all()
+            for admin in admins:
+                db.add(Notification(
+                    user_id=admin.id,
+                    type=NotificationType.VENDOR_APPROVAL,
+                    message=f"New vendor registration request: '{comp_name}' registered by {user_in.full_name}. Awaiting Admin approval.",
+                    is_read=False
+                ))
 
     user = User(
         full_name=user_in.full_name,

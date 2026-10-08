@@ -126,6 +126,23 @@ def get_dashboard_stats(
         if not risk_donut:
             risk_donut = [{"name": "Low Risk", "value": 1, "pct": 100, "color": "#10b981"}]
 
+        pending_vendor_list = db.query(Vendor).filter(Vendor.status == VendorStatus.PENDING).order_by(Vendor.id.desc()).all()
+        pending_vendor_requests = [
+            {
+                "id": pv.id,
+                "company_name": pv.company_name,
+                "category": pv.category.value if hasattr(pv.category, "value") else str(pv.category),
+                "contact_person": pv.contact_person,
+                "contact_role": pv.contact_role,
+                "email": pv.email,
+                "phone": pv.phone,
+                "gst_number": pv.gst_number,
+                "notes": pv.notes,
+                "created_at": pv.created_at.strftime("%Y-%m-%d %H:%M") if pv.created_at else ""
+            }
+            for pv in pending_vendor_list
+        ]
+
         return {
             "role": role.value,
             "metrics": {
@@ -142,6 +159,7 @@ def get_dashboard_stats(
                 "active_sessions": total_users,
                 "storage_usage": 38
             },
+            "pending_vendor_requests": pending_vendor_requests,
             "roles_distribution": roles_count,
             "roles_donut": roles_donut,
             "risk_distribution": risk_dist,
@@ -563,6 +581,11 @@ def get_dashboard_stats(
             {"name": "Support Queries", "value": max(1, v_msgs // 4), "pct": 10, "color": "#f43f5e"}
         ]
 
+        total_v_orders = active_pos + delivered_pos
+        is_new_vendor = (total_v_orders == 0)
+        tier_fallback = "New Vendor (Score: 0)" if is_new_vendor else "Tier 1: Preferred Supplier"
+        risk_fallback = "Unrated (New)" if is_new_vendor else "Low"
+
         return {
             "role": role.value,
             "vendor_info": {
@@ -576,19 +599,19 @@ def get_dashboard_stats(
                 "phone": vendor.phone if vendor and vendor.phone else "+91 98765 43210",
                 "address": vendor.address if vendor and vendor.address else "Industrial Hub Park, Pune",
                 "gst_number": vendor.gst_number if vendor and vendor.gst_number else "27AABCU9603R1ZM",
-                "tier": intel.get("supplier_tier", "Tier 1: Preferred Supplier"),
-                "risk_level": intel.get("risk_level", "Low")
+                "tier": intel.get("supplier_tier", tier_fallback),
+                "risk_level": intel.get("risk_level", risk_fallback)
             },
             "metrics": {
                 "performance_score": intel.get("reliability_score", 0.0),
                 "reliability_score": intel.get("reliability_score", 0.0),
-                "risk_level": intel.get("risk_level", "Low"),
-                "supplier_tier": intel.get("supplier_tier", "Tier 1: Preferred Supplier"),
-                "on_time_delivery_rate": intel.get("on_time_delivery_rate", 100.0),
+                "risk_level": intel.get("risk_level", risk_fallback),
+                "supplier_tier": intel.get("supplier_tier", tier_fallback),
+                "on_time_delivery_rate": intel.get("on_time_delivery_rate", 0.0 if is_new_vendor else 100.0),
                 "on_time_orders": intel.get("on_time_orders", delivered_pos),
-                "total_orders": active_pos + delivered_pos,
-                "average_quality_rating": intel.get("average_quality_rating", 4.8),
-                "average_response_hours": intel.get("average_response_hours", 1.8),
+                "total_orders": total_v_orders,
+                "average_quality_rating": intel.get("average_quality_rating", 0.0 if is_new_vendor else 4.8),
+                "average_response_hours": intel.get("average_response_hours", 0.0 if is_new_vendor else 1.8),
                 "issue_resolution_days": round(intel.get("issue_resolution_hours", 24.0) / 24.0, 1),
                 "active_orders": active_pos,
                 "active_commitment": round(active_commitment, 2),

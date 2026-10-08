@@ -154,12 +154,14 @@ export const Register = () => {
               marginBottom: '18px',
               marginTop: '4px'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-                
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
                 <strong style={{ fontSize: '13.5px', color: 'var(--text-primary)' }}>Vendor / Supplier Company Profile</strong>
                 <span className="badge badge-warning" style={{ marginLeft: 'auto', fontSize: '11px' }}>
-                  Pending Review on Submit
+                  Pending Admin Approval
                 </span>
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '14px', lineHeight: '1.4' }}>
+                New vendor registrations are submitted in <strong>Pending</strong> status and require Administrator approval before onboarding. Upon approval, your account starts with an initial reliability score and quality rating of <strong>0.0</strong>.
               </div>
 
               <div className="form-row">

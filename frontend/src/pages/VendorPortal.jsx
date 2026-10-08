@@ -105,7 +105,7 @@ export const VendorPortal = () => {
 
     try {
       await api.publicRegisterVendor(formData);
-      setRegSuccess(`Registration submitted successfully for ${formData.company_name}! Your supplier profile is now active on the platform.`);
+      setRegSuccess(`Registration submitted successfully for ${formData.company_name}! Your request has been forwarded to the Administrator for approval. Upon approval, your supplier account will be initialized with a reliability score and rating of 0.0.`);
       setFormData({
         company_name: '',
         category: 'raw_material',
@@ -191,7 +191,9 @@ export const VendorPortal = () => {
   };
 
   const getReliabilityInfo = (score) => {
-    const num = Math.round(Number(score) || 85);
+    const raw = Number(score);
+    const num = isNaN(raw) ? 0 : Math.round(raw);
+    if (num === 0) return { score: 0, label: 'Unrated (New)', color: '#64748b', barColor: '#94a3b8' };
     if (num >= 85) return { score: num, label: 'Excellent', color: '#0d7658', barColor: '#10b981' };
     if (num >= 70) return { score: num, label: 'Good', color: '#1d4ed8', barColor: '#3b82f6' };
     if (num >= 50) return { score: num, label: 'Moderate', color: '#b45309', barColor: '#f59e0b' };

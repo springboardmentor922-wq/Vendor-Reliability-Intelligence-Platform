@@ -5,7 +5,8 @@ from datetime import datetime
 from app.database import get_db
 from app.models.vendor import Vendor
 from app.models.user import User
-from app.models.enums import UserRole, VendorStatus, VendorCategory
+from app.models.notification import Notification
+from app.models.enums import UserRole, VendorStatus, VendorCategory, NotificationType
 from app.schemas.vendor import VendorCreate, VendorUpdate, VendorStatusUpdate, VendorResponse, PublicVendorShowcase
 from app.core.dependencies import get_current_user, require_roles
 from app.core.audit import log_audit_event
@@ -80,11 +81,24 @@ def public_vendor_registration(vendor_in: VendorCreate, db: Session = Depends(ge
         gst_number=vendor_in.gst_number,
         payment_terms=vendor_in.payment_terms or "Net 15",
         notes=vendor_in.notes or "Registered via Public Vendor Portal Gateway",
-        status=VendorStatus.PENDING
+        status=VendorStatus.PENDING,
+        approved_by_id=None
     )
     db.add(new_vendor)
     db.commit()
     db.refresh(new_vendor)
+
+    # Send approval request notification to all administrators
+    admins = db.query(User).filter(User.role == UserRole.ADMINISTRATOR).all()
+    for admin in admins:
+        db.add(Notification(
+            user_id=admin.id,
+            type=NotificationType.VENDOR_APPROVAL,
+            message=f"New vendor onboarding request: '{new_vendor.company_name}' requires Admin approval.",
+            is_read=False
+        ))
+    db.commit()
+
     return new_vendor
 
 @router.get("", response_model=List[VendorResponse])
@@ -161,6 +175,17 @@ def create_vendor(
         current_user.vendor_id = vendor.id
         db.commit()
 
+    # Notify all Administrators about the new vendor approval request
+    admins = db.query(User).filter(User.role == UserRole.ADMINISTRATOR).all()
+    for admin in admins:
+        db.add(Notification(
+            user_id=admin.id,
+            type=NotificationType.VENDOR_APPROVAL,
+            message=f"New vendor registration: '{vendor.company_name}' requires Admin review and approval.",
+            is_read=False
+        ))
+    db.commit()
+
     log_audit_event(
         db, current_user.id, "CREATE_VENDOR", "Vendor",
         f"Vendor '{vendor.company_name}' registered with status {vendor.status.value}"
@@ -217,22 +242,17 @@ def update_vendor_status(
     if not vendor:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vendor not found")
 
-    # If approving a pending vendor confirmation:
-    if status_in.status == VendorStatus.APPROVED and vendor.status == VendorStatus.PENDING:
-        # Constraint: confirmation must be approved by vendor, NOT by procurement manager
-        if current_user.role == UserRole.PROCUREMENT_MANAGER:
+    # If approving or rejecting a pending vendor:
+    if vendor.status == VendorStatus.PENDING:
+        # Strictly restricted to Administrator
+        if current_user.role != UserRole.ADMINISTRATOR:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Vendor onboarding confirmation must be approved by the Vendor, not by the Procurement Manager."
-            )
-        if current_user.role not in [UserRole.VENDOR, UserRole.ADMINISTRATOR]:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only the Vendor or Administrator can confirm vendor onboarding."
+                detail="Only an Administrator can review and approve/reject new vendor registrations."
             )
     else:
-        # Administrative lifecycle actions (reject, suspend, reactivate)
-        if current_user.role not in [UserRole.ADMINISTRATOR, UserRole.VENDOR, UserRole.SUPPLY_CHAIN_MANAGER, UserRole.PROCUREMENT_MANAGER]:
+        # Administrative lifecycle actions (suspend, reactivate)
+        if current_user.role not in [UserRole.ADMINISTRATOR, UserRole.SUPPLY_CHAIN_MANAGER, UserRole.PROCUREMENT_MANAGER]:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Insufficient permissions to change vendor lifecycle status."
@@ -242,8 +262,25 @@ def update_vendor_status(
     if status_in.notes:
         vendor.notes = f"{vendor.notes or ''}\n[Status Change Note]: {status_in.notes}".strip()
     
-    if status_in.status == VendorStatus.APPROVED:
+    if status_in.status in [VendorStatus.APPROVED, VendorStatus.ACTIVE]:
         vendor.approved_by_id = current_user.id
+        vendor_users = db.query(User).filter(User.vendor_id == vendor.id).all()
+        for vu in vendor_users:
+            db.add(Notification(
+                user_id=vu.id,
+                type=NotificationType.VENDOR_APPROVAL,
+                message=f"Vendor profile '{vendor.company_name}' approved by Administrator. Initial reliability score is 0.0.",
+                is_read=False
+            ))
+    elif status_in.status == VendorStatus.REJECTED:
+        vendor_users = db.query(User).filter(User.vendor_id == vendor.id).all()
+        for vu in vendor_users:
+            db.add(Notification(
+                user_id=vu.id,
+                type=NotificationType.VENDOR_APPROVAL,
+                message=f"Vendor registration for '{vendor.company_name}' was rejected by Administrator.",
+                is_read=False
+            ))
 
     vendor.updated_at = datetime.utcnow()
     db.commit()

@@ -23,6 +23,8 @@ export const Dashboard = () => {
   const [staffUsers, setStaffUsers] = useState([]);
   const [staffMsg, setStaffMsg] = useState(null);
   const [roleLoadingId, setRoleLoadingId] = useState(null);
+  const [approvalMsg, setApprovalMsg] = useState(null);
+  const [approvalLoadingId, setApprovalLoadingId] = useState(null);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [isPdfOpen, setIsPdfOpen] = useState(false);
 
@@ -66,6 +68,29 @@ export const Dashboard = () => {
       });
     } finally {
       setRoleLoadingId(null);
+    }
+  };
+
+  const handleVendorApproval = async (vendorId, actionStatus) => {
+    setApprovalLoadingId(vendorId);
+    setApprovalMsg(null);
+    try {
+      await api.updateVendorStatus(vendorId, {
+        status: actionStatus,
+        notes: actionStatus === 'approved' ? 'Approved by Administrator. Initialized with rating and score 0.0.' : 'Rejected by Administrator.'
+      });
+      setApprovalMsg({
+        type: 'success',
+        text: `Vendor successfully ${actionStatus === 'approved' ? 'approved and activated with initial score 0.0' : 'rejected'}.`
+      });
+      await loadStatsAndUsers();
+    } catch (err) {
+      setApprovalMsg({
+        type: 'error',
+        text: `Approval action failed: ${err.message}`
+      });
+    } finally {
+      setApprovalLoadingId(null);
     }
   };
 
@@ -313,6 +338,131 @@ export const Dashboard = () => {
                   </tbody>
                 </table>
               </div>
+            </div>
+          </div>
+
+          {/* Pending Vendor Registration Approvals Panel */}
+          <div className="card" style={{ marginTop: '20px' }}>
+            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h2 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  Pending Vendor Registration Approvals
+                  {(data?.pending_vendor_requests?.length || 0) > 0 && (
+                    <span className="badge badge-warning" style={{ fontSize: '11px' }}>
+                      {data.pending_vendor_requests.length} Pending
+                    </span>
+                  )}
+                </h2>
+                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                  Newly registered suppliers require Administrator authorization before onboarding. Approved suppliers initialize with a starting score and rating of 0.0.
+                </div>
+              </div>
+              <Link to="/vendors?status=pending" className="btn btn-secondary btn-sm">
+                View All in Directory
+              </Link>
+            </div>
+            <div className="card-body" style={{ padding: 0 }}>
+              {approvalMsg && (
+                <div style={{
+                  margin: '14px 20px',
+                  padding: '10px 14px',
+                  borderRadius: '8px',
+                  background: approvalMsg.type === 'error' ? 'var(--danger-bg)' : 'var(--success-bg)',
+                  border: `1px solid ${approvalMsg.type === 'error' ? 'var(--danger-border)' : 'var(--success-border)'}`,
+                  fontSize: '13px',
+                  color: approvalMsg.type === 'error' ? 'var(--danger)' : 'var(--success)'
+                }}>
+                  {approvalMsg.text}
+                </div>
+              )}
+              {(!data?.pending_vendor_requests || data.pending_vendor_requests.length === 0) ? (
+                <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                  <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-primary)', marginBottom: '4px' }}>
+                    No Pending Vendor Applications
+                  </div>
+                  <div style={{ fontSize: '12.5px' }}>
+                    All vendor registrations have been reviewed. When new suppliers register, approval requests will appear here.
+                  </div>
+                </div>
+              ) : (
+                <div className="table-responsive">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Company Name</th>
+                        <th>Category</th>
+                        <th>Primary Contact</th>
+                        <th>Contact Info</th>
+                        <th>Registered On</th>
+                        <th style={{ textAlign: 'right' }}>Admin Decision</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.pending_vendor_requests.map((pv) => (
+                        <tr key={pv.id}>
+                          <td>
+                            <strong>{pv.company_name}</strong>
+                            {pv.gst_number && (
+                              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>GST: {pv.gst_number}</div>
+                            )}
+                          </td>
+                          <td>
+                            <span className="badge badge-neutral" style={{ textTransform: 'capitalize' }}>
+                              {(pv.category || 'General').replace('_', ' ')}
+                            </span>
+                          </td>
+                          <td>
+                            <div>{pv.contact_person}</div>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{pv.contact_role || 'Sales Manager'}</div>
+                          </td>
+                          <td>
+                            <div>{pv.email}</div>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{pv.phone || '—'}</div>
+                          </td>
+                          <td style={{ fontSize: '12px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                            {pv.created_at || 'Recently'}
+                          </td>
+                          <td style={{ textAlign: 'right' }}>
+                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-primary"
+                                style={{
+                                  background: '#047857',
+                                  borderColor: '#047857',
+                                  color: '#ffffff',
+                                  padding: '5px 12px',
+                                  fontSize: '12px',
+                                  fontWeight: 600
+                                }}
+                                disabled={approvalLoadingId === pv.id}
+                                onClick={() => handleVendorApproval(pv.id, 'approved')}
+                              >
+                                {approvalLoadingId === pv.id ? 'Processing...' : 'Approve (0.0 Initial)'}
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-secondary"
+                                style={{
+                                  color: 'var(--danger)',
+                                  borderColor: 'var(--danger-border)',
+                                  padding: '5px 12px',
+                                  fontSize: '12px',
+                                  fontWeight: 600
+                                }}
+                                disabled={approvalLoadingId === pv.id}
+                                onClick={() => handleVendorApproval(pv.id, 'rejected')}
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         </>
@@ -674,6 +824,31 @@ export const Dashboard = () => {
       {/* --- VENDOR DASHBOARD --- */}
       {role === 'Vendor' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {data?.vendor_info?.status === 'pending' && (
+            <div style={{
+              background: '#fffbeb',
+              border: '1px solid #fde68a',
+              borderRadius: '10px',
+              padding: '16px 20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '16px'
+            }}>
+              <div>
+                <div style={{ fontWeight: 800, color: '#92400e', fontSize: '14.5px', marginBottom: '4px' }}>
+                  Vendor Registration Pending Administrator Approval
+                </div>
+                <div style={{ color: '#b45309', fontSize: '13px' }}>
+                  Your supplier account registration has been submitted and is currently pending review by the Administrator. Once approved, your supplier profile will be activated with an initial reliability score and quality rating of 0.0.
+                </div>
+              </div>
+              <span className="badge badge-warning" style={{ fontSize: '12px', padding: '6px 12px' }}>
+                Pending Approval
+              </span>
+            </div>
+          )}
+
           {/* 1. Welcome & Session Security Card */}
           <div className="card" style={{ margin: 0, border: '1px solid var(--border-color)', background: '#ffffff', boxShadow: 'var(--shadow-xs)' }}>
             <div className="card-body" style={{ padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
