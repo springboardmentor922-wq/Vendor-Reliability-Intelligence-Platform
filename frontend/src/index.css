@@ -710,30 +710,35 @@ a:hover {
 
 .modal-body {
   padding: 24px;
-  overflow-y: auto;
-  flex: 1 1 auto;
-  min-height: 0;
+  overflow-y: auto !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: calc(90vh - 120px);
   overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f8fafc;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Custom scrollbars for modals */
 .modal-body::-webkit-scrollbar,
 .modal-backdrop::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 .modal-body::-webkit-scrollbar-track,
 .modal-backdrop::-webkit-scrollbar-track {
-  background: transparent;
+  background: #f1f5f9;
+  border-radius: 4px;
 }
 .modal-body::-webkit-scrollbar-thumb,
 .modal-backdrop::-webkit-scrollbar-thumb {
-  background: rgba(15, 59, 51, 0.25);
+  background: #94a3b8;
   border-radius: 4px;
 }
 .modal-body::-webkit-scrollbar-thumb:hover,
 .modal-backdrop::-webkit-scrollbar-thumb:hover {
-  background: rgba(15, 59, 51, 0.5);
+  background: #64748b;
 }
 
 .modal-footer {

@@ -25,7 +25,7 @@ export const Modal = ({ isOpen, onClose, title, subtitle, children, maxWidth = '
     <div className="modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
       <div
         className={`modal-content ${className}`.trim()}
-        style={{ maxWidth }}
+        style={{ maxWidth, maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-header">

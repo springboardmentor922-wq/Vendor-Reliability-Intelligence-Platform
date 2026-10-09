@@ -1120,9 +1120,21 @@ export const VendorPortal = () => {
           }}
           title={vendorModalData?.company_name || selectedVendorForModal.company_name}
           subtitle={`Supplier Profile • Code: ${vendorModalData?.code || `VN-${String(selectedVendorForModal.id).padStart(4, '0')}`} • Category: ${getCategoryLabel(vendorModalData?.category || selectedVendorForModal.category)}`}
-          maxWidth="840px"
+          maxWidth="880px"
         >
-          <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '22px 26px' }}>
+          <div
+            className="modal-body"
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '20px',
+              padding: '22px 26px',
+              overflowY: 'auto',
+              maxHeight: 'calc(88vh - 120px)',
+              minHeight: 0,
+              flex: '1 1 auto'
+            }}
+          >
             {/* Header Identity & Quick Badges */}
             <div style={{
               display: 'flex',
@@ -1337,7 +1349,7 @@ export const VendorPortal = () => {
                   </div>
                 </div>
               ) : (
-                <div className="table-responsive" style={{ margin: 0 }}>
+                <div className="table-responsive" style={{ margin: 0, maxHeight: '280px', overflowY: 'auto' }}>
                   <table className="data-table" style={{ width: '100%' }}>
                     <thead>
                       <tr>
