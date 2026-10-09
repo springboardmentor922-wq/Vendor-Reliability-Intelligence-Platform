@@ -62,6 +62,7 @@ export const api = {
     return request(`/vendors${query ? `?${query}` : ''}`);
   },
   getVendorById: (id) => request(`/vendors/${id}`),
+  getVendorPublicProfile: (id) => request(`/vendors/${id}/public-profile`),
   createVendor: (vendorData) => request('/vendors', { method: 'POST', body: JSON.stringify(vendorData) }),
   updateVendor: (id, vendorData) => request(`/vendors/${id}`, { method: 'PUT', body: JSON.stringify(vendorData) }),
   updateVendorStatus: (id, statusData) => request(`/vendors/${id}/status`, { method: 'PATCH', body: JSON.stringify(statusData) }),

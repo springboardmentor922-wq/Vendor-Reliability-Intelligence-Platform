@@ -65,6 +65,25 @@ export const VendorPortal = () => {
   const [acquireVendorId, setAcquireVendorId] = useState('');
   const [acquireStatus, setAcquireStatus] = useState({ error: '', success: '', loading: false });
 
+  // Supplier Profile & Contracts Detail Modal State
+  const [selectedVendorForModal, setSelectedVendorForModal] = useState(null);
+  const [vendorModalLoading, setVendorModalLoading] = useState(false);
+  const [vendorModalData, setVendorModalData] = useState(null);
+
+  const handleOpenVendorModal = async (vendor) => {
+    setSelectedVendorForModal(vendor);
+    setVendorModalLoading(true);
+    setVendorModalData(vendor);
+    try {
+      const fullProfile = await api.getVendorPublicProfile(vendor.id);
+      setVendorModalData(fullProfile);
+    } catch (err) {
+      console.error('Failed to load supplier public profile:', err);
+    } finally {
+      setVendorModalLoading(false);
+    }
+  };
+
   const loadPortalData = async () => {
     setLoading(true);
     setError('');
@@ -467,14 +486,29 @@ export const VendorPortal = () => {
                 return (
                   <div
                     key={v.id}
-                    className="card"
+                    className="card supplier-grid-card"
+                    onClick={() => handleOpenVendorModal(v)}
+                    title="Click to view complete supplier profile, reliability index, and awarded contracts"
                     style={{
                       border: '1px solid var(--border-color)',
                       boxShadow: 'var(--shadow-xs)',
                       display: 'flex',
                       flexDirection: 'column',
                       justifyContent: 'space-between',
-                      borderRadius: 'var(--radius-lg)'
+                      borderRadius: 'var(--radius-lg)',
+                      cursor: 'pointer',
+                      transition: 'all 0.18s ease-in-out',
+                      position: 'relative'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-3px)';
+                      e.currentTarget.style.boxShadow = '0 10px 20px -5px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04)';
+                      e.currentTarget.style.borderColor = '#94a3b8';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = 'var(--shadow-xs)';
+                      e.currentTarget.style.borderColor = 'var(--border-color)';
                     }}
                   >
                     <div style={{ padding: '20px' }}>
@@ -512,10 +546,12 @@ export const VendorPortal = () => {
                         {v.address && <div>{v.address}</div>}
                       </div>
 
-                      {/* Reliability Score Bar */}
+                      {/* Reliability Score & Index Bar */}
                       <div style={{ backgroundColor: 'var(--bg-subtle)', padding: '10px 14px', borderRadius: '8px', marginBottom: '6px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                          <span style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)' }}>Reliability Rating</span>
+                          <span style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                            Reliability Rating
+                          </span>
                           <span style={{ fontSize: '12px', fontWeight: 700, color: relInfo.color }}>
                             {relInfo.score}% • {relInfo.label}
                           </span>
@@ -527,21 +563,45 @@ export const VendorPortal = () => {
                     </div>
 
                     {/* Card Footer: Terms & Status */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-subtle)', padding: '12px 20px', backgroundColor: '#fcfbf8', borderBottomLeftRadius: 'var(--radius-lg)', borderBottomRightRadius: 'var(--radius-lg)' }}>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      borderTop: '1px solid var(--border-subtle)',
+                      padding: '12px 20px',
+                      backgroundColor: '#fcfbf8',
+                      borderBottomLeftRadius: 'var(--radius-lg)',
+                      borderBottomRightRadius: 'var(--radius-lg)',
+                      flexWrap: 'wrap',
+                      gap: '8px'
+                    }}>
                       <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>
                         Terms: <strong>{v.payment_terms || 'Net 30'}</strong>
                       </span>
-                      <span style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '5px',
-                        fontSize: '11.5px',
-                        fontWeight: 600,
-                        color: '#065f46'
-                      }}>
-                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981' }} />
-                        Active Supplier
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          fontSize: '11.5px',
+                          fontWeight: 600,
+                          color: '#065f46'
+                        }}>
+                          <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981' }} />
+                          Active Supplier
+                        </span>
+                        <span style={{
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          color: '#0f3b33',
+                          backgroundColor: '#eef8f3',
+                          padding: '3px 8px',
+                          borderRadius: '4px',
+                          border: '1px solid #d8f0e5'
+                        }}>
+                          Contracts &rarr;
+                        </span>
+                      </div>
                     </div>
                   </div>
                 );
@@ -1045,6 +1105,308 @@ export const VendorPortal = () => {
               </button>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {/* ========================================================================= */}
+      {/* SUPPLIER DETAILS, RELIABILITY INDEX & CONTRACTS POPUP MODAL               */}
+      {/* ========================================================================= */}
+      {selectedVendorForModal && (
+        <Modal
+          isOpen={!!selectedVendorForModal}
+          onClose={() => {
+            setSelectedVendorForModal(null);
+            setVendorModalData(null);
+          }}
+          title={vendorModalData?.company_name || selectedVendorForModal.company_name}
+          subtitle={`Supplier Profile • Code: ${vendorModalData?.code || `VN-${String(selectedVendorForModal.id).padStart(4, '0')}`} • Category: ${getCategoryLabel(vendorModalData?.category || selectedVendorForModal.category)}`}
+          maxWidth="840px"
+        >
+          <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '22px 26px' }}>
+            {/* Header Identity & Quick Badges */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '12px',
+              paddingBottom: '14px',
+              borderBottom: '1px solid var(--border-color)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                <span className="badge badge-neutral" style={{ padding: '4px 10px', fontSize: '12px', fontWeight: 700 }}>
+                  {getCategoryLabel(vendorModalData?.category || selectedVendorForModal.category)}
+                </span>
+                <span className="badge badge-approved" style={{ padding: '4px 10px', fontSize: '12px' }}>
+                  {vendorModalData?.status ? (vendorModalData.status.charAt(0).toUpperCase() + vendorModalData.status.slice(1)) : 'Active'} Supplier
+                </span>
+                <span className="badge badge-ordered" style={{ padding: '4px 10px', fontSize: '12px' }}>
+                  Tier: {vendorModalData?.tier || 'Standard Supplier'}
+                </span>
+                {vendorModalData?.risk_level && (
+                  <span className="badge" style={{
+                    padding: '4px 10px',
+                    fontSize: '12px',
+                    backgroundColor: String(vendorModalData.risk_level).includes('Low') ? '#ecfdf5' : '#fef2f2',
+                    color: String(vendorModalData.risk_level).includes('Low') ? '#047857' : '#b91c1c',
+                    border: `1px solid ${String(vendorModalData.risk_level).includes('Low') ? '#a7f3d0' : '#fecaca'}`
+                  }}>
+                    {vendorModalData.risk_level}
+                  </span>
+                )}
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                Registered ID: <code>VN-{String(selectedVendorForModal.id).padStart(4, '0')}</code>
+              </div>
+            </div>
+
+            {/* Key Reliability & Performance KPI Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px' }}>
+              {/* Reliability Index Card */}
+              <div style={{
+                backgroundColor: '#f8fafc',
+                border: '1.5px solid #0f766e',
+                borderRadius: '10px',
+                padding: '14px 16px',
+                position: 'relative'
+              }}>
+                <div style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: '#0f766e', letterSpacing: '0.05em' }}>
+                  Reliability Index
+                </div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginTop: '6px' }}>
+                  <span style={{ fontSize: '26px', fontWeight: 900, color: '#0f172a' }}>
+                    {vendorModalData?.reliability_index !== undefined ? Number(vendorModalData.reliability_index).toFixed(1) : Number(selectedVendorForModal.reliability_score || 0).toFixed(1)}
+                  </span>
+                  <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 600 }}>/ 100</span>
+                </div>
+                <div style={{ marginTop: '8px', height: '6px', backgroundColor: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
+                  <div style={{
+                    width: `${Math.min(Number(vendorModalData?.reliability_index ?? selectedVendorForModal.reliability_score ?? 0), 100)}%`,
+                    height: '100%',
+                    backgroundColor: Number(vendorModalData?.reliability_index ?? selectedVendorForModal.reliability_score ?? 0) >= 75 ? '#10b981' : Number(vendorModalData?.reliability_index ?? selectedVendorForModal.reliability_score ?? 0) >= 50 ? '#f59e0b' : '#ef4444'
+                  }} />
+                </div>
+                <div style={{ fontSize: '11px', color: '#64748b', marginTop: '6px' }}>
+                  {getReliabilityInfo(vendorModalData?.reliability_score || selectedVendorForModal.reliability_score).label} Reliability
+                </div>
+              </div>
+
+              {/* Quality Rating */}
+              <div style={{
+                backgroundColor: '#f8fafc',
+                border: '1px solid var(--border-color)',
+                borderRadius: '10px',
+                padding: '14px 16px'
+              }}>
+                <div style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.05em' }}>
+                  Quality Rating
+                </div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginTop: '6px' }}>
+                  <span style={{ fontSize: '26px', fontWeight: 900, color: '#0f172a' }}>
+                    {vendorModalData?.quality_rating !== undefined ? Number(vendorModalData.quality_rating).toFixed(1) : (vendorModalData?.rating ? Number(vendorModalData.rating).toFixed(1) : '5.0')}
+                  </span>
+                  <span style={{ fontSize: '13px', color: '#eab308' }}>★ / 5.0</span>
+                </div>
+                <div style={{ fontSize: '11.5px', color: '#059669', marginTop: '6px', fontWeight: 600 }}>
+                  {vendorModalData?.on_time_delivery_rate ? `${vendorModalData.on_time_delivery_rate}% On-Time Delivery` : 'Delivery Commitments Met'}
+                </div>
+              </div>
+
+              {/* Awarded Contracts Count */}
+              <div style={{
+                backgroundColor: '#f8fafc',
+                border: '1px solid var(--border-color)',
+                borderRadius: '10px',
+                padding: '14px 16px'
+              }}>
+                <div style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.05em' }}>
+                  Awarded Contracts
+                </div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginTop: '6px' }}>
+                  <span style={{ fontSize: '26px', fontWeight: 900, color: '#0f172a' }}>
+                    {vendorModalData?.contracts?.length ?? (vendorModalData?.completed_contracts || 0)}
+                  </span>
+                  <span style={{ fontSize: '12.5px', color: '#64748b' }}>agreements</span>
+                </div>
+                <div style={{ fontSize: '11.5px', color: '#0284c7', marginTop: '6px', fontWeight: 600 }}>
+                  {vendorModalData?.active_contracts ? `${vendorModalData.active_contracts} Active Agreement(s)` : 'Lifecycle Tracked'}
+                </div>
+              </div>
+
+              {/* Fulfillment Status */}
+              <div style={{
+                backgroundColor: '#f8fafc',
+                border: '1px solid var(--border-color)',
+                borderRadius: '10px',
+                padding: '14px 16px'
+              }}>
+                <div style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.05em' }}>
+                  Commercial Terms
+                </div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginTop: '6px' }}>
+                  <span style={{ fontSize: '20px', fontWeight: 900, color: '#0f172a' }}>
+                    {vendorModalData?.payment_terms || selectedVendorForModal.payment_terms || 'Net 30'}
+                  </span>
+                </div>
+                <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', marginTop: '6px' }}>
+                  {vendorModalData?.completed_contracts || 0} Contracts Completed
+                </div>
+              </div>
+            </div>
+
+            {/* Vendor Details Info Card */}
+            <div style={{
+              backgroundColor: '#ffffff',
+              border: '1px solid var(--border-color)',
+              borderRadius: '10px',
+              padding: '16px 20px'
+            }}>
+              <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '12px' }}>
+                Supplier Corporate Details & Points of Contact
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                <div>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '11.5px', display: 'block' }}>Primary Liaison:</span>
+                  <strong style={{ color: 'var(--text-primary)' }}>{vendorModalData?.contact_person || selectedVendorForModal.contact_person}</strong>
+                  {(vendorModalData?.contact_role || selectedVendorForModal.contact_role) && ` (${vendorModalData?.contact_role || selectedVendorForModal.contact_role})`}
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '11.5px', display: 'block' }}>Email Communications:</span>
+                  <strong style={{ color: 'var(--text-primary)' }}>{vendorModalData?.email || selectedVendorForModal.email}</strong>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '11.5px', display: 'block' }}>Phone / Direct:</span>
+                  <strong style={{ color: 'var(--text-primary)' }}>{vendorModalData?.phone || selectedVendorForModal.phone || '—'}</strong>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '11.5px', display: 'block' }}>GST / Tax Identification:</span>
+                  <code style={{ fontSize: '12px', color: 'var(--text-primary)' }}>{vendorModalData?.gst_number || selectedVendorForModal.gst_number || '—'}</code>
+                </div>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '11.5px', display: 'block' }}>Facility / Registered Address:</span>
+                  <span>{vendorModalData?.address || selectedVendorForModal.address || 'National Headquarters'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Section: Contracts He Has Been Part Of */}
+            <div style={{
+              backgroundColor: '#ffffff',
+              border: '1px solid var(--border-color)',
+              borderRadius: '10px',
+              overflow: 'hidden'
+            }}>
+              <div style={{
+                padding: '14px 20px',
+                backgroundColor: '#f8fafc',
+                borderBottom: '1px solid var(--border-color)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '8px'
+              }}>
+                <div>
+                  <div style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>
+                    Awarded Contracts & Agreements ({vendorModalData?.contracts?.length || 0})
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#64748b' }}>
+                    All enterprise procurement contracts awarded to this supplier.
+                  </div>
+                </div>
+                {vendorModalLoading && (
+                  <span style={{ fontSize: '12px', color: '#0284c7' }}>
+                    Syncing live contract records...
+                  </span>
+                )}
+              </div>
+
+              {(!vendorModalData?.contracts || vendorModalData.contracts.length === 0) ? (
+                <div style={{ padding: '36px 20px', textAlign: 'center', color: '#64748b' }}>
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5" style={{ margin: '0 auto 10px auto', display: 'block' }}>
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                  </svg>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                    No Historical Contracts on Record
+                  </div>
+                  <div style={{ fontSize: '12.5px', color: '#94a3b8', maxWidth: '420px', margin: '0 auto' }}>
+                    This supplier has not been awarded any procurement contracts yet. When purchase orders or requisitions are finalized and authorized by Finance, the binding contract will automatically appear here.
+                  </div>
+                </div>
+              ) : (
+                <div className="table-responsive" style={{ margin: 0 }}>
+                  <table className="data-table" style={{ width: '100%' }}>
+                    <thead>
+                      <tr>
+                        <th>Contract Number</th>
+                        <th>Agreement Title</th>
+                        <th>Duration / Dates</th>
+                        <th>Order Value</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {vendorModalData.contracts.map((c) => (
+                        <tr key={c.id}>
+                          <td>
+                            <strong>{c.contract_number}</strong>
+                            <div style={{ fontSize: '11px', color: '#64748b' }}>
+                              {c.purchase_orders_count ? `${c.purchase_orders_count} PO(s) Linked` : 'Direct Agreement'}
+                            </div>
+                          </td>
+                          <td>
+                            <div style={{ fontWeight: 600, color: '#1e293b' }}>{c.title}</div>
+                          </td>
+                          <td style={{ fontSize: '12px', color: '#475569' }}>
+                            <div>Start: <strong>{c.start_date}</strong></div>
+                            <div>End: <strong>{c.end_date}</strong></div>
+                          </td>
+                          <td>
+                            <strong style={{ color: '#0f172a' }}>
+                              {c.total_purchase_amount ? `₹${Number(c.total_purchase_amount).toLocaleString('en-IN')}` : 'Variable / Active'}
+                            </strong>
+                          </td>
+                          <td>
+                            <span
+                              className="badge"
+                              style={{
+                                fontSize: '11px',
+                                padding: '3px 8px',
+                                backgroundColor: (c.status === 'active') ? '#ecfdf5' : (c.status === 'expiring_soon') ? '#fffbeb' : '#f1f5f9',
+                                color: (c.status === 'active') ? '#047857' : (c.status === 'expiring_soon') ? '#b45309' : '#475569',
+                                border: `1px solid ${(c.status === 'active') ? '#a7f3d0' : (c.status === 'expiring_soon') ? '#fde68a' : '#cbd5e1'}`
+                              }}
+                            >
+                              {(c.status || '').toUpperCase()}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+              Reliability intelligence recalculated automatically after each delivery completion.
+            </div>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => {
+                setSelectedVendorForModal(null);
+                setVendorModalData(null);
+              }}
+            >
+              Close
+            </button>
+          </div>
         </Modal>
       )}
     </div>

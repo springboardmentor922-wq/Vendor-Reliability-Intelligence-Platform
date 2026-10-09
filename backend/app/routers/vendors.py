@@ -4,6 +4,8 @@ from typing import List, Optional
 from datetime import datetime
 from app.database import get_db
 from app.models.vendor import Vendor
+from app.models.contract import Contract
+from app.models.procurement import PurchaseOrder
 from app.models.user import User
 from app.models.notification import Notification
 from app.models.enums import UserRole, VendorStatus, VendorCategory, NotificationType
@@ -18,7 +20,7 @@ router = APIRouter(prefix="/vendors", tags=["Vendor Management"])
 def get_public_vendors_showcase(db: Session = Depends(get_db)):
     """
     Public Vendor Portal endpoint accessible before login/registration.
-    Returns basic showcase profile details for suppliers across all categories.
+    Returns showcase profile details for suppliers across all categories.
     """
     vendors = db.query(Vendor).all()
     showcase_items = []
@@ -33,6 +35,7 @@ def get_public_vendors_showcase(db: Session = Depends(get_db)):
         stat_str = v.status.value if hasattr(v.status, "value") else str(v.status)
         
         score = intel.get("reliability_score", 0.0)
+        rel_index = intel.get("reliability_index", score)
         if stat_str == "suspended" or score < 60:
             priority = "low"
         elif score >= 80:
@@ -53,9 +56,81 @@ def get_public_vendors_showcase(db: Session = Depends(get_db)):
             "tier": intel.get("supplier_tier", "New Vendor (Score: 0)"),
             "rating": intel.get("average_quality_rating", 0.0),
             "reliability_score": score,
-            "priority": priority
+            "reliability_index": rel_index,
+            "priority": priority,
+            "phone": v.phone or "—",
+            "address": v.address or "—",
+            "contact_role": v.contact_role or "Key Contact",
+            "payment_terms": v.payment_terms or "Net 30",
+            "gst_number": v.gst_number or "—"
         })
     return showcase_items
+
+@router.get("/{vendor_id}/public-profile")
+def get_vendor_public_profile(vendor_id: int, db: Session = Depends(get_db)):
+    """
+    Public profile endpoint for Supplier Directory modal popup.
+    Returns vendor details, reliability score, reliability index, and all contracts.
+    """
+    vendor = db.query(Vendor).filter(Vendor.id == vendor_id).first()
+    if not vendor:
+        raise HTTPException(status_code=404, detail="Vendor not found")
+
+    intel = compute_vendor_intelligence(vendor, db)
+    contracts = db.query(Contract).filter(Contract.vendor_id == vendor.id).order_by(Contract.id.desc()).all()
+
+    contract_list = []
+    for c in contracts:
+        c_suffix = c.contract_number.split("-")[-1] if "-" in c.contract_number else ""
+        all_vendor_pos = db.query(PurchaseOrder).filter(PurchaseOrder.vendor_id == c.vendor_id).all()
+        matching_pos = [po for po in all_vendor_pos if c_suffix and c_suffix in (po.po_number or "")]
+        if not matching_pos and (len(all_vendor_pos) == 1 or len(contracts) == 1):
+            matching_pos = all_vendor_pos
+
+        pos_total = sum(po.total_amount for po in matching_pos) if matching_pos else 0.0
+
+        contract_list.append({
+            "id": c.id,
+            "contract_number": c.contract_number,
+            "title": c.title,
+            "start_date": c.start_date.isoformat() if hasattr(c.start_date, "isoformat") else str(c.start_date),
+            "end_date": c.end_date.isoformat() if hasattr(c.end_date, "isoformat") else str(c.end_date),
+            "status": c.status.value if hasattr(c.status, "value") else str(c.status),
+            "total_purchase_amount": pos_total,
+            "purchase_orders_count": len(matching_pos)
+        })
+
+    score = intel.get("reliability_score", 0.0)
+    rel_index = intel.get("reliability_index", score)
+
+    return {
+        "id": vendor.id,
+        "company_name": vendor.company_name,
+        "code": f"VN-{vendor.id:04d}",
+        "category": vendor.category.value if hasattr(vendor.category, "value") else str(vendor.category),
+        "status": vendor.status.value if hasattr(vendor.status, "value") else str(vendor.status),
+        "tier": intel.get("supplier_tier", "Standard Supplier"),
+        "contact_person": vendor.contact_person,
+        "contact_role": vendor.contact_role or "Key Account Manager",
+        "email": vendor.email,
+        "phone": vendor.phone or "—",
+        "address": vendor.address or "—",
+        "gst_number": vendor.gst_number or "—",
+        "payment_terms": vendor.payment_terms or "Net 30",
+        "created_at": vendor.created_at.isoformat() if vendor.created_at else None,
+        "reliability_score": score,
+        "reliability_index": rel_index,
+        "rating": intel.get("average_quality_rating", 0.0),
+        "quality_rating": intel.get("average_quality_rating", 0.0),
+        "on_time_delivery_rate": intel.get("on_time_delivery_rate", 0.0),
+        "completed_contracts": intel.get("completed_contracts", 0),
+        "active_contracts": intel.get("active_contracts", len([c for c in contract_list if c["status"] == "active"])),
+        "total_orders": intel.get("total_orders", 0),
+        "risk_level": intel.get("risk_level", "Low Risk"),
+        "factor_breakdown": intel.get("factor_breakdown", {}),
+        "recommendations": intel.get("recommendations", []),
+        "contracts": contract_list
+    }
 
 @router.post("/public-register", response_model=VendorResponse, status_code=status.HTTP_201_CREATED)
 def public_vendor_registration(vendor_in: VendorCreate, db: Session = Depends(get_db)):

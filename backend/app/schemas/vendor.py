@@ -57,6 +57,12 @@ class PublicVendorShowcase(BaseModel):
     rating: float
     reliability_score: float
     priority: Optional[str] = "medium"
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    contact_role: Optional[str] = None
+    payment_terms: Optional[str] = "Net 30"
+    reliability_index: Optional[float] = 0.0
+    gst_number: Optional[str] = None
 
     class Config:
         from_attributes = True
