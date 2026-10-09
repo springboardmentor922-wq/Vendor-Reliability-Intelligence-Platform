@@ -604,6 +604,17 @@ def create_purchase_order(
             req.status = RequestStatus.IN_PROGRESS
             db.commit()
 
+    # Notify Finance Officers that a new PO requires authorization
+    finance_users = db.query(User).filter(User.role == UserRole.FINANCE_OFFICER).all()
+    for fu in finance_users:
+        db.add(Notification(
+            user_id=fu.id,
+            type=NotificationType.PAYMENT_REQUEST,
+            message=f"Purchase Order Authorization Required: {po.po_number} created for {vendor.company_name} with amount ₹{total_amount:,.2f}. Review company treasury balance and authorize payment.",
+            is_read=False
+        ))
+    db.commit()
+
     # Fetch with full relations
     po_full = db.query(PurchaseOrder).options(
         joinedload(PurchaseOrder.vendor),
@@ -638,6 +649,166 @@ def get_purchase_order_by_id(
 
     return po
 
+@router.post("/orders/{order_id}/finance-approve")
+def finance_approve_purchase_order(
+    order_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles([
+        UserRole.FINANCE_OFFICER, UserRole.ADMINISTRATOR, UserRole.PROCUREMENT_MANAGER
+    ]))
+):
+    po = db.query(PurchaseOrder).options(
+        joinedload(PurchaseOrder.vendor),
+        joinedload(PurchaseOrder.created_by),
+        joinedload(PurchaseOrder.items)
+    ).filter(PurchaseOrder.id == order_id).first()
+
+    if not po:
+        raise HTTPException(status_code=404, detail="Purchase Order not found")
+
+    if po.status != POStatus.PENDING:
+        return {
+            "message": f"Purchase Order {po.po_number} is already {po.status.value}.",
+            "purchase_order": {
+                "id": po.id,
+                "po_number": po.po_number,
+                "status": po.status.value,
+                "total_amount": po.total_amount
+            }
+        }
+
+    amount = float(po.total_amount or 0.0)
+    treasury = get_or_create_treasury(db)
+
+    # Balance check: PO Total Amount > Available Balance is strictly forbidden
+    if amount > treasury.available_balance:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Purchase Order amount ₹{amount:,.2f} exceeds Company Available Balance ₹{treasury.available_balance:,.2f}. Cannot approve payment."
+        )
+
+    # Deduct balance
+    treasury.available_balance -= amount
+    treasury.updated_at = datetime.utcnow()
+
+    # Update PO status
+    po.status = POStatus.APPROVED
+    po.approved_by_id = current_user.id
+    po.updated_at = datetime.utcnow()
+
+    # Generate or link active contract if not present
+    existing_contract = db.query(Contract).filter(
+        Contract.vendor_id == po.vendor_id,
+        Contract.status == ContractStatus.ACTIVE
+    ).first()
+    contract_number = existing_contract.contract_number if existing_contract else None
+    if not existing_contract:
+        unique_suffix = str(uuid.uuid4().hex[:6]).upper()
+        contract_number = f"CNT-{datetime.utcnow().year}-{unique_suffix}"
+        contract = Contract(
+            contract_number=contract_number,
+            vendor_id=po.vendor_id,
+            title=f"Supply Contract - {po.po_number}",
+            start_date=date.today(),
+            end_date=po.expected_delivery_date or (date.today() + timedelta(days=30)),
+            status=ContractStatus.ACTIVE
+        )
+        db.add(contract)
+        db.commit()
+
+    # Notify Vendor
+    if po.vendor_id:
+        vendor_users = db.query(User).filter(User.vendor_id == po.vendor_id).all()
+        for vu in vendor_users:
+            db.add(Notification(
+                user_id=vu.id,
+                type=NotificationType.PAYMENT_APPROVED,
+                message=f"Payment Approved & PO Funded! Payment of ₹{amount:,.2f} for PO {po.po_number} has been approved and authorized by Finance. Order is APPROVED for fulfillment.",
+                is_read=False
+            ))
+
+    # Notify Creator / Procurement
+    if po.created_by_id:
+        db.add(Notification(
+            user_id=po.created_by_id,
+            type=NotificationType.PROCUREMENT_ALERT,
+            message=f"Finance approved payment of ₹{amount:,.2f} for Purchase Order {po.po_number}. Treasury balance is now ₹{treasury.available_balance:,.2f}.",
+            is_read=False
+        ))
+
+    # Notify Supply Chain Controller
+    sc_users = db.query(User).filter(User.role == UserRole.SUPPLY_CHAIN_MANAGER).all()
+    for sc in sc_users:
+        db.add(Notification(
+            user_id=sc.id,
+            type=NotificationType.PROCUREMENT_ALERT,
+            message=f"New Active Order: {po.po_number} for {po.vendor.company_name if po.vendor else 'Supplier'} is funded and ready for delivery tracking.",
+            is_read=False
+        ))
+
+    db.commit()
+
+    log_audit_event(
+        db, current_user.id, "FINANCE_APPROVE_PO", "PurchaseOrder",
+        f"Finance approved ₹{amount:,.2f} for PO {po.po_number}. Treasury balance now ₹{treasury.available_balance:,.2f}"
+    )
+
+    return {
+        "message": f"Payment of ₹{amount:,.2f} approved and funded. Order {po.po_number} is ACTIVE.",
+        "po_id": po.id,
+        "po_number": po.po_number,
+        "contract_number": contract_number,
+        "status": po.status.value,
+        "available_balance": treasury.available_balance
+    }
+
+@router.post("/orders/{order_id}/finance-reject")
+def finance_reject_purchase_order(
+    order_id: int,
+    reason: str = "Insufficient corporate liquidity or unverified requisition",
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles([
+        UserRole.FINANCE_OFFICER, UserRole.ADMINISTRATOR
+    ]))
+):
+    po = db.query(PurchaseOrder).options(
+        joinedload(PurchaseOrder.vendor)
+    ).filter(PurchaseOrder.id == order_id).first()
+
+    if not po:
+        raise HTTPException(status_code=404, detail="Purchase Order not found")
+
+    po.status = POStatus.CANCELLED
+    po.updated_at = datetime.utcnow()
+
+    # Notify Vendor
+    if po.vendor_id:
+        vendor_users = db.query(User).filter(User.vendor_id == po.vendor_id).all()
+        for vu in vendor_users:
+            db.add(Notification(
+                user_id=vu.id,
+                type=NotificationType.PROCUREMENT_ALERT,
+                message=f"Payment Declined: PO {po.po_number} was rejected by Finance. Reason: {reason}",
+                is_read=False
+            ))
+
+    if po.created_by_id:
+        db.add(Notification(
+            user_id=po.created_by_id,
+            type=NotificationType.PROCUREMENT_ALERT,
+            message=f"Finance rejected payment authorization for PO {po.po_number}. Reason: {reason}",
+            is_read=False
+        ))
+
+    db.commit()
+
+    log_audit_event(
+        db, current_user.id, "FINANCE_REJECT_PO", "PurchaseOrder",
+        f"Finance rejected PO {po.po_number}. Reason: {reason}"
+    )
+
+    return {"message": "Purchase order payment rejected by Finance.", "status": po.status.value}
+
 @router.patch("/orders/{order_id}/status", response_model=PurchaseOrderResponse)
 def update_purchase_order_status(
     order_id: int,
@@ -662,8 +833,32 @@ def update_purchase_order_status(
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
         if status_in.status not in [POStatus.IN_TRANSIT, POStatus.DELIVERED]:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Vendors can only mark orders as in transit or delivered")
-    elif current_user.role not in [UserRole.ADMINISTRATOR, UserRole.PROCUREMENT_MANAGER, UserRole.SUPPLY_CHAIN_MANAGER]:
+    elif current_user.role not in [UserRole.ADMINISTRATOR, UserRole.PROCUREMENT_MANAGER, UserRole.SUPPLY_CHAIN_MANAGER, UserRole.FINANCE_OFFICER]:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Role not authorized to update PO delivery status")
+
+    # If approving a pending PO, validate treasury balance and deduct
+    if status_in.status == POStatus.APPROVED and po.status == POStatus.PENDING:
+        amount = float(po.total_amount or 0.0)
+        treasury = get_or_create_treasury(db)
+        if amount > treasury.available_balance:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Purchase Order amount ₹{amount:,.2f} exceeds Company Available Balance ₹{treasury.available_balance:,.2f}."
+            )
+        treasury.available_balance -= amount
+        treasury.updated_at = datetime.utcnow()
+        po.approved_by_id = current_user.id
+        
+        # Notify vendor of approval
+        if po.vendor_id:
+            vendor_users = db.query(User).filter(User.vendor_id == po.vendor_id).all()
+            for vu in vendor_users:
+                db.add(Notification(
+                    user_id=vu.id,
+                    type=NotificationType.PAYMENT_APPROVED,
+                    message=f"Payment Approved & PO Funded! Payment of ₹{amount:,.2f} for PO {po.po_number} has been approved by Finance. Order is APPROVED for fulfillment.",
+                    is_read=False
+                ))
 
     po.status = status_in.status
     if status_in.status == POStatus.APPROVED:

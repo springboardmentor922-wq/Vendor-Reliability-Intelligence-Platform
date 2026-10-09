@@ -630,7 +630,9 @@ a:hover {
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px;
+  padding: 16px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .modal-content {
@@ -640,10 +642,12 @@ a:hover {
   box-shadow: var(--shadow-lg);
   width: 100%;
   max-width: 640px;
-  max-height: 90vh;
+  max-height: calc(100vh - 32px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  margin: auto;
+  position: relative;
   animation: modalEnter 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -653,12 +657,13 @@ a:hover {
 }
 
 .modal-header {
-  padding: 20px 26px;
+  padding: 18px 24px;
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
   background: #fdfcf9;
+  flex-shrink: 0;
 }
 
 .modal-title {
@@ -666,6 +671,14 @@ a:hover {
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.modal-subtitle {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin: 3px 0 0 0;
+  font-weight: 400;
 }
 
 .modal-close {
@@ -675,23 +688,74 @@ a:hover {
   cursor: pointer;
   color: var(--text-muted);
   transition: color 0.15s ease;
+  line-height: 1;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .modal-close:hover {
   color: var(--text-primary);
 }
 
+/* Ensure any form or wrapper inside modal-content behaves as a flex column that sizes properly */
+.modal-content > form,
+.modal-content > div:not(.modal-header):not(.modal-body):not(.modal-footer) {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .modal-body {
-  padding: 26px;
+  padding: 24px;
   overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  overscroll-behavior: contain;
+}
+
+/* Custom scrollbars for modals */
+.modal-body::-webkit-scrollbar,
+.modal-backdrop::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.modal-body::-webkit-scrollbar-track,
+.modal-backdrop::-webkit-scrollbar-track {
+  background: transparent;
+}
+.modal-body::-webkit-scrollbar-thumb,
+.modal-backdrop::-webkit-scrollbar-thumb {
+  background: rgba(15, 59, 51, 0.25);
+  border-radius: 4px;
+}
+.modal-body::-webkit-scrollbar-thumb:hover,
+.modal-backdrop::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 59, 51, 0.5);
 }
 
 .modal-footer {
-  padding: 18px 26px;
+  padding: 16px 24px;
   border-top: 1px solid var(--border-color);
   display: flex;
   justify-content: flex-end;
   gap: 12px;
   background-color: #f9f7f1;
+  flex-shrink: 0 !important;
+}
+
+.printable-modal #printable-tax-invoice {
+  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+@media print {
+  .printable-modal #printable-tax-invoice {
+    overflow: visible !important;
+  }
 }
 
 /* Alerts */

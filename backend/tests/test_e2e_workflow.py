@@ -86,8 +86,11 @@ def run_test():
     # Ensure Treasury exists
     treasury = db.query(CompanyTreasury).first()
     if not treasury:
-        treasury = CompanyTreasury(available_balance=10000000.0, total_budget=20000000.0)
+        treasury = CompanyTreasury(available_balance=25000000.0, total_budget=50000000.0)
         db.add(treasury)
+        db.commit()
+    elif treasury.available_balance < 2000000.0:
+        treasury.available_balance = 25000000.0
         db.commit()
     print(f"[OK] Company Treasury verified: Balance = INR {treasury.available_balance:,.2f}")
 
@@ -318,10 +321,65 @@ def run_test():
     # Vendor trying to approve finance request -> should be 403 Forbidden
     res_forbidden = client.post(f"/procurement/requests/{req_id}/finance-approve", headers=vendor_headers)
     assert res_forbidden.status_code == 403, "Vendor must NOT be allowed to approve finance payment"
-    print(f"[STEP 15 OK] RBAC enforced: Vendor forbidden from finance approval (HTTP 403)")
+    # ----------------------------------------------------
+    # STEP 16: Direct PO Creation -> Finance Officer Treasury Authorization Workflow
+    # ----------------------------------------------------
+    # Admin creates a direct PO for an approved vendor
+    direct_po_payload = {
+        "vendor_id": vendor_id,
+        "payment_terms": "Net 30",
+        "expected_delivery_date": (datetime.utcnow() + timedelta(days=20)).strftime("%Y-%m-%d"),
+        "items": [
+            {"item_name": "High Precision Servo Motors", "quantity": 10, "unit_price": 25000.0}
+        ]
+    }
+    res_direct_po = client.post("/procurement/orders", json=direct_po_payload, headers=admin_headers)
+    assert res_direct_po.status_code == 201, f"Failed to create direct PO: {res_direct_po.text}"
+    direct_po = res_direct_po.json()
+    direct_po_id = direct_po["id"]
+    direct_po_amount = direct_po["total_amount"]
+    assert direct_po_amount == 250000.0, "Total amount calculation must match items sum"
+    assert direct_po["status"] == "pending", "Direct PO must start in pending status"
+    print(f"[STEP 16.1 OK] Direct PO created: #{direct_po['po_number']}, Amount=INR {direct_po_amount:,.2f}, Status=pending")
+
+    # Finance Officer sees pending PO
+    pending_pos = client.get("/procurement/orders?status=pending", headers=finance_headers).json()
+    assert any(p["id"] == direct_po_id for p in pending_pos), "Finance Officer must see newly created pending PO"
+    print(f"[STEP 16.2 OK] Finance Officer queried pending orders and located PO #{direct_po['po_number']}")
+
+    # Check treasury balance verification (insufficient balance guard)
+    treasury_before = client.get("/procurement/treasury", headers=finance_headers).json()
+    treasury_record = db.query(CompanyTreasury).first()
+    original_balance = treasury_record.available_balance
+    treasury_record.available_balance = 5000.0  # Set less than 250,000
+    db.commit()
+
+    res_insufficient = client.post(f"/procurement/orders/{direct_po_id}/finance-approve", headers=finance_headers)
+    assert res_insufficient.status_code == 400, "Must reject PO authorization if amount exceeds treasury balance"
+    print(f"[STEP 16.3 OK] Treasury liquidity guard verified: Cannot approve PO when requested INR 250,000 exceeds available balance")
+
+    # Restore balance and approve
+    treasury_record.available_balance = original_balance
+    db.commit()
+
+    res_po_approve = client.post(f"/procurement/orders/{direct_po_id}/finance-approve", headers=finance_headers)
+    assert res_po_approve.status_code == 200, f"Finance PO approval failed: {res_po_approve.text}"
+    approved_data = res_po_approve.json()
+    print(f"[STEP 16.4 OK] Finance Officer authorized and funded PO: #{direct_po['po_number']}. New Treasury Balance = INR {approved_data['available_balance']:,.2f}")
+    assert approved_data["status"] == "approved"
+
+    # Verify treasury was deducted
+    treasury_after = client.get("/procurement/treasury", headers=finance_headers).json()
+    assert treasury_after["available_balance"] == original_balance - direct_po_amount
+
+    # Verify Vendor received notification
+    v_notifs = client.get("/notifications", headers=vendor_headers).json()
+    po_approved_notif = next((n for n in v_notifs if "PO Funded" in n["message"] or direct_po["po_number"] in n["message"]), None)
+    assert po_approved_notif is not None, "Vendor must receive notification upon PO funding"
+    print(f"[STEP 16.5 OK] Vendor received notification: '{po_approved_notif['message']}'")
 
     print("=" * 70)
-    print("ALL 15 END-TO-END WORKFLOW AUDIT STEPS PASSED WITH 100% SUCCESS!")
+    print("ALL 16 END-TO-END WORKFLOW AUDIT STEPS PASSED WITH 100% SUCCESS!")
     print("=" * 70)
     db.close()
 

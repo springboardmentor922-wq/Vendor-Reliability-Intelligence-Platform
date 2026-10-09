@@ -141,7 +141,7 @@ export const Procurement = () => {
   });
 
   const canManageProcurement = ['Administrator', 'Procurement Manager'].includes(user?.role);
-  const canUpdateStatus = ['Administrator', 'Procurement Manager', 'Supply Chain Manager'].includes(user?.role);
+  const canUpdateStatus = ['Administrator', 'Procurement Manager', 'Supply Chain Manager', 'Finance Officer'].includes(user?.role);
   const canManageFinance = ['Administrator', 'Procurement Manager', 'Finance Officer'].includes(user?.role);
 
   const loadAllData = async () => {
@@ -286,6 +286,34 @@ export const Procurement = () => {
       loadAllData();
     } catch (err) {
       alert('Error rejecting payment: ' + err.message);
+    }
+  };
+
+  const handleFinanceApprovePO = async (poId) => {
+    try {
+      const res = await api.financeApprovePO(poId);
+      alert(`Purchase Order ${res.po_number || ''} authorized & funded successfully! Treasury balance updated.`);
+      loadAllData();
+      if (selectedPOForDetail && selectedPOForDetail.id === poId) {
+        setSelectedPOForDetail(null);
+      }
+    } catch (err) {
+      alert('Finance PO authorization failed: ' + err.message);
+    }
+  };
+
+  const handleFinanceRejectPO = async (poId) => {
+    const reason = prompt('Please enter reason for rejecting purchase order authorization:');
+    if (reason === null) return;
+    try {
+      await api.financeRejectPO(poId, reason);
+      alert('Purchase order authorization rejected.');
+      loadAllData();
+      if (selectedPOForDetail && selectedPOForDetail.id === poId) {
+        setSelectedPOForDetail(null);
+      }
+    } catch (err) {
+      alert('Error rejecting PO: ' + err.message);
     }
   };
 
@@ -1247,18 +1275,21 @@ export const Procurement = () => {
                     <th style={{ padding: '12px 18px', fontSize: '11px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                       DELIVERY DATE
                     </th>
+                    <th style={{ padding: '12px 18px', fontSize: '11px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      ACTIONS
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan="6" style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+                      <td colSpan="7" style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
                         Loading purchase orders...
                       </td>
                     </tr>
                   ) : filteredOrders.length === 0 ? (
                     <tr>
-                      <td colSpan="6" style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+                      <td colSpan="7" style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
                         No purchase orders found. Click <strong>+ Purchase order</strong> to issue a direct order.
                       </td>
                     </tr>
@@ -1336,6 +1367,110 @@ export const Procurement = () => {
                           {/* DELIVERY DATE */}
                           <td style={{ padding: '14px 18px', fontSize: '13px', color: '#4b5563' }}>
                             {formatDate(po.expected_delivery_date)}
+                          </td>
+
+                          {/* ACTIONS */}
+                          <td style={{ padding: '14px 18px' }} onClick={(e) => e.stopPropagation()}>
+                            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                              {(po.status || '').toLowerCase() === 'pending' && ['Finance Officer', 'Administrator'].includes(user?.role) && (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleFinanceApprovePO(po.id)}
+                                    disabled={treasury && (treasury.available_balance < totalAmount)}
+                                    title={treasury && (treasury.available_balance < totalAmount) ? 'Insufficient Treasury Liquidity' : 'Authorize & Fund PO'}
+                                    style={{
+                                      backgroundColor: (treasury && treasury.available_balance < totalAmount) ? '#9ca3af' : '#047857',
+                                      color: '#ffffff',
+                                      border: 'none',
+                                      borderRadius: '5px',
+                                      padding: '5px 10px',
+                                      fontSize: '11.5px',
+                                      fontWeight: 700,
+                                      cursor: (treasury && treasury.available_balance < totalAmount) ? 'not-allowed' : 'pointer',
+                                      boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                                    }}
+                                  >
+                                    Approve & Fund
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleFinanceRejectPO(po.id)}
+                                    style={{
+                                      backgroundColor: '#ffffff',
+                                      color: '#b91c1c',
+                                      border: '1px solid #fecaca',
+                                      borderRadius: '5px',
+                                      padding: '5px 8px',
+                                      fontSize: '11.5px',
+                                      fontWeight: 600,
+                                      cursor: 'pointer'
+                                    }}
+                                  >
+                                    Reject
+                                  </button>
+                                </>
+                              )}
+                              {(po.status || '').toLowerCase() === 'pending' && user?.role === 'Procurement Manager' && (
+                                <span style={{ fontSize: '11.5px', color: '#d97706', fontWeight: 600 }}>
+                                  Awaiting Finance
+                                </span>
+                              )}
+                              {['approved', 'ordered'].includes((po.status || '').toLowerCase()) && user?.role === 'Supply Chain Manager' && (
+                                <button
+                                  type="button"
+                                  onClick={() => handlePOStatusChange(po.id, 'in_transit')}
+                                  style={{
+                                    backgroundColor: '#fef3c7',
+                                    color: '#92400e',
+                                    border: '1px solid #fde68a',
+                                    borderRadius: '5px',
+                                    padding: '4px 8px',
+                                    fontSize: '11.5px',
+                                    fontWeight: 700,
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  Mark In Transit &rarr;
+                                </button>
+                              )}
+                              {(po.status || '').toLowerCase() === 'in_transit' && user?.role === 'Supply Chain Manager' && (
+                                <button
+                                  type="button"
+                                  onClick={() => handlePOStatusChange(po.id, 'delivered')}
+                                  style={{
+                                    backgroundColor: '#ecfdf5',
+                                    color: '#047857',
+                                    border: '1px solid #a7f3d0',
+                                    borderRadius: '5px',
+                                    padding: '4px 8px',
+                                    fontSize: '11.5px',
+                                    fontWeight: 700,
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  Mark Delivered &rarr;
+                                </button>
+                              )}
+                              {(po.status || '').toLowerCase() === 'approved' && ['Finance Officer', 'Administrator'].includes(user?.role) && (
+                                <span style={{ fontSize: '11.5px', color: '#047857', fontWeight: 600 }}>
+                                  Funded &bull; Active
+                                </span>
+                              )}
+                              {['delivered', 'completed'].includes((po.status || '').toLowerCase()) && (
+                                <span style={{ fontSize: '11.5px', color: '#0d9488', fontWeight: 600 }}>
+                                  Delivered
+                                </span>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => setSelectedPOForDetail(po)}
+                                className="btn btn-secondary btn-sm"
+                                style={{ padding: '3px 8px', fontSize: '11px' }}
+                              >
+                                Details
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -1670,6 +1805,93 @@ export const Procurement = () => {
                 </table>
               </div>
             </div>
+
+            {/* Dedicated Finance Authorization Card for Pending POs */}
+            {(selectedPOForDetail.status || '').toLowerCase() === 'pending' && ['Finance Officer', 'Administrator'].includes(user?.role) && (
+              <div style={{
+                backgroundColor: '#f0fdf4',
+                border: '1.5px solid #16a34a',
+                borderRadius: '8px',
+                padding: '16px',
+                marginTop: '16px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                  <div>
+                    <div style={{ fontSize: '12px', fontWeight: 800, color: '#15803d', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Finance Manager Payout Authorization
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#166534', marginTop: '2px' }}>
+                      Verify available company treasury funds before approving payment for this purchase order.
+                    </div>
+                  </div>
+                  {treasury && (
+                    <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#15803d' }}>
+                      Treasury Balance: {formatCurrency(treasury.available_balance)}
+                    </span>
+                  )}
+                </div>
+
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginTop: '14px',
+                  paddingTop: '12px',
+                  borderTop: '1px solid #bbf7d0',
+                  flexWrap: 'wrap',
+                  gap: '10px'
+                }}>
+                  <div>
+                    <span style={{ fontSize: '13px', color: '#374151' }}>Order Payout Amount: </span>
+                    <strong style={{ fontSize: '15px', color: '#111827' }}>{formatCurrency(selectedPOForDetail.total_amount)}</strong>
+                    {treasury && (
+                      <span style={{ marginLeft: '10px' }}>
+                        {treasury.available_balance >= selectedPOForDetail.total_amount ? (
+                          <span className="badge badge-approved" style={{ fontSize: '11px' }}>Sufficient Liquidity</span>
+                        ) : (
+                          <span className="badge badge-rejected" style={{ fontSize: '11px' }}>Insufficient Balance</span>
+                        )}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={() => handleFinanceApprovePO(selectedPOForDetail.id)}
+                      disabled={treasury && (treasury.available_balance < selectedPOForDetail.total_amount)}
+                      style={{
+                        backgroundColor: (treasury && treasury.available_balance < selectedPOForDetail.total_amount) ? '#9ca3af' : '#16a34a',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '6px',
+                        padding: '8px 16px',
+                        fontSize: '12.5px',
+                        fontWeight: 700,
+                        cursor: (treasury && treasury.available_balance < selectedPOForDetail.total_amount) ? 'not-allowed' : 'pointer'
+                      }}
+                    >
+                      Approve Payment & Fund Order
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleFinanceRejectPO(selectedPOForDetail.id)}
+                      style={{
+                        backgroundColor: '#ffffff',
+                        color: '#dc2626',
+                        border: '1px solid #fca5a5',
+                        borderRadius: '6px',
+                        padding: '8px 14px',
+                        fontSize: '12.5px',
+                        fontWeight: 600,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Reject Order
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Status Change Controls for staff */}
             {canUpdateStatus && (

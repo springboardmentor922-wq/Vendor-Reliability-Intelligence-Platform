@@ -29,6 +29,7 @@ export const Dashboard = () => {
   const [isPdfOpen, setIsPdfOpen] = useState(false);
   const [treasury, setTreasury] = useState(null);
   const [pendingPaymentReqs, setPendingPaymentReqs] = useState([]);
+  const [pendingPurchaseOrders, setPendingPurchaseOrders] = useState([]);
   const [actionMsg, setActionMsg] = useState(null);
 
   const loadStatsAndUsers = async () => {
@@ -42,12 +43,14 @@ export const Dashboard = () => {
       }
       if (['Finance Officer', 'Administrator'].includes(user?.role)) {
         try {
-          const [tData, reqs] = await Promise.all([
+          const [tData, reqs, pos] = await Promise.all([
             api.getCompanyTreasury().catch(() => null),
-            api.getProcurementRequests('vendor_accepted').catch(() => [])
+            api.getProcurementRequests('vendor_accepted').catch(() => []),
+            api.getPurchaseOrders({ status: 'pending' }).catch(() => [])
           ]);
           if (tData) setTreasury(tData);
           setPendingPaymentReqs(reqs || []);
+          setPendingPurchaseOrders(pos || []);
         } catch {
           // ignore
         }
@@ -80,6 +83,30 @@ export const Dashboard = () => {
       await loadStatsAndUsers();
     } catch (err) {
       setActionMsg({ type: 'error', text: err.message || 'Payment rejection failed' });
+    }
+  };
+
+  const handleApprovePOPayment = async (poId) => {
+    setActionMsg(null);
+    try {
+      const res = await api.financeApprovePO(poId);
+      setActionMsg({ type: 'success', text: `Purchase order payment authorized & funded! Order ${res.po_number || ''} is ACTIVE.` });
+      await loadStatsAndUsers();
+    } catch (err) {
+      setActionMsg({ type: 'error', text: err.message || 'Purchase order payment authorization failed' });
+    }
+  };
+
+  const handleRejectPOPayment = async (poId) => {
+    setActionMsg(null);
+    const reason = prompt('Reason for purchase order rejection:');
+    if (reason === null) return;
+    try {
+      await api.financeRejectPO(poId, reason);
+      setActionMsg({ type: 'success', text: 'Purchase order payment authorization rejected.' });
+      await loadStatsAndUsers();
+    } catch (err) {
+      setActionMsg({ type: 'error', text: err.message || 'Purchase order rejection failed' });
     }
   };
 
@@ -1590,6 +1617,126 @@ export const Dashboard = () => {
                     </tbody>
                   </table>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Pending Purchase Orders awaiting Finance approval & Treasury Payout */}
+          {pendingPurchaseOrders.length > 0 && (
+            <div className="card" style={{ marginBottom: '22px', border: '1.5px solid #0284c7', boxShadow: '0 4px 6px -1px rgba(2, 132, 199, 0.1)' }}>
+              <div className="card-header" style={{ backgroundColor: '#f0f9ff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h2 className="card-title" style={{ color: '#0369a1', fontSize: '15px', fontWeight: 800 }}>
+                    Purchase Orders Awaiting Payment Authorization ({pendingPurchaseOrders.length})
+                  </h2>
+                  <div style={{ fontSize: '12px', color: '#0284c7' }}>
+                    Direct purchase orders requiring company balance verification before vendor fulfillment commences.
+                  </div>
+                </div>
+                <span className="badge badge-ordered" style={{ backgroundColor: '#bae6fd', color: '#0369a1', fontWeight: 700 }}>
+                  PO Funding Pending
+                </span>
+              </div>
+              <div className="card-body" style={{ padding: 0 }}>
+                <div className="table-responsive">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Purchase Order</th>
+                        <th>Vendor / Supplier</th>
+                        <th>Order Amount</th>
+                        <th>Available Balance</th>
+                        <th>Liquidity Status</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pendingPurchaseOrders.map(po => {
+                        const poAmount = Number(po.total_amount || 0);
+                        const hasEnoughBalance = (treasury?.available_balance || 0) >= poAmount;
+                        return (
+                          <tr key={po.id}>
+                            <td>
+                              <strong>{po.po_number || `PO-${po.id}`}</strong>
+                              <div style={{ fontSize: '11px', color: '#64748b' }}>
+                                {po.items?.length || 0} line item(s) &bull; Due: {po.expected_delivery_date || 'Standard'}
+                              </div>
+                            </td>
+                            <td>
+                              <strong>{po.vendor?.company_name || `Vendor #${po.vendor_id}`}</strong>
+                              <div style={{ fontSize: '11px', color: '#64748b' }}>
+                                Category: {po.vendor?.category?.replace('_', ' ') || 'General'}
+                              </div>
+                            </td>
+                            <td>
+                              <strong style={{ color: '#0f172a', fontSize: '13.5px' }}>
+                                ₹{poAmount.toLocaleString('en-IN')}
+                              </strong>
+                            </td>
+                            <td>
+                              ₹{Number(treasury?.available_balance || 0).toLocaleString('en-IN')}
+                            </td>
+                            <td>
+                              {hasEnoughBalance ? (
+                                <span className="badge badge-approved" style={{ fontSize: '11px' }}>Sufficient Liquidity</span>
+                              ) : (
+                                <span className="badge badge-rejected" style={{ fontSize: '11px' }}>Insufficient Balance</span>
+                              )}
+                            </td>
+                            <td>
+                              <div style={{ display: 'flex', gap: '6px' }}>
+                                <button
+                                  type="button"
+                                  onClick={() => handleApprovePOPayment(po.id)}
+                                  disabled={!hasEnoughBalance}
+                                  style={{
+                                    backgroundColor: hasEnoughBalance ? '#047857' : '#9ca3af',
+                                    color: '#ffffff',
+                                    border: 'none',
+                                    borderRadius: '5px',
+                                    padding: '5px 12px',
+                                    fontSize: '11.5px',
+                                    fontWeight: 700,
+                                    cursor: hasEnoughBalance ? 'pointer' : 'not-allowed'
+                                  }}
+                                >
+                                  Approve & Fund PO
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRejectPOPayment(po.id)}
+                                  style={{
+                                    backgroundColor: '#ffffff',
+                                    color: '#b91c1c',
+                                    border: '1px solid #fecaca',
+                                    borderRadius: '5px',
+                                    padding: '5px 8px',
+                                    fontSize: '11.5px',
+                                    fontWeight: 600,
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  Reject
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {pendingPaymentReqs.length === 0 && pendingPurchaseOrders.length === 0 && (
+            <div className="card" style={{ marginBottom: '22px', padding: '22px', textAlign: 'center', backgroundColor: '#f8fafc', border: '1px dashed #cbd5e1' }}>
+              <div style={{ fontSize: '14.5px', fontWeight: 700, color: '#334155' }}>
+                All Purchase Orders & Requisitions are authorized and funded.
+              </div>
+              <div style={{ fontSize: '12.5px', color: '#64748b', marginTop: '4px' }}>
+                New purchase orders created for suppliers will appear here for company financial liquidity review and payout authorization.
               </div>
             </div>
           )}

@@ -89,6 +89,8 @@ export const api = {
   getPurchaseOrderById: (id) => request(`/procurement/orders/${id}`),
   createPurchaseOrder: (data) => request('/procurement/orders', { method: 'POST', body: JSON.stringify(data) }),
   updatePurchaseOrderStatus: (id, data) => request(`/procurement/orders/${id}/status`, { method: 'PATCH', body: JSON.stringify(data) }),
+  financeApprovePO: (orderId) => request(`/procurement/orders/${orderId}/finance-approve`, { method: 'POST' }),
+  financeRejectPO: (orderId, reason) => request(`/procurement/orders/${orderId}/finance-reject?reason=${encodeURIComponent(reason || '')}`, { method: 'POST' }),
 
   // Invoices
   getInvoices: (status) => request(`/procurement/invoices${status ? `?status=${status}` : ''}`),
