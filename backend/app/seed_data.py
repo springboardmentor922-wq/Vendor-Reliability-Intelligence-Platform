@@ -16,13 +16,11 @@ from app.models.audit import AuditLog
 from app.core.security import hash_password
 
 def seed_database(db: Session):
-    # Check if database is already seeded
     if db.query(User).count() > 0:
         return {"status": "already_seeded", "message": "Database already contains seed data."}
 
     today = date.today()
 
-    # 1. Seed Vendors
     vendors_data = [
         {
             "company_name": "Apex Raw Materials Ltd",
@@ -99,7 +97,6 @@ def seed_database(db: Session):
         vendor_objs.append(vendor)
     db.commit()
 
-    # 2. Seed Users for each of the 6 roles
     users_data = [
         {
             "full_name": "Arthur Vance",
@@ -174,13 +171,11 @@ def seed_database(db: Session):
     pro_vendor = vendor_objs[4]
     nexus_vendor = vendor_objs[5]
 
-    # Update approval references for vendors
     for v in vendor_objs:
         if v.status == VendorStatus.APPROVED:
             v.approved_by_id = procure_mgr.id
     db.commit()
 
-    # 3. Seed Procurement Requests
     req1 = ProcurementRequest(
         title="Q3 Structural Carbon Steel Ingot Procurement",
         description="High-density industrial grade carbon steel batch for heavy machinery frame production.",
@@ -202,7 +197,6 @@ def seed_database(db: Session):
     db.add_all([req1, req2, req3])
     db.commit()
 
-    # 4. Seed Purchase Orders with Line Items
     po1 = PurchaseOrder(
         po_number="PO-2026-APX01",
         procurement_request_id=req1.id,
@@ -236,7 +230,6 @@ def seed_database(db: Session):
     db.add_all([po1, po2, po3])
     db.commit()
 
-    # Purchase Order Items
     items_data = [
         PurchaseOrderItem(purchase_order_id=po1.id, item_name="Grade 316 Stainless Steel Billets (Tons)", quantity=20.0, unit_price=1850.0),
         PurchaseOrderItem(purchase_order_id=po1.id, item_name="High-Tensile Reinforcement Rods (Pack 100)", quantity=15.0, unit_price=766.67),
@@ -248,7 +241,6 @@ def seed_database(db: Session):
     db.add_all(items_data)
     db.commit()
 
-    # 5. Seed Invoices
     inv1 = Invoice(
         invoice_number="INV-2026-APX001",
         purchase_order_id=po1.id,
@@ -267,7 +259,6 @@ def seed_database(db: Session):
     db.add_all([inv1, inv2])
     db.commit()
 
-    # 6. Seed Contracts & Certifications
     contract1 = Contract(
         contract_number="CTR-2026-APX001",
         vendor_id=apex_vendor.id,
@@ -308,7 +299,6 @@ def seed_database(db: Session):
     db.add_all([cert1, cert2])
     db.commit()
 
-    # 7. Seed Messages
     msg1 = Message(
         vendor_id=apex_vendor.id,
         sender_id=procure_mgr.id,
@@ -336,7 +326,6 @@ def seed_database(db: Session):
     db.add_all([msg1, msg2, msg3])
     db.commit()
 
-    # 8. Seed Performance Records & Reliability Scores for All Vendors
     perfs = [
         PerformanceRecord(vendor_id=apex_vendor.id, purchase_order_id=po1.id, on_time=True, quality_rating=4.9, response_time_hours=1.5, issue_resolution_hours=4.0, recorded_at=datetime.utcnow() - timedelta(days=3)),
         PerformanceRecord(vendor_id=apex_vendor.id, on_time=True, quality_rating=4.8, response_time_hours=2.0, issue_resolution_hours=6.0, recorded_at=datetime.utcnow() - timedelta(days=25)),
@@ -351,7 +340,6 @@ def seed_database(db: Session):
     db.add_all(perfs)
     db.commit()
 
-    # 9. Seed Notifications
     notif1 = Notification(
         user_id=procure_mgr.id,
         type=NotificationType.VENDOR_APPROVAL,
@@ -369,7 +357,6 @@ def seed_database(db: Session):
     db.add_all([notif1, notif2])
     db.commit()
 
-    # 10. Seed Audit Logs
     audit1 = AuditLog(
         user_id=admin_user.id,
         action="SYSTEM_INIT",

@@ -40,7 +40,6 @@ def get_dashboard_stats(
             r.value: db.query(User).filter(User.role == r).count() for r in UserRole
         }
 
-        # Calculate live risk tiers for all approved vendors
         all_vendors = db.query(Vendor).all()
         risk_dist = {"Low Risk": 0, "Medium Risk": 0, "High Risk": 0, "Critical Risk": 0}
         for v in all_vendors:
@@ -55,7 +54,6 @@ def get_dashboard_stats(
             else:
                 risk_dist["Critical Risk"] += 1
 
-        # Procurement monthly cost in Lakhs and PO counts directly from DB
         months_map = {}
         for i in range(5, -1, -1):
             m_date = today - timedelta(days=i*30)
@@ -75,7 +73,6 @@ def get_dashboard_stats(
         if not procurement_reports:
             procurement_reports = [{"month": "Sep", "cost": 0.0, "pos": 0}]
 
-        # Live compliance breakdown
         compliant_count = db.query(Contract).filter(Contract.status == ContractStatus.ACTIVE).count()
         expiring_count = db.query(Contract).filter(Contract.status == ContractStatus.EXPIRING_SOON).count()
         expired_count = db.query(Contract).filter(Contract.status == ContractStatus.EXPIRED).count()
@@ -188,7 +185,6 @@ def get_dashboard_stats(
         }
         recent_orders = db.query(PurchaseOrder).order_by(PurchaseOrder.id.desc()).limit(5).all()
 
-        # Monthly procurement spend trajectory and order volume
         p_months = {}
         for i in range(5, -1, -1):
             m_date = today - timedelta(days=i*30)
@@ -204,7 +200,6 @@ def get_dashboard_stats(
                 p_months[m_key] = {"month": m_key, "cost": round(p.total_amount / 100000.0, 2), "pos": 1}
         procurement_overview = list(p_months.values())
 
-        # PO status distribution
         total_p = max(1, total_orders_count)
         pending_c = po_by_status.get(POStatus.PENDING.value, 0)
         approved_c = po_by_status.get(POStatus.APPROVED.value, 0)
@@ -220,7 +215,6 @@ def get_dashboard_stats(
             {"name": "Cancelled", "value": cancelled_c, "pct": round(cancelled_c / total_p * 100), "color": "#f43f5e"}
         ]
 
-        # Vendor performance radar metrics
         all_v_intel = [compute_vendor_intelligence(v, db) for v in db.query(Vendor).all()]
         if all_v_intel:
             top_v = max(all_v_intel, key=lambda x: x["reliability_score"])
@@ -246,7 +240,6 @@ def get_dashboard_stats(
                 {"subject": "Cost Efficiency", "top_vendor": 90, "average": 79, "fullMark": 100}
             ]
 
-        # Spend breakdown by vendor category
         category_costs = {}
         for p in all_pos:
             if p.status == POStatus.CANCELLED:
@@ -268,7 +261,6 @@ def get_dashboard_stats(
         if not cost_by_category:
             cost_by_category = [{"name": "Raw Materials", "value": 0.0, "pct": 100, "color": "#0284c7"}]
 
-        # Fulfillment and delivery performance breakdown
         delivered_orders_db = [p for p in all_pos if p.status in [POStatus.DELIVERED, POStatus.COMPLETED]]
         in_transit_db = [p for p in all_pos if p.status == POStatus.ORDERED]
         overdue_db = [p for p in all_pos if p.status in [POStatus.PENDING, POStatus.APPROVED, POStatus.ORDERED] and str(p.expected_delivery_date) < str(today)]
@@ -331,7 +323,6 @@ def get_dashboard_stats(
         all_pos = db.query(PurchaseOrder).all()
         total_p = max(1, total_pos)
 
-        # Delayed orders
         overdue_pos = [
             p for p in all_pos
             if p.status in [POStatus.PENDING, POStatus.APPROVED, POStatus.ORDERED]
@@ -350,7 +341,6 @@ def get_dashboard_stats(
         ).count()
         total_items_volume = int(db.query(func.sum(PurchaseOrderItem.quantity)).scalar() or 0)
 
-        # 1. 6-Month Supply Chain Delivery Performance Trend (Dual Axis Chart)
         months_map = {}
         for i in range(5, -1, -1):
             m_date = today - timedelta(days=i*30)
@@ -369,7 +359,6 @@ def get_dashboard_stats(
                     months_map[m_key]["on_time"] += 1
         delivery_performance_trend = list(months_map.values())
 
-        # 2. Active Shipment Pipeline Donut
         shipment_pipeline_donut = [
             {"name": "In-Transit", "value": ordered_pos, "pct": round(ordered_pos / total_p * 100), "color": "#0284c7"},
             {"name": "Delivered", "value": delivered_pos + completed_pos, "pct": round((delivered_pos + completed_pos) / total_p * 100), "color": "#10b981"},
@@ -378,7 +367,6 @@ def get_dashboard_stats(
             {"name": "Cancelled", "value": cancelled_pos, "pct": round(cancelled_pos / total_p * 100), "color": "#f43f5e"}
         ]
 
-        # 3. Supply Chain Logistics Radar Chart
         all_v_intel = [compute_vendor_intelligence(v, db) for v in db.query(Vendor).all()]
         if all_v_intel:
             top_v = max(all_v_intel, key=lambda x: x["reliability_score"])
@@ -404,7 +392,6 @@ def get_dashboard_stats(
                 {"subject": "Issue Turnaround", "top_vendor": 90, "average": 78, "fullMark": 100}
             ]
 
-        # 4. On-Time Delivery Rate by Category
         category_orders = {}
         for p in all_pos:
             c_name = p.vendor.category.value if p.vendor and hasattr(p.vendor.category, "value") else "general"
@@ -473,7 +460,6 @@ def get_dashboard_stats(
         vendor = db.query(Vendor).filter(Vendor.id == vid).first()
         intel = compute_vendor_intelligence(vendor, db) if vendor else {}
 
-        # Active POs
         active_pos_list = db.query(PurchaseOrder).filter(
             PurchaseOrder.vendor_id == vid,
             PurchaseOrder.status.in_([POStatus.APPROVED, POStatus.ORDERED])
@@ -481,7 +467,6 @@ def get_dashboard_stats(
         active_pos = len(active_pos_list)
         active_commitment = sum(p.total_amount for p in active_pos_list)
 
-        # Delivered & Completed POs
         completed_pos_list = db.query(PurchaseOrder).filter(
             PurchaseOrder.vendor_id == vid,
             PurchaseOrder.status.in_([POStatus.DELIVERED, POStatus.COMPLETED])
@@ -489,14 +474,12 @@ def get_dashboard_stats(
         delivered_pos = len(completed_pos_list)
         lifetime_fulfilled = sum(p.total_amount for p in completed_pos_list)
 
-        # Delayed POs
         delayed_pos = db.query(PurchaseOrder).filter(
             PurchaseOrder.vendor_id == vid,
             PurchaseOrder.expected_delivery_date < today,
             PurchaseOrder.status.in_([POStatus.PENDING, POStatus.APPROVED, POStatus.ORDERED])
         ).count()
 
-        # Invoices
         invoices = db.query(Invoice).join(PurchaseOrder).filter(
             PurchaseOrder.vendor_id == vid
         ).all()
@@ -519,7 +502,6 @@ def get_dashboard_stats(
             Message.sender_id != current_user.id
         ).count()
 
-        # Top vendor performance metrics comparison
         top_5_vendors = db.query(Vendor).limit(5).all()
         vendor_performance_comparison = []
         for tv in top_5_vendors:
@@ -532,7 +514,6 @@ def get_dashboard_stats(
                 "compliance": 95 if tv_intel.get("active_certifications", 0) >= 1 else 75
             })
 
-        # Historical reliability trend
         reliability_trend = [
             {"month": m["month"], "score": round(m["on_time_rate"] * 0.9 + 10)}
             for m in intel.get("monthly_trend", [])
@@ -540,7 +521,6 @@ def get_dashboard_stats(
         if not reliability_trend:
             reliability_trend = [{"month": "Sep", "score": round(intel.get("reliability_score", 0.0))}]
 
-        # Contract lifecycle distribution
         v_contracts = db.query(Contract).filter(Contract.vendor_id == vid).all()
         total_vc = max(1, len(v_contracts))
         c_active = sum(1 for c in v_contracts if c.status == ContractStatus.ACTIVE)
@@ -555,7 +535,6 @@ def get_dashboard_stats(
             {"name": "Expired", "value": c_expired, "pct": round(c_expired / total_vc * 100), "color": "#ea580c"}
         ]
 
-        # Order history by month
         v_pos = db.query(PurchaseOrder).filter(PurchaseOrder.vendor_id == vid).all()
         v_order_months = {}
         for i in range(5, -1, -1):
@@ -572,7 +551,6 @@ def get_dashboard_stats(
                 v_order_months[m_key] = {"month": m_key, "value": round(p.total_amount / 100000.0, 2), "orders": 1}
         order_history_chart = list(v_order_months.values())
 
-        # Interaction channel distribution
         v_msgs = db.query(Message).filter(Message.vendor_id == vid).count()
         communication_activity_donut = [
             {"name": "Portal Messages", "value": max(1, v_msgs), "pct": 50, "color": "#0284c7"},
@@ -657,7 +635,6 @@ def get_dashboard_stats(
             {"name": "Overdue", "value": len(overdue_list), "pct": round(len(overdue_list) / total_inv_count * 100), "color": "#ea580c", "amount": round(overdue_amount, 2)}
         ]
 
-        # 6-Month Cash Flow Trend (Monthly Invoiced vs Disbursed/Paid in ₹ Lakh)
         f_months = {}
         for i in range(5, -1, -1):
             m_date = today - timedelta(days=i*30)
@@ -680,7 +657,6 @@ def get_dashboard_stats(
                 }
         cashflow_trend = list(f_months.values())
 
-        # Spend by Vendor Category
         cat_spend = {}
         for inv in all_invoices:
             if inv.purchase_order and inv.purchase_order.vendor:
@@ -698,7 +674,6 @@ def get_dashboard_stats(
         if not spend_by_category:
             spend_by_category = [{"name": "Raw Materials", "value": 0.0, "pct": 100, "color": "#0284c7"}]
 
-        # Top 5 Suppliers by Financial Commitment
         vendor_spend = {}
         for inv in all_invoices:
             v_name = inv.purchase_order.vendor.company_name if inv.purchase_order and inv.purchase_order.vendor else "Supplier"
@@ -784,7 +759,6 @@ def get_dashboard_stats(
         total_orders = db.query(PurchaseOrder).count()
         approved_pos = db.query(PurchaseOrder).filter(PurchaseOrder.status != POStatus.PENDING).count()
 
-        # Audit Log Event Action Distribution Donut
         all_logs = db.query(AuditLog).all()
         action_groups = {
             "Purchase Orders": sum(1 for l in all_logs if "PO" in l.action or l.entity == "PurchaseOrder"),
@@ -802,7 +776,6 @@ def get_dashboard_stats(
         if not audit_events_donut:
             audit_events_donut = [{"name": "System Activity", "value": total_audit_logs, "pct": 100, "color": "#0284c7"}]
 
-        # Contract & Certification Compliance Health Donut
         active_c = db.query(Contract).filter(Contract.status == ContractStatus.ACTIVE).count()
         expiring_c = expiring_contracts
         expired_c = db.query(Contract).filter(Contract.status == ContractStatus.EXPIRED).count()
@@ -815,7 +788,6 @@ def get_dashboard_stats(
             {"name": "Expired / Non-Compliant", "value": expired_c + expired_certs, "pct": round((expired_c + expired_certs) / total_comp * 100), "color": "#f43f5e"}
         ]
 
-        # Organization-Wide Vendor Risk Distribution
         all_vendors = db.query(Vendor).all()
         risk_counts = {"Low Risk": 0, "Medium Risk": 0, "High Risk": 0}
         for v in all_vendors:
@@ -835,7 +807,6 @@ def get_dashboard_stats(
             {"name": "High Risk (Tier 4)", "value": risk_counts["High Risk"], "pct": round(risk_counts["High Risk"] / total_r * 100), "color": "#f43f5e"}
         ]
 
-        # 6-Month Monthly Audit Log Activity Trend
         a_months = {}
         for i in range(5, -1, -1):
             m_date = today - timedelta(days=i*30)

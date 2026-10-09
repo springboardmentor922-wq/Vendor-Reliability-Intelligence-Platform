@@ -45,7 +45,6 @@ const REQUEST_PRIORITY_PILLS = [
   { label: 'Urgent', value: 'urgent' }
 ];
 
-// PO status filter options
 const PO_STATUS_PILLS = [
   { label: 'All', value: '' },
   { label: 'Pending', value: 'pending' },
@@ -57,7 +56,6 @@ const PO_STATUS_PILLS = [
   { label: 'Cancelled', value: 'cancelled' }
 ];
 
-// Commercial Invoice status filter options
 const INVOICE_STATUS_PILLS = [
   { label: 'All', value: '' },
   { label: 'Paid', value: 'paid' },
@@ -73,16 +71,13 @@ export const Procurement = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  // Active Tab: 'requests' | 'orders' | 'invoices'
   const tabParam = searchParams.get('tab');
   const [activeTab, setActiveTab] = useState(
     tabParam === 'requests' ? 'requests' : tabParam === 'invoices' ? 'invoices' : 'orders'
   );
 
-  // Search filter query
   const [globalSearch, setGlobalSearch] = useState('');
 
-  // Data lists
   const [requests, setRequests] = useState([]);
   const [orders, setOrders] = useState([]);
   const [invoices, setInvoices] = useState([]);
@@ -91,13 +86,11 @@ export const Procurement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Filter pills
   const [requestStatusFilter, setRequestStatusFilter] = useState('');
   const [requestPriorityFilter, setRequestPriorityFilter] = useState('');
   const [poStatusFilter, setPOStatusFilter] = useState('');
   const [invoiceStatusFilter, setInvoiceStatusFilter] = useState('');
 
-  // Modals state
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [isPOModalOpen, setIsPOModalOpen] = useState(false);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
@@ -105,7 +98,6 @@ export const Procurement = () => {
   const [selectedInvoiceForPDF, setSelectedInvoiceForPDF] = useState(null);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
 
-  // New Requisition Form State
   const [requestForm, setRequestForm] = useState({
     title: '',
     department: 'Operations',
@@ -124,7 +116,6 @@ export const Procurement = () => {
 
   const [treasury, setTreasury] = useState(null);
 
-  // Direct Purchase Order Form State
   const [poForm, setPOForm] = useState({
     vendor_id: '',
     procurement_request_id: '',
@@ -133,7 +124,6 @@ export const Procurement = () => {
     items: [{ item_name: '', quantity: 1, unit_price: 0 }]
   });
 
-  // Invoice Form State
   const [invoiceForm, setInvoiceForm] = useState({
     purchase_order_id: '',
     amount: '',
@@ -174,7 +164,6 @@ export const Procurement = () => {
     loadAllData();
   }, []);
 
-  // Handle URL query parameters (e.g. from Vendor Management or Sidebar)
   useEffect(() => {
     const directVendorId = searchParams.get('directVendorId');
     const linkedReqId = searchParams.get('reqId');
@@ -205,7 +194,6 @@ export const Procurement = () => {
     }
   }, [searchParams, requests]);
 
-  // Request Handlers
   const handleCreateRequest = async (e) => {
     e.preventDefault();
     try {
@@ -317,7 +305,6 @@ export const Procurement = () => {
     }
   };
 
-  // PO Line Items Handler
   const handleAddItem = () => {
     setPOForm({
       ...poForm,
@@ -382,7 +369,6 @@ export const Procurement = () => {
     }
   };
 
-  // Invoice Handlers
   const handleCreateInvoice = async (e) => {
     e.preventDefault();
     try {
@@ -409,7 +395,6 @@ export const Procurement = () => {
     }
   };
 
-  // Date formatting helper
   const formatDate = (dateStr) => {
     if (!dateStr) return '—';
     try {
@@ -421,7 +406,6 @@ export const Procurement = () => {
     }
   };
 
-  // Currency formatted with Indian Rupee formatting e.g. ₹21,00,000, ₹60,000
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -430,7 +414,6 @@ export const Procurement = () => {
     }).format(amount || 0);
   };
 
-  // Status Badge for Purchase Orders
   const getPOStatusBadge = (status) => {
     const s = (status || 'pending').toLowerCase();
     if (s === 'pending') {
@@ -491,7 +474,6 @@ export const Procurement = () => {
     return found ? found.label : (cat ? cat.replace('_', ' ') : 'General');
   };
 
-  // Helper to format clean PO code e.g. PO-3530
   const getPOCode = (po) => {
     if (po.po_number && po.po_number.startsWith('PO-') && po.po_number.length <= 8) {
       return po.po_number;
@@ -499,7 +481,6 @@ export const Procurement = () => {
     return `PO-${3200 + po.id}`;
   };
 
-  // Helper to summarize line items
   const getPOItemsSummary = (po) => {
     if (po.items && po.items.length > 0) {
       const firstName = po.items[0].item_name;
@@ -511,7 +492,6 @@ export const Procurement = () => {
     return 'General Procurement Supplies';
   };
 
-  // Filtered lists
   const filteredRequests = requests.filter(r => {
     if (globalSearch.trim()) {
       const q = globalSearch.toLowerCase();
@@ -570,7 +550,7 @@ export const Procurement = () => {
 
   return (
     <div style={{ maxWidth: '1440px', margin: '0 auto', paddingBottom: '40px' }}>
-      {/* Header and Controls */}
+      
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
@@ -588,9 +568,9 @@ export const Procurement = () => {
           </p>
         </div>
 
-        {/* Search and Action Bar */}
+        
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {/* Search Box in Header */}
+          
           <div style={{ position: 'relative' }}>
             <div style={{
               position: 'absolute',
@@ -625,7 +605,7 @@ export const Procurement = () => {
             />
           </div>
 
-          {/* + Purchase order and + New request buttons: restricted to Procurement Manager & Admin */}
+          
           {canManageProcurement && (
             <>
               <button
@@ -716,7 +696,7 @@ export const Procurement = () => {
 
       {error && <div className="alert alert-danger" style={{ marginBottom: '16px' }}>{error}</div>}
 
-      {/* Navigation Tabs */}
+      
       <div style={{ display: 'flex', gap: '8px', marginBottom: '22px' }}>
         <button
           onClick={() => {
@@ -779,12 +759,10 @@ export const Procurement = () => {
         </button>
       </div>
 
-      {/* ========================================================================= */}
-      {/* TAB 1: REQUESTS                                                           */}
-      {/* ========================================================================= */}
+      
       {activeTab === 'requests' && (
         <div>
-          {/* Status Filter Pills */}
+          
           <div style={{ marginBottom: '10px' }}>
             <div style={{ fontSize: '11px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
               STATUS
@@ -814,7 +792,7 @@ export const Procurement = () => {
             </div>
           </div>
 
-          {/* Priority Filter Pills */}
+          
           <div style={{ marginBottom: '22px' }}>
             <div style={{ fontSize: '11px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
               PRIORITY
@@ -844,7 +822,7 @@ export const Procurement = () => {
             </div>
           </div>
 
-          {/* Requests Table */}
+          
           <div style={{
             backgroundColor: '#ffffff',
             border: '1px solid #e5e7eb',
@@ -914,7 +892,7 @@ export const Procurement = () => {
                           onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fafafa'}
                           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
                         >
-                          {/* REQUEST */}
+                          
                           <td style={{ padding: '14px 18px' }}>
                             <div style={{ fontWeight: 700, color: '#111827', fontSize: '14px' }}>
                               {req.title}
@@ -983,17 +961,17 @@ export const Procurement = () => {
                             )}
                           </td>
 
-                          {/* DEPARTMENT */}
+                          
                           <td style={{ padding: '14px 18px', fontSize: '13px', color: '#374151', fontWeight: 500 }}>
                             {req.department || 'Operations'}
                           </td>
 
-                          {/* REQUESTED BY */}
+                          
                           <td style={{ padding: '14px 18px', fontSize: '13px', color: '#1f2937', fontWeight: 600 }}>
                             {req.requested_by_name || 'Staff Member'}
                           </td>
 
-                          {/* PRIORITY */}
+                          
                           <td style={{ padding: '14px 18px' }}>
                             <span style={{
                               padding: '3px 10px',
@@ -1008,12 +986,12 @@ export const Procurement = () => {
                             </span>
                           </td>
 
-                          {/* NEEDED BY */}
+                          
                           <td style={{ padding: '14px 18px', fontSize: '12.5px', color: '#4b5563', whiteSpace: 'nowrap' }}>
                             {formatDate(req.needed_by)}
                           </td>
 
-                          {/* STATUS */}
+                          
                           <td style={{ padding: '14px 18px' }}>
                             <span style={{
                               display: 'inline-flex',
@@ -1037,10 +1015,10 @@ export const Procurement = () => {
                             </span>
                           </td>
 
-                          {/* ACTIONS */}
+                          
                           <td style={{ padding: '14px 18px', textAlign: 'right' }}>
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', flexWrap: 'wrap' }}>
-                              {/* Vendor Acceptance Action */}
+                              
                               {user?.role === 'Vendor' && (req.status === 'assigned' || (['pending', 'submitted'].includes(req.status) && req.is_multi_vendor)) && (
                                 <button
                                   onClick={() => handleVendorAccept(req.id)}
@@ -1059,7 +1037,7 @@ export const Procurement = () => {
                                 </button>
                               )}
 
-                              {/* Finance Manager Payment Authorization Action */}
+                              
                               {['Finance Officer', 'Administrator'].includes(user?.role) && req.status === 'vendor_accepted' && (
                                 <>
                                   <button
@@ -1209,12 +1187,10 @@ export const Procurement = () => {
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* TAB 2: PURCHASE ORDERS                                                    */}
-      {/* ========================================================================= */}
+      
       {activeTab === 'orders' && (
         <div>
-          {/* Status Filter Pills */}
+          
           <div style={{ marginBottom: '22px' }}>
             <div style={{ fontSize: '11px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
               STATUS
@@ -1245,7 +1221,7 @@ export const Procurement = () => {
             </div>
           </div>
 
-          {/* Purchase Orders Table */}
+          
           <div style={{
             backgroundColor: '#ffffff',
             border: '1px solid #e5e7eb',
@@ -1316,7 +1292,7 @@ export const Procurement = () => {
                           onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fafafa'}
                           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
                         >
-                          {/* PURCHASE ORDER */}
+                          
                           <td style={{ padding: '14px 18px' }}>
                             <div style={{ fontWeight: 700, color: '#111827', fontSize: '13.5px' }}>
                               {poCode}
@@ -1326,22 +1302,22 @@ export const Procurement = () => {
                             </div>
                           </td>
 
-                          {/* VENDOR */}
+                          
                           <td style={{ padding: '14px 18px', fontSize: '13.5px', color: '#1f2937' }}>
                             {vendor ? vendor.company_name : `Vendor #${po.vendor_id}`}
                           </td>
 
-                          {/* ITEMS */}
+                          
                           <td style={{ padding: '14px 18px', fontSize: '13px', color: '#374151' }}>
                             {itemsText}
                           </td>
 
-                          {/* TOTAL */}
+                          
                           <td style={{ padding: '14px 18px', fontWeight: 600, color: '#111827', fontSize: '13.5px' }}>
                             {formatCurrency(totalAmount)}
                           </td>
 
-                          {/* STATUS with Dot */}
+                          
                           <td style={{ padding: '14px 18px' }}>
                             <span style={{
                               display: 'inline-flex',
@@ -1364,12 +1340,12 @@ export const Procurement = () => {
                             </span>
                           </td>
 
-                          {/* DELIVERY DATE */}
+                          
                           <td style={{ padding: '14px 18px', fontSize: '13px', color: '#4b5563' }}>
                             {formatDate(po.expected_delivery_date)}
                           </td>
 
-                          {/* ACTIONS */}
+                          
                           <td style={{ padding: '14px 18px' }} onClick={(e) => e.stopPropagation()}>
                             <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                               {(po.status || '').toLowerCase() === 'pending' && ['Finance Officer', 'Administrator'].includes(user?.role) && (
@@ -1483,12 +1459,10 @@ export const Procurement = () => {
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* TAB 3: COMMERCIAL INVOICES                                                */}
-      {/* ========================================================================= */}
+      
       {activeTab === 'invoices' && (
         <div>
-          {/* Status Filter Pills & Quick Actions */}
+          
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '12px', marginBottom: '18px' }}>
             <div>
               <div style={{ fontSize: '11px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
@@ -1546,7 +1520,7 @@ export const Procurement = () => {
             )}
           </div>
 
-          {/* Invoices Table */}
+          
           <div style={{
             backgroundColor: '#ffffff',
             border: '1px solid #e5e7eb',
@@ -1610,7 +1584,7 @@ export const Procurement = () => {
                           onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fafafa'}
                           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
                         >
-                          {/* INVOICE # */}
+                          
                           <td style={{ padding: '14px 18px' }}>
                             <div style={{ fontWeight: 700, color: '#111827', fontSize: '13.5px' }}>
                               {inv.invoice_number}
@@ -1620,7 +1594,7 @@ export const Procurement = () => {
                             </div>
                           </td>
 
-                          {/* PO REF */}
+                          
                           <td style={{ padding: '14px 18px', fontSize: '13px' }}>
                             {po.po_number ? (
                               <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#2563eb', backgroundColor: '#eff6ff', padding: '3px 8px', borderRadius: '4px' }}>
@@ -1631,7 +1605,7 @@ export const Procurement = () => {
                             )}
                           </td>
 
-                          {/* SUPPLIER */}
+                          
                           <td style={{ padding: '14px 18px', fontSize: '13.5px', color: '#1f2937' }}>
                             <strong>{vendor ? vendor.company_name : `Vendor #${po.vendor_id || 'N/A'}`}</strong>
                             {vendor?.category && (
@@ -1641,7 +1615,7 @@ export const Procurement = () => {
                             )}
                           </td>
 
-                          {/* TOTAL BILLED AMOUNT */}
+                          
                           <td style={{ padding: '14px 18px' }}>
                             <div style={{ fontWeight: 700, color: '#0f766e', fontSize: '14px' }}>
                               {formatCurrency(inv.amount)}
@@ -1651,7 +1625,7 @@ export const Procurement = () => {
                             </div>
                           </td>
 
-                          {/* PAYMENT STATUS */}
+                          
                           <td style={{ padding: '14px 18px' }}>
                             <span style={{
                               display: 'inline-flex',
@@ -1674,7 +1648,7 @@ export const Procurement = () => {
                             </span>
                           </td>
 
-                          {/* DUE DATE */}
+                          
                           <td style={{ padding: '14px 18px', fontSize: '13px', color: '#4b5563' }}>
                             {formatDate(inv.due_date)}
                             {inv.paid_date && (
@@ -1684,7 +1658,7 @@ export const Procurement = () => {
                             )}
                           </td>
 
-                          {/* ACTIONS */}
+                          
                           <td style={{ padding: '14px 18px', textAlign: 'right' }}>
                             <div style={{ display: 'inline-flex', gap: '8px', alignItems: 'center' }}>
                               <button
@@ -1743,9 +1717,7 @@ export const Procurement = () => {
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* MODAL: PURCHASE ORDER DETAILS & ACTIONS (on row click)                   */}
-      {/* ========================================================================= */}
+      
       {selectedPOForDetail && (
         <Modal
           isOpen={true}
@@ -1775,7 +1747,7 @@ export const Procurement = () => {
               </div>
             </div>
 
-            {/* Line items list */}
+            
             <div>
               <div style={{ fontSize: '13px', fontWeight: 700, color: '#374151', marginBottom: '8px' }}>
                 Ordered Line Items
@@ -1806,7 +1778,7 @@ export const Procurement = () => {
               </div>
             </div>
 
-            {/* Dedicated Finance Authorization Card for Pending POs */}
+            
             {(selectedPOForDetail.status || '').toLowerCase() === 'pending' && ['Finance Officer', 'Administrator'].includes(user?.role) && (
               <div style={{
                 backgroundColor: '#f0fdf4',
@@ -1893,7 +1865,7 @@ export const Procurement = () => {
               </div>
             )}
 
-            {/* Status Change Controls for staff */}
+            
             {canUpdateStatus && (
               <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: '14px' }}>
                 <div style={{ fontSize: '12px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', marginBottom: '8px' }}>
@@ -1927,7 +1899,7 @@ export const Procurement = () => {
 
           <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              {/* PDF Invoice Button */}
+              
               <button
                 type="button"
                 onClick={() => {
@@ -1967,9 +1939,7 @@ export const Procurement = () => {
         </Modal>
       )}
 
-      {/* ========================================================================= */}
-      {/* MODAL: NEW PROCUREMENT REQUEST                                            */}
-      {/* ========================================================================= */}
+      
       <Modal
         isOpen={isRequestModalOpen}
         onClose={() => setIsRequestModalOpen(false)}
@@ -2202,7 +2172,7 @@ export const Procurement = () => {
               />
             </div>
 
-            {/* Vendor Assignment Strategy */}
+            
             <div style={{ backgroundColor: '#f9fafb', padding: '14px 16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#111827', marginBottom: '8px' }}>
                 Vendor Assignment Strategy
@@ -2322,9 +2292,7 @@ export const Procurement = () => {
         </form>
       </Modal>
 
-      {/* ========================================================================= */}
-      {/* MODAL: CREATE PURCHASE ORDER                                              */}
-      {/* ========================================================================= */}
+      
       <Modal
         isOpen={isPOModalOpen}
         onClose={() => setIsPOModalOpen(false)}
@@ -2333,7 +2301,7 @@ export const Procurement = () => {
       >
         <form onSubmit={handleCreatePO}>
           <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {/* Assign vendor selectable pills */}
+            
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
                 Assign vendor *
@@ -2387,7 +2355,7 @@ export const Procurement = () => {
               </div>
             </div>
 
-            {/* Line items table */}
+            
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>
                 Line items
@@ -2505,7 +2473,7 @@ export const Procurement = () => {
               </div>
             </div>
 
-            {/* Expected delivery date & Payment terms */}
+            
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '14px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
@@ -2584,9 +2552,7 @@ export const Procurement = () => {
         </form>
       </Modal>
 
-      {/* ========================================================================= */}
-      {/* MODAL: CREATE INVOICE                                                     */}
-      {/* ========================================================================= */}
+      
       <Modal
         isOpen={isInvoiceModalOpen}
         onClose={() => setIsInvoiceModalOpen(false)}
@@ -2701,7 +2667,7 @@ export const Procurement = () => {
         </form>
       </Modal>
 
-      {/* Structured PDF Invoice Modal */}
+      
       <InvoicePDFModal
         isOpen={isPdfModalOpen}
         onClose={() => setIsPdfModalOpen(false)}

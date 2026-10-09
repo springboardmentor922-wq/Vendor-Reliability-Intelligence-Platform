@@ -1,6 +1,5 @@
 import React, { useRef } from 'react';
 
-// Number to Words converter for Indian Rupees
 const numberToWords = (num) => {
   if (!num || isNaN(num)) return 'Zero Rupees Only';
   const a = [
@@ -63,7 +62,6 @@ export const InvoicePDFModal = ({ isOpen, onClose, invoice }) => {
     }
   ];
 
-  // GST 18% calculation
   const totalAmount = Number(invoice.amount) || 0;
   const taxableValue = Math.round((totalAmount / 1.18) * 100) / 100;
   const cgstAmount = Math.round(((totalAmount - taxableValue) / 2) * 100) / 100;
@@ -84,7 +82,7 @@ export const InvoicePDFModal = ({ isOpen, onClose, invoice }) => {
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Action Bar (Hidden in Print) */}
+        
         <div
           className="no-print"
           style={{
@@ -151,7 +149,7 @@ export const InvoicePDFModal = ({ isOpen, onClose, invoice }) => {
           </div>
         </div>
 
-        {/* Printable Tax Invoice A4 Document */}
+        
         <div
           ref={printAreaRef}
           id="printable-tax-invoice"
@@ -164,7 +162,7 @@ export const InvoicePDFModal = ({ isOpen, onClose, invoice }) => {
             backgroundColor: '#ffffff'
           }}
         >
-          {/* Header Row */}
+          
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #0284c7', paddingBottom: '16px', marginBottom: '20px' }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
@@ -220,9 +218,9 @@ export const InvoicePDFModal = ({ isOpen, onClose, invoice }) => {
             </div>
           </div>
 
-          {/* Supplier & Buyer Section */}
+          
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px', background: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-            {/* Supplier / Vendor */}
+            
             <div>
               <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', letterSpacing: '0.5px' }}>
                 Billed By (Supplier / Vendor)
@@ -244,7 +242,7 @@ export const InvoicePDFModal = ({ isOpen, onClose, invoice }) => {
               </div>
             </div>
 
-            {/* Buyer Details */}
+            
             <div>
               <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', letterSpacing: '0.5px' }}>
                 Billed To (Buyer / Recipient)
@@ -267,7 +265,7 @@ export const InvoicePDFModal = ({ isOpen, onClose, invoice }) => {
             </div>
           </div>
 
-          {/* Line Items Table */}
+          
           <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px' }}>
             <thead>
               <tr style={{ background: '#0f172a', color: '#ffffff', textAlign: 'left', fontSize: '11px', textTransform: 'uppercase' }}>
@@ -303,9 +301,9 @@ export const InvoicePDFModal = ({ isOpen, onClose, invoice }) => {
             </tbody>
           </table>
 
-          {/* Financials & Tax Breakdown */}
+          
           <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '24px', alignItems: 'flex-start', marginBottom: '24px' }}>
-            {/* Amount in words & Bank Details */}
+            
             <div>
               <div style={{ background: '#f8fafc', padding: '12px 14px', borderRadius: '6px', border: '1px solid #e2e8f0', marginBottom: '14px' }}>
                 <div style={{ fontSize: '10.5px', fontWeight: 700, textTransform: 'uppercase', color: '#64748b' }}>
@@ -335,7 +333,7 @@ export const InvoicePDFModal = ({ isOpen, onClose, invoice }) => {
               </div>
             </div>
 
-            {/* Calculations Card */}
+            
             <div style={{ background: '#f8fafc', padding: '14px 18px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', color: '#475569', fontSize: '11.5px' }}>
                 <span>Taxable Amount (Subtotal):</span>
@@ -360,7 +358,7 @@ export const InvoicePDFModal = ({ isOpen, onClose, invoice }) => {
             </div>
           </div>
 
-          {/* Declarations & Signatures */}
+          
           <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '24px', alignItems: 'flex-end', paddingTop: '14px', borderTop: '1px solid #e2e8f0' }}>
             <div style={{ fontSize: '10px', color: '#64748b' }}>
               <p style={{ margin: '0 0 4px 0', fontWeight: 700, color: '#475569' }}>Terms & Declaration:</p>
@@ -391,7 +389,7 @@ export const InvoicePDFModal = ({ isOpen, onClose, invoice }) => {
           </div>
         </div>
 
-        {/* Print Stylesheet */}
+        
         <style>{`
           @media print {
             body * {

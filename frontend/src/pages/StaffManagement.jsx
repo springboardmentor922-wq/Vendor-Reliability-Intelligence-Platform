@@ -51,7 +51,6 @@ export const StaffManagement = () => {
     }
   };
 
-  // Filter users based on search text and role filter
   const filteredUsers = useMemo(() => {
     return users.filter((u) => {
       const matchesSearch =
@@ -72,7 +71,7 @@ export const StaffManagement = () => {
 
   return (
     <div className="staff-management-page">
-      {/* Page Header */}
+      
       <div className="page-header" style={{ marginBottom: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
           <div>
@@ -116,7 +115,7 @@ export const StaffManagement = () => {
         </div>
       </div>
 
-      {/* Metric Cards Row */}
+      
       <div
         style={{
           display: 'grid',
@@ -158,9 +157,9 @@ export const StaffManagement = () => {
         </div>
       </div>
 
-      {/* Main Staff Directory Card */}
+      
       <div className="card" style={{ margin: 0 }}>
-        {/* Card Toolbar */}
+        
         <div
           className="card-header"
           style={{
@@ -215,7 +214,7 @@ export const StaffManagement = () => {
           </div>
         </div>
 
-        {/* Feedback message banner */}
+        
         {staffMsg && (
           <div
             style={{
@@ -242,14 +241,14 @@ export const StaffManagement = () => {
           </div>
         )}
 
-        {/* Error State */}
+        
         {error && (
           <div style={{ margin: '14px 20px' }} className="alert alert-danger">
             {error}
           </div>
         )}
 
-        {/* Loading State */}
+        
         {loading ? (
           <div style={{ padding: '36px', textAlign: 'center', color: 'var(--text-secondary)' }}>
             Loading staff directory...

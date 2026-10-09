@@ -41,7 +41,6 @@ class ProcurementRequest(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
-    # Relationships
     requested_by = relationship("User", back_populates="procurement_requests", foreign_keys=[requested_by_id])
     purchase_orders = relationship("PurchaseOrder", back_populates="procurement_request")
     assigned_vendor = relationship("Vendor", foreign_keys=[assigned_vendor_id])
@@ -66,7 +65,6 @@ class PurchaseOrder(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
-    # Relationships
     procurement_request = relationship("ProcurementRequest", back_populates="purchase_orders")
     vendor = relationship("Vendor", back_populates="purchase_orders")
     created_by = relationship("User", back_populates="created_orders", foreign_keys=[created_by_id])
@@ -85,7 +83,6 @@ class PurchaseOrderItem(Base):
     quantity = Column(Float, nullable=False, default=1.0)
     unit_price = Column(Float, nullable=False, default=0.0)
 
-    # Relationships
     purchase_order = relationship("PurchaseOrder", back_populates="items")
 
 
@@ -101,5 +98,4 @@ class Invoice(Base):
     paid_date = Column(Date, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
-    # Relationships
     purchase_order = relationship("PurchaseOrder", back_populates="invoices")

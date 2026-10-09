@@ -14,7 +14,6 @@ class Message(Base):
     is_read = Column(Boolean, default=False, nullable=False)
     timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
 
-    # Relationships
     vendor = relationship("Vendor", back_populates="messages")
     sender = relationship("User", back_populates="sent_messages")
 
@@ -29,6 +28,5 @@ class InternalMessage(Base):
     is_read = Column(Boolean, default=False, nullable=False)
     timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
 
-    # Relationship
     sender = relationship("User")
 

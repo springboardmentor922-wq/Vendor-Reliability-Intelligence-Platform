@@ -58,7 +58,6 @@ def get_vendor_messages(
         joinedload(Message.sender)
     ).filter(Message.vendor_id == vendor_id).order_by(Message.timestamp.asc()).all()
 
-    # Mark incoming messages as read for current viewer
     for m in messages:
         if m.sender_id != current_user.id and not m.is_read:
             m.is_read = True
@@ -88,7 +87,6 @@ def send_direct_email(
     if not vendor:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vendor not found")
 
-    # Format formal email message payload
     ref_part = f" | Ref: {email_in.reference_type}" + (f" #{email_in.reference_id}" if email_in.reference_id else "")
     formatted_body = (
         f"[FORMAL EMAIL | Priority: {email_in.priority}{ref_part}]\n"
@@ -110,9 +108,7 @@ def send_direct_email(
     db.commit()
     db.refresh(message)
 
-    # Trigger notification for recipient team
     if current_user.role == UserRole.VENDOR:
-        # Notify Procurement Managers
         proc_managers = db.query(User).filter(User.role == UserRole.PROCUREMENT_MANAGER).all()
         for pm in proc_managers:
             notif = Notification(
@@ -123,7 +119,6 @@ def send_direct_email(
             )
             db.add(notif)
     else:
-        # Notify Vendor users
         vendor_users = db.query(User).filter(User.vendor_id == vendor.id).all()
         for vu in vendor_users:
             notif = Notification(
@@ -185,9 +180,6 @@ def send_message(
     return msg_full
 
 
-# ============================================================================
-# INTERNAL CROSS-ROLE TEAM COLLABORATION CHANNELS
-# ============================================================================
 from app.models.communication import InternalMessage
 from app.schemas.communication import InternalMessageCreate, InternalMessageResponse
 from app.database import Base, engine
@@ -251,7 +243,6 @@ def ensure_internal_tables_and_seeds(db: Session):
     Base.metadata.create_all(bind=engine)
     count = db.query(InternalMessage).count()
     if count == 0:
-        # Seed initial messages
         users_by_email = {u.email: u for u in db.query(User).all()}
         for channel_id, msg_list in DEFAULT_SEED_MESSAGES.items():
             for idx, (sender_email, text) in enumerate(msg_list):
@@ -274,7 +265,6 @@ def get_internal_channels(
 ):
     ensure_internal_tables_and_seeds(db)
 
-    # 1. Operational Channels
     channel_list = []
     for c in DEFAULT_INTERNAL_CHANNELS:
         last_msg = db.query(InternalMessage).filter(InternalMessage.channel == c["id"]).order_by(InternalMessage.timestamp.desc()).first()
@@ -290,7 +280,6 @@ def get_internal_channels(
             "unread_count": unread
         })
 
-    # 2. Direct Role Peers (Excluding current user and external vendors)
     internal_peers = db.query(User).filter(
         User.role != UserRole.VENDOR,
         User.id != current_user.id
@@ -335,7 +324,6 @@ def get_internal_channel_messages(
         joinedload(InternalMessage.sender)
     ).filter(InternalMessage.channel == channel_id).order_by(InternalMessage.timestamp.asc()).all()
 
-    # Mark as read for current viewer
     for m in messages:
         if m.sender_id != current_user.id and not m.is_read:
             m.is_read = True
@@ -365,6 +353,5 @@ def post_internal_message(
 
     msg_full = db.query(InternalMessage).options(joinedload(InternalMessage.sender)).filter(InternalMessage.id == message.id).first()
     return msg_full
-
 
 

@@ -27,7 +27,6 @@ export const Register = () => {
   const [role, setRole] = useState('Vendor');
   const [phone, setPhone] = useState('');
 
-  // Vendor-Specific Company Information
   const [companyName, setCompanyName] = useState('');
   const [category, setCategory] = useState('raw_material');
   const [contactPerson, setContactPerson] = useState('');
@@ -91,7 +90,7 @@ export const Register = () => {
         {error && <div className="alert alert-danger">{error}</div>}
 
         <form onSubmit={handleSubmit}>
-          {/* User Account Info */}
+          
           <div className="form-row">
             <div className="form-group" style={{ flex: 1 }}>
               <label className="form-label">Full Name *</label>
@@ -144,7 +143,7 @@ export const Register = () => {
             </div>
           </div>
 
-          {/* VENDOR COMPANY INFORMATION SECTION */}
+          
           {role === 'Vendor' && (
             <div style={{
               background: 'var(--bg-main)',

@@ -14,13 +14,11 @@ export const Contracts = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Modals
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
   const [isCertModalOpen, setIsCertModalOpen] = useState(false);
   const [selectedInvoiceForPDF, setSelectedInvoiceForPDF] = useState(null);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
 
-  // Forms
   const [contractForm, setContractForm] = useState({
     vendor_id: '',
     title: '',
@@ -183,7 +181,7 @@ export const Contracts = () => {
         </button>
       </div>
 
-      {/* --- TAB 1: CONTRACTS --- */}
+      
       {activeTab === 'contracts' && (
         <div className="card">
           <div className="card-body" style={{ padding: 0 }}>
@@ -301,7 +299,7 @@ export const Contracts = () => {
         </div>
       )}
 
-      {/* --- TAB 2: CERTIFICATIONS --- */}
+      
       {activeTab === 'certifications' && (
         <div className="card">
           <div className="card-body" style={{ padding: 0 }}>
@@ -361,7 +359,7 @@ export const Contracts = () => {
         </div>
       )}
 
-      {/* Modal: Register Contract */}
+      
       <Modal
         isOpen={isContractModalOpen}
         onClose={() => setIsContractModalOpen(false)}
@@ -443,7 +441,7 @@ export const Contracts = () => {
         </form>
       </Modal>
 
-      {/* Modal: Add Certification */}
+      
       <Modal
         isOpen={isCertModalOpen}
         onClose={() => setIsCertModalOpen(false)}

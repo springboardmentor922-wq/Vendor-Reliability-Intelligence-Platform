@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 
-// Tooltip helper component
 const FloatingTooltip = ({ visible, x, y, content }) => {
   if (!visible || !content) return null;
   return (
@@ -29,7 +28,6 @@ const FloatingTooltip = ({ visible, x, y, content }) => {
   );
 };
 
-// 1. Dual Axis Bar + Line Chart (Procurement Overview, Cashflow, Order History)
 export const DualAxisChart = ({
   data = [],
   barKey,
@@ -53,7 +51,6 @@ export const DualAxisChart = ({
   const chartH = height - padding.top - padding.bottom;
   const stepX = chartW / (data.length || 1);
 
-  // Dynamic max calculation
   const computedMaxBar = maxBar || Math.max(10, Math.ceil(Math.max(...data.map(d => Number(d[barKey]) || 0), 10) * 1.15));
   const computedMaxLine = maxLine || Math.max(10, Math.ceil(Math.max(...data.map(d => Number(d[lineKey]) || 0), 10) * 1.15));
 
@@ -201,7 +198,6 @@ export const DualAxisChart = ({
   );
 };
 
-// 2. Interactive Donut Chart with Hover Slices & Dynamic Center Text
 export const DonutChart = ({ data = [], centerValue, centerLabel, size = 190, strokeWidth = 26 }) => {
   const [activeIdx, setActiveIdx] = useState(null);
 
@@ -330,7 +326,6 @@ export const DonutChart = ({ data = [], centerValue, centerLabel, size = 190, st
   );
 };
 
-// 3. Spider / Radar Chart with Interactive Vertices
 export const RadarChart = ({ data = [], size = 230 }) => {
   const [hoveredIdx, setHoveredIdx] = useState(null);
 
@@ -397,7 +392,7 @@ export const RadarChart = ({ data = [], size = 230 }) => {
         <path d={topVendorPath} fill="rgba(139, 92, 246, 0.25)" stroke="#8b5cf6" strokeWidth="2.2" />
         <path d={averagePath} fill="rgba(2, 132, 199, 0.18)" stroke="#0284c7" strokeWidth="1.8" strokeDasharray="3 3" />
 
-        {/* Interactive Vertex Dots */}
+        
         {data.map((d, i) => {
           const topCoord = getCoordinates(i, d.top_vendor || 80);
           const avgCoord = getCoordinates(i, d.average || 60);
@@ -431,7 +426,6 @@ export const RadarChart = ({ data = [], size = 230 }) => {
   );
 };
 
-// 4. Delivery Status Half-Gauge Chart
 export const HalfGaugeChart = ({ percentage = 78, items = [], title = "On-Time Delivery" }) => {
   const [hovered, setHovered] = useState(false);
   const size = 180;
@@ -516,7 +510,6 @@ export const HalfGaugeChart = ({ percentage = 78, items = [], title = "On-Time D
   );
 };
 
-// 5. Grouped Bar Chart with Interactive Hover & Tooltips
 export const GroupedBarChart = ({
   data = [],
   categories = ['delivery', 'quality', 'communication', 'compliance'],
@@ -613,7 +606,6 @@ export const GroupedBarChart = ({
   );
 };
 
-// 6. Line Trend Chart with Gradient Fill & Active Point Markers
 export const LineTrendChart = ({ data = [], keyName = 'score', height = 190, color = '#10b981', valueSuffix = '%' }) => {
   const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, content: null });
 
@@ -706,7 +698,6 @@ export const LineTrendChart = ({ data = [], keyName = 'score', height = 190, col
   );
 };
 
-// 7. Horizontal Risk Tier Bar Chart with Tooltip & Hover Animation
 export const HorizontalBarChart = ({
   data = {},
   colors = { 'Low Risk': '#10b981', 'Medium Risk': '#f59e0b', 'High Risk': '#ea580c', 'Critical Risk': '#f43f5e' }

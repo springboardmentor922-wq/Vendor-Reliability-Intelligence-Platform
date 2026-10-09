@@ -32,7 +32,6 @@ export const Navbar = () => {
   useEffect(() => {
     if (user) {
       loadNotifications();
-      // Polling or periodic refresh
       const interval = setInterval(loadNotifications, 30000);
       return () => clearInterval(interval);
     }
@@ -95,8 +94,6 @@ export const Navbar = () => {
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
-  // When accessed directly as guest (no login), render a completely clean public header:
-  // Zero sign-in buttons, zero demo user dropdowns, zero guest mode tags!
   if (!user) {
     return (
       <header className="top-navbar" style={{ justifyContent: 'space-between', padding: '12px 24px' }}>
@@ -263,7 +260,7 @@ export const Navbar = () => {
       )}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-        {/* Notification Bell Trigger */}
+        
         <div style={{ position: 'relative' }}>
           <button
             type="button"
@@ -292,7 +289,7 @@ export const Navbar = () => {
             )}
           </button>
 
-          {/* Notification Dropdown Tray */}
+          
           {isNotifOpen && (
             <div
               style={{
@@ -386,7 +383,7 @@ export const Navbar = () => {
           )}
         </div>
 
-        {/* User Profile Info */}
+        
         <div className="user-profile-widget">
           <div className="user-avatar" style={{ backgroundColor: user ? 'var(--primary)' : '#6b7280' }}>
             {user?.full_name ? user.full_name.charAt(0).toUpperCase() : 'G'}

@@ -24,11 +24,9 @@ def register(user_in: UserRegister, db: Session = Depends(get_db)):
 
     assigned_vendor_id = user_in.vendor_id
 
-    # If user is registering as a Vendor and didn't specify an existing vendor_id, create a new Vendor company
     if user_in.role == UserRole.VENDOR and not assigned_vendor_id:
         comp_name = user_in.company_name or f"{user_in.full_name}'s Enterprise"
         
-        # Check if vendor company already exists
         existing_vendor = db.query(Vendor).filter(Vendor.company_name.ilike(comp_name)).first()
         if existing_vendor:
             assigned_vendor_id = existing_vendor.id
@@ -50,7 +48,6 @@ def register(user_in: UserRegister, db: Session = Depends(get_db)):
             db.flush()
             assigned_vendor_id = new_vendor.id
 
-            # Notify all administrators to approve new vendor
             admins = db.query(User).filter(User.role == UserRole.ADMINISTRATOR).all()
             for admin in admins:
                 db.add(Notification(
@@ -123,7 +120,6 @@ def update_user_role(
     if not target_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-    # Rule: Cannot reassign Vendor accounts or assign Vendor role
     if target_user.role == UserRole.VENDOR:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

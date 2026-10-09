@@ -22,7 +22,6 @@ from app.core.audit import log_audit_event
 
 router = APIRouter(prefix="/analytics", tags=["Analytics & Reliability Intelligence"])
 
-# Load Machine Learning Model trained on real DataCo Supply Chain dataset (180,519 records)
 _MODEL_PATH = os.path.join(os.path.dirname(__file__), "..", "delivery_risk_model.joblib")
 _ml_data = None
 if os.path.exists(_MODEL_PATH):
@@ -43,14 +42,12 @@ def compute_vendor_intelligence(vendor: Vendor, db: Session) -> Dict[str, Any]:
     Computes real-time multi-factor reliability scoring, delivery metrics,
     risk level, trend, and procurement recommendations for a supplier.
     """
-    # 1. Purchase Orders
     orders = db.query(PurchaseOrder).filter(PurchaseOrder.vendor_id == vendor.id).all()
     total_orders = len(orders)
     delivered_orders = [o for o in orders if o.status in [POStatus.DELIVERED, POStatus.COMPLETED]]
     cancelled_orders = [o for o in orders if o.status == POStatus.CANCELLED]
     total_spend = sum(o.total_amount for o in orders if o.status != POStatus.CANCELLED)
 
-    # 2. Performance Records
     perf_records = db.query(PerformanceRecord).filter(PerformanceRecord.vendor_id == vendor.id).all()
 
     if perf_records:
@@ -61,7 +58,6 @@ def compute_vendor_intelligence(vendor: Vendor, db: Session) -> Dict[str, Any]:
         avg_response = round(sum(p.response_time_hours for p in perf_records) / len(perf_records), 1)
         avg_resolution = round(sum(p.issue_resolution_hours for p in perf_records) / len(perf_records), 1)
     else:
-        # Fallback based on completed orders if records not explicitly added
         on_time_count = len(delivered_orders)
         delayed_count = 0
         on_time_rate = 92.0 if total_orders > 0 else 85.0
@@ -69,18 +65,15 @@ def compute_vendor_intelligence(vendor: Vendor, db: Session) -> Dict[str, Any]:
         avg_response = 3.5
         avg_resolution = 14.0
 
-    # 3. Order Completion Rate
     effective_orders = total_orders - len(cancelled_orders)
     completion_rate = round((len(delivered_orders) / effective_orders * 100), 1) if effective_orders > 0 else 100.0
 
-    # 4. Contracts & Compliance
     contracts = db.query(Contract).filter(Contract.vendor_id == vendor.id).all()
     active_contracts = sum(1 for c in contracts if c.status in [ContractStatus.ACTIVE, ContractStatus.EXPIRING_SOON])
     expiring_soon_contracts = sum(1 for c in contracts if c.status == ContractStatus.EXPIRING_SOON)
     certs = db.query(Certification).filter(Certification.vendor_id == vendor.id).all()
     active_certs = len(certs)
 
-    # Initial reliability score for new vendor with 0 delivered orders and 0 performance history is strictly 0.0
     if (total_orders == 0 or len(delivered_orders) == 0) and not perf_records:
         return {
             "vendor_id": vendor.id,
@@ -120,12 +113,9 @@ def compute_vendor_intelligence(vendor: Vendor, db: Session) -> Dict[str, Any]:
             }
         }
 
-    # Calculate weighted reliability score (0 - 100)
-    # Factors: Delivery (25%), Quality (25%), Communication (10%), Compliance (15%), Fulfillment (10%), Issue Resolution (15%)
     delivery_score = min(100.0, max(0.0, float(on_time_rate)))
     quality_score = min(100.0, max(0.0, float((avg_quality / 5.0) * 100.0)))
     
-    # Communication Efficiency: response time in hours
     if avg_response <= 2.0:
         comm_score = 100.0
     elif avg_response <= 4.0:
@@ -137,7 +127,6 @@ def compute_vendor_intelligence(vendor: Vendor, db: Session) -> Dict[str, Any]:
     else:
         comm_score = 40.0
 
-    # Contract Compliance (15%)
     compliance_score = 90.0
     if active_certs >= 2:
         compliance_score += 10.0
@@ -147,10 +136,8 @@ def compute_vendor_intelligence(vendor: Vendor, db: Session) -> Dict[str, Any]:
         compliance_score -= 15.0
     compliance_score = max(20.0, min(100.0, compliance_score))
 
-    # Purchase History: order completion rate (10%)
     completion_score = min(100.0, max(0.0, float(completion_rate)))
 
-    # Issue Resolution: resolution time in hours (15%)
     if avg_resolution <= 8.0:
         issue_score = 100.0
     elif avg_resolution <= 16.0:
@@ -172,7 +159,6 @@ def compute_vendor_intelligence(vendor: Vendor, db: Session) -> Dict[str, Any]:
     )
     reliability_score = round(max(0.0, min(100.0, raw_score)), 1)
 
-    # Risk tier classification
     if reliability_score >= 80.0:
         risk_level = "Low"
         supplier_tier = "Tier 1: Preferred Supplier"
@@ -186,7 +172,6 @@ def compute_vendor_intelligence(vendor: Vendor, db: Session) -> Dict[str, Any]:
         supplier_tier = "Tier 3: Conditional / Probation"
         trend = "Deteriorating SLA"
 
-    # Status and compliance overrides
     is_suspended = hasattr(vendor, "status") and (vendor.status.value if hasattr(vendor.status, "value") else str(vendor.status)) == "suspended"
     if is_suspended:
         risk_level = "High"
@@ -196,7 +181,6 @@ def compute_vendor_intelligence(vendor: Vendor, db: Session) -> Dict[str, Any]:
     elif expiring_soon_contracts > 0 and risk_level == "Low":
         risk_level = "Medium"
 
-    # Actionable procurement recommendations
     recommendations = []
     if risk_level == "Low":
         recommendations.append("Preferred vendor. Safe to assign.")
@@ -214,7 +198,6 @@ def compute_vendor_intelligence(vendor: Vendor, db: Session) -> Dict[str, Any]:
         if delivery_score < 70:
             recommendations.append("Delivery delay rates exceed threshold — recommend dual-sourcing contingency.")
 
-    # 8. Monthly Delivery Performance Trend (Last 6 Months)
     now = datetime.utcnow()
     monthly_trend = []
     months_labels = ["Apr", "May", "Jun", "Jul", "Aug", "Sep"]
@@ -283,7 +266,6 @@ def get_global_analytics(
     monthly trends, and risk tier distributions, supporting dynamic filtering
     by category, risk tier, and time window.
     """
-    # If user is a Vendor, scope to only their company
     if current_user.role == UserRole.VENDOR:
         if not current_user.vendor_id:
             raise HTTPException(status_code=404, detail="No vendor assigned to current user")
@@ -296,7 +278,6 @@ def get_global_analytics(
 
     all_metrics = [compute_vendor_intelligence(v, db) for v in vendors]
 
-    # Apply Category & Risk Level filtering to metrics
     filtered_metrics = all_metrics
     if category and category.strip():
         c_norm = category.strip().lower().replace("_", " ").replace("-", " ")
@@ -307,7 +288,6 @@ def get_global_analytics(
         ]
 
     if risk_level and risk_level.strip():
-        # Handle "low", "medium-low", "medium", "high"
         r_norm = risk_level.strip().lower().replace(" ", "").replace("-", "")
         filtered_metrics = [
             m for m in filtered_metrics
@@ -321,7 +301,6 @@ def get_global_analytics(
     high_risk_count = sum(1 for m in filtered_metrics if m["risk_level"] in ["High", "Medium"])
     total_spend = sum(m["total_spend"] for m in filtered_metrics)
 
-    # Active & delayed orders for the filtered set
     filtered_vendor_ids = [m["vendor_id"] for m in filtered_metrics]
     all_pos = db.query(PurchaseOrder).all()
     if filtered_metrics:
@@ -330,7 +309,6 @@ def get_global_analytics(
         active_pos_count = 0
     delayed_pos_count = sum(m["delayed_orders"] for m in filtered_metrics)
 
-    # Category breakdown
     categories = {}
     metrics_for_breakdown = filtered_metrics if (category or risk_level) else all_metrics
     for m in metrics_for_breakdown:
@@ -351,7 +329,6 @@ def get_global_analytics(
             "avg_reliability": avg_score
         })
 
-    # Risk Tier Distribution across the scope
     risk_tier_dist = {
         "Low Risk (Tier 1)": sum(1 for m in filtered_metrics if m["risk_level"] == "Low"),
         "Medium-Low (Tier 2)": sum(1 for m in filtered_metrics if m["risk_level"] == "Medium-Low"),
@@ -359,13 +336,11 @@ def get_global_analytics(
         "High Risk (Tier 4)": sum(1 for m in filtered_metrics if m["risk_level"] == "High")
     }
 
-    # Monthly Delivery Trend scoped to time_window and filtered vendors
     if time_window == "30d":
         month_names = ["Aug", "Sep"]
     elif time_window == "90d":
         month_names = ["Jul", "Aug", "Sep"]
     else:
-        # 1y or all
         month_names = ["Apr", "May", "Jun", "Jul", "Aug", "Sep"]
 
     monthly_trend_agg = []
@@ -394,7 +369,6 @@ def get_global_analytics(
             "orders": cnt
         })
 
-    # Top Ranked Suppliers
     sorted_metrics = sorted(filtered_metrics, key=lambda x: x["reliability_score"], reverse=True)
     top_suppliers = [
         {
@@ -466,17 +440,15 @@ def predict_po_delay_risk(
     rel_score = metrics["reliability_score"]
     ontime_rate = metrics["on_time_delivery_rate"]
 
-    # Base Probability from vendor empirical reliability history
     vendor_delay_factor = max(0.05, 1.0 - (rel_score / 100.0))
     base_prob = vendor_delay_factor
 
     risk_factors = []
 
-    # Real Machine Learning Inference on DataCo trained model (180k rows)
     mode_code = _SHIPPING_MODES_MAP.get(request.shipping_mode, 0)
     if _ml_data and "model" in _ml_data:
         try:
-            est_profit = request.total_amount * 0.18  # Average commercial order margin
+            est_profit = request.total_amount * 0.18
             input_vector = np.array([[
                 float(request.scheduled_days),
                 float(request.total_amount),
@@ -485,13 +457,11 @@ def predict_po_delay_risk(
                 float(mode_code)
             ]])
             ml_prob_late = float(_ml_data["model"].predict_proba(input_vector)[0][1])
-            # Hybrid ensemble: 60% ML gradient boosting + 40% vendor empirical score
             base_prob = (0.60 * ml_prob_late) + (0.40 * vendor_delay_factor)
             risk_factors.append(f"DataCo ML Inference Engine (Trained on 180k rows): {round(ml_prob_late*100, 1)}% baseline delay probability.")
         except Exception as err:
             print(f"ML inference error: {err}")
     
-    # Factor 1: Scheduled turnaround time
     if request.scheduled_days <= 3:
         base_prob += 0.22
         risk_factors.append(f"Compressed delivery timeline ({request.scheduled_days} days scheduled).")
@@ -499,22 +469,18 @@ def predict_po_delay_risk(
         base_prob += 0.08
         risk_factors.append(f"Short delivery window ({request.scheduled_days} days).")
 
-    # Factor 2: High order volume / line item quantity
     if request.item_count >= 5 or request.total_amount > 25000:
         base_prob += 0.12
         risk_factors.append(f"High procurement value (₹{request.total_amount:,.2f}) with multiple line items.")
 
-    # Factor 3: Historical supplier delay profile
     if ontime_rate < 85.0:
         base_prob += 0.15
         risk_factors.append(f"Supplier historical delay rate is {round(100.0 - ontime_rate, 1)}%.")
 
-    # Factor 4: Shipping mode constraint
     if request.shipping_mode == "Same Day":
         base_prob += 0.16
         risk_factors.append("Expedited same-day freight creates logistics volatility.")
 
-    # Normalize probability
     risk_prob = round(max(0.05, min(0.95, base_prob)), 2)
     late_delivery_risk = risk_prob >= 0.45
     predicted_delay = round(risk_prob * 4.2, 1) if late_delivery_risk else 0.0
@@ -727,7 +693,7 @@ def export_reports(
 
         output = io.StringIO()
         if is_excel:
-            output.write("\ufeff")  # UTF-8 BOM for Microsoft Excel
+            output.write("\ufeff")
         writer = csv.writer(output)
         writer.writerow([
             "Vendor ID", "Company Name", "Category", "Status", "Reliability Score (0-100)",

@@ -40,7 +40,6 @@ def scan_and_trigger_alerts(
     in_30_days = (today_dt + timedelta(days=30)).strftime("%Y-%m-%d")
     alerts_created = 0
 
-    # 1. Check for Delayed Purchase Orders
     delayed_pos = db.query(PurchaseOrder).filter(
         PurchaseOrder.status.in_([POStatus.PENDING, POStatus.APPROVED, POStatus.ORDERED]),
         PurchaseOrder.expected_delivery_date < today_str
@@ -60,7 +59,6 @@ def scan_and_trigger_alerts(
             db.add(notif)
             alerts_created += 1
 
-    # 2. Check for Expiring Contracts (< 30 days)
     expiring_contracts = db.query(Contract).filter(
         Contract.end_date <= in_30_days,
         Contract.end_date >= today_str
@@ -80,7 +78,6 @@ def scan_and_trigger_alerts(
             db.add(notif)
             alerts_created += 1
 
-    # 3. Check for Pending Vendor Registrations
     pending_vendors = db.query(Vendor).filter(Vendor.status == VendorStatus.PENDING).all()
     if pending_vendors:
         msg = f"Vendor Approval Required: {len(pending_vendors)} new supplier registration(s) awaiting procurement verification."
@@ -95,7 +92,6 @@ def scan_and_trigger_alerts(
             db.add(notif)
             alerts_created += 1
 
-    # 4. Check for Overdue Invoices
     overdue_invoices = db.query(Invoice).filter(
         Invoice.status == InvoiceStatus.PENDING,
         Invoice.due_date < today_str
@@ -114,7 +110,6 @@ def scan_and_trigger_alerts(
             db.add(notif)
             alerts_created += 1
 
-    # 5. Check for Expiring or Missing Compliance Certifications
     certs = db.query(Certification).all()
     for c in certs:
         if c.expiry_date <= (today_dt + timedelta(days=30)).date():
@@ -134,7 +129,6 @@ def scan_and_trigger_alerts(
 
     db.commit()
 
-    # Trigger automatic SMS log for urgent delays or expirations
     if delayed_pos or expiring_contracts:
         urgency_msg = f"[VendorIQ SMS Alert] Urgent: {len(delayed_pos)} PO delivery delay(s) and {len(expiring_contracts)} contract renewal(s) detected. Please check dashboard."
         _SMS_GATEWAY_LOGS.append({
@@ -177,7 +171,6 @@ def mark_all_notifications_read(
     db.commit()
     return {"status": "success", "message": "All notifications marked as read"}
 
-# --- SMS Notification Gateway Endpoints ---
 _SMS_GATEWAY_LOGS = [
     {
         "id": 1,

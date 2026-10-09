@@ -44,7 +44,6 @@ def get_company_treasury(
     """
     return get_or_create_treasury(db)
 
-# --- Procurement Requests Endpoints ---
 
 @router.get("/public-open-requests")
 def get_public_open_requests(
@@ -110,7 +109,6 @@ def acquire_procurement_request(
     req.vendor_accepted_at = datetime.utcnow()
     db.commit()
 
-    # Notify Finance Officers
     f_users = db.query(User).filter(User.role == UserRole.FINANCE_OFFICER).all()
     for fu in f_users:
         db.add(Notification(
@@ -139,7 +137,6 @@ def get_procurement_requests(
         joinedload(ProcurementRequest.accepted_vendor)
     )
 
-    # Role isolation for vendors: only see requests assigned to them, accepted by them, or open in their category
     if current_user.role == UserRole.VENDOR:
         if not current_user.vendor_id:
             return []
@@ -196,7 +193,6 @@ def create_procurement_request(
     db.commit()
     db.refresh(req)
 
-    # STEP 5: Single Vendor Notification
     if req.assigned_vendor_id and assigned_v:
         vendor_users = db.query(User).filter(User.vendor_id == assigned_v.id).all()
         for vu in vendor_users:
@@ -208,7 +204,6 @@ def create_procurement_request(
             ))
         db.commit()
 
-    # STEP 6: Multiple Vendor Request in matching category
     elif req.is_multi_vendor and req.category:
         matched_vendors = db.query(Vendor).filter(
             Vendor.category == req.category,
@@ -292,11 +287,9 @@ def vendor_accept_procurement_request(
     if req.status not in [RequestStatus.ASSIGNED, RequestStatus.PENDING, RequestStatus.SUBMITTED]:
         raise HTTPException(status_code=400, detail=f"Request cannot be accepted in current status: {req.status.value}")
 
-    # If single vendor assignment, must match
     if req.assigned_vendor_id and req.assigned_vendor_id != vendor.id:
         raise HTTPException(status_code=403, detail="This request is specifically assigned to another supplier.")
 
-    # If multi-vendor, category must match
     v_cat = vendor.category.value if hasattr(vendor.category, "value") else str(vendor.category)
     if req.category and req.category != v_cat and req.category != "all":
         raise HTTPException(status_code=400, detail=f"Category mismatch: Requisition requires '{req.category}', but vendor is in '{v_cat}'.")
@@ -308,7 +301,6 @@ def vendor_accept_procurement_request(
     req.updated_at = datetime.utcnow()
     db.commit()
 
-    # STEP 7 -> STEP 8: Notify all Finance Officers to review and approve payment
     finance_users = db.query(User).filter(User.role == UserRole.FINANCE_OFFICER).all()
     for fu in finance_users:
         db.add(Notification(
@@ -318,7 +310,6 @@ def vendor_accept_procurement_request(
             is_read=False
         ))
 
-    # Notify Procurement Manager
     if req.requested_by_id:
         db.add(Notification(
             user_id=req.requested_by_id,
@@ -368,24 +359,20 @@ def finance_approve_procurement_request(
     amount = float(req.budget_amount or 0.0)
     treasury = get_or_create_treasury(db)
 
-    # Balance check: Requested Amount > Available Balance is strictly forbidden
     if amount > treasury.available_balance:
         raise HTTPException(
             status_code=400,
             detail=f"Requested Amount ₹{amount:,.2f} exceeds Company Available Balance ₹{treasury.available_balance:,.2f}. Cannot approve payment."
         )
 
-    # Deduct balance
     treasury.available_balance -= amount
     treasury.updated_at = datetime.utcnow()
 
-    # Update requisition status
     req.status = RequestStatus.FINANCE_APPROVED
     req.finance_status = "approved"
     req.finance_approved_by_id = current_user.id
     req.updated_at = datetime.utcnow()
 
-    # Generate sequential unique PO
     unique_suffix = str(uuid.uuid4().hex[:6]).upper()
     po_number = f"PO-{datetime.utcnow().year}-{unique_suffix}"
     exp_date = req.needed_by or (datetime.utcnow().date() + timedelta(days=14))
@@ -405,7 +392,6 @@ def finance_approve_procurement_request(
     db.commit()
     db.refresh(po)
 
-    # Add PO Line Item
     po_item = PurchaseOrderItem(
         purchase_order_id=po.id,
         item_name=req.title,
@@ -414,7 +400,6 @@ def finance_approve_procurement_request(
     )
     db.add(po_item)
 
-    # Generate Active Contract
     contract_number = f"CNT-{datetime.utcnow().year}-{unique_suffix}"
     contract = Contract(
         contract_number=contract_number,
@@ -428,7 +413,6 @@ def finance_approve_procurement_request(
     db.commit()
     db.refresh(contract)
 
-    # STEP 9: Notify Vendor
     vendor_users = db.query(User).filter(User.vendor_id == vendor.id).all()
     for vu in vendor_users:
         db.add(Notification(
@@ -438,7 +422,6 @@ def finance_approve_procurement_request(
             is_read=False
         ))
 
-    # Notify Procurement Manager
     if req.requested_by_id:
         db.add(Notification(
             user_id=req.requested_by_id,
@@ -447,7 +430,6 @@ def finance_approve_procurement_request(
             is_read=False
         ))
 
-    # Notify Supply Chain Controller
     sc_users = db.query(User).filter(User.role == UserRole.SUPPLY_CHAIN_MANAGER).all()
     for sc in sc_users:
         db.add(Notification(
@@ -502,7 +484,6 @@ def finance_reject_procurement_request(
     req.updated_at = datetime.utcnow()
     db.commit()
 
-    # Notify Vendor and Procurement
     if req.accepted_vendor_id:
         v_users = db.query(User).filter(User.vendor_id == req.accepted_vendor_id).all()
         for vu in v_users:
@@ -522,7 +503,6 @@ def finance_reject_procurement_request(
     db.commit()
     return {"message": "Requisition payment rejected by Finance.", "status": req.status.value}
 
-# --- Purchase Orders Endpoints ---
 
 @router.get("/orders", response_model=List[PurchaseOrderResponse])
 def get_purchase_orders(
@@ -538,7 +518,6 @@ def get_purchase_orders(
         joinedload(PurchaseOrder.items)
     )
 
-    # Enforce role isolation for vendors
     if current_user.role == UserRole.VENDOR:
         if not current_user.vendor_id:
             return []
@@ -566,11 +545,9 @@ def create_purchase_order(
     if not po_in.items or len(po_in.items) == 0:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="PO must contain at least one line item")
 
-    # Generate sequential or unique PO number
     unique_suffix = str(uuid.uuid4().hex[:6]).upper()
     po_number = f"PO-{datetime.utcnow().year}-{unique_suffix}"
 
-    # Auto-calculate total amount
     total_amount = sum(item.quantity * item.unit_price for item in po_in.items)
 
     po = PurchaseOrder(
@@ -597,14 +574,12 @@ def create_purchase_order(
         db.add(item)
     db.commit()
 
-    # Link back to request if specified
     if po_in.procurement_request_id:
         req = db.query(ProcurementRequest).filter(ProcurementRequest.id == po_in.procurement_request_id).first()
         if req:
             req.status = RequestStatus.IN_PROGRESS
             db.commit()
 
-    # Notify Finance Officers that a new PO requires authorization
     finance_users = db.query(User).filter(User.role == UserRole.FINANCE_OFFICER).all()
     for fu in finance_users:
         db.add(Notification(
@@ -615,7 +590,6 @@ def create_purchase_order(
         ))
     db.commit()
 
-    # Fetch with full relations
     po_full = db.query(PurchaseOrder).options(
         joinedload(PurchaseOrder.vendor),
         joinedload(PurchaseOrder.created_by),
@@ -680,23 +654,19 @@ def finance_approve_purchase_order(
     amount = float(po.total_amount or 0.0)
     treasury = get_or_create_treasury(db)
 
-    # Balance check: PO Total Amount > Available Balance is strictly forbidden
     if amount > treasury.available_balance:
         raise HTTPException(
             status_code=400,
             detail=f"Purchase Order amount ₹{amount:,.2f} exceeds Company Available Balance ₹{treasury.available_balance:,.2f}. Cannot approve payment."
         )
 
-    # Deduct balance
     treasury.available_balance -= amount
     treasury.updated_at = datetime.utcnow()
 
-    # Update PO status
     po.status = POStatus.APPROVED
     po.approved_by_id = current_user.id
     po.updated_at = datetime.utcnow()
 
-    # Generate or link active contract if not present
     existing_contract = db.query(Contract).filter(
         Contract.vendor_id == po.vendor_id,
         Contract.status == ContractStatus.ACTIVE
@@ -716,7 +686,6 @@ def finance_approve_purchase_order(
         db.add(contract)
         db.commit()
 
-    # Notify Vendor
     if po.vendor_id:
         vendor_users = db.query(User).filter(User.vendor_id == po.vendor_id).all()
         for vu in vendor_users:
@@ -727,7 +696,6 @@ def finance_approve_purchase_order(
                 is_read=False
             ))
 
-    # Notify Creator / Procurement
     if po.created_by_id:
         db.add(Notification(
             user_id=po.created_by_id,
@@ -736,7 +704,6 @@ def finance_approve_purchase_order(
             is_read=False
         ))
 
-    # Notify Supply Chain Controller
     sc_users = db.query(User).filter(User.role == UserRole.SUPPLY_CHAIN_MANAGER).all()
     for sc in sc_users:
         db.add(Notification(
@@ -781,7 +748,6 @@ def finance_reject_purchase_order(
     po.status = POStatus.CANCELLED
     po.updated_at = datetime.utcnow()
 
-    # Notify Vendor
     if po.vendor_id:
         vendor_users = db.query(User).filter(User.vendor_id == po.vendor_id).all()
         for vu in vendor_users:
@@ -826,9 +792,7 @@ def update_purchase_order_status(
     if not po:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Purchase Order not found")
 
-    # Role check for status updates
     if current_user.role == UserRole.VENDOR:
-        # Vendors can transition pending/ordered -> in_transit (indicating shipment dispatch)
         if po.vendor_id != current_user.vendor_id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
         if status_in.status not in [POStatus.IN_TRANSIT, POStatus.DELIVERED]:
@@ -836,7 +800,6 @@ def update_purchase_order_status(
     elif current_user.role not in [UserRole.ADMINISTRATOR, UserRole.PROCUREMENT_MANAGER, UserRole.SUPPLY_CHAIN_MANAGER, UserRole.FINANCE_OFFICER]:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Role not authorized to update PO delivery status")
 
-    # If approving a pending PO, validate treasury balance and deduct
     if status_in.status == POStatus.APPROVED and po.status == POStatus.PENDING:
         amount = float(po.total_amount or 0.0)
         treasury = get_or_create_treasury(db)
@@ -849,7 +812,6 @@ def update_purchase_order_status(
         treasury.updated_at = datetime.utcnow()
         po.approved_by_id = current_user.id
         
-        # Notify vendor of approval
         if po.vendor_id:
             vendor_users = db.query(User).filter(User.vendor_id == po.vendor_id).all()
             for vu in vendor_users:
@@ -864,7 +826,6 @@ def update_purchase_order_status(
     if status_in.status == POStatus.APPROVED:
         po.approved_by_id = current_user.id
     elif status_in.status == POStatus.IN_TRANSIT:
-        # STEP 10: In transit notification
         if po.vendor_id:
             v_users = db.query(User).filter(User.vendor_id == po.vendor_id).all()
             for vu in v_users:
@@ -883,18 +844,15 @@ def update_purchase_order_status(
             ))
         db.commit()
     elif status_in.status in [POStatus.DELIVERED, POStatus.COMPLETED]:
-        # STEP 11: Delivery completion
         po.actual_delivery_date = status_in.actual_delivery_date or date.today()
         is_on_time = po.actual_delivery_date <= po.expected_delivery_date
 
-        # Update linked requisition if any
         if po.procurement_request_id:
             linked_req = db.query(ProcurementRequest).filter(ProcurementRequest.id == po.procurement_request_id).first()
             if linked_req:
                 linked_req.status = RequestStatus.COMPLETED
                 db.commit()
         
-        # STEP 12: Automatic Invoice Generation upon delivery completion
         existing_invoice = db.query(Invoice).filter(Invoice.purchase_order_id == po.id).first()
         inv_number = None
         if not existing_invoice:
@@ -913,7 +871,6 @@ def update_purchase_order_status(
         else:
             inv_number = existing_invoice.invoice_number
 
-        # STEP 13: Automatic Performance Record & Reliability Index Recalculation
         existing_perf = db.query(PerformanceRecord).filter(PerformanceRecord.purchase_order_id == po.id).first()
         if not existing_perf:
             perf = PerformanceRecord(
@@ -928,7 +885,6 @@ def update_purchase_order_status(
             db.add(perf)
             db.commit()
 
-        # Recalculate & Persist Reliability Score
         if po.vendor:
             intel = compute_vendor_intelligence(po.vendor, db)
             new_score = intel.get("reliability_score", 0.0)
@@ -941,7 +897,6 @@ def update_purchase_order_status(
             db.add(rel)
             db.commit()
 
-            # Notify Vendor with updated reliability index
             v_users = db.query(User).filter(User.vendor_id == po.vendor_id).all()
             for vu in v_users:
                 db.add(Notification(
@@ -951,7 +906,6 @@ def update_purchase_order_status(
                     is_read=False
                 ))
 
-        # Notification to Procurement Manager
         notif_msg = f"PO {po.po_number} delivered by {po.vendor.company_name if po.vendor else 'Supplier'} (On-Time: {'Yes' if is_on_time else 'Delayed'}). Invoice {inv_number} & performance record finalized."
         if po.created_by_id:
             db.add(Notification(
@@ -972,7 +926,6 @@ def update_purchase_order_status(
     )
     return po
 
-# --- Invoices Endpoints ---
 
 @router.get("/invoices", response_model=List[InvoiceResponse])
 def get_invoices(

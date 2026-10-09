@@ -13,5 +13,4 @@ class AuditLog(Base):
     details = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
-    # Relationships
     user = relationship("User", back_populates="audit_logs")

@@ -25,10 +25,8 @@ const PAYMENT_TERMS_OPTIONS = ['Net 15', 'Net 30', 'Net 45', 'Net 60'];
 export const VendorPortal = () => {
   const { user } = useAuth();
 
-  // Active Main Section: 'directory' | 'requisitions'
   const [activePortalTab, setActivePortalTab] = useState('directory');
 
-  // Directory Data
   const [vendors, setVendors] = useState([]);
   const [openRequests, setOpenRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,7 +36,6 @@ export const VendorPortal = () => {
   const [selectedPriority, setSelectedPriority] = useState('all');
   const [search, setSearch] = useState('');
 
-  // Vendor registration modal state
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [regSuccess, setRegSuccess] = useState('');
   const [regError, setRegError] = useState('');
@@ -60,12 +57,10 @@ export const VendorPortal = () => {
     notes: ''
   });
 
-  // Requisition Acquisition Modal State
   const [selectedReqForAcquire, setSelectedReqForAcquire] = useState(null);
   const [acquireVendorId, setAcquireVendorId] = useState('');
   const [acquireStatus, setAcquireStatus] = useState({ error: '', success: '', loading: false });
 
-  // Supplier Profile & Contracts Detail Modal State
   const [selectedVendorForModal, setSelectedVendorForModal] = useState(null);
   const [vendorModalLoading, setVendorModalLoading] = useState(false);
   const [vendorModalData, setVendorModalData] = useState(null);
@@ -174,7 +169,6 @@ export const VendorPortal = () => {
       return;
     }
 
-    // Validation: Only vendors in matching category can acquire requisition
     if (chosenVendor.category !== selectedReqForAcquire.category) {
       setAcquireStatus({
         error: `Category Mismatch: Only suppliers in '${getCategoryLabel(selectedReqForAcquire.category)}' can acquire this requisition. Your supplier category is '${getCategoryLabel(chosenVendor.category)}'.`,
@@ -271,7 +265,7 @@ export const VendorPortal = () => {
 
   return (
     <div style={{ maxWidth: '1440px', margin: '0 auto', paddingBottom: '40px' }}>
-      {/* Platform Standard Header */}
+      
       <div className="page-header" style={{ marginBottom: '22px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -315,7 +309,7 @@ export const VendorPortal = () => {
 
       {error && <div className="alert alert-danger" style={{ marginBottom: '16px' }}>{error}</div>}
 
-      {/* Tabs matching Procurement style */}
+      
       <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
         <button
           onClick={() => setActivePortalTab('directory')}
@@ -378,7 +372,7 @@ export const VendorPortal = () => {
         </button>
       </div>
 
-      {/* Search & Filter Toolbar matching project styling */}
+      
       <div className="card" style={{ marginBottom: '22px', padding: '16px 20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', marginBottom: '14px' }}>
           <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>
@@ -405,7 +399,7 @@ export const VendorPortal = () => {
           </div>
         </div>
 
-        {/* Category Filter Pills */}
+        
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
           {CATEGORY_TABS.map((cat) => {
             const isActive = selectedCategory === cat.id;
@@ -433,7 +427,7 @@ export const VendorPortal = () => {
           })}
         </div>
 
-        {/* Priority Filter Pills */}
+        
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
           <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginRight: '4px' }}>
             Priority:
@@ -464,9 +458,7 @@ export const VendorPortal = () => {
         </div>
       </div>
 
-      {/* ========================================================================= */}
-      {/* VIEW 1: SUPPLIER DIRECTORY GRID                                           */}
-      {/* ========================================================================= */}
+      
       {activePortalTab === 'directory' && (
         <div>
           {loading ? (
@@ -512,7 +504,7 @@ export const VendorPortal = () => {
                     }}
                   >
                     <div style={{ padding: '20px' }}>
-                      {/* Header: Company Name & Category */}
+                      
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '10px' }}>
                         <div style={{ minWidth: 0, flex: 1 }}>
                           <h3 style={{ fontSize: '15.5px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 2px 0', wordBreak: 'break-word' }}>
@@ -538,7 +530,7 @@ export const VendorPortal = () => {
                         </span>
                       </div>
 
-                      {/* Contact details */}
+                      
                       <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)', marginBottom: '14px', lineHeight: 1.6 }}>
                         <div><strong>{v.contact_person}</strong> {v.contact_role && `(${v.contact_role})`}</div>
                         <div>{v.email}</div>
@@ -546,7 +538,7 @@ export const VendorPortal = () => {
                         {v.address && <div>{v.address}</div>}
                       </div>
 
-                      {/* Reliability Score & Index Bar */}
+                      
                       <div style={{ backgroundColor: 'var(--bg-subtle)', padding: '10px 14px', borderRadius: '8px', marginBottom: '6px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                           <span style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)' }}>
@@ -562,7 +554,7 @@ export const VendorPortal = () => {
                       </div>
                     </div>
 
-                    {/* Card Footer: Terms & Status */}
+                    
                     <div style={{
                       display: 'flex',
                       justifyContent: 'space-between',
@@ -611,9 +603,7 @@ export const VendorPortal = () => {
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* VIEW 2: OPEN PROCUREMENT REQUISITIONS (Bidding & Same-Category Acquire)   */}
-      {/* ========================================================================= */}
+      
       {activePortalTab === 'requisitions' && (
         <div>
           <div className="alert alert-info" style={{ marginBottom: '20px' }}>
@@ -722,9 +712,7 @@ export const VendorPortal = () => {
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* MODAL: REGISTER VENDOR                                                    */}
-      {/* ========================================================================= */}
+      
       <Modal
         isOpen={isRegisterOpen}
         onClose={() => setIsRegisterOpen(false)}
@@ -791,7 +779,7 @@ export const VendorPortal = () => {
               </div>
             )}
 
-            {/* Vendor Name */}
+            
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px' }}>
                 Vendor name *
@@ -806,7 +794,7 @@ export const VendorPortal = () => {
               />
             </div>
 
-            {/* Category Selectable Pills */}
+            
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
                 Category *
@@ -837,7 +825,7 @@ export const VendorPortal = () => {
               </div>
             </div>
 
-            {/* Contact Person & Role */}
+            
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px' }}>
@@ -866,7 +854,7 @@ export const VendorPortal = () => {
               </div>
             </div>
 
-            {/* Email & Phone */}
+            
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px' }}>
@@ -895,7 +883,7 @@ export const VendorPortal = () => {
               </div>
             </div>
 
-            {/* Registered Address */}
+            
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px' }}>
                 Registered address
@@ -909,7 +897,7 @@ export const VendorPortal = () => {
               />
             </div>
 
-            {/* Tax / GST ID & Payment terms */}
+            
             <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '14px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px' }}>
@@ -954,7 +942,7 @@ export const VendorPortal = () => {
               </div>
             </div>
 
-            {/* Notes (optional) */}
+            
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px' }}>
                 Notes (optional)
@@ -997,9 +985,7 @@ export const VendorPortal = () => {
         </form>
       </Modal>
 
-      {/* ========================================================================= */}
-      {/* MODAL 2: ACQUIRE REQUISITION (Enforces Same Category Bidding)              */}
-      {/* ========================================================================= */}
+      
       {selectedReqForAcquire && (
         <Modal
           isOpen={true}
@@ -1020,7 +1006,7 @@ export const VendorPortal = () => {
                 </div>
               )}
 
-              {/* Requisition Summary Card */}
+              
               <div style={{ backgroundColor: 'var(--bg-subtle)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                 <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
                   {selectedReqForAcquire.title}
@@ -1032,12 +1018,12 @@ export const VendorPortal = () => {
                 </div>
               </div>
 
-              {/* Category Governance Notice */}
+              
               <div className="alert alert-info" style={{ fontSize: '12.5px', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', color: '#1e40af' }}>
                 <strong>Category Matching Active:</strong> Showing only verified suppliers registered under the <strong>{getCategoryLabel(selectedReqForAcquire.category)}</strong> category.
               </div>
 
-              {/* Select Supplier - Only Matching Category Vendors */}
+              
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px' }}>
                   Select Your Supplier Company ({getCategoryLabel(selectedReqForAcquire.category)} only) *
@@ -1108,9 +1094,7 @@ export const VendorPortal = () => {
         </Modal>
       )}
 
-      {/* ========================================================================= */}
-      {/* SUPPLIER DETAILS, RELIABILITY INDEX & CONTRACTS POPUP MODAL               */}
-      {/* ========================================================================= */}
+      
       {selectedVendorForModal && (
         <Modal
           isOpen={!!selectedVendorForModal}
@@ -1135,7 +1119,7 @@ export const VendorPortal = () => {
               flex: '1 1 auto'
             }}
           >
-            {/* Header Identity & Quick Badges */}
+            
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',
@@ -1172,9 +1156,9 @@ export const VendorPortal = () => {
               </div>
             </div>
 
-            {/* Key Reliability & Performance KPI Grid - Compact & Scalable */}
+            
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '10px' }}>
-              {/* Reliability Index Card */}
+              
               <div style={{
                 backgroundColor: '#f8fafc',
                 border: '1.5px solid #0f766e',
@@ -1203,7 +1187,7 @@ export const VendorPortal = () => {
                 </div>
               </div>
 
-              {/* Quality Rating */}
+              
               <div style={{
                 backgroundColor: '#f8fafc',
                 border: '1px solid var(--border-color)',
@@ -1224,7 +1208,7 @@ export const VendorPortal = () => {
                 </div>
               </div>
 
-              {/* Awarded Contracts Count */}
+              
               <div style={{
                 backgroundColor: '#f8fafc',
                 border: '1px solid var(--border-color)',
@@ -1245,7 +1229,7 @@ export const VendorPortal = () => {
                 </div>
               </div>
 
-              {/* Fulfillment Status */}
+              
               <div style={{
                 backgroundColor: '#f8fafc',
                 border: '1px solid var(--border-color)',
@@ -1266,7 +1250,7 @@ export const VendorPortal = () => {
               </div>
             </div>
 
-            {/* Vendor Corporate Details Info Card - Compact & Scalable */}
+            
             <div style={{
               backgroundColor: '#ffffff',
               border: '1px solid var(--border-color)',
@@ -1301,7 +1285,7 @@ export const VendorPortal = () => {
               </div>
             </div>
 
-            {/* Section: Contracts He Has Been Part Of */}
+            
             <div style={{
               backgroundColor: '#ffffff',
               border: '1px solid var(--border-color)',

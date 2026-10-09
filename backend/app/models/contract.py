@@ -17,7 +17,6 @@ class Contract(Base):
     file_path = Column(String(500), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
-    # Relationships
     vendor = relationship("Vendor", back_populates="contracts")
     certifications = relationship("Certification", back_populates="contract", cascade="all, delete-orphan")
 
@@ -34,6 +33,5 @@ class Certification(Base):
     document_path = Column(String(500), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
-    # Relationships
     contract = relationship("Contract", back_populates="certifications")
     vendor = relationship("Vendor", back_populates="certifications")

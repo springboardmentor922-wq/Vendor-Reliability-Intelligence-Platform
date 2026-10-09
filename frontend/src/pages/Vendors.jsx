@@ -37,19 +37,16 @@ export const Vendors = () => {
 
   const canManageProcurement = ['Administrator', 'Procurement Manager'].includes(user?.role);
 
-  // Category and Status Filter state
   const initialCategory = searchParams.get('category') || '';
   const linkedReqId = searchParams.get('reqId') || '';
   const [categoryFilter, setCategoryFilter] = useState(initialCategory);
   const [statusFilter, setStatusFilter] = useState('');
 
-  // Modals state
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState(null);
   const [viewVendorDetails, setViewVendorDetails] = useState(null);
 
-  // Form state for vendor creation
   const [formData, setFormData] = useState({
     company_name: '',
     category: 'raw_material',
@@ -204,7 +201,6 @@ export const Vendors = () => {
   };
 
   const filteredVendors = vendors.filter(v => {
-    // If arriving from a requisition, strictly restrict to matching category
     if (linkedReqId && initialCategory && v.category !== initialCategory) {
       return false;
     }
@@ -227,7 +223,7 @@ export const Vendors = () => {
 
   return (
     <div style={{ maxWidth: '1440px', margin: '0 auto', paddingBottom: '40px' }}>
-      {/* Top Requisition Redirect Notice (when navigated from procurement) */}
+      
       {linkedReqId && canManageProcurement && (
         <div style={{
           backgroundColor: '#eff6ff',
@@ -259,7 +255,7 @@ export const Vendors = () => {
         </div>
       )}
 
-      {/* Page Header Card matching Screenshot */}
+      
       <div style={{
         backgroundColor: '#ffffff',
         border: '1px solid #e2e8f0',
@@ -315,7 +311,7 @@ export const Vendors = () => {
           </div>
         </div>
 
-        {/* Action Controls */}
+        
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           <form onSubmit={handleSearchSubmit} style={{ position: 'relative', width: '260px' }}>
             <div style={{
@@ -435,7 +431,7 @@ export const Vendors = () => {
 
       {error && <div className="alert alert-danger" style={{ marginBottom: '16px' }}>{error}</div>}
 
-      {/* VENDOR CATEGORIES (SWAP PARTITIONS) */}
+      
       <div style={{ marginBottom: '14px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
           <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
@@ -486,7 +482,7 @@ export const Vendors = () => {
         </div>
       </div>
 
-      {/* Filter by Status */}
+      
       <div style={{ marginBottom: '20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
           <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
@@ -540,7 +536,7 @@ export const Vendors = () => {
         </div>
       </div>
 
-      {/* Vendors Directory Table */}
+      
       <div style={{
         backgroundColor: '#ffffff',
         border: '1px solid #e5e7eb',
@@ -605,7 +601,7 @@ export const Vendors = () => {
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fafafa'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
                     >
-                      {/* VENDOR */}
+                      
                       <td style={{ padding: '14px 18px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                           <div style={{
@@ -641,7 +637,7 @@ export const Vendors = () => {
                         </div>
                       </td>
 
-                      {/* CATEGORY */}
+                      
                       <td style={{ padding: '14px 18px' }}>
                         <span style={{
                           padding: '4px 9px',
@@ -656,7 +652,7 @@ export const Vendors = () => {
                         </span>
                       </td>
 
-                      {/* PRIMARY CONTACT */}
+                      
                       <td style={{ padding: '14px 18px' }}>
                         <div style={{ fontWeight: 600, color: '#1f2937', fontSize: '13px' }}>
                           {v.contact_person} {v.contact_role && <span style={{ fontSize: '11.5px', color: '#6b7280', fontWeight: 400 }}>• {v.contact_role}</span>}
@@ -666,7 +662,7 @@ export const Vendors = () => {
                         </div>
                       </td>
 
-                      {/* STATUS with Dot */}
+                      
                       <td style={{ padding: '14px 18px' }}>
                         <span style={{
                           display: 'inline-flex',
@@ -690,7 +686,7 @@ export const Vendors = () => {
                         </span>
                       </td>
 
-                      {/* RELIABILITY Progress Bar */}
+                      
                       <td style={{ padding: '14px 18px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <div style={{
@@ -716,12 +712,12 @@ export const Vendors = () => {
                         </div>
                       </td>
 
-                      {/* ONBOARDED */}
+                      
                       <td style={{ padding: '14px 18px', fontSize: '12.5px', color: '#4b5563', whiteSpace: 'nowrap' }}>
                         {formatDate(v.created_at)}
                       </td>
 
-                      {/* ACTIONS */}
+                      
                       <td style={{ padding: '14px 18px', textAlign: 'right' }}>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px' }}>
                           {linkedReqId && isSupplierActive && canManageProcurement && (
@@ -822,7 +818,7 @@ export const Vendors = () => {
         </div>
       </div>
 
-      {/* Modal: Register Vendor */}
+      
       <Modal
         isOpen={isRegisterOpen}
         onClose={() => setIsRegisterOpen(false)}
@@ -831,7 +827,7 @@ export const Vendors = () => {
       >
         <form onSubmit={handleRegisterSubmit}>
           <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {/* Vendor Name */}
+            
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
                 Vendor name *
@@ -852,7 +848,7 @@ export const Vendors = () => {
               />
             </div>
 
-            {/* Category Selectable Pills */}
+            
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>
                 Category *
@@ -883,7 +879,7 @@ export const Vendors = () => {
               </div>
             </div>
 
-            {/* Contact Person & Role */}
+            
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
@@ -924,7 +920,7 @@ export const Vendors = () => {
               </div>
             </div>
 
-            {/* Email & Phone */}
+            
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
@@ -965,7 +961,7 @@ export const Vendors = () => {
               </div>
             </div>
 
-            {/* Registered Address */}
+            
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
                 Registered address
@@ -986,7 +982,7 @@ export const Vendors = () => {
               />
             </div>
 
-            {/* Tax / GST ID & Payment terms */}
+            
             <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '14px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
@@ -1037,7 +1033,7 @@ export const Vendors = () => {
               </div>
             </div>
 
-            {/* Notes (optional) */}
+            
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
                 Notes (optional)
@@ -1086,7 +1082,7 @@ export const Vendors = () => {
         </form>
       </Modal>
 
-      {/* Edit Vendor Modal */}
+      
       <Modal
         isOpen={isEditOpen}
         onClose={() => setIsEditOpen(false)}
@@ -1219,7 +1215,7 @@ export const Vendors = () => {
         </form>
       </Modal>
 
-      {/* View Vendor Details Modal */}
+      
       {viewVendorDetails && (
         <Modal
           isOpen={true}

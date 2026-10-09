@@ -51,7 +51,6 @@ def get_contracts(
     contracts = query.order_by(Contract.id.desc()).all()
     refresh_contract_expiries(contracts, db)
 
-    # Attach total purchase amount and contract invoices for each contract
     for c in contracts:
         c_suffix = c.contract_number.split("-")[-1] if "-" in c.contract_number else ""
         all_vendor_pos = db.query(PurchaseOrder).filter(PurchaseOrder.vendor_id == c.vendor_id).all()

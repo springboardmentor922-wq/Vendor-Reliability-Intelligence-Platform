@@ -1,46 +1,46 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap');
 
 :root {
-  /* Warm Editorial Canvas & Surfaces */
+  
   --bg-main: #fbfaf7;
   --bg-surface: #ffffff;
   --bg-subtle: #f4f0e6;
   --bg-hover: #f7f4ec;
   
-  /* Deep Cypress Pine for Sidebar & Dark Containers (Zero Navy/Black) */
+  
   --bg-sidebar: #0e241d;
   --sidebar-hover: #17382f;
   --sidebar-active: #1f4a3e;
   --sidebar-border: rgba(255, 255, 255, 0.08);
 
-  /* Warm Muted Earth Borders */
+  
   --border-color: #e5e0d3;
   --border-subtle: #f0ebe0;
   --border-focus: #145e47;
 
-  /* Typography: Deep Forest Espresso (Grounded & Human, not cold Slate) */
+  
   --text-primary: #17241f;
   --text-secondary: #53645b;
   --text-muted: #8d9e94;
   --text-inverse: #fcfcfb;
 
-  /* Primary Accent: Deep Forest Pine */
+  
   --primary: #145e47;
   --primary-hover: #0e4836;
   --primary-light: #eef8f3;
   --primary-border: #b2decb;
 
-  /* Warm Ochre Amber Accent (AI & Highlights) */
+  
   --accent: #d97706;
   --accent-hover: #b45309;
   --accent-light: #fef8ee;
   --accent-border: #fde68a;
 
-  /* Rich Terracotta (Simulators & Critical Actions) */
+  
   --terracotta: #ea580c;
   --terracotta-light: #fff5ed;
 
-  /* Status Colors */
+  
   --success: #0d7658;
   --success-bg: #edfbf5;
   --success-border: #a7edd1;
@@ -105,7 +105,7 @@ a:hover {
   text-decoration: underline;
 }
 
-/* Layout */
+
 .app-layout {
   display: flex;
   min-height: 100vh;
@@ -253,7 +253,7 @@ a:hover {
   margin: 0 auto;
 }
 
-/* Page Headers */
+
 .page-header {
   display: flex;
   justify-content: space-between;
@@ -275,7 +275,7 @@ a:hover {
   margin-top: 3px;
 }
 
-/* Cards & Metric Grids */
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
@@ -369,7 +369,7 @@ a:hover {
   padding: 24px;
 }
 
-/* Tables */
+
 .table-responsive {
   width: 100%;
   overflow-x: auto;
@@ -418,7 +418,7 @@ a:hover {
   background-color: #f9f7f1;
 }
 
-/* Status Badges */
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -466,7 +466,7 @@ a:hover {
   border: 1px solid var(--border-color);
 }
 
-/* Buttons */
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -546,7 +546,7 @@ a:hover {
   border-radius: var(--radius-sm);
 }
 
-/* Forms & Inputs */
+
 .form-group {
   margin-bottom: 18px;
 }
@@ -588,7 +588,7 @@ a:hover {
   flex: 1;
 }
 
-/* Tabs */
+
 .tabs {
   display: flex;
   gap: 8px;
@@ -620,7 +620,7 @@ a:hover {
   font-weight: 700;
 }
 
-/* Modals */
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -698,7 +698,7 @@ a:hover {
   color: var(--text-primary);
 }
 
-/* Ensure any form or wrapper inside modal-content behaves as a flex column that sizes properly */
+
 .modal-content > form,
 .modal-content > div:not(.modal-header):not(.modal-body):not(.modal-footer) {
   display: flex;
@@ -720,7 +720,7 @@ a:hover {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Custom scrollbars for modals */
+
 .modal-body::-webkit-scrollbar,
 .modal-backdrop::-webkit-scrollbar,
 .custom-scrollbar::-webkit-scrollbar {
@@ -745,7 +745,7 @@ a:hover {
   background: #64748b;
 }
 
-/* Responsive height scaling for modal popups on compact / standard displays */
+
 @media (max-height: 820px) {
   .modal-content {
     max-height: 96vh !important;
@@ -783,7 +783,7 @@ a:hover {
   }
 }
 
-/* Alerts */
+
 .alert {
   padding: 13px 18px;
   border-radius: var(--radius-md);
@@ -812,7 +812,7 @@ a:hover {
   color: var(--warning);
 }
 
-/* Auth Screens */
+
 .auth-page {
   min-height: 100vh;
   display: flex;
@@ -877,7 +877,7 @@ a:hover {
   transform: translateY(-1px);
 }
 
-/* Communication Thread UI */
+
 .chat-layout {
   display: grid;
   grid-template-columns: 320px 1fr;
@@ -957,7 +957,7 @@ a:hover {
   background: #faf8f3;
 }
 
-/* Vendor Telemetry Grid (8-card layout as requested in user reference) */
+
 .vendor-telemetry-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -1089,9 +1089,7 @@ a:hover {
   background: #ffffff;
 }
 
-/* ==========================================================================
-   Landing Page Styling - Forest & Ochre Sand Editorial
-   ========================================================================== */
+
 .landing-page {
   background: linear-gradient(180deg, #091a14 0%, #0d251d 40%, #081712 100%);
   color: #f4f6f5;
@@ -1136,7 +1134,7 @@ a:hover {
   color: #ffffff;
 }
 
-/* Hero Container & Split Layout */
+
 .landing-hero-container {
   max-width: 1240px;
   margin: 0 auto;
@@ -1154,7 +1152,7 @@ a:hover {
   z-index: 1;
 }
 
-/* Subtle Animated Cyber/Tech Dot Matrix with Smooth Radial Mask */
+
 .hero-grid-mesh {
   position: absolute;
   inset: -60px;
@@ -1171,7 +1169,7 @@ a:hover {
   100% { transform: translateY(8px) scale(0.99); }
 }
 
-/* Dynamic Aurora Glow Orbs */
+
 .glow-orb {
   position: absolute;
   border-radius: 50%;
@@ -1233,7 +1231,7 @@ a:hover {
   100% { transform: translate(-45px, 15px) scale(0.9); opacity: 0.65; }
 }
 
-/* Constellation SVG Paths & Live Packet Flows */
+
 .hero-svg-constellation {
   position: absolute;
   inset: 0;
@@ -1349,7 +1347,7 @@ a:hover {
   flex-shrink: 0;
 }
 
-/* Embedded Auth Card on Landing Hero */
+
 .landing-auth-card {
   background: rgba(18, 44, 35, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -1534,7 +1532,7 @@ a:hover {
   transform: translateY(-1px);
 }
 
-/* Stats Banner */
+
 .hero-stats-banner {
   width: 100%;
   display: grid;
@@ -1570,7 +1568,7 @@ a:hover {
   margin-top: 4px;
 }
 
-/* Landing Sections */
+
 .landing-section {
   padding: 90px 24px;
   max-width: 1240px;
@@ -1608,7 +1606,7 @@ a:hover {
   line-height: 1.6;
 }
 
-/* Roles Grid */
+
 .roles-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1631,7 +1629,7 @@ a:hover {
   box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.4);
 }
 
-/* Features Grid */
+
 .features-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1682,7 +1680,7 @@ a:hover {
   line-height: 1.6;
 }
 
-/* Tech Pills */
+
 .tech-stack-row {
   display: flex;
   flex-wrap: wrap;

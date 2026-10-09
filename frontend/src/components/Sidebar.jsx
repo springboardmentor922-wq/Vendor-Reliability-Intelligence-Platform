@@ -11,7 +11,6 @@ export const Sidebar = () => {
   const isAuditorOrAdmin = ['Administrator', 'Auditor'].includes(user?.role);
   const isVendor = user?.role === 'Vendor';
 
-  // Notifications state for interactive drawer & unread badge
   const [notifications, setNotifications] = useState([]);
   const [isNotifDrawerOpen, setIsNotifDrawerOpen] = useState(false);
   const [scanning, setScanning] = useState(false);
@@ -83,7 +82,7 @@ export const Sidebar = () => {
         top: 0,
         zIndex: 100
       }}>
-        {/* Brand Header */}
+        
         <div style={{
           padding: '20px 20px 16px 20px',
           borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
@@ -127,7 +126,7 @@ export const Sidebar = () => {
           </Link>
         </div>
 
-        {/* Navigation List */}
+        
         <nav style={{
           padding: '14px 12px',
           flex: 1,
@@ -136,7 +135,7 @@ export const Sidebar = () => {
           gap: '4px',
           overflowY: 'auto'
         }}>
-          {/* Section: SUPPLIER WORKSPACE */}
+          
           <div style={{
             padding: '10px 12px 6px 12px',
             fontSize: '11px',
@@ -148,7 +147,7 @@ export const Sidebar = () => {
             SUPPLIER WORKSPACE
           </div>
 
-          {/* 1. Supplier Portal */}
+          
           <NavLink
             to="/vendor-portal"
             className={({ isActive }) => `sidebar-nav-btn ${isActive ? 'active' : ''}`}
@@ -189,7 +188,7 @@ export const Sidebar = () => {
             </span>
           </NavLink>
 
-          {/* 2. Vendor Management - Internal Staff Only */}
+          
           {user && !isVendor && (
             <NavLink
               to="/vendors"
@@ -220,10 +219,10 @@ export const Sidebar = () => {
             </NavLink>
           )}
 
-          {/* Authenticated Workspace Options (Vendors & Staff) */}
+          
           {user && (
             <>
-              {/* 3. Orders & Invoices */}
+              
               <NavLink
                 to="/procurement?tab=orders"
                 className={({ isActive }) => `sidebar-nav-btn ${isActive || location.pathname.startsWith('/procurement') ? 'active' : ''}`}
@@ -254,7 +253,7 @@ export const Sidebar = () => {
                 </div>
               </NavLink>
 
-              {/* 4. Contracts & Compliance */}
+              
               <NavLink
                 to="/contracts"
                 className={({ isActive }) => `sidebar-nav-btn ${isActive ? 'active' : ''}`}
@@ -284,7 +283,7 @@ export const Sidebar = () => {
                 </div>
               </NavLink>
 
-              {/* 5. Communication Hub */}
+              
               <NavLink
                 to="/messages"
                 className={({ isActive }) => `sidebar-nav-btn ${isActive ? 'active' : ''}`}
@@ -310,7 +309,7 @@ export const Sidebar = () => {
                 </div>
               </NavLink>
 
-              {/* 6. Notifications */}
+              
               <button
                 type="button"
                 onClick={() => setIsNotifDrawerOpen(!isNotifDrawerOpen)}
@@ -359,7 +358,7 @@ export const Sidebar = () => {
             </>
           )}
 
-          {/* Role-specific additions: Enterprise Operations for Authenticated Non-Vendor Staff Only */}
+          
           {user && !isVendor && (
             <>
               <div style={{
@@ -513,7 +512,7 @@ export const Sidebar = () => {
             </>
           )}
 
-          {/* When no user is signed in: show a clean sign-in shortcut */}
+          
           {!user && (
             <div style={{
               marginTop: '16px',
@@ -552,7 +551,7 @@ export const Sidebar = () => {
           )}
         </nav>
 
-        {/* Footer */}
+        
         <div style={{
           padding: '14px 18px',
           borderTop: '1px solid rgba(255, 255, 255, 0.08)',
@@ -575,7 +574,7 @@ export const Sidebar = () => {
         </div>
       </aside>
 
-      {/* Interactive Sliding Notification Drawer */}
+      
       {user && isNotifDrawerOpen && (
         <div style={{
           position: 'fixed',
@@ -591,7 +590,7 @@ export const Sidebar = () => {
           flexDirection: 'column',
           animation: 'fadeIn 0.2s ease'
         }}>
-          {/* Drawer Header */}
+          
           <div style={{
             padding: '18px 20px',
             borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
@@ -637,7 +636,7 @@ export const Sidebar = () => {
             </button>
           </div>
 
-          {/* Drawer Quick Actions */}
+          
           <div style={{
             padding: '10px 16px',
             backgroundColor: '#1e293b',
@@ -679,7 +678,7 @@ export const Sidebar = () => {
             )}
           </div>
 
-          {/* Notification Items List */}
+          
           <div style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
             {notifications.length === 0 ? (
               <div style={{ padding: '30px 16px', textAlign: 'center', color: '#64748b', fontSize: '13px' }}>

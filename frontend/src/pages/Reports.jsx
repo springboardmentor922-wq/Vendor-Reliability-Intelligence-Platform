@@ -22,7 +22,6 @@ export const Reports = () => {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // PO Details Modal State
   const [selectedPO, setSelectedPO] = useState(null);
   const [isPOModalOpen, setIsPOModalOpen] = useState(false);
 
@@ -302,7 +301,7 @@ export const Reports = () => {
 
       {error && <div className="alert alert-danger">{error}</div>}
 
-      {/* 5 Report Module Tabs */}
+      
       <div className="tabs">
         {REPORT_TYPES.map((rep) => (
           <button
@@ -316,7 +315,7 @@ export const Reports = () => {
         ))}
       </div>
 
-      {/* Search & Actions Bar */}
+      
       <div className="card" style={{ marginBottom: '20px' }}>
         <div className="card-body" style={{ padding: '12px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: '240px' }}>
@@ -339,7 +338,7 @@ export const Reports = () => {
         </div>
       </div>
 
-      {/* Dynamic Report Data Grid */}
+      
       <div className="card">
         <div className="card-body" style={{ padding: 0 }}>
           <div className="table-responsive">
@@ -353,7 +352,7 @@ export const Reports = () => {
               </div>
             ) : (
               <table className="data-table">
-                {/* 1. VENDOR PERFORMANCE REPORT */}
+                
                 {activeReport === 'vendor_performance' && (
                   <>
                     <thead>
@@ -393,7 +392,7 @@ export const Reports = () => {
                   </>
                 )}
 
-                {/* 2. PROCUREMENT REPORTS */}
+                
                 {activeReport === 'procurement_reports' && (
                   <>
                     <thead>
@@ -421,7 +420,7 @@ export const Reports = () => {
                   </>
                 )}
 
-                {/* 3. PURCHASE ORDER REPORTS */}
+                
                 {activeReport === 'po_reports' && (
                   <>
                     <thead>
@@ -496,7 +495,7 @@ export const Reports = () => {
                   </>
                 )}
 
-                {/* 4. COMPLIANCE REPORTS */}
+                
                 {activeReport === 'compliance_reports' && (
                   <>
                     <thead>
@@ -528,7 +527,7 @@ export const Reports = () => {
                   </>
                 )}
 
-                {/* 5. CONTRACT REPORTS */}
+                
                 {activeReport === 'contract_reports' && (
                   <>
                     <thead>
@@ -561,7 +560,7 @@ export const Reports = () => {
         </div>
       </div>
 
-      {/* Purchase Order Details Modal */}
+      
       {selectedPO && (
         <Modal
           isOpen={isPOModalOpen}
@@ -614,7 +613,7 @@ export const Reports = () => {
               </div>
             </div>
 
-            {/* Line Items Table if available */}
+            
             {selectedPO.items && selectedPO.items.length > 0 && (
               <div>
                 <h4 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>Line Items ({selectedPO.items.length})</h4>

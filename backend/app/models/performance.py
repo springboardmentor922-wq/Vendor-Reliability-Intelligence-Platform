@@ -15,7 +15,6 @@ class PerformanceRecord(Base):
     issue_resolution_hours = Column(Float, nullable=False, default=12.0)
     recorded_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
-    # Relationships
     vendor = relationship("Vendor", back_populates="performance_records")
     purchase_order = relationship("PurchaseOrder", back_populates="performance_records")
 
@@ -29,5 +28,4 @@ class ReliabilityScore(Base):
     risk_level = Column(String(50), nullable=False, default="Low")
     calculated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
-    # Relationships
     vendor = relationship("Vendor", back_populates="reliability_scores")

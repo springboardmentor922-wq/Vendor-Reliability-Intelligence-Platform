@@ -16,7 +16,6 @@ from app.routers import (
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize all database tables on startup and apply dynamic migrations
     Base.metadata.create_all(bind=engine)
     run_migrations(engine)
     db = SessionLocal()
@@ -33,7 +32,6 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Configure CORS
 origins = settings.CORS_ORIGINS if isinstance(settings.CORS_ORIGINS, list) else [settings.CORS_ORIGINS]
 app.add_middleware(
     CORSMiddleware,
@@ -43,7 +41,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount all API routers under /api
 app.include_router(auth.router, prefix=settings.API_V1_STR)
 app.include_router(vendors.router, prefix=settings.API_V1_STR)
 app.include_router(procurement.router, prefix=settings.API_V1_STR)

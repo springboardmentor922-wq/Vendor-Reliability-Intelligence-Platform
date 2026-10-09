@@ -23,7 +23,6 @@ class Vendor(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
-    # Relationships
     users = relationship("User", back_populates="vendor", foreign_keys="User.vendor_id")
     approved_by = relationship("User", back_populates="approved_vendors", foreign_keys=[approved_by_id])
     purchase_orders = relationship("PurchaseOrder", back_populates="vendor", cascade="all, delete-orphan")

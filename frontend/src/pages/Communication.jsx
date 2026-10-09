@@ -21,13 +21,11 @@ export const Communication = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
-  const [activeMode, setActiveMode] = useState('team'); // 'team', 'email', 'sms'
+  const [activeMode, setActiveMode] = useState('team');
 
-  // Vendors list for external dispatch
   const [vendorsList, setVendorsList] = useState([]);
   const [selectedVendorId, setSelectedVendorId] = useState('');
 
-  // Direct Email Form State
   const [emailSubject, setEmailSubject] = useState('');
   const [emailRecipient, setEmailRecipient] = useState('');
   const [emailPriority, setEmailPriority] = useState('Standard');
@@ -38,13 +36,11 @@ export const Communication = () => {
   const [emailSending, setEmailSending] = useState(false);
   const [emailSuccess, setEmailSuccess] = useState(null);
 
-  // Gmail Redirect Modal State
   const [showGmailModal, setShowGmailModal] = useState(false);
   const [formattedPreviewSubject, setFormattedPreviewSubject] = useState('');
   const [formattedPreviewBody, setFormattedPreviewBody] = useState('');
   const [gmailUrl, setGmailUrl] = useState('');
 
-  // SMS Gateway State
   const [smsPhone, setSmsPhone] = useState('+91 98765 43210');
   const [smsMessage, setSmsMessage] = useState('');
   const [smsLogs, setSmsLogs] = useState([]);
@@ -154,7 +150,6 @@ export const Communication = () => {
     type: 'channel'
   };
 
-  // Gmail & SMS Gateway handlers for external vendors
   const handleOpenGmailModal = (e) => {
     e.preventDefault();
     if (!emailRecipient.trim() || !emailSubject.trim() || !emailBody.trim()) {
@@ -241,7 +236,7 @@ export const Communication = () => {
 
   return (
     <div className="communication-page">
-      {/* Page Header */}
+      
       <div className="page-header" style={{ marginBottom: '20px' }}>
         <div>
           <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -253,7 +248,7 @@ export const Communication = () => {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          {/* Active Role Indicator Badge */}
+          
           <div
             style={{
               display: 'flex',
@@ -279,7 +274,7 @@ export const Communication = () => {
             <span>Active as: {user?.full_name} ({user?.role})</span>
           </div>
 
-          {/* Mode Switcher Tabs */}
+          
           <div style={{ display: 'flex', gap: '6px', background: '#f4f0e6', padding: '4px', borderRadius: '8px' }}>
             <button
               type="button"
@@ -344,10 +339,10 @@ export const Communication = () => {
 
       {error && <div className="alert alert-danger" style={{ marginBottom: '18px' }}>{error}</div>}
 
-      {/* MODE 1: INTERNAL TEAM COLLABORATION CHAT */}
+      
       {activeMode === 'team' && (
         <div className="chat-layout">
-          {/* Left Panel: Operational Channels & Direct Colleagues */}
+          
           <div className="chat-sidebar">
             <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
@@ -368,7 +363,7 @@ export const Communication = () => {
             </div>
 
             <div className="chat-threads-list" style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 270px)' }}>
-              {/* Operational Channels Section */}
+              
               <div style={{ padding: '8px 14px 4px 14px', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                 Operational Channels
               </div>
@@ -401,7 +396,7 @@ export const Communication = () => {
                 );
               })}
 
-              {/* Direct Messages Section */}
+              
               <div style={{ padding: '16px 14px 4px 14px', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', borderTop: '1px solid var(--border-subtle)', marginTop: '8px' }}>
                 Direct Colleagues
               </div>
@@ -464,9 +459,9 @@ export const Communication = () => {
             </div>
           </div>
 
-          {/* Right Panel: Chat Thread & Input */}
+          
           <div className="chat-main" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 230px)', background: '#ffffff', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
-            {/* Thread Header */}
+            
             <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-color)', background: '#fdfcf9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -509,7 +504,7 @@ export const Communication = () => {
               </div>
             </div>
 
-            {/* Messages Area */}
+            
             <div className="chat-messages" style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
               {messages.length === 0 ? (
                 <div style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '80px' }}>
@@ -536,7 +531,7 @@ export const Communication = () => {
                         marginBottom: '16px'
                       }}
                     >
-                      {/* Sender Meta */}
+                      
                       <div
                         style={{
                           display: 'flex',
@@ -569,7 +564,7 @@ export const Communication = () => {
                         </span>
                       </div>
 
-                      {/* Message Bubble */}
+                      
                       <div
                         style={{
                           maxWidth: '75%',
@@ -593,7 +588,7 @@ export const Communication = () => {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input Bar */}
+            
             <form onSubmit={handleSendMessage} style={{ padding: '14px 20px', borderTop: '1px solid var(--border-color)', background: '#ffffff', display: 'flex', gap: '10px', alignItems: 'center' }}>
               <input
                 type="text"
@@ -621,7 +616,7 @@ export const Communication = () => {
         </div>
       )}
 
-      {/* MODE 2: DIRECT FORMAL EMAIL DISPATCH TO EXTERNAL VENDORS */}
+      
       {activeMode === 'email' && (
         <div style={{ maxWidth: '820px', margin: '0 auto' }}>
           {emailSuccess && (
@@ -768,7 +763,7 @@ export const Communication = () => {
         </div>
       )}
 
-      {/* MODE 3: HIGH-PRIORITY SMS GATEWAY DISPATCH */}
+      
       {activeMode === 'sms' && (
         <div style={{ maxWidth: '820px', margin: '0 auto' }}>
           {smsSuccess && (
@@ -848,7 +843,7 @@ export const Communication = () => {
             </div>
           </div>
 
-          {/* SMS Logs */}
+          
           <div className="card" style={{ margin: 0 }}>
             <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 className="card-title" style={{ fontSize: '14.5px', fontWeight: 800 }}>SMS Gateway Dispatch Registry</h3>
@@ -903,7 +898,7 @@ export const Communication = () => {
         </div>
       )}
 
-      {/* Gmail Redirect Modal */}
+      
       {showGmailModal && (
         <div className="modal-backdrop" onClick={() => setShowGmailModal(false)}>
           <div

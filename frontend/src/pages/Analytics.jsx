@@ -11,17 +11,14 @@ export const Analytics = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Filter States
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedRisk, setSelectedRisk] = useState('');
   const [timeWindow, setTimeWindow] = useState('90d');
 
-  // Vendor Deep Dive Modal
   const [selectedVendorId, setSelectedVendorId] = useState(null);
   const [vendorMetrics, setVendorMetrics] = useState(null);
   const [metricsLoading, setMetricsLoading] = useState(false);
 
-  // Predictive Simulator State
   const [simVendorId, setSimVendorId] = useState('');
   const [simCategory, setSimCategory] = useState('raw_material');
   const [simItemCount, setSimItemCount] = useState(3);
@@ -99,7 +96,6 @@ export const Analytics = () => {
     }
   };
 
-  // Filtered Suppliers for Leaderboard with robust string normalization
   const filteredSuppliers = (overview?.top_ranked_suppliers || []).filter((s) => {
     if (selectedCategory) {
       const cNorm = normalize(selectedCategory);
@@ -121,7 +117,7 @@ export const Analytics = () => {
 
   return (
     <div>
-      {/* Header */}
+      
       <div className="page-header">
         <div>
           <h1 className="page-title">Predictive Vendor Intelligence & Analytics</h1>
@@ -140,7 +136,7 @@ export const Analytics = () => {
 
       {error && <div className="alert alert-danger">{error}</div>}
 
-      {/* Top Telemetry KPI Cards */}
+      
       <div className="stats-grid">
         <div className="stat-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
@@ -195,7 +191,7 @@ export const Analytics = () => {
         </div>
       </div>
 
-      {/* Interactive Filter Toolbar */}
+      
       <div className="card" style={{ marginBottom: '24px', border: hasActiveFilters ? '1px solid var(--primary-border)' : '1px solid var(--border-color)', boxShadow: 'var(--shadow-xs)' }}>
         <div className="card-body" style={{ padding: '16px 20px' }}>
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -257,7 +253,7 @@ export const Analytics = () => {
             )}
           </div>
 
-          {/* Active Filters Tag Row */}
+          
           {hasActiveFilters && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px', paddingTop: '10px', borderTop: '1px solid var(--border-subtle)', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
@@ -286,9 +282,9 @@ export const Analytics = () => {
         </div>
       </div>
 
-      {/* Main Analytics Grid: Visual Charts & Intelligence */}
+      
       <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '20px', marginBottom: '24px' }}>
-        {/* Chart 1: Monthly On-Time Delivery Trajectory (Interactive SVG Chart) */}
+        
         <div className="card">
           <div className="card-header">
             <div>
@@ -360,7 +356,7 @@ export const Analytics = () => {
           </div>
         </div>
 
-        {/* Chart 2: Category Spend vs. Reliability */}
+        
         <div className="card">
           <div className="card-header">
             <div>
@@ -421,9 +417,9 @@ export const Analytics = () => {
         </div>
       </div>
 
-      {/* Row 2: Supplier Reliability Leaderboard + Predictive AI Simulator */}
+      
       <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: '20px', marginBottom: '24px' }}>
-        {/* Supplier Leaderboard Table */}
+        
         <div className="card">
           <div className="card-header">
             <div>
@@ -518,7 +514,7 @@ export const Analytics = () => {
           </div>
         </div>
 
-        {/* Predictive PO Delivery Delay Simulator Widget */}
+        
         <div className="card" style={{ border: '1px solid var(--border-color)', background: 'var(--bg-surface)' }}>
           <div className="card-header" style={{ background: 'var(--primary-light)', borderBottom: '1px solid var(--primary-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -614,7 +610,7 @@ export const Analytics = () => {
               </button>
             </form>
 
-            {/* Prediction Result Display */}
+            
             {predictionResult && (
               <div
                 style={{
@@ -665,7 +661,7 @@ export const Analytics = () => {
         </div>
       </div>
 
-      {/* Modal: Vendor 360 Deep Dive Inspection */}
+      
       <Modal
         isOpen={Boolean(selectedVendorId)}
         onClose={() => { setSelectedVendorId(null); setVendorMetrics(null); }}
@@ -677,7 +673,7 @@ export const Analytics = () => {
         ) : (
           <div>
             <div className="modal-body">
-              {/* Score Header */}
+              
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '20px' }}>
                 <div className="stat-card" style={{ padding: '14px' }}>
                   <div className="stat-label">Composite Score</div>
@@ -712,7 +708,7 @@ export const Analytics = () => {
                 </div>
               </div>
 
-              {/* 5-Factor Radar Breakdown */}
+              
               <div style={{ marginBottom: '20px' }}>
                 <strong style={{ fontSize: '13.5px', color: 'var(--text-primary)' }}>5-Factor Reliability Weighting Breakdown</strong>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginTop: '12px' }}>
@@ -758,7 +754,7 @@ export const Analytics = () => {
                 </div>
               </div>
 
-              {/* AI Procurement Recommendations */}
+              
               <div style={{ background: 'var(--bg-main)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '16px' }}>
                 <strong style={{ fontSize: '13px', color: 'var(--text-primary)' }}>Strategic Sourcing Recommendations</strong>
                 <ul style={{ margin: '8px 0 0 18px', padding: 0, fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>

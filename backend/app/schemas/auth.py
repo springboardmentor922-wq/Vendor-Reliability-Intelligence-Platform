@@ -21,7 +21,6 @@ class UserRegister(BaseModel):
     phone: Optional[str] = None
     vendor_id: Optional[int] = None
 
-    # Vendor Company Profile Fields (auto-created if role == VENDOR)
     company_name: Optional[str] = None
     category: Optional[VendorCategory] = None
     contact_person: Optional[str] = None

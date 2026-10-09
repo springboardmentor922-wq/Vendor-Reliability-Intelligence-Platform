@@ -23,18 +23,18 @@ export function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* Public Standalone Landing & Auth Routes */}
+          
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/signup" element={<Register />} />
 
-          {/* Embedded Platform Shell with Left Sidebar Column */}
+          
           <Route element={<AppLayout />}>
-            {/* Vendor Portal - Embedded with Sidebar Column */}
+            
             <Route path="/vendor-portal" element={<VendorPortal />} />
 
-            {/* Authenticated Dashboard & Module Routes */}
+            
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/vendors" element={<Vendors />} />
@@ -46,18 +46,18 @@ export function App() {
               <Route path="/messages" element={<Communication />} />
             </Route>
 
-            {/* Role-Restricted Routes: Admin Only */}
+            
             <Route element={<ProtectedRoute allowedRoles={['Administrator']} />}>
               <Route path="/staff" element={<StaffManagement />} />
             </Route>
 
-            {/* Role-Restricted Routes (Admin & Auditor) */}
+            
             <Route element={<ProtectedRoute allowedRoles={['Administrator', 'Auditor']} />}>
               <Route path="/audit-logs" element={<AuditLogs />} />
             </Route>
           </Route>
 
-          {/* Fallback */}
+          
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

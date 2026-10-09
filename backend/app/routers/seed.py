@@ -7,7 +7,6 @@ router = APIRouter(prefix="/seed", tags=["Seed Data"])
 
 @router.post("")
 def run_seed(db: Session = Depends(get_db)):
-    # Ensure tables are created
     Base.metadata.create_all(bind=engine)
     return seed_database(db)
 

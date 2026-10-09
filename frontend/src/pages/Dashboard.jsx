@@ -52,7 +52,6 @@ export const Dashboard = () => {
           setPendingPaymentReqs(reqs || []);
           setPendingPurchaseOrders(pos || []);
         } catch {
-          // ignore
         }
       }
     } catch (err) {
@@ -135,7 +134,6 @@ export const Dashboard = () => {
         type: 'success',
         text: `Role for ${updated.full_name} successfully updated to ${updated.role}.`
       });
-      // Refresh dashboard stats so user distribution updates immediately
       const stats = await api.getDashboardStats();
       setData(stats);
     } catch (err) {
@@ -194,10 +192,10 @@ export const Dashboard = () => {
         </div>
       </div>
 
-      {/* --- ADMINISTRATOR DASHBOARD --- */}
+      
       {role === 'Administrator' && (
         <>
-          {/* Key Performance Indicators */}
+          
           <div className="stats-grid">
             <StatCard label="Total Users" value={metrics.total_users || 124} helpText="↑ 10% vs last month" color="#0284c7" />
             <StatCard label="Total Vendors" value={metrics.total_vendors || 42} helpText="↑ 8% vs last month" color="#10b981" />
@@ -205,9 +203,9 @@ export const Dashboard = () => {
             <StatCard label="System Uptime" value={`${metrics.system_uptime || 99.8}%`} helpText="↑ 0.2% SLA Reliability" color="#059669" />
           </div>
 
-          {/* Admin Dashboard: Row 1 of Charts */}
+          
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '20px', marginBottom: '22px' }}>
-            {/* Chart 1: User Management Donut */}
+            
             <div className="card" style={{ margin: 0 }}>
               <div className="card-header">
                 <h3 className="card-title" style={{ fontSize: '14.5px', fontWeight: 800 }}>User Management</h3>
@@ -228,7 +226,7 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* Chart 2: Vendor Analytics (Risk Distribution) */}
+            
             <div className="card" style={{ margin: 0 }}>
               <div className="card-header">
                 <h3 className="card-title" style={{ fontSize: '14.5px', fontWeight: 800 }}>Vendor Analytics (Risk Distribution)</h3>
@@ -246,9 +244,9 @@ export const Dashboard = () => {
             </div>
           </div>
 
-          {/* Admin Dashboard: Row 2 of Charts */}
+          
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginBottom: '22px' }}>
-            {/* Chart 3: Procurement Reports (Dual Axis Cost in Lakh vs Number of POs) */}
+            
             <div className="card" style={{ margin: 0 }}>
               <div className="card-header">
                 <h3 className="card-title" style={{ fontSize: '14.5px', fontWeight: 800 }}>Procurement Reports</h3>
@@ -273,7 +271,7 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* Chart 4: Compliance Monitoring */}
+            
             <div className="card" style={{ margin: 0 }}>
               <div className="card-header">
                 <h3 className="card-title" style={{ fontSize: '14.5px', fontWeight: 800 }}>Compliance Monitoring</h3>
@@ -292,7 +290,7 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* Chart 5: System Statistics */}
+            
             <div className="card" style={{ margin: 0 }}>
               <div className="card-header">
                 <h3 className="card-title" style={{ fontSize: '14.5px', fontWeight: 800 }}>System Statistics</h3>
@@ -333,7 +331,7 @@ export const Dashboard = () => {
             </div>
           </div>
 
-          {/* Internal Staff Directory & Role Promotion Panel */}
+          
           <div className="card">
             <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
@@ -418,7 +416,7 @@ export const Dashboard = () => {
             </div>
           </div>
 
-          {/* Pending Vendor Registration Approvals Panel */}
+          
           <div className="card" style={{ marginTop: '20px' }}>
             <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
@@ -545,10 +543,10 @@ export const Dashboard = () => {
         </>
       )}
 
-      {/* --- PROCUREMENT MANAGER DASHBOARD --- */}
+      
       {role === 'Procurement Manager' && (
         <>
-          {/* Workflow Action Bar */}
+          
           <div style={{
             backgroundColor: '#ffffff',
             border: '1px solid #e2e8f0',
@@ -611,7 +609,7 @@ export const Dashboard = () => {
             </div>
           </div>
 
-          {/* Key Performance Indicators */}
+          
           <div className="stats-grid">
             <StatCard label="Total Purchase Orders" value={metrics.total_orders || 124} helpText="↑ 12% vs last month" color="#0284c7" />
             <StatCard label="Total Procurement Cost" value={metrics.total_procurement_cost_display || `₹${(metrics.total_procurement_spend || 0).toLocaleString()}`} helpText="↑ 5% vs last month" color="#ea580c" />
@@ -619,9 +617,9 @@ export const Dashboard = () => {
             <StatCard label="Items Procured" value={metrics.items_procured ? Number(metrics.items_procured).toLocaleString() : '1,240'} helpText="↑ 15% vs last month" color="#8b5cf6" />
           </div>
 
-          {/* Procurement Overview & Order Status */}
+          
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '20px', marginBottom: '22px' }}>
-            {/* Chart 1: Procurement Overview (Dual Axis: Monthly Cost in Lakh vs Number of POs) */}
+            
             <div className="card" style={{ margin: 0 }}>
               <div className="card-header">
                 <h3 className="card-title" style={{ fontSize: '14.5px', fontWeight: 800 }}>Procurement Overview</h3>
@@ -646,7 +644,7 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* Chart 2: Active Purchase Orders Donut */}
+            
             <div className="card" style={{ margin: 0 }}>
               <div className="card-header">
                 <h3 className="card-title" style={{ fontSize: '14.5px', fontWeight: 800 }}>Active Purchase Orders</h3>
@@ -667,9 +665,9 @@ export const Dashboard = () => {
             </div>
           </div>
 
-          {/* Vendor Performance & Cost Breakdown */}
+          
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginBottom: '22px' }}>
-            {/* Chart 3: Vendor Performance Summary (Spider / Radar Chart) */}
+            
             <div className="card" style={{ margin: 0 }}>
               <div className="card-header">
                 <h3 className="card-title" style={{ fontSize: '14.5px', fontWeight: 800 }}>Vendor Performance Summary</h3>
@@ -687,7 +685,7 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* Chart 4: Procurement Cost Analysis Donut */}
+            
             <div className="card" style={{ margin: 0 }}>
               <div className="card-header">
                 <h3 className="card-title" style={{ fontSize: '14.5px', fontWeight: 800 }}>Procurement Cost Analysis</h3>
@@ -707,7 +705,7 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* Chart 5: Delivery Status Half Gauge */}
+            
             <div className="card" style={{ margin: 0 }}>
               <div className="card-header">
                 <h3 className="card-title" style={{ fontSize: '14.5px', fontWeight: 800 }}>Delivery Status</h3>
@@ -726,7 +724,7 @@ export const Dashboard = () => {
             </div>
           </div>
 
-          {/* Quick Intelligence Banner */}
+          
           <div className="card" style={{ background: 'linear-gradient(135deg, #0e3d2e 0%, #175440 100%)', color: '#ffffff', marginBottom: '22px', border: '1px solid rgba(52, 211, 153, 0.25)', boxShadow: '0 10px 25px -5px rgba(14, 61, 46, 0.25)' }}>
             <div className="card-body" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', padding: '20px 26px' }}>
               <div>
@@ -781,7 +779,7 @@ export const Dashboard = () => {
         </>
       )}
 
-      {/* --- SUPPLY CHAIN MANAGER DASHBOARD --- */}
+      
       {role === 'Supply Chain Manager' && (
         <>
           <div className="stats-grid">
@@ -791,9 +789,9 @@ export const Dashboard = () => {
             <StatCard label="Delayed Shipments" value={metrics.delayed_orders ?? 0} helpText="Past expected delivery date" color={(metrics.delayed_orders || 0) > 0 ? '#be123c' : '#0d7658'} />
           </div>
 
-          {/* Supply Chain Charts: Row 1 */}
+          
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '20px', marginBottom: '22px' }}>
-            {/* Chart 1: Delivery Performance Trend */}
+            
             <div className="card" style={{ margin: 0 }}>
               <div className="card-header">
                 <h3 className="card-title" style={{ fontSize: '14.5px', fontWeight: 800 }}>Delivery Performance Trend</h3>
@@ -819,7 +817,7 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* Chart 2: Shipment Pipeline Donut */}
+            
             <div className="card" style={{ margin: 0 }}>
               <div className="card-header">
                 <h3 className="card-title" style={{ fontSize: '14.5px', fontWeight: 800 }}>Shipment Pipeline</h3>
@@ -839,9 +837,9 @@ export const Dashboard = () => {
             </div>
           </div>
 
-          {/* Supply Chain Charts: Row 2 */}
+          
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginBottom: '22px' }}>
-            {/* Chart 3: Logistics & Fulfillment Efficiency */}
+            
             <div className="card" style={{ margin: 0 }}>
               <div className="card-header">
                 <h3 className="card-title" style={{ fontSize: '14.5px', fontWeight: 800 }}>Logistics & SLA Efficiency</h3>
@@ -859,7 +857,7 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* Chart 4: Fulfillment by Vendor Category */}
+            
             <div className="card" style={{ margin: 0 }}>
               <div className="card-header">
                 <h3 className="card-title" style={{ fontSize: '14.5px', fontWeight: 800 }}>Fulfillment by Category</h3>
@@ -879,7 +877,7 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* Chart 5: Delivery Health Half Gauge */}
+            
             <div className="card" style={{ margin: 0 }}>
               <div className="card-header">
                 <h3 className="card-title" style={{ fontSize: '14.5px', fontWeight: 800 }}>Fulfillment Health</h3>
@@ -898,7 +896,7 @@ export const Dashboard = () => {
             </div>
           </div>
 
-          {/* Operational Alerts */}
+          
           <div className="card" style={{ marginBottom: '22px' }}>
             <div className="card-header">
               <h2 className="card-title">Supply Chain Operational Alerts</h2>
@@ -925,7 +923,7 @@ export const Dashboard = () => {
             </div>
           </div>
 
-          {/* Recent Shipments / Orders Table */}
+          
           <div className="card">
             <div className="card-header">
               <h2 className="card-title">Recent Supply Shipments</h2>
@@ -1005,7 +1003,7 @@ export const Dashboard = () => {
         </>
       )}
 
-      {/* --- VENDOR DASHBOARD --- */}
+      
       {role === 'Vendor' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {(data?.vendor_info?.status === 'pending' || data?.vendor_info?.status === 'pending_approval') && (
@@ -1033,7 +1031,7 @@ export const Dashboard = () => {
             </div>
           )}
 
-          {/* 1. Welcome & Session Security Card */}
+          
           <div className="card" style={{ margin: 0, border: '1px solid var(--border-color)', background: '#ffffff', boxShadow: 'var(--shadow-xs)' }}>
             <div className="card-body" style={{ padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -1103,7 +1101,7 @@ export const Dashboard = () => {
             </div>
           </div>
 
-          {/* 2. Supplier Identity & Governance Card */}
+          
           {data?.vendor_info && (
             <div className="card" style={{ margin: 0, border: '1px solid var(--border-color)', background: '#ffffff', boxShadow: 'var(--shadow-xs)' }}>
               <div className="card-body" style={{ padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
@@ -1141,7 +1139,7 @@ export const Dashboard = () => {
             </div>
           )}
 
-          {/* Key Performance Indicators */}
+          
           <div className="stats-grid">
             <StatCard label="Performance Score" value={`${metrics.performance_score ?? 88}%`} helpText="↑ 6% vs last month" color="#10b981" />
             <StatCard label="Reliability Score" value={`${Math.round(metrics.reliability_score ?? 0)}%`} helpText="Based on historical orders" color="#0284c7" />
@@ -1149,9 +1147,9 @@ export const Dashboard = () => {
             <StatCard label="Total Orders" value={metrics.total_orders ?? 0} helpText="Total POs processed" color="#8b5cf6" />
           </div>
 
-          {/* Vendor Performance & Reliability Trend */}
+          
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '20px' }}>
-            {/* Chart 1: Vendor Performance Grouped Bar */}
+            
             <div className="card" style={{ margin: 0 }}>
               <div className="card-header">
                 <h3 className="card-title" style={{ fontSize: '14.5px', fontWeight: 800 }}>Vendor Performance</h3>
@@ -1171,7 +1169,7 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* Chart 2: Reliability Score Trend Line */}
+            
             <div className="card" style={{ margin: 0 }}>
               <div className="card-header">
                 <h3 className="card-title" style={{ fontSize: '14.5px', fontWeight: 800 }}>Reliability Score Trend</h3>
@@ -1193,9 +1191,9 @@ export const Dashboard = () => {
             </div>
           </div>
 
-          {/* Contract & Order Distribution */}
+          
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
-            {/* Chart 3: Contract Status Donut */}
+            
             <div className="card" style={{ margin: 0 }}>
               <div className="card-header">
                 <h3 className="card-title" style={{ fontSize: '14.5px', fontWeight: 800 }}>Contract Status</h3>
@@ -1214,7 +1212,7 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* Chart 4: Order History Dual Axis */}
+            
             <div className="card" style={{ margin: 0 }}>
               <div className="card-header">
                 <h3 className="card-title" style={{ fontSize: '14.5px', fontWeight: 800 }}>Order History</h3>
@@ -1239,7 +1237,7 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* Chart 5: Communication Activity Donut */}
+            
             <div className="card" style={{ margin: 0 }}>
               <div className="card-header">
                 <h3 className="card-title" style={{ fontSize: '14.5px', fontWeight: 800 }}>Communication Activity</h3>
@@ -1260,9 +1258,9 @@ export const Dashboard = () => {
             </div>
           </div>
 
-          {/* 6. The 8-Card Telemetry Grid (Vendor Scoped) */}
+          
           <div className="vendor-telemetry-grid">
-            {/* CARD 1: RELIABILITY SCORE */}
+            
             <div className="vendor-metric-card">
               <div>
                 <div className="vendor-metric-header">
@@ -1286,7 +1284,7 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* CARD 2: ON-TIME DELIVERY RATE */}
+            
             <div className="vendor-metric-card">
               <div>
                 <div className="vendor-metric-header">
@@ -1310,7 +1308,7 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* CARD 3: PRODUCT QUALITY RATING */}
+            
             <div className="vendor-metric-card">
               <div>
                 <div className="vendor-metric-header">
@@ -1334,7 +1332,7 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* CARD 4: COMMUNICATION RESPONSE */}
+            
             <div className="vendor-metric-card">
               <div>
                 <div className="vendor-metric-header">
@@ -1358,7 +1356,7 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* CARD 5: ACTIVE PURCHASE ORDERS */}
+            
             <div className="vendor-metric-card">
               <div>
                 <div className="vendor-metric-header">
@@ -1382,7 +1380,7 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* CARD 6: COMPLETED ORDERS */}
+            
             <div className="vendor-metric-card">
               <div>
                 <div className="vendor-metric-header">
@@ -1406,7 +1404,7 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* CARD 7: DELAYED ORDERS */}
+            
             <div className="vendor-metric-card">
               <div>
                 <div className="vendor-metric-header">
@@ -1430,7 +1428,7 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* CARD 8: DISBURSED & PENDING AP */}
+            
             <div className="vendor-metric-card">
               <div>
                 <div className="vendor-metric-header">
@@ -1455,7 +1453,7 @@ export const Dashboard = () => {
             </div>
           </div>
 
-          {/* 4. Quick Action Hub Navigation */}
+          
           <div className="card" style={{ margin: 0, border: '1px solid var(--border-color)', background: '#ffffff', boxShadow: 'var(--shadow-xs)' }}>
             <div className="card-header" style={{ background: '#fdfcf9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
               <div>
@@ -1486,7 +1484,7 @@ export const Dashboard = () => {
         </div>
       )}
 
-      {/* --- FINANCE OFFICER DASHBOARD --- */}
+      
       {role === 'Finance Officer' && (
         <>
           {actionMsg && (
@@ -1528,7 +1526,7 @@ export const Dashboard = () => {
             </div>
           )}
 
-          {/* Pending Payment Requests awaiting Finance approval */}
+          
           {pendingPaymentReqs.length > 0 && (
             <div className="card" style={{ marginBottom: '22px', border: '1.5px solid #f59e0b' }}>
               <div className="card-header" style={{ backgroundColor: '#fffbeb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1621,7 +1619,7 @@ export const Dashboard = () => {
             </div>
           )}
 
-          {/* Pending Purchase Orders awaiting Finance approval & Treasury Payout */}
+          
           {pendingPurchaseOrders.length > 0 && (
             <div className="card" style={{ marginBottom: '22px', border: '1.5px solid #0284c7', boxShadow: '0 4px 6px -1px rgba(2, 132, 199, 0.1)' }}>
               <div className="card-header" style={{ backgroundColor: '#f0f9ff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1748,9 +1746,9 @@ export const Dashboard = () => {
             <StatCard label="Overdue Invoices" value={metrics.overdue_count ?? 0} helpText="Past invoice due date" color={(metrics.overdue_count || 0) > 0 ? '#be123c' : '#0d7658'} />
           </div>
 
-          {/* Finance Charts: Row 1 */}
+          
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '20px', marginBottom: '22px' }}>
-            {/* Chart 1: Cashflow & Spend Trajectory */}
+            
             <div className="card" style={{ margin: 0 }}>
               <div className="card-header">
                 <h3 className="card-title" style={{ fontSize: '14.5px', fontWeight: 800 }}>Cashflow & AP Settlement Trajectory</h3>
@@ -1777,7 +1775,7 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* Chart 2: Invoice Status Breakdown */}
+            
             <div className="card" style={{ margin: 0 }}>
               <div className="card-header">
                 <h3 className="card-title" style={{ fontSize: '14.5px', fontWeight: 800 }}>Invoice Status & Payment Pipeline</h3>
@@ -1796,9 +1794,9 @@ export const Dashboard = () => {
             </div>
           </div>
 
-          {/* Finance Charts: Row 2 */}
+          
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '20px', marginBottom: '22px' }}>
-            {/* Chart 3: Spend by Vendor Category */}
+            
             <div className="card" style={{ margin: 0 }}>
               <div className="card-header">
                 <h3 className="card-title" style={{ fontSize: '14.5px', fontWeight: 800 }}>Spend by Vendor Category</h3>
@@ -1817,7 +1815,7 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* Chart 4: Top Vendors by Invoiced vs Paid Spend */}
+            
             <div className="card" style={{ margin: 0 }}>
               <div className="card-header">
                 <h3 className="card-title" style={{ fontSize: '14.5px', fontWeight: 800 }}>Top Vendor Spend Comparison (₹ Lakh)</h3>
@@ -1890,7 +1888,7 @@ export const Dashboard = () => {
         </>
       )}
 
-      {/* --- AUDITOR DASHBOARD --- */}
+      
       {role === 'Auditor' && (
         <>
           <div className="stats-grid">
@@ -1900,9 +1898,9 @@ export const Dashboard = () => {
             <StatCard label="Audited PO Records" value={metrics.audited_orders ?? 0} helpText="Approved procurement commitments" color="#0d7658" />
           </div>
 
-          {/* Auditor Charts: Row 1 */}
+          
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '20px', marginBottom: '22px' }}>
-            {/* Chart 1: Audit Events Breakdown Donut */}
+            
             <div className="card" style={{ margin: 0 }}>
               <div className="card-header">
                 <h3 className="card-title" style={{ fontSize: '14.5px', fontWeight: 800 }}>Audit Events by Action Category</h3>
@@ -1921,7 +1919,7 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* Chart 2: Compliance & Contract Health Donut */}
+            
             <div className="card" style={{ margin: 0 }}>
               <div className="card-header">
                 <h3 className="card-title" style={{ fontSize: '14.5px', fontWeight: 800 }}>Compliance & Contract Health</h3>
@@ -1940,9 +1938,9 @@ export const Dashboard = () => {
             </div>
           </div>
 
-          {/* Auditor Charts: Row 2 */}
+          
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '20px', marginBottom: '22px' }}>
-            {/* Chart 3: System Vendor Risk Distribution */}
+            
             <div className="card" style={{ margin: 0 }}>
               <div className="card-header">
                 <h3 className="card-title" style={{ fontSize: '14.5px', fontWeight: 800 }}>System Vendor Risk Distribution</h3>
@@ -1959,7 +1957,7 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* Chart 4: Audit Activity Trend */}
+            
             <div className="card" style={{ margin: 0 }}>
               <div className="card-header">
                 <h3 className="card-title" style={{ fontSize: '14.5px', fontWeight: 800 }}>Audit Activity 6-Month Trail Trend</h3>
@@ -2017,7 +2015,7 @@ export const Dashboard = () => {
         </>
       )}
 
-      {/* Structured Tax Invoice PDF Preview & Download Modal */}
+      
       <InvoicePDFModal
         isOpen={isPdfOpen}
         onClose={() => {

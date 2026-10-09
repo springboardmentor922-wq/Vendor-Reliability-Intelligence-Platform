@@ -18,7 +18,6 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
-    # Relationships
     vendor = relationship("Vendor", back_populates="users", foreign_keys=[vendor_id])
     procurement_requests = relationship("ProcurementRequest", back_populates="requested_by", foreign_keys="ProcurementRequest.requested_by_id")
     created_orders = relationship("PurchaseOrder", back_populates="created_by", foreign_keys="PurchaseOrder.created_by_id")

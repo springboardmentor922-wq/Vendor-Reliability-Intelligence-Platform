@@ -10,7 +10,6 @@ export const Landing = () => {
   const [authLoading, setAuthLoading] = React.useState(false);
   const [authError, setAuthError] = React.useState('');
 
-  // Direct persona login for demo navigation
   const handleLaunchPersona = async (persona) => {
     setAuthError('');
     setAuthLoading(true);
@@ -26,7 +25,7 @@ export const Landing = () => {
 
   return (
     <div className="landing-page">
-      {/* Top Navigation */}
+      
       <nav className="landing-nav">
         <div className="landing-nav-inner">
           <div className="brand-logo" style={{ fontSize: '20px' }}>
@@ -78,9 +77,9 @@ export const Landing = () => {
         </div>
       </nav>
 
-      {/* Hero */}
+      
       <header className="landing-hero-container">
-        {/* Background visual accents */}
+        
         <div className="hero-dynamic-backdrop" aria-hidden="true">
           <div className="hero-grid-mesh" />
           <div className="glow-orb orb-primary" />
@@ -88,7 +87,7 @@ export const Landing = () => {
           <div className="glow-orb orb-accent" />
           <div className="glow-orb orb-subtle" />
 
-          {/* Network graphic */}
+          
           <svg className="hero-svg-constellation" viewBox="0 0 1200 650" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M80 320 Q320 160 600 250 T1120 280" stroke="rgba(52, 211, 153, 0.22)" strokeWidth="1.5" strokeDasharray="6 6" className="constellation-path-1" />
             <path d="M120 460 Q380 300 600 250 T1080 380" stroke="rgba(245, 158, 11, 0.18)" strokeWidth="1.5" strokeDasharray="5 5" className="constellation-path-2" />
@@ -161,7 +160,7 @@ export const Landing = () => {
           </div>
         </div>
 
-        {/* Live Metrics Showcase Banner */}
+        
         <div className="hero-stats-banner" style={{ marginTop: '50px' }}>
           <div className="hero-stat-box">
             <div className="stat-number">13</div>
@@ -182,7 +181,7 @@ export const Landing = () => {
         </div>
       </header>
 
-      {/* Interactive 6-Role Selector Section */}
+      
       <section id="roles" className="landing-section">
         <div className="section-header">
           <div className="section-tag">Role-Based Access Control</div>
@@ -224,7 +223,7 @@ export const Landing = () => {
         </div>
       </section>
 
-      {/* Core Capabilities */}
+      
       <section id="features" className="landing-section" style={{ background: 'rgba(6, 18, 14, 0.5)' }}>
         <div className="section-header">
           <div className="section-tag">Platform Modules</div>
@@ -322,7 +321,7 @@ export const Landing = () => {
         </div>
       </section>
 
-      {/* Architecture & Tech Stack */}
+      
       <section id="architecture" className="landing-section">
         <div className="section-header">
           <div className="section-tag">Enterprise Architecture</div>
@@ -357,7 +356,7 @@ export const Landing = () => {
         </div>
       </section>
 
-      {/* Footer */}
+      
       <footer className="landing-footer">
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
           <div style={{ color: '#9db2a8', fontSize: '13px' }}>

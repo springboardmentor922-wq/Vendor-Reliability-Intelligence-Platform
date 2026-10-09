@@ -14,7 +14,6 @@ async function request(endpoint, options = {}) {
   });
 
   if (response.status === 401) {
-    // If unauthorized, clear token and notify
     localStorage.removeItem('vendoriq_token');
     localStorage.removeItem('vendoriq_user');
     if (!window.location.pathname.includes('/login')) {
@@ -22,7 +21,6 @@ async function request(endpoint, options = {}) {
     }
   }
 
-  // Handle file downloads/blobs
   if (options.responseType === 'blob') {
     if (!response.ok) {
       throw new Error('Failed to download report');
@@ -39,7 +37,6 @@ async function request(endpoint, options = {}) {
 }
 
 export const api = {
-  // Authentication
   login: (credentials) => request('/auth/login', { method: 'POST', body: JSON.stringify(credentials) }),
   register: (userData) => request('/auth/register', { method: 'POST', body: JSON.stringify(userData) }),
   getMe: () => request('/auth/me'),
@@ -47,10 +44,8 @@ export const api = {
   updateUserRole: (userId, newRole) => request(`/auth/users/${userId}/role`, { method: 'PUT', body: JSON.stringify({ new_role: newRole }) }),
 
 
-  // Dashboard
   getDashboardStats: () => request('/dashboard/stats'),
 
-  // Vendors
   getPublicVendorShowcase: () => request('/vendors/public-showcase'),
   publicRegisterVendor: (vendorData) => request('/vendors/public-register', { method: 'POST', body: JSON.stringify(vendorData) }),
   getVendors: (params = {}) => {
@@ -68,7 +63,6 @@ export const api = {
   updateVendorStatus: (id, statusData) => request(`/vendors/${id}/status`, { method: 'PATCH', body: JSON.stringify(statusData) }),
   submitVendorApproval: (vendorId) => request(`/vendors/${vendorId}/submit-approval`, { method: 'POST' }),
 
-  // Procurement Requests & Treasury
   getCompanyTreasury: () => request('/procurement/treasury'),
   getProcurementRequests: (status) => request(`/procurement/requests${status ? `?status=${status}` : ''}`),
   getPublicOpenRequests: (category) => request(`/procurement/public-open-requests${category ? `?category=${category}` : ''}`),
@@ -79,7 +73,6 @@ export const api = {
   financeApproveRequest: (reqId) => request(`/procurement/requests/${reqId}/finance-approve`, { method: 'POST' }),
   financeRejectRequest: (reqId, reason) => request(`/procurement/requests/${reqId}/finance-reject?reason=${encodeURIComponent(reason || '')}`, { method: 'POST' }),
 
-  // Purchase Orders
   getPurchaseOrders: (params = {}) => {
     const searchParams = new URLSearchParams();
     if (params.status) searchParams.append('status', params.status);
@@ -93,12 +86,10 @@ export const api = {
   financeApprovePO: (orderId) => request(`/procurement/orders/${orderId}/finance-approve`, { method: 'POST' }),
   financeRejectPO: (orderId, reason) => request(`/procurement/orders/${orderId}/finance-reject?reason=${encodeURIComponent(reason || '')}`, { method: 'POST' }),
 
-  // Invoices
   getInvoices: (status) => request(`/procurement/invoices${status ? `?status=${status}` : ''}`),
   createInvoice: (data) => request('/procurement/invoices', { method: 'POST', body: JSON.stringify(data) }),
   updateInvoiceStatus: (id, data) => request(`/procurement/invoices/${id}/status`, { method: 'PATCH', body: JSON.stringify(data) }),
 
-  // Contracts & Compliance
   getContracts: (params = {}) => {
     const searchParams = new URLSearchParams();
     if (params.status) searchParams.append('status', params.status);
@@ -111,7 +102,6 @@ export const api = {
   getCertifications: (vendor_id) => request(`/contracts/compliance/certifications${vendor_id ? `?vendor_id=${vendor_id}` : ''}`),
   createCertification: (data) => request('/contracts/certifications', { method: 'POST', body: JSON.stringify(data) }),
 
-  // Communication / Team Collaboration & Messages
   getConversations: () => request('/messages/conversations'),
   getVendorMessages: (vendorId) => request(`/messages/vendor/${vendorId}`),
   sendMessage: (data) => request('/messages', { method: 'POST', body: JSON.stringify(data) }),
@@ -121,8 +111,6 @@ export const api = {
   sendInternalMessage: (data) => request('/messages/internal', { method: 'POST', body: JSON.stringify(data) }),
 
 
-
-  // Predictive Analytics & Reliability
   getAnalyticsOverview: (params = {}) => {
     const searchParams = new URLSearchParams();
     if (params.category) searchParams.append('category', params.category);
@@ -140,7 +128,6 @@ export const api = {
     });
   },
 
-  // Event-Driven Notifications & SMS Gateway
   getNotifications: () => request('/notifications'),
   scanAndTriggerNotifications: () => request('/notifications/scan-and-trigger', { method: 'POST' }),
   markNotificationRead: (id) => request(`/notifications/${id}/read`, { method: 'PATCH' }),
@@ -148,7 +135,6 @@ export const api = {
   getSMSLogs: () => request('/notifications/sms-logs'),
   sendSMSNotification: (data) => request('/notifications/send-sms', { method: 'POST', body: JSON.stringify(data) }),
 
-  // Audit Logs
   getAuditLogs: (params = {}) => {
     const searchParams = new URLSearchParams();
     if (params.entity) searchParams.append('entity', params.entity);
@@ -157,6 +143,5 @@ export const api = {
     return request(`/audit-logs${query ? `?${query}` : ''}`);
   },
 
-  // Seed
   resetDatabase: () => request('/seed/reset', { method: 'POST' }),
 };

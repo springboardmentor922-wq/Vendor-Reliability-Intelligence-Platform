@@ -163,7 +163,6 @@ def public_vendor_registration(vendor_in: VendorCreate, db: Session = Depends(ge
     db.commit()
     db.refresh(new_vendor)
 
-    # Send approval request notification to all administrators (avoiding duplicates)
     admins = db.query(User).filter(User.role == UserRole.ADMINISTRATOR).all()
     for admin in admins:
         existing = db.query(Notification).filter(
@@ -231,7 +230,6 @@ def get_vendors(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    # Restrict vendor role to their own assigned company
     if current_user.role == UserRole.VENDOR:
         if not current_user.vendor_id:
             return []
@@ -270,7 +268,6 @@ def create_vendor(
             detail="A vendor with this company name already exists."
         )
 
-    # Newly created vendors start in Pending status awaiting confirmation
     initial_status = VendorStatus.PENDING
     approved_by = None
 
@@ -292,12 +289,10 @@ def create_vendor(
     db.commit()
     db.refresh(vendor)
 
-    # Link user to vendor if registering vendor user
     if current_user.role == UserRole.VENDOR and not current_user.vendor_id:
         current_user.vendor_id = vendor.id
         db.commit()
 
-    # Notify all Administrators about the new vendor approval request
     admins = db.query(User).filter(User.role == UserRole.ADMINISTRATOR).all()
     for admin in admins:
         db.add(Notification(
@@ -364,16 +359,13 @@ def update_vendor_status(
     if not vendor:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vendor not found")
 
-    # If approving or rejecting a pending vendor:
     if vendor.status in [VendorStatus.PENDING, VendorStatus.PENDING_APPROVAL]:
-        # Strictly restricted to Administrator
         if current_user.role != UserRole.ADMINISTRATOR:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Only an Administrator can review and approve/reject new vendor registrations."
             )
     else:
-        # Administrative lifecycle actions (suspend, reactivate)
         if current_user.role not in [UserRole.ADMINISTRATOR, UserRole.SUPPLY_CHAIN_MANAGER, UserRole.PROCUREMENT_MANAGER]:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
