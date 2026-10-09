@@ -282,3 +282,11 @@ walkthrough and the end-to-end demonstration script.
 - Docker, cloud deployment and load testing are Milestone 4 scope.
 - `frontend_legacy/` holds the original single-file prototype, kept for
   reference. It is not part of the build.
+
+
+##  Project Demo
+https://drive.google.com/file/d/1qlh8FGZGos5XlcTLiRLa8PVSIeCTBMQt/view?usp=drive_link
+https://drive.google.com/file/d/1fq9q8xkqgr1nzLqrnUyHtt-TnsjVl2yX/view?usp=drive_link
+
+
+
