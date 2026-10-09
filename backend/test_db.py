@@ -1,8 +1,11 @@
+"""Minimal PostgreSQL smoke check for local development."""
+
+from sqlalchemy import text
 from database import engine
 
-try:
-    with engine.connect() as connection:
-        print("SUCCESS: Connected to MySQL database!")
-except Exception as e:
-    print("ERROR: Could not connect to MySQL")
-    print(e)
+
+if __name__ == "__main__":
+    with engine.connect() as conn:
+        version = conn.execute(text("SELECT version()")).scalar()
+        print(version)
+        print("VendorIQ PostgreSQL connection: OK")

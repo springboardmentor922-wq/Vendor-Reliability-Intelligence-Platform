@@ -1,10 +1,7 @@
-"""Milestone-1, 2, 3: Audit Trails & Compliance logging module.
+"""Audit trail endpoints for governance and review."""
 
-Provides activity tracking and historical reconstructibility for Auditors and Administrators.
-"""
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-
 import models
 from deps import get_current_user, get_db, require_role
 
@@ -16,56 +13,59 @@ def list_audit_logs(
     entity_type: str | None = None,
     action: str | None = None,
     limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
     current_user: models.User = Depends(
-        require_role(["admin", "auditor", "manager"])
+        require_role(["administrator", "auditor", "supply_chain_manager"])
     ),
     db: Session = Depends(get_db),
 ):
-    """Retrieve system audit logs for compliance tracking."""
     query = db.query(models.AuditLog)
-
     if entity_type:
         query = query.filter(models.AuditLog.entity_type == entity_type)
     if action:
         query = query.filter(models.AuditLog.action == action)
-
-    logs = query.order_by(models.AuditLog.created_at.desc()).limit(limit).all()
-
-    result = []
-    for log in logs:
-        user = db.query(models.User).filter(models.User.id == log.user_id).first() if log.user_id else None
-        result.append({
-            "id": log.id,
-            "user_id": log.user_id,
-            "user_name": user.name if user else ("System" if not log.user_id else f"User #{log.user_id}"),
-            "user_role": user.role if user else "system",
-            "action": log.action,
-            "entity_type": log.entity_type,
-            "entity_id": log.entity_id,
-            "details": log.details,
-            "created_at": log.created_at.isoformat() if log.created_at else None,
-        })
-    return result
+    logs = (
+        query.order_by(models.AuditLog.created_at.desc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+    return [
+        {
+            "id": l.id,
+            "user_id": l.user_id,
+            "user_name": l.user.name
+            if l.user
+            else ("System" if l.user_id is None else f"User #{l.user_id}"),
+            "user_role": l.user.role if l.user else "system",
+            "action": l.action,
+            "entity_type": l.entity_type,
+            "entity_id": l.entity_id,
+            "details": l.details,
+            "created_at": l.created_at.isoformat() if l.created_at else None,
+        }
+        for l in logs
+    ]
 
 
 @router.get("/summary")
 def audit_summary(
     current_user: models.User = Depends(
-        require_role(["admin", "auditor", "manager"])
+        require_role(["administrator", "auditor", "supply_chain_manager"])
     ),
     db: Session = Depends(get_db),
 ):
-    """Aggregated overview of logged activities."""
     logs = db.query(models.AuditLog).all()
     from collections import Counter
-    actions = Counter(l.action for l in logs)
-    entities = Counter(l.entity_type for l in logs)
 
     return {
         "total_events": len(logs),
-        "total_logs": len(logs),
-        "actions": [{"action": k, "count": v} for k, v in actions.items()],
-        "entities": [{"entity_type": k, "count": v} for k, v in entities.items()],
+        "actions": [
+            {"action": k, "count": v}
+            for k, v in Counter(x.action for x in logs).most_common()
+        ],
+        "entities": [
+            {"entity_type": k, "count": v}
+            for k, v in Counter(x.entity_type for x in logs).most_common()
+        ],
     }
-
-

@@ -1,178 +1,185 @@
-"""Milestone-3: Notification System.
+"""Notification and alert services.
 
-Event-triggered, in-app notifications. Notifications are created either
-inline from business events (PO status change, vendor approval) or by
-running the alert generators (delivery-delay, contract-expiry, compliance,
-procurement alerts) against the live database.
+Provider-neutral: in-app notifications work without external credentials, while
+email/SMS delivery can be layered on later through Celery providers.
 """
-from datetime import datetime, timedelta
 
+from __future__ import annotations
+
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 import models
-from database import engine
-from deps import get_current_user, get_db, require_role
+from deps import get_current_user, get_db, normalize_role, require_role
 
-router = APIRouter(prefix="/notifications", tags=["notifications"])
-
+router = APIRouter(prefix="/api/notifications", tags=["notifications"])
 ALERT_TYPES = {
     "procurement",
     "delivery_delay",
     "vendor_approval",
     "contract_expiry",
     "compliance",
+    "invoice",
 }
 
 
-def create_notification(db: Session, user_id: int, title: str, message: str,
-                        notification_type: str):
-    """Create a single in-app notification row."""
-    n = models.Notification(
+def create_notification(
+    db: Session,
+    user_id: int,
+    title: str,
+    message: str,
+    notification_type: str = "procurement",
+):
+    item = models.Notification(
         user_id=user_id,
         title=title,
         message=message,
         notification_type=notification_type,
         is_read=False,
     )
-    db.add(n)
-    return n
+    db.add(item)
+    return item
 
 
-def notify_roles(db: Session, roles: list[str], title: str, message: str,
-                 notification_type: str):
-    """Notify every user whose role is in `roles`."""
-    users = db.query(models.User).filter(models.User.role.in_(roles)).all()
-    for u in users:
-        create_notification(db, u.id, title, message, notification_type)
-
-
-def notify_user(db: Session, user_id: int, title: str, message: str,
-                notification_type: str):
+def notify_user(
+    db: Session,
+    user_id: int,
+    title: str,
+    message: str,
+    notification_type: str = "procurement",
+):
     return create_notification(db, user_id, title, message, notification_type)
 
 
-# --------------------------------------------------------------------------
-# Alert generators (run against live DB to surface actionable events)
-# --------------------------------------------------------------------------
+def notify_roles(
+    db: Session,
+    roles: list[str],
+    title: str,
+    message: str,
+    notification_type: str = "procurement",
+):
+    allowed = {normalize_role(role) for role in roles}
+    users = db.query(models.User).all()
+    for user in users:
+        if normalize_role(user.role) in allowed:
+            create_notification(db, user.id, title, message, notification_type)
+
 
 def generate_alerts(db: Session):
-    """Create notifications for all currently-detectable risk events.
-
-    Returns a summary of how many notifications were created per type.
-    """
-    from datetime import datetime as _dt
-    now = _dt.now()
-    counts: dict[str, int] = {}
-    roles = ["admin", "procurement", "manager"]
-
-    # 1. Contract-expiry alerts (within 90 days)
-    contracts = db.query(models.Contract).filter(
-        models.Contract.end_date >= now,
-        models.Contract.end_date <= now + timedelta(days=90),
-        models.Contract.status == "Active",
-    ).all()
-    for c in contracts:
-        days_left = (c.end_date - now).days
-        level = "within 30 days" if days_left <= 30 else (
-            "within 60 days" if days_left <= 60 else "within 90 days")
-        notify_roles(
-            db, roles,
-            "Contract Expiry Alert",
-            f"Contract '{c.contract_name}' (vendor #{c.vendor_id}) expires "
-            f"{level} ({c.end_date.strftime('%Y-%m-%d')}).",
-            "contract_expiry",
-        )
-        counts["contract_expiry"] = counts.get("contract_expiry", 0) + 1
-
-    # 2. Compliance alerts (contracts marked non-compliant)
-    non_compliant = db.query(models.Contract).filter(
-        models.Contract.compliance_status.notin_(["Compliant"]),
-        models.Contract.status == "Active",
-    ).all()
-    for c in non_compliant:
-        notify_roles(
-            db, roles,
-            "Compliance Notification",
-            f"Contract '{c.contract_name}' is not marked Compliant "
-            f"(status: {c.compliance_status}). Review documentation.",
-            "compliance",
-        )
-        counts["compliance"] = counts.get("compliance", 0) + 1
-
-    # 3. Delivery-delay alerts from the real dataset (high-risk suppliers)
-    with engine.connect() as conn:
-        rows = conn.execute(text("""
-            SELECT product_card_id, product_name, reliability_score,
-                   late_rate, risk_level
-            FROM dataset_suppliers
-            WHERE risk_level = 'High'
-               OR late_rate > 60
-            ORDER BY late_rate DESC
-            LIMIT 10
-        """)).fetchall()
-    for r in rows:
-        notify_roles(
-            db, roles,
-            "Delivery Delay Alert",
-            f"Supplier '{r.product_name}' has {r.late_rate:.1f}% late "
-            f"deliveries (reliability {r.reliability_score}). Risk: "
-            f"{r.risk_level}. Consider expedited review.",
-            "delivery_delay",
-        )
-        counts["delivery_delay"] = counts.get("delivery_delay", 0) + 1
-
-    # 4. Procurement alerts (pending requests / orders past due)
-    pending_prs = db.query(models.ProcurementRequest).filter(
-        models.ProcurementRequest.status == "Pending").count()
-    if pending_prs:
-        notify_roles(
-            db, roles,
-            "Procurement Alert",
-            f"{pending_prs} procurement request(s) are awaiting approval.",
-            "procurement",
-        )
-        counts["procurement"] = counts.get("procurement", 0) + 1
-
-    overdue_orders = db.query(models.PurchaseOrder).filter(
-        models.PurchaseOrder.expected_delivery < now,
-        models.PurchaseOrder.status.in_(["Pending", "Approved"]),
-    ).count()
-    if overdue_orders:
-        notify_roles(
-            db, roles,
-            "Procurement Alert",
-            f"{overdue_orders} purchase order(s) are past their expected "
-            f"delivery date.",
-            "procurement",
-        )
-        counts["procurement"] = counts.get("procurement", 0) + 1
-
+    counts = {key: 0 for key in ALERT_TYPES}
+    now = datetime.utcnow()
+    # Due/late POs
+    for po in (
+        db.query(models.PurchaseOrder)
+        .filter(models.PurchaseOrder.status.in_(["Approved", "Ordered"]))
+        .all()
+    ):
+        if po.expected_delivery and po.expected_delivery.replace(tzinfo=None) < now:
+            create_notification(
+                db,
+                po.created_by,
+                "Delivery delay detected",
+                f"{po.po_number or 'PO #' + str(po.id)} is past its expected delivery date.",
+                "delivery_delay",
+            )
+            counts["delivery_delay"] += 1
+    # Contract expiry
+    for c in db.query(models.Contract).filter(models.Contract.status == "Active").all():
+        if c.end_date and 0 <= (c.end_date.replace(tzinfo=None) - now).days <= 60:
+            target = c.vendor.users[0].id if c.vendor and c.vendor.users else None
+            if target is None:
+                notify_roles(
+                    db,
+                    ["administrator", "procurement_manager"],
+                    "Contract expires soon",
+                    f"{c.contract_name} expires in {(c.end_date.replace(tzinfo=None) - now).days} day(s).",
+                    "contract_expiry",
+                )
+            else:
+                create_notification(
+                    db,
+                    target,
+                    "Contract expires soon",
+                    f"{c.contract_name} expires in {(c.end_date.replace(tzinfo=None) - now).days} day(s).",
+                    "contract_expiry",
+                )
+            counts["contract_expiry"] += 1
+    # Compliance
+    for c in (
+        db.query(models.Contract)
+        .filter(models.Contract.compliance_status.in_(["Pending", "Non-Compliant"]))
+        .all()
+    ):
+        target = c.vendor.users[0].id if c.vendor and c.vendor.users else None
+        if target is None:
+            notify_roles(
+                db,
+                ["administrator", "procurement_manager"],
+                "Compliance attention needed",
+                f"{c.contract_name} is marked {c.compliance_status}.",
+                "compliance",
+            )
+        else:
+            create_notification(
+                db,
+                target,
+                "Compliance attention needed",
+                f"{c.contract_name} is marked {c.compliance_status}.",
+                "compliance",
+            )
+        counts["compliance"] += 1
+    # Overdue invoices
+    for invoice in (
+        db.query(models.Invoice).filter(models.Invoice.status == "Pending").all()
+    ):
+        if invoice.due_date and invoice.due_date.replace(tzinfo=None) < now:
+            target = (
+                invoice.vendor.users[0].id
+                if invoice.vendor and invoice.vendor.users
+                else None
+            )
+            if target is None:
+                notify_roles(
+                    db,
+                    ["administrator", "finance_officer"],
+                    "Invoice overdue",
+                    f"{invoice.invoice_number} is past its due date.",
+                    "invoice",
+                )
+            else:
+                create_notification(
+                    db,
+                    target,
+                    "Invoice overdue",
+                    f"{invoice.invoice_number} is past its due date.",
+                    "invoice",
+                )
+            counts["invoice"] += 1
     return counts
 
 
-# --------------------------------------------------------------------------
-# API endpoints
-# --------------------------------------------------------------------------
-
 class TestNotification(BaseModel):
-    notification_type: str  # one of ALERT_TYPES
+    notification_type: str = "procurement"
     message: str | None = None
 
 
 @router.get("")
 def list_notifications(
+    limit: int = 100,
     unread_only: bool = False,
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    q = db.query(models.Notification).filter(
-        models.Notification.user_id == current_user.id)
+    query = (
+        db.query(models.Notification)
+        .filter(models.Notification.user_id == current_user.id)
+        .order_by(models.Notification.created_at.desc())
+    )
     if unread_only:
-        q = q.filter(models.Notification.is_read == False)  # noqa: E712
-    items = q.order_by(models.Notification.created_at.desc()).limit(100).all()
+        query = query.filter(models.Notification.is_read.is_(False))
+    rows = query.limit(min(max(limit, 1), 500)).all()
     return [
         {
             "id": n.id,
@@ -182,20 +189,23 @@ def list_notifications(
             "is_read": n.is_read,
             "created_at": n.created_at.isoformat() if n.created_at else None,
         }
-        for n in items
+        for n in rows
     ]
 
 
 @router.get("/count/unread")
 def unread_count(
-    current_user: models.User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)
 ):
-    count = db.query(models.Notification).filter(
-        models.Notification.user_id == current_user.id,
-        models.Notification.is_read == False,  # noqa: E712
-    ).count()
-    return {"unread": count}
+    count = (
+        db.query(models.Notification)
+        .filter(
+            models.Notification.user_id == current_user.id,
+            models.Notification.is_read.is_(False),
+        )
+        .count()
+    )
+    return {"count": count}
 
 
 @router.put("/{notification_id}/read")
@@ -204,10 +214,14 @@ def mark_read(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    n = db.query(models.Notification).filter(
-        models.Notification.id == notification_id,
-        models.Notification.user_id == current_user.id,
-    ).first()
+    n = (
+        db.query(models.Notification)
+        .filter(
+            models.Notification.id == notification_id,
+            models.Notification.user_id == current_user.id,
+        )
+        .first()
+    )
     if not n:
         raise HTTPException(status_code=404, detail="Notification not found")
     n.is_read = True
@@ -217,12 +231,11 @@ def mark_read(
 
 @router.put("/read-all")
 def mark_all_read(
-    current_user: models.User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)
 ):
     db.query(models.Notification).filter(
         models.Notification.user_id == current_user.id,
-        models.Notification.is_read == False,  # noqa: E712
+        models.Notification.is_read.is_(False),
     ).update({"is_read": True}, synchronize_session=False)
     db.commit()
     return {"message": "All notifications marked as read"}
@@ -231,16 +244,15 @@ def mark_all_read(
 @router.post("/generate")
 def trigger_alerts(
     current_user: models.User = Depends(
-        require_role(["admin", "procurement", "manager"])),
+        require_role(["administrator", "procurement_manager", "supply_chain_manager"])
+    ),
     db: Session = Depends(get_db),
 ):
-    """Scan live data and create alert notifications for detected events."""
     counts = generate_alerts(db)
     db.commit()
-    created = sum(counts.values())
     return {
-        "message": f"Alert generation complete ({created} notification(s))",
-        "created": created,
+        "message": "Alert scan completed",
+        "created": sum(counts.values()),
         "breakdown": counts,
     }
 
@@ -253,10 +265,13 @@ def send_test_notification(
 ):
     if payload.notification_type not in ALERT_TYPES:
         raise HTTPException(status_code=400, detail="Invalid notification type")
-    message = payload.message or (
-        f"Test {payload.notification_type.replace('_', ' ')} notification "
-        f"sent to your inbox.")
-    notify_user(db, current_user.id, "Test Notification", message,
-                payload.notification_type)
+    notify_user(
+        db,
+        current_user.id,
+        "Test notification",
+        payload.message
+        or f"Test {payload.notification_type.replace('_', ' ')} notification.",
+        payload.notification_type,
+    )
     db.commit()
     return {"message": "Test notification created"}

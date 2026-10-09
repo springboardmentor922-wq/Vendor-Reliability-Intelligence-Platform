@@ -1,3 +1,7 @@
+# Implementation note
+
+The supplied assignment specification names Angular for the frontend. The current VendorIQ implementation intentionally uses React + TypeScript + Vite instead, per the project decision made after reviewing the supplied requirements. Backend, database, workflows and functional requirements remain aligned to the specification.
+
 # Vendor Reliability Intelligence Platform
 
 ## 1. Project Objective
