@@ -722,23 +722,43 @@ a:hover {
 
 /* Custom scrollbars for modals */
 .modal-body::-webkit-scrollbar,
-.modal-backdrop::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+.modal-backdrop::-webkit-scrollbar,
+.custom-scrollbar::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
 }
 .modal-body::-webkit-scrollbar-track,
-.modal-backdrop::-webkit-scrollbar-track {
+.modal-backdrop::-webkit-scrollbar-track,
+.custom-scrollbar::-webkit-scrollbar-track {
   background: #f1f5f9;
   border-radius: 4px;
 }
 .modal-body::-webkit-scrollbar-thumb,
-.modal-backdrop::-webkit-scrollbar-thumb {
+.modal-backdrop::-webkit-scrollbar-thumb,
+.custom-scrollbar::-webkit-scrollbar-thumb {
   background: #94a3b8;
   border-radius: 4px;
 }
 .modal-body::-webkit-scrollbar-thumb:hover,
-.modal-backdrop::-webkit-scrollbar-thumb:hover {
+.modal-backdrop::-webkit-scrollbar-thumb:hover,
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #64748b;
+}
+
+/* Responsive height scaling for modal popups on compact / standard displays */
+@media (max-height: 820px) {
+  .modal-content {
+    max-height: 96vh !important;
+  }
+  .modal-header {
+    padding: 12px 20px !important;
+  }
+  .modal-body {
+    padding: 12px 18px !important;
+  }
+  .modal-footer {
+    padding: 10px 18px !important;
+  }
 }
 
 .modal-footer {

@@ -1120,17 +1120,17 @@ export const VendorPortal = () => {
           }}
           title={vendorModalData?.company_name || selectedVendorForModal.company_name}
           subtitle={`Supplier Profile • Code: ${vendorModalData?.code || `VN-${String(selectedVendorForModal.id).padStart(4, '0')}`} • Category: ${getCategoryLabel(vendorModalData?.category || selectedVendorForModal.category)}`}
-          maxWidth="880px"
+          maxWidth="940px"
         >
           <div
-            className="modal-body"
+            className="modal-body custom-scrollbar"
             style={{
               display: 'flex',
               flexDirection: 'column',
-              gap: '20px',
-              padding: '22px 26px',
+              gap: '12px',
+              padding: '14px 20px',
               overflowY: 'auto',
-              maxHeight: 'calc(88vh - 120px)',
+              maxHeight: 'calc(88vh - 100px)',
               minHeight: 0,
               flex: '1 1 auto'
             }}
@@ -1141,24 +1141,24 @@ export const VendorPortal = () => {
               justifyContent: 'space-between',
               alignItems: 'center',
               flexWrap: 'wrap',
-              gap: '12px',
-              paddingBottom: '14px',
+              gap: '8px',
+              paddingBottom: '8px',
               borderBottom: '1px solid var(--border-color)'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                <span className="badge badge-neutral" style={{ padding: '4px 10px', fontSize: '12px', fontWeight: 700 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <span className="badge badge-neutral" style={{ padding: '3px 8px', fontSize: '11.5px', fontWeight: 700 }}>
                   {getCategoryLabel(vendorModalData?.category || selectedVendorForModal.category)}
                 </span>
-                <span className="badge badge-approved" style={{ padding: '4px 10px', fontSize: '12px' }}>
+                <span className="badge badge-approved" style={{ padding: '3px 8px', fontSize: '11.5px' }}>
                   {vendorModalData?.status ? (vendorModalData.status.charAt(0).toUpperCase() + vendorModalData.status.slice(1)) : 'Active'} Supplier
                 </span>
-                <span className="badge badge-ordered" style={{ padding: '4px 10px', fontSize: '12px' }}>
+                <span className="badge badge-ordered" style={{ padding: '3px 8px', fontSize: '11.5px' }}>
                   Tier: {vendorModalData?.tier || 'Standard Supplier'}
                 </span>
                 {vendorModalData?.risk_level && (
                   <span className="badge" style={{
-                    padding: '4px 10px',
-                    fontSize: '12px',
+                    padding: '3px 8px',
+                    fontSize: '11.5px',
                     backgroundColor: String(vendorModalData.risk_level).includes('Low') ? '#ecfdf5' : '#fef2f2',
                     color: String(vendorModalData.risk_level).includes('Low') ? '#047857' : '#b91c1c',
                     border: `1px solid ${String(vendorModalData.risk_level).includes('Low') ? '#a7f3d0' : '#fecaca'}`
@@ -1167,38 +1167,38 @@ export const VendorPortal = () => {
                   </span>
                 )}
               </div>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
                 Registered ID: <code>VN-{String(selectedVendorForModal.id).padStart(4, '0')}</code>
               </div>
             </div>
 
-            {/* Key Reliability & Performance KPI Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px' }}>
+            {/* Key Reliability & Performance KPI Grid - Compact & Scalable */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '10px' }}>
               {/* Reliability Index Card */}
               <div style={{
                 backgroundColor: '#f8fafc',
                 border: '1.5px solid #0f766e',
-                borderRadius: '10px',
-                padding: '14px 16px',
+                borderRadius: '8px',
+                padding: '10px 14px',
                 position: 'relative'
               }}>
-                <div style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: '#0f766e', letterSpacing: '0.05em' }}>
+                <div style={{ fontSize: '10.5px', fontWeight: 800, textTransform: 'uppercase', color: '#0f766e', letterSpacing: '0.05em' }}>
                   Reliability Index
                 </div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginTop: '6px' }}>
-                  <span style={{ fontSize: '26px', fontWeight: 900, color: '#0f172a' }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '5px', marginTop: '4px' }}>
+                  <span style={{ fontSize: '22px', fontWeight: 900, color: '#0f172a', lineHeight: 1.1 }}>
                     {vendorModalData?.reliability_index !== undefined ? Number(vendorModalData.reliability_index).toFixed(1) : Number(selectedVendorForModal.reliability_score || 0).toFixed(1)}
                   </span>
-                  <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 600 }}>/ 100</span>
+                  <span style={{ fontSize: '11.5px', color: '#64748b', fontWeight: 600 }}>/ 100</span>
                 </div>
-                <div style={{ marginTop: '8px', height: '6px', backgroundColor: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
+                <div style={{ marginTop: '6px', height: '5px', backgroundColor: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
                   <div style={{
                     width: `${Math.min(Number(vendorModalData?.reliability_index ?? selectedVendorForModal.reliability_score ?? 0), 100)}%`,
                     height: '100%',
                     backgroundColor: Number(vendorModalData?.reliability_index ?? selectedVendorForModal.reliability_score ?? 0) >= 75 ? '#10b981' : Number(vendorModalData?.reliability_index ?? selectedVendorForModal.reliability_score ?? 0) >= 50 ? '#f59e0b' : '#ef4444'
                   }} />
                 </div>
-                <div style={{ fontSize: '11px', color: '#64748b', marginTop: '6px' }}>
+                <div style={{ fontSize: '10.5px', color: '#64748b', marginTop: '4px' }}>
                   {getReliabilityInfo(vendorModalData?.reliability_score || selectedVendorForModal.reliability_score).label} Reliability
                 </div>
               </div>
@@ -1207,19 +1207,19 @@ export const VendorPortal = () => {
               <div style={{
                 backgroundColor: '#f8fafc',
                 border: '1px solid var(--border-color)',
-                borderRadius: '10px',
-                padding: '14px 16px'
+                borderRadius: '8px',
+                padding: '10px 14px'
               }}>
-                <div style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.05em' }}>
+                <div style={{ fontSize: '10.5px', fontWeight: 800, textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.05em' }}>
                   Quality Rating
                 </div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginTop: '6px' }}>
-                  <span style={{ fontSize: '26px', fontWeight: 900, color: '#0f172a' }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '5px', marginTop: '4px' }}>
+                  <span style={{ fontSize: '22px', fontWeight: 900, color: '#0f172a', lineHeight: 1.1 }}>
                     {vendorModalData?.quality_rating !== undefined ? Number(vendorModalData.quality_rating).toFixed(1) : (vendorModalData?.rating ? Number(vendorModalData.rating).toFixed(1) : '5.0')}
                   </span>
-                  <span style={{ fontSize: '13px', color: '#eab308' }}>★ / 5.0</span>
+                  <span style={{ fontSize: '12px', color: '#eab308' }}>★ / 5.0</span>
                 </div>
-                <div style={{ fontSize: '11.5px', color: '#059669', marginTop: '6px', fontWeight: 600 }}>
+                <div style={{ fontSize: '11px', color: '#059669', marginTop: '4px', fontWeight: 600 }}>
                   {vendorModalData?.on_time_delivery_rate ? `${vendorModalData.on_time_delivery_rate}% On-Time Delivery` : 'Delivery Commitments Met'}
                 </div>
               </div>
@@ -1228,19 +1228,19 @@ export const VendorPortal = () => {
               <div style={{
                 backgroundColor: '#f8fafc',
                 border: '1px solid var(--border-color)',
-                borderRadius: '10px',
-                padding: '14px 16px'
+                borderRadius: '8px',
+                padding: '10px 14px'
               }}>
-                <div style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.05em' }}>
+                <div style={{ fontSize: '10.5px', fontWeight: 800, textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.05em' }}>
                   Awarded Contracts
                 </div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginTop: '6px' }}>
-                  <span style={{ fontSize: '26px', fontWeight: 900, color: '#0f172a' }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '5px', marginTop: '4px' }}>
+                  <span style={{ fontSize: '22px', fontWeight: 900, color: '#0f172a', lineHeight: 1.1 }}>
                     {vendorModalData?.contracts?.length ?? (vendorModalData?.completed_contracts || 0)}
                   </span>
-                  <span style={{ fontSize: '12.5px', color: '#64748b' }}>agreements</span>
+                  <span style={{ fontSize: '11.5px', color: '#64748b' }}>agreements</span>
                 </div>
-                <div style={{ fontSize: '11.5px', color: '#0284c7', marginTop: '6px', fontWeight: 600 }}>
+                <div style={{ fontSize: '11px', color: '#0284c7', marginTop: '4px', fontWeight: 600 }}>
                   {vendorModalData?.active_contracts ? `${vendorModalData.active_contracts} Active Agreement(s)` : 'Lifecycle Tracked'}
                 </div>
               </div>
@@ -1249,54 +1249,54 @@ export const VendorPortal = () => {
               <div style={{
                 backgroundColor: '#f8fafc',
                 border: '1px solid var(--border-color)',
-                borderRadius: '10px',
-                padding: '14px 16px'
+                borderRadius: '8px',
+                padding: '10px 14px'
               }}>
-                <div style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.05em' }}>
+                <div style={{ fontSize: '10.5px', fontWeight: 800, textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.05em' }}>
                   Commercial Terms
                 </div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginTop: '6px' }}>
-                  <span style={{ fontSize: '20px', fontWeight: 900, color: '#0f172a' }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '5px', marginTop: '4px' }}>
+                  <span style={{ fontSize: '18px', fontWeight: 900, color: '#0f172a', lineHeight: 1.1 }}>
                     {vendorModalData?.payment_terms || selectedVendorForModal.payment_terms || 'Net 30'}
                   </span>
                 </div>
-                <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', marginTop: '6px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
                   {vendorModalData?.completed_contracts || 0} Contracts Completed
                 </div>
               </div>
             </div>
 
-            {/* Vendor Details Info Card */}
+            {/* Vendor Corporate Details Info Card - Compact & Scalable */}
             <div style={{
               backgroundColor: '#ffffff',
               border: '1px solid var(--border-color)',
-              borderRadius: '10px',
-              padding: '16px 20px'
+              borderRadius: '8px',
+              padding: '10px 16px'
             }}>
-              <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '12px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
                 Supplier Corporate Details & Points of Contact
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '8px 14px', fontSize: '12px', color: 'var(--text-secondary)' }}>
                 <div>
-                  <span style={{ color: 'var(--text-muted)', fontSize: '11.5px', display: 'block' }}>Primary Liaison:</span>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '10.5px', display: 'block', fontWeight: 600 }}>Primary Liaison:</span>
                   <strong style={{ color: 'var(--text-primary)' }}>{vendorModalData?.contact_person || selectedVendorForModal.contact_person}</strong>
-                  {(vendorModalData?.contact_role || selectedVendorForModal.contact_role) && ` (${vendorModalData?.contact_role || selectedVendorForModal.contact_role})`}
+                  {(vendorModalData?.contact_role || selectedVendorForModal.contact_role) && <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}> ({vendorModalData?.contact_role || selectedVendorForModal.contact_role})</span>}
                 </div>
                 <div>
-                  <span style={{ color: 'var(--text-muted)', fontSize: '11.5px', display: 'block' }}>Email Communications:</span>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '10.5px', display: 'block', fontWeight: 600 }}>Email Communications:</span>
                   <strong style={{ color: 'var(--text-primary)' }}>{vendorModalData?.email || selectedVendorForModal.email}</strong>
                 </div>
                 <div>
-                  <span style={{ color: 'var(--text-muted)', fontSize: '11.5px', display: 'block' }}>Phone / Direct:</span>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '10.5px', display: 'block', fontWeight: 600 }}>Phone / Direct:</span>
                   <strong style={{ color: 'var(--text-primary)' }}>{vendorModalData?.phone || selectedVendorForModal.phone || '—'}</strong>
                 </div>
                 <div>
-                  <span style={{ color: 'var(--text-muted)', fontSize: '11.5px', display: 'block' }}>GST / Tax Identification:</span>
-                  <code style={{ fontSize: '12px', color: 'var(--text-primary)' }}>{vendorModalData?.gst_number || selectedVendorForModal.gst_number || '—'}</code>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '10.5px', display: 'block', fontWeight: 600 }}>GST / Tax Identification:</span>
+                  <code style={{ fontSize: '11.5px', color: 'var(--text-primary)', background: '#f1f5f9', padding: '1px 5px', borderRadius: '4px' }}>{vendorModalData?.gst_number || selectedVendorForModal.gst_number || '—'}</code>
                 </div>
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <span style={{ color: 'var(--text-muted)', fontSize: '11.5px', display: 'block' }}>Facility / Registered Address:</span>
-                  <span>{vendorModalData?.address || selectedVendorForModal.address || 'National Headquarters'}</span>
+                <div style={{ gridColumn: '1 / -1', paddingTop: '6px', borderTop: '1px dashed #e2e8f0', display: 'flex', alignItems: 'baseline', gap: '6px', flexWrap: 'wrap' }}>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '10.5px', fontWeight: 600 }}>Facility / Registered Address:</span>
+                  <span style={{ color: 'var(--text-primary)', fontSize: '11.5px' }}>{vendorModalData?.address || selectedVendorForModal.address || 'National Headquarters'}</span>
                 </div>
               </div>
             </div>
@@ -1305,88 +1305,88 @@ export const VendorPortal = () => {
             <div style={{
               backgroundColor: '#ffffff',
               border: '1px solid var(--border-color)',
-              borderRadius: '10px',
+              borderRadius: '8px',
               overflow: 'hidden'
             }}>
               <div style={{
-                padding: '14px 20px',
+                padding: '10px 16px',
                 backgroundColor: '#f8fafc',
                 borderBottom: '1px solid var(--border-color)',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 flexWrap: 'wrap',
-                gap: '8px'
+                gap: '6px'
               }}>
                 <div>
-                  <div style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 800, color: '#0f172a' }}>
                     Awarded Contracts & Agreements ({vendorModalData?.contracts?.length || 0})
                   </div>
-                  <div style={{ fontSize: '12px', color: '#64748b' }}>
+                  <div style={{ fontSize: '11px', color: '#64748b' }}>
                     All enterprise procurement contracts awarded to this supplier.
                   </div>
                 </div>
                 {vendorModalLoading && (
-                  <span style={{ fontSize: '12px', color: '#0284c7' }}>
+                  <span style={{ fontSize: '11px', color: '#0284c7' }}>
                     Syncing live contract records...
                   </span>
                 )}
               </div>
 
               {(!vendorModalData?.contracts || vendorModalData.contracts.length === 0) ? (
-                <div style={{ padding: '36px 20px', textAlign: 'center', color: '#64748b' }}>
-                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5" style={{ margin: '0 auto 10px auto', display: 'block' }}>
+                <div style={{ padding: '24px 16px', textAlign: 'center', color: '#64748b' }}>
+                  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5" style={{ margin: '0 auto 8px auto', display: 'block' }}>
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                     <polyline points="14 2 14 8 20 8" />
                     <line x1="16" y1="13" x2="8" y2="13" />
                     <line x1="16" y1="17" x2="8" y2="17" />
                   </svg>
-                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '2px' }}>
                     No Historical Contracts on Record
                   </div>
-                  <div style={{ fontSize: '12.5px', color: '#94a3b8', maxWidth: '420px', margin: '0 auto' }}>
+                  <div style={{ fontSize: '11.5px', color: '#94a3b8', maxWidth: '420px', margin: '0 auto' }}>
                     This supplier has not been awarded any procurement contracts yet. When purchase orders or requisitions are finalized and authorized by Finance, the binding contract will automatically appear here.
                   </div>
                 </div>
               ) : (
-                <div className="table-responsive" style={{ margin: 0, maxHeight: '280px', overflowY: 'auto' }}>
-                  <table className="data-table" style={{ width: '100%' }}>
+                <div className="table-responsive" style={{ margin: 0, maxHeight: '240px', overflowY: 'auto' }}>
+                  <table className="data-table" style={{ width: '100%', fontSize: '12px' }}>
                     <thead>
                       <tr>
-                        <th>Contract Number</th>
-                        <th>Agreement Title</th>
-                        <th>Duration / Dates</th>
-                        <th>Order Value</th>
-                        <th>Status</th>
+                        <th style={{ padding: '8px 12px', fontSize: '11px' }}>Contract Number</th>
+                        <th style={{ padding: '8px 12px', fontSize: '11px' }}>Agreement Title</th>
+                        <th style={{ padding: '8px 12px', fontSize: '11px' }}>Duration / Dates</th>
+                        <th style={{ padding: '8px 12px', fontSize: '11px' }}>Order Value</th>
+                        <th style={{ padding: '8px 12px', fontSize: '11px' }}>Status</th>
                       </tr>
                     </thead>
                     <tbody>
                       {vendorModalData.contracts.map((c) => (
                         <tr key={c.id}>
-                          <td>
-                            <strong>{c.contract_number}</strong>
-                            <div style={{ fontSize: '11px', color: '#64748b' }}>
+                          <td style={{ padding: '8px 12px' }}>
+                            <strong style={{ color: '#0f766e' }}>{c.contract_number}</strong>
+                            <div style={{ fontSize: '10.5px', color: '#64748b' }}>
                               {c.purchase_orders_count ? `${c.purchase_orders_count} PO(s) Linked` : 'Direct Agreement'}
                             </div>
                           </td>
-                          <td>
+                          <td style={{ padding: '8px 12px' }}>
                             <div style={{ fontWeight: 600, color: '#1e293b' }}>{c.title}</div>
                           </td>
-                          <td style={{ fontSize: '12px', color: '#475569' }}>
+                          <td style={{ padding: '8px 12px', fontSize: '11.5px', color: '#475569' }}>
                             <div>Start: <strong>{c.start_date}</strong></div>
                             <div>End: <strong>{c.end_date}</strong></div>
                           </td>
-                          <td>
+                          <td style={{ padding: '8px 12px' }}>
                             <strong style={{ color: '#0f172a' }}>
                               {c.total_purchase_amount ? `₹${Number(c.total_purchase_amount).toLocaleString('en-IN')}` : 'Variable / Active'}
                             </strong>
                           </td>
-                          <td>
+                          <td style={{ padding: '8px 12px' }}>
                             <span
                               className="badge"
                               style={{
-                                fontSize: '11px',
-                                padding: '3px 8px',
+                                fontSize: '10.5px',
+                                padding: '2px 8px',
                                 backgroundColor: (c.status === 'active') ? '#ecfdf5' : (c.status === 'expiring_soon') ? '#fffbeb' : '#f1f5f9',
                                 color: (c.status === 'active') ? '#047857' : (c.status === 'expiring_soon') ? '#b45309' : '#475569',
                                 border: `1px solid ${(c.status === 'active') ? '#a7f3d0' : (c.status === 'expiring_soon') ? '#fde68a' : '#cbd5e1'}`
@@ -1404,13 +1404,14 @@ export const VendorPortal = () => {
             </div>
           </div>
 
-          <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+          <div className="modal-footer" style={{ padding: '10px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
               Reliability intelligence recalculated automatically after each delivery completion.
             </div>
             <button
               type="button"
               className="btn btn-secondary"
+              style={{ padding: '6px 16px', fontSize: '13px' }}
               onClick={() => {
                 setSelectedVendorForModal(null);
                 setVendorModalData(null);
