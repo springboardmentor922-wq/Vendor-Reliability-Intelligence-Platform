@@ -285,6 +285,7 @@ walkthrough and the end-to-end demonstration script.
 
 
 ##  Project Demo
+Watch the full screen-recorded demonstration of the project:
 https://drive.google.com/file/d/1qlh8FGZGos5XlcTLiRLa8PVSIeCTBMQt/view?usp=drive_link
 https://drive.google.com/file/d/1fq9q8xkqgr1nzLqrnUyHtt-TnsjVl2yX/view?usp=drive_link
 
