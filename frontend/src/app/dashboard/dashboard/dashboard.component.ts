@@ -194,7 +194,7 @@ import { AuthService } from '../../core/services/auth.service';
 
               <div>
                 <small>REPORTING PERIOD</small>
-                <strong>January — June 2026</strong>
+                <strong>Live data · {{ currentDateLabel }}</strong>
               </div>
 
               <span class="arrow">⌄</span>
@@ -295,8 +295,8 @@ import { AuthService } from '../../core/services/auth.service';
                 <strong>{{ vendorCount }}</strong>
 
                 <div class="kpi-bottom">
-                  <span class="positive">↑ 8%</span>
-                  <span>vs last month</span>
+                  <span class="positive">Live</span>
+                  <span>registered vendors</span>
                 </div>
 
               </div>
@@ -312,8 +312,8 @@ import { AuthService } from '../../core/services/auth.service';
                 <strong>{{ purchaseOrderCount }}</strong>
 
                 <div class="kpi-bottom">
-                  <span class="positive">↑ 12%</span>
-                  <span>vs last month</span>
+                  <span class="positive">Live</span>
+                  <span>open orders</span>
                 </div>
 
               </div>
@@ -346,8 +346,8 @@ import { AuthService } from '../../core/services/auth.service';
                 <strong>{{ reliabilityScore }}%</strong>
 
                 <div class="kpi-bottom">
-                  <span class="positive">↑ 4%</span>
-                  <span>platform average</span>
+                  <span class="positive">Live</span>
+                  <span>average vendor score</span>
                 </div>
 
               </div>
@@ -399,7 +399,7 @@ import { AuthService } from '../../core/services/auth.service';
 
                   <div class="attention-content">
                     <strong>Delivery performance</strong>
-                    <span>2 purchase orders require attention</span>
+                    <span>{{ deliveryAttentionCount }} purchase orders are awaiting delivery or completion</span>
                   </div>
 
                   <a routerLink="/purchase-orders">View →</a>
@@ -500,17 +500,17 @@ import { AuthService } from '../../core/services/auth.service';
               <div>
               
                 <span>Delivery</span>
-                <strong>92%</strong>
+                <strong>{{ deliveryScore }}%</strong>
               </div>
 
               <div>
                 <span>Quality</span>
-                <strong>95%</strong>
+                <strong>{{ qualityScore }}%</strong>
               </div>
 
               <div>
                 <span>Compliance</span>
-                <strong>97%</strong>
+                <strong>{{ complianceScore }}%</strong>
               </div>
 
             </div>
@@ -553,10 +553,10 @@ import { AuthService } from '../../core/services/auth.service';
 
                 <div class="donut-wrapper">
 
-                  <div class="donut-chart">
+                  <div class="donut-chart" [style.background]="getPoDonutStyle()">
 
                     <div class="donut-center">
-                      <strong>28</strong>
+                      <strong>{{ totalPurchaseOrders }}</strong>
                       <span>Orders</span>
                     </div>
 
@@ -569,12 +569,12 @@ import { AuthService } from '../../core/services/auth.service';
 
                   <div>
                     <span class="legend-dot green-dot"></span>
-                    Active
+                    Active: {{ purchaseOrderCount }}
                   </div>
 
                   <div>
                     <span class="legend-dot amber-dot"></span>
-                    Completed
+                    Not active: {{ totalPurchaseOrders - purchaseOrderCount }}
                   </div>
 
                 </div>
@@ -587,8 +587,8 @@ import { AuthService } from '../../core/services/auth.service';
 
                 <div class="analytics-header">
                   <div>
-                    <strong>Procurement Volume</strong>
-                    <span>Monthly purchase activity</span>
+                    <strong>Purchase Order Status</strong>
+                    <span>Current order counts by status</span>
                   </div>
 
                   <a routerLink="/procurement">
@@ -598,61 +598,29 @@ import { AuthService } from '../../core/services/auth.service';
 
 
                 <div class="bar-chart">
-
                   <div class="bar-item">
-
-                    <div class="bar-label">
-                      <span>January</span>
-                      <strong>28</strong>
-                    </div>
-
-                    <div class="bar-track">
-                      <div
-                        class="bar-fill blue-fill"
-                        style="width: 78%">
-                      </div>
-                    </div>
-
+                    <div class="bar-label"><span>Pending</span><strong>{{ pendingPurchaseOrders }}</strong></div>
+                    <div class="bar-track"><div class="bar-fill blue-fill" [style.width.%]="getBarWidth(pendingPurchaseOrders)"></div></div>
                   </div>
-
-
                   <div class="bar-item">
-
-                    <div class="bar-label">
-                      <span>February</span>
-                      <strong>34</strong>
-                    </div>
-
-                    <div class="bar-track">
-                      <div
-                        class="bar-fill blue-fill"
-                        style="width: 88%">
-                      </div>
-                    </div>
-
+                    <div class="bar-label"><span>Approved</span><strong>{{ approvedPurchaseOrders }}</strong></div>
+                    <div class="bar-track"><div class="bar-fill blue-fill" [style.width.%]="getBarWidth(approvedPurchaseOrders)"></div></div>
                   </div>
-
-
                   <div class="bar-item">
-
-                    <div class="bar-label">
-                      <span>March</span>
-                      <strong>41</strong>
-                    </div>
-
-                    <div class="bar-track">
-                      <div
-                        class="bar-fill blue-fill"
-                        style="width: 96%">
-                      </div>
-                    </div>
-
+                    <div class="bar-label"><span>Ordered</span><strong>{{ orderedPurchaseOrders }}</strong></div>
+                    <div class="bar-track"><div class="bar-fill blue-fill" [style.width.%]="getBarWidth(orderedPurchaseOrders)"></div></div>
                   </div>
-
+                  <div class="bar-item">
+                    <div class="bar-label"><span>Delivered</span><strong>{{ deliveredPurchaseOrders }}</strong></div>
+                    <div class="bar-track"><div class="bar-fill blue-fill" [style.width.%]="getBarWidth(deliveredPurchaseOrders)"></div></div>
+                  </div>
+                  <div class="bar-item">
+                    <div class="bar-label"><span>Completed</span><strong>{{ completedPurchaseOrders }}</strong></div>
+                    <div class="bar-track"><div class="bar-fill blue-fill" [style.width.%]="getBarWidth(completedPurchaseOrders)"></div></div>
+                  </div>
                 </div>
 
               </div>
-
 
               <!-- RELIABILITY PERFORMANCE -->
               <div class="analytics-card">
@@ -675,13 +643,13 @@ import { AuthService } from '../../core/services/auth.service';
 
                     <div class="performance-label">
                       <span>Delivery</span>
-                      <strong>92%</strong>
+                      <strong>{{ deliveryScore }}%</strong>
                     </div>
 
                     <div class="performance-track">
                       <div
                         class="performance-fill"
-                        style="width: 92%">
+                        [style.width.%]="deliveryScore">
                       </div>
                     </div>
 
@@ -692,13 +660,13 @@ import { AuthService } from '../../core/services/auth.service';
 
                     <div class="performance-label">
                       <span>Quality</span>
-                      <strong>95%</strong>
+                      <strong>{{ qualityScore }}%</strong>
                     </div>
 
                     <div class="performance-track">
                       <div
                         class="performance-fill"
-                        style="width: 95%">
+                        [style.width.%]="qualityScore">
                       </div>
                     </div>
 
@@ -709,13 +677,13 @@ import { AuthService } from '../../core/services/auth.service';
 
                     <div class="performance-label">
                       <span>Compliance</span>
-                      <strong>97%</strong>
+                      <strong>{{ complianceScore }}%</strong>
                     </div>
 
                     <div class="performance-track">
                       <div
                         class="performance-fill"
-                        style="width: 97%">
+                        [style.width.%]="complianceScore">
                       </div>
                     </div>
 
@@ -759,7 +727,7 @@ import { AuthService } from '../../core/services/auth.service';
                   </div>
 
                   <div>
-                    <strong>18</strong>
+                    <strong>{{ totalRequisitions }}</strong>
                     <span>Total Requisitions</span>
                   </div>
 
@@ -773,9 +741,9 @@ import { AuthService } from '../../core/services/auth.service';
                   </div>
 
                   <div>
-                    <strong>7</strong>
-                    <span>Pending Approval</span>
-                  </div>
+                    <strong>{{ pendingPurchaseOrders }}</strong>
+                    <span>Active Purchase Orders</span>                  
+                 </div>
 
                 </div>
 
@@ -787,7 +755,7 @@ import { AuthService } from '../../core/services/auth.service';
                   </div>
 
                   <div>
-                    <strong>₹8.4L</strong>
+                    <strong>{{ formatCurrency(totalProcurementValue) }}</strong>
                     <span>Total Procurement Value</span>
                   </div>
 
@@ -829,7 +797,7 @@ import { AuthService } from '../../core/services/auth.service';
                   </div>
 
                   <div>
-                    <strong>5</strong>
+                    <strong>{{ pendingApprovalCount }}</strong>
                     <span>Pending Vendor Approvals</span>
                   </div>
 
@@ -843,8 +811,8 @@ import { AuthService } from '../../core/services/auth.service';
                   </div>
 
                   <div>
-                    <strong>24</strong>
-                    <span>Approved Vendors</span>
+                    <strong>{{ approvedVendorCount }}</strong>
+                    <span>Approved Vendor Requests</span>
                   </div>
 
                 </div>
@@ -857,7 +825,7 @@ import { AuthService } from '../../core/services/auth.service';
                   </div>
 
                   <div>
-                    <strong>3</strong>
+                    <strong>{{ underReviewVendorCount }}</strong>
                     <span>Under Review</span>
                   </div>
 
@@ -892,7 +860,7 @@ import { AuthService } from '../../core/services/auth.service';
 
               <div class="vendor-main-number">
 
-                <strong>42</strong>
+                <strong>{{ vendorCount }}</strong>
 
                 <span>
                   Registered vendors across the procurement network
@@ -2380,9 +2348,15 @@ export class DashboardComponent {
   // Dashboard analytics
   totalPurchaseOrders = 0;
   completedPurchaseOrders = 0;
+  deliveredPurchaseOrders = 0;
   pendingPurchaseOrders = 0;
   approvedPurchaseOrders = 0;
   orderedPurchaseOrders = 0;
+  deliveryAttentionCount = 0;
+  currentDateLabel = new Date().toLocaleDateString('en-IN', {
+    month: 'short',
+    year: 'numeric'
+  });
 
   totalRequisitions = 0;
   totalProcurementValue = 0;
@@ -2452,7 +2426,7 @@ export class DashboardComponent {
 
       next: (vendors) => {
 
-        this.vendorCount = vendors.length;
+        this.vendorCount = Array.isArray(vendors) ? vendors.length : 0;
 
       },
 
@@ -2481,32 +2455,27 @@ export class DashboardComponent {
 
       next: (orders) => {
 
-        this.totalPurchaseOrders = orders.length;
+        const safeOrders = Array.isArray(orders) ? orders : [];
+        const statusOf = (order: any) =>
+          String(order?.status ?? '').trim().toUpperCase().replace(/[ -]+/g, '_');
 
+        this.totalPurchaseOrders = safeOrders.length;
         this.pendingPurchaseOrders =
-          orders.filter(
-            order => order.status === 'PENDING'
-          ).length;
-
+          safeOrders.filter(order => statusOf(order) === 'PENDING').length;
         this.approvedPurchaseOrders =
-          orders.filter(
-            order => order.status === 'APPROVED'
-          ).length;
-
+          safeOrders.filter(order => statusOf(order) === 'APPROVED').length;
         this.orderedPurchaseOrders =
-          orders.filter(
-            order => order.status === 'ORDERED'
-          ).length;
-
+          safeOrders.filter(order => statusOf(order) === 'ORDERED').length;
+        this.deliveredPurchaseOrders =
+          safeOrders.filter(order => statusOf(order) === 'DELIVERED').length;
         this.completedPurchaseOrders =
-          orders.filter(
-            order => order.status === 'COMPLETED'
-          ).length;
+          safeOrders.filter(order => statusOf(order) === 'COMPLETED').length;
 
         this.purchaseOrderCount =
           this.pendingPurchaseOrders +
           this.approvedPurchaseOrders +
           this.orderedPurchaseOrders;
+        this.deliveryAttentionCount = this.orderedPurchaseOrders;
 
       },
 
@@ -2535,22 +2504,17 @@ export class DashboardComponent {
 
       next: (approvals) => {
 
+        const safeApprovals = Array.isArray(approvals) ? approvals : [];
+        const statusOf = (approval: any) =>
+          String(approval?.status ?? '').trim().toUpperCase().replace(/[ -]+/g, '_');
+
         this.pendingApprovalCount =
-          approvals.filter(
-            approval =>
-              approval.status === 'PENDING'
-          ).length;
-
+          safeApprovals.filter(approval => statusOf(approval) === 'PENDING').length;
         this.approvedVendorCount =
-          approvals.filter(
-            approval =>
-              approval.status === 'APPROVED'
-          ).length;
-
+          safeApprovals.filter(approval => statusOf(approval) === 'APPROVED').length;
         this.underReviewVendorCount =
-          approvals.filter(
-            approval =>
-              approval.status === 'UNDER_REVIEW'
+          safeApprovals.filter(approval =>
+            ['UNDER_REVIEW', 'IN_REVIEW'].includes(statusOf(approval))
           ).length;
 
       },
@@ -2581,9 +2545,9 @@ export class DashboardComponent {
       next: (contracts) => {
 
         this.expiringContracts =
-          contracts.filter(
+          (Array.isArray(contracts) ? contracts : []).filter(
             contract =>
-              contract.expiry_status === 'EXPIRING_SOON'
+              String(contract?.expiry_status ?? '').trim().toUpperCase() === 'EXPIRING_SOON'
           ).length;
 
       },
@@ -2800,7 +2764,13 @@ export class DashboardComponent {
       next: (activities) => {
 
         this.recentActivities =
-          activities.slice(0, 5);
+          (Array.isArray(activities) ? activities : [])
+            .slice()
+            .sort((a, b) =>
+              new Date(b?.created_at ?? 0).getTime() -
+              new Date(a?.created_at ?? 0).getTime()
+            )
+            .slice(0, 5);
 
       },
 
@@ -3011,6 +2981,40 @@ export class DashboardComponent {
     this.router.navigate([
       result.route
     ]);
+  }
+
+
+  // =========================
+  // DASHBOARD CHART HELPERS
+  // =========================
+
+  getBarWidth(value: number): number {
+    if (!this.totalPurchaseOrders || !value) {
+      return 0;
+    }
+
+    return Math.max(0, Math.min(100, (value / this.totalPurchaseOrders) * 100));
+  }
+
+  getPoDonutStyle(): string {
+    const total = this.totalPurchaseOrders;
+
+    if (!total) {
+      return 'conic-gradient(#edf1f5 0deg 360deg)';
+    }
+
+    const activeDegrees = (this.purchaseOrderCount / total) * 360;
+    return `conic-gradient(#4c79e7 0deg ${activeDegrees}deg, #dfe4eb ${activeDegrees}deg 360deg)`;
+  }
+
+  formatCurrency(value: number): string {
+    const amount = Number(value) || 0;
+
+    if (amount >= 100000) {
+      return `₹${(amount / 100000).toFixed(2)}L`;
+    }
+
+    return `₹${Math.round(amount).toLocaleString('en-IN')}`;
   }
 
 
