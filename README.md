@@ -8,10 +8,9 @@ VendorIQ is a full-stack enterprise web application that unifies supplier perfor
 
 ---
 
-## Project Demo Video
+## 🎥 Project Demo
 
-<!-- Drag & drop your .mp4 video into GitHub's README editor or link your video URL below -->
-[![VendorIQ Demo Walkthrough](https://drive.google.com/file/d/1znVcDLNjxxJ9rolM6XYRdNxyNwrOVl0u/view?usp=sharing)](#project-demo-video)
+[Watch the demo video](https://drive.google.com/file/d/1znVcDLNjxxJ9rolM6XYRdNxyNwrOVl0u/view?usp=sharing)
 
 ## Features
 
