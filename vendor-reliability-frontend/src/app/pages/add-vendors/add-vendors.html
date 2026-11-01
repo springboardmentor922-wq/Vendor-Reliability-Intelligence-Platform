@@ -1,0 +1,125 @@
+<div class="add-vendor-page">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="page-title">Register New Vendor</h1>
+      <p class="page-subtitle mb-0">Submit vendor profile into the approval pipeline</p>
+    </div>
+    <a routerLink="/vendors" class="btn-iq-secondary">
+      <i class="bi bi-arrow-left"></i> Back to Vendors
+    </a>
+  </div>
+
+  <div class="iq-card">
+    <div class="iq-card-header">
+      <h2 class="iq-card-title">Vendor Corporate Information</h2>
+      <span class="iq-badge badge-pending">Registration Workflow</span>
+    </div>
+
+    <div *ngIf="errorMessage" class="alert alert-danger py-2 d-flex align-items-center gap-2 small">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      <span>{{ errorMessage }}</span>
+    </div>
+
+    <form (ngSubmit)="saveVendor()" class="row g-3">
+      <!-- Contact Rep Name -->
+      <div class="col-md-6">
+        <label class="form-label fw-semibold">Primary Contact / Representative Name *</label>
+        <input type="text" class="form-control iq-input-simple" [(ngModel)]="vendor.name" name="name" placeholder="e.g. Johnathan Miller" required />
+      </div>
+
+      <!-- Company Name -->
+      <div class="col-md-6">
+        <label class="form-label fw-semibold">Legal Company Name *</label>
+        <input type="text" class="form-control iq-input-simple" [(ngModel)]="vendor.company" name="company" placeholder="e.g. Acme Industrial Supplies Inc" required />
+      </div>
+
+      <!-- Corporate Email -->
+      <div class="col-md-6">
+        <label class="form-label fw-semibold">Contact Email *</label>
+        <input type="email" class="form-control iq-input-simple" [(ngModel)]="vendor.email" name="email" placeholder="e.g. sales@acme-industrial.com" required />
+      </div>
+
+      <!-- Phone -->
+      <div class="col-md-6">
+        <label class="form-label fw-semibold">Phone Number *</label>
+        <input type="tel" class="form-control iq-input-simple" [(ngModel)]="vendor.phone" name="phone" placeholder="e.g. +1 800-555-0100" required />
+      </div>
+
+      <!-- Vendor Portal Login Password -->
+      <div class="col-md-6">
+        <label class="form-label fw-semibold">Vendor Login Password</label>
+        <input type="password" class="form-control iq-input-simple" [(ngModel)]="vendor.password" name="password" placeholder="Leave empty for default (vendor123)" />
+        <div class="form-text small text-muted">Sets the password for the vendor's portal login account.</div>
+      </div>
+
+      <!-- Category (6 Mandatory Standard Categories) -->
+      <div class="col-md-6">
+        <label class="form-label fw-semibold">Vendor Category (Must Select 1 of 6 Categories) *</label>
+        <select class="form-select iq-input-simple" [(ngModel)]="vendor.category" name="category" required>
+          <option *ngFor="let cat of categories" [value]="cat.name">{{ cat.name }}</option>
+        </select>
+        <div class="form-text small text-primary">Choose from the 6 authorized organizational vendor domains.</div>
+      </div>
+
+      <!-- Primary Product / Service -->
+      <div class="col-md-6">
+        <label class="form-label fw-semibold">Core Product / Service Supplied *</label>
+        <input type="text" class="form-control iq-input-simple" [(ngModel)]="vendor.product" name="product" placeholder="e.g. Structural Steel & Industrial Fasteners" required />
+      </div>
+
+      <!-- Business Reg Number / CIN -->
+      <div class="col-md-6">
+        <label class="form-label fw-semibold">Corporate Reg Number / CIN</label>
+        <input type="text" class="form-control iq-input-simple font-monospace" [(ngModel)]="vendor.business_reg_number" name="business_reg_number" placeholder="e.g. CIN-9902184-CORP" />
+      </div>
+
+      <!-- GST / Tax ID -->
+      <div class="col-md-6">
+        <label class="form-label fw-semibold">GSTIN / Tax ID</label>
+        <input type="text" class="form-control iq-input-simple font-monospace" [(ngModel)]="vendor.gst_tax_id" name="gst_tax_id" placeholder="e.g. GSTIN-27AAACG0184A1Z5" />
+      </div>
+
+      <!-- Address -->
+      <div class="col-md-8">
+        <label class="form-label fw-semibold">Business Address</label>
+        <input type="text" class="form-control iq-input-simple" [(ngModel)]="vendor.address" name="address" placeholder="e.g. 1200 Industrial Parkway, Suite 400" />
+      </div>
+
+      <!-- Website -->
+      <div class="col-md-4">
+        <label class="form-label fw-semibold">Website</label>
+        <input type="url" class="form-control iq-input-simple" [(ngModel)]="vendor.website" name="website" placeholder="https://..." />
+      </div>
+
+      <!-- Initial Estimated Delivery Rate -->
+      <div class="col-md-6">
+        <label class="form-label fw-semibold">Estimated Reliability / Delivery Rate (%)</label>
+        <input type="number" min="0" max="100" class="form-control iq-input-simple" [(ngModel)]="vendor.deliveryRate" name="deliveryRate" />
+      </div>
+
+      <!-- Risk Level -->
+      <div class="col-md-6">
+        <label class="form-label fw-semibold">Initial Risk Assessment</label>
+        <select class="form-select iq-input-simple" [(ngModel)]="vendor.risk_level" name="risk_level">
+          <option value="Low">Low Risk (Tier 1 Verified)</option>
+          <option value="Medium">Medium Risk (Standard Verification)</option>
+          <option value="High">High Risk (Requires In-Depth Audit)</option>
+        </select>
+      </div>
+
+      <!-- Notes -->
+      <div class="col-12">
+        <label class="form-label fw-semibold">Registration Notes & Compliance Details</label>
+        <textarea class="form-control" rows="3" [(ngModel)]="vendor.notes" name="notes" placeholder="ISO certifications, standard delivery lead times, payment terms..."></textarea>
+      </div>
+
+      <div class="col-12 d-flex justify-content-end gap-2 mt-4">
+        <a routerLink="/vendors" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary fw-bold" [disabled]="isLoading">
+          <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+          Submit Vendor for Review
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,181 @@
+<div class="analytics-page">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+      <h1 class="page-title">Procurement Spend & Risk Analytics</h1>
+      <p class="page-subtitle mb-0">
+        Cost variance analysis, category spend breakdown, supplier risk exposure, and delivery fulfillment metrics
+      </p>
+    </div>
+    <div class="d-flex gap-2">
+      <a routerLink="/reports" class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1 fw-semibold">
+        <i class="bi bi-file-earmark-bar-graph"></i> Reports & Export Center
+      </a>
+      <button class="btn btn-light btn-sm border" (click)="loadAnalyticsData()" title="Refresh telemetry">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status"></div>
+    <div class="mt-2 text-muted small">Computing financial and risk telemetry...</div>
+  </div>
+
+  <div *ngIf="!isLoading">
+    <!-- Procurement Cost Analysis KPIs -->
+    <div class="row g-3 mb-4">
+      <div class="col-sm-6 col-md-3">
+        <div class="stat-card p-3">
+          <div class="stat-label small text-muted text-uppercase fw-semibold">Committed Spend (Actual)</div>
+          <div class="stat-value fs-4 fw-bold text-primary">{{ totalActualSpend | currency }}</div>
+          <div class="text-muted small" style="font-size: 0.75rem;">Total active purchase orders</div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-md-3">
+        <div class="stat-card p-3">
+          <div class="stat-label small text-muted text-uppercase fw-semibold">Budgeted Requisitions</div>
+          <div class="stat-value fs-4 fw-bold text-dark">{{ totalBudget | currency }}</div>
+          <div class="text-muted small" style="font-size: 0.75rem;">Allocated procurement requests</div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-md-3">
+        <div class="stat-card p-3">
+          <div class="stat-label small text-muted text-uppercase fw-semibold">Cost Variance</div>
+          <div class="stat-value fs-4 fw-bold" [ngClass]="costVariance >= 0 ? 'text-success' : 'text-danger'">
+            {{ costVariance >= 0 ? '+' : '' }}{{ costVariance | currency }}
+          </div>
+          <div class="text-muted small" style="font-size: 0.75rem;">
+            {{ costVariancePercentage }}% budget variance
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-md-3">
+        <div class="stat-card p-3">
+          <div class="stat-label small text-muted text-uppercase fw-semibold">High Risk Exposure</div>
+          <div class="stat-value fs-4 fw-bold text-danger">{{ highRiskCount }} Suppliers</div>
+          <div class="text-muted small" style="font-size: 0.75rem;">Requires secondary sourcing backup</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category Spend Breakdown & Delivery Status -->
+    <div class="row g-4 mb-4">
+      <!-- Category Spend Breakdown -->
+      <div class="col-lg-8">
+        <div class="iq-card h-100">
+          <div class="iq-card-header">
+            <h2 class="iq-card-title">Procurement Cost Analysis by Category</h2>
+            <span class="badge bg-light text-dark border">6 Official Categories</span>
+          </div>
+
+          <div class="p-3">
+            <div class="d-flex flex-column gap-3">
+              <div *ngFor="let item of categoryBreakdowns" class="p-3 bg-light rounded border">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <span class="fw-bold text-dark small">{{ item.category }}</span>
+                  <span class="fw-bold text-primary small">{{ item.actualSpend | currency }} ({{ item.percentageOfTotal }}%)</span>
+                </div>
+                <div class="progress mb-2" style="height: 8px;">
+                  <div class="progress-bar bg-primary" [style.width.%]="item.percentageOfTotal"></div>
+                </div>
+                <div class="d-flex justify-content-between small text-muted" style="font-size: 0.75rem;">
+                  <span>Allocated Budget: {{ item.budget | currency }}</span>
+                  <span>Variance: <strong [ngClass]="item.variance >= 0 ? 'text-success' : 'text-danger'">{{ item.variance | currency }}</strong></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Supplier Risk Distribution -->
+      <div class="col-lg-4">
+        <div class="iq-card h-100">
+          <div class="iq-card-header">
+            <h2 class="iq-card-title">Supplier Risk Distribution</h2>
+          </div>
+
+          <div class="p-3 d-flex flex-column justify-content-around h-75">
+            <!-- Low Risk -->
+            <div class="p-3 bg-light rounded border mb-2">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="fw-bold text-success small"><i class="bi bi-shield-check me-1"></i> Low Risk Tier</span>
+                <span class="fw-bold text-dark">{{ lowRiskCount }} Suppliers</span>
+              </div>
+              <div class="progress" style="height: 6px;">
+                <div class="progress-bar bg-success" [style.width.%]="vendors.length ? (lowRiskCount / vendors.length) * 100 : 80"></div>
+              </div>
+            </div>
+
+            <!-- Medium Risk -->
+            <div class="p-3 bg-light rounded border mb-2">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="fw-bold text-warning small"><i class="bi bi-exclamation-triangle me-1"></i> Medium Risk Tier</span>
+                <span class="fw-bold text-dark">{{ medRiskCount }} Suppliers</span>
+              </div>
+              <div class="progress" style="height: 6px;">
+                <div class="progress-bar bg-warning" [style.width.%]="vendors.length ? (medRiskCount / vendors.length) * 100 : 15"></div>
+              </div>
+            </div>
+
+            <!-- High Risk -->
+            <div class="p-3 bg-light rounded border mb-2">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="fw-bold text-danger small"><i class="bi bi-x-octagon me-1"></i> High Risk Tier</span>
+                <span class="fw-bold text-dark">{{ highRiskCount }} Suppliers</span>
+              </div>
+              <div class="progress" style="height: 6px;">
+                <div class="progress-bar bg-danger" [style.width.%]="vendors.length ? (highRiskCount / vendors.length) * 100 : 5"></div>
+              </div>
+            </div>
+
+            <div class="text-center mt-2">
+              <a routerLink="/vendor-reliability" class="btn btn-outline-primary btn-sm w-100">
+                Inspect High-Risk Mitigations
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delivery Fulfillment & Order Tracking Overview -->
+    <div class="iq-card p-3 mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="iq-card-title m-0">Delivery Status & Fulfillment Telemetry</h2>
+        <span class="badge bg-success-subtle text-success border border-success">{{ deliveryRate }}% Overall Delivery Accuracy</span>
+      </div>
+
+      <div class="row g-3 text-center">
+        <div class="col-6 col-md-3">
+          <div class="p-3 bg-light rounded border">
+            <div class="text-muted small text-uppercase fw-semibold">Total Deliveries</div>
+            <div class="fs-4 fw-bold text-dark mt-1">{{ totalDeliveries }}</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="p-3 bg-light rounded border">
+            <div class="text-muted small text-uppercase fw-semibold">On-Time Deliveries</div>
+            <div class="fs-4 fw-bold text-success mt-1">{{ onTimeDeliveries }}</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="p-3 bg-light rounded border">
+            <div class="text-muted small text-uppercase fw-semibold">Delayed Deliveries</div>
+            <div class="fs-4 fw-bold text-danger mt-1">{{ delayedDeliveries }}</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="p-3 bg-light rounded border">
+            <div class="text-muted small text-uppercase fw-semibold">Pending / In-Transit</div>
+            <div class="fs-4 fw-bold text-primary mt-1">{{ pendingDeliveries }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

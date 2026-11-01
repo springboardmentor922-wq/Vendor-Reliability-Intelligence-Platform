@@ -1,0 +1,813 @@
+<div class="vendor-details-page">
+  <!-- Feedback Alert -->
+  <div *ngIf="feedbackMessage" class="alert alert-dismissible fade show shadow-sm mb-4" [ngClass]="feedbackType === 'success' ? 'alert-success' : 'alert-danger'" role="alert">
+    <div class="d-flex align-items-center gap-2">
+      <i class="bi" [ngClass]="feedbackType === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-octagon-fill'"></i>
+      <span>{{ feedbackMessage }}</span>
+    </div>
+    <button type="button" class="btn-close" (click)="feedbackMessage = ''" aria-label="Close"></button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <div class="text-muted small mt-2">Loading supplier intelligence dossier...</div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="!isLoading && !vendor" class="iq-card text-center py-5">
+    <i class="bi bi-exclamation-triangle text-danger fs-1 mb-3"></i>
+    <h3 class="fs-5 fw-bold text-dark">{{ errorMessage || 'Vendor Profile Not Found' }}</h3>
+    <p class="text-muted small mb-4">The requested vendor could not be located in the enterprise directory.</p>
+    <a routerLink="/vendors" class="btn-iq-primary">
+      <i class="bi bi-arrow-left"></i> Return to Vendor Directory
+    </a>
+  </div>
+
+  <div *ngIf="!isLoading && vendor">
+    <!-- Breadcrumb & Header Action Bar -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+      <div>
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb mb-1 small">
+            <li class="breadcrumb-item"><a routerLink="/vendors" class="text-decoration-none">Vendors</a></li>
+            <li class="breadcrumb-item"><a routerLink="/vendor-categories" class="text-decoration-none">{{ vendor.category }}</a></li>
+            <li class="breadcrumb-item active text-dark fw-semibold" aria-current="page">{{ vendor.name }}</li>
+          </ol>
+        </nav>
+        <h1 class="page-title mb-0">{{ vendor.name }}</h1>
+        <p class="page-subtitle mb-0">{{ vendor.company }} &bull; Supplier Code: <span class="font-monospace fw-semibold text-primary">{{ formatVendorId(vendor.id) }}</span></p>
+      </div>
+
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <!-- Quick Status Update Dropdown for Admins / Procurement Managers -->
+        <div class="dropdown" *ngIf="authService.hasRole(['Administrator', 'Procurement Manager'])">
+          <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-sliders2 me-1"></i> Status: <span class="fw-semibold">{{ vendor.status }}</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+            <li><a class="dropdown-item small" (click)="updateVendorStatus('Approved')"><i class="bi bi-check-circle-fill text-success me-2"></i>Active / Approved</a></li>
+            <li><a class="dropdown-item small" (click)="updateVendorStatus('Pending')"><i class="bi bi-hourglass-split text-warning me-2"></i>Pending Approval</a></li>
+            <li><a class="dropdown-item small" (click)="updateVendorStatus('Under Review')"><i class="bi bi-search text-info me-2"></i>Under Review</a></li>
+            <li><a class="dropdown-item small" (click)="updateVendorStatus('Suspended')"><i class="bi bi-pause-circle text-secondary me-2"></i>Suspended</a></li>
+            <li><a class="dropdown-item small text-danger" (click)="updateVendorStatus('Blacklisted')"><i class="bi bi-x-octagon-fill text-danger me-2"></i>Blacklisted</a></li>
+          </ul>
+        </div>
+
+        <button type="button" class="btn btn-outline-primary btn-sm" (click)="openEditProfileModal()">
+          <i class="bi bi-pencil-square me-1"></i> Edit Profile
+        </button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" (click)="openContactModal()">
+          <i class="bi bi-person-plus me-1"></i> Add Contact
+        </button>
+        <a routerLink="/vendors" class="btn-iq-secondary btn-sm">
+          <i class="bi bi-arrow-left"></i> Back
+        </a>
+      </div>
+    </div>
+
+    <!-- Vendor Hero Profile Card -->
+    <div class="iq-card p-4 mb-4 vendor-hero-card">
+      <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+        <div class="d-flex align-items-center gap-3">
+          <div class="vendor-avatar-lg">
+            {{ getInitials(vendor.name, vendor.company) }}
+          </div>
+          <div>
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+              <h2 class="fs-4 fw-bold text-dark m-0">{{ vendor.name }}</h2>
+              <span class="iq-badge" [ngClass]="getStatusClass(vendor.status)">{{ vendor.status }}</span>
+              <span class="iq-badge" [ngClass]="getRiskBadgeClass(vendor.risk_level)">{{ vendor.risk_level || 'Low' }} Risk</span>
+            </div>
+            <div class="d-flex flex-wrap align-items-center gap-3 text-muted small">
+              <span><i class="bi bi-building me-1 text-primary"></i>{{ vendor.company }}</span>
+              <span><i class="bi bi-tag me-1 text-primary"></i>{{ vendor.category }}</span>
+              <span *ngIf="vendor.address"><i class="bi bi-geo-alt me-1 text-primary"></i>{{ vendor.address }}</span>
+              <span *ngIf="vendor.website"><i class="bi bi-globe me-1 text-primary"></i><a [href]="vendor.website" target="_blank" class="text-decoration-none">{{ vendor.website }}</a></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Corporate Registration IDs -->
+        <div class="corporate-id-pill bg-light p-2 px-3 rounded border text-md-end">
+          <div class="small text-muted">Corporate Tax ID / GSTIN</div>
+          <div class="font-monospace fw-bold text-dark">{{ vendor.gst_tax_id || 'GSTIN-PENDING' }}</div>
+          <div class="text-muted extra-small">CIN: {{ vendor.business_reg_number || 'CIN-PENDING' }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending Administrator Verification Alert Banner -->
+    <div *ngIf="vendor.status === 'Pending' || vendor.status === 'Pending Approval' || vendor.status === 'Under Review'"
+         class="alert alert-warning border-warning shadow-sm mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-clock-history fs-4 text-warning"></i>
+        <div>
+          <strong class="text-dark">Awaiting Administrator Verification & Approval:</strong>
+          <span class="d-block small text-muted">This supplier is pending official verification and is not yet eligible to receive purchase orders or contracts.</span>
+        </div>
+      </div>
+      <button *ngIf="authService.hasRole(['Administrator', 'Procurement Manager'])"
+              type="button" class="btn btn-success btn-sm fw-bold" (click)="approve()" [disabled]="isProcessingApproval">
+        <i class="bi bi-check-lg me-1"></i> Verify & Approve Vendor Now
+      </button>
+    </div>
+
+    <!-- Top KPI Telemetry Row (Circular Meter + 3 Performance Cards) -->
+    <div class="row g-3 mb-4">
+      <!-- 1. Circular SVG Reliability Gauge -->
+      <div class="col-xl-3 col-md-6">
+        <div class="iq-card h-100 p-3 d-flex flex-column justify-content-between">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="text-muted small fw-semibold text-uppercase tracking-wider">Reliability Index</span>
+            <i class="bi bi-shield-check text-primary fs-5"></i>
+          </div>
+
+          <div class="d-flex align-items-center justify-content-center py-2">
+            <div class="circular-chart-container">
+              <svg viewBox="0 0 120 120" class="circular-chart">
+                <circle class="circle-bg" cx="60" cy="60" r="48" fill="none" stroke="#f1f5f9" stroke-width="10" />
+                <circle class="circle-progress"
+                  cx="60" cy="60" r="48"
+                  fill="none"
+                  [attr.stroke]="getReliabilityColor(reliabilityScore)"
+                  stroke-width="10"
+                  stroke-linecap="round"
+                  [attr.stroke-dasharray]="getCircumference(48)"
+                  [attr.stroke-dashoffset]="getStrokeDashoffset(reliabilityScore, 48)"
+                  transform="rotate(-90 60 60)" />
+              </svg>
+              <div class="circular-chart-label">
+                <span class="score-value" [style.color]="getReliabilityColor(reliabilityScore)">{{ reliabilityScore }}%</span>
+                <span class="score-caption">Score</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="text-center mt-2 border-top pt-2">
+            <span class="badge" [ngClass]="reliabilityScore >= 85 ? 'bg-success-subtle text-success' : (reliabilityScore >= 70 ? 'bg-primary-subtle text-primary' : 'bg-danger-subtle text-danger')">
+              {{ getReliabilityGrade(reliabilityScore) }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. On-Time Delivery Card -->
+      <div class="col-xl-3 col-md-6">
+        <div class="iq-card h-100 p-3 d-flex flex-column justify-content-between">
+          <div>
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="text-muted small fw-semibold text-uppercase tracking-wider">On-Time Delivery</span>
+              <i class="bi bi-truck text-success fs-5"></i>
+            </div>
+            <div class="fs-2 fw-bold text-dark mt-2 mb-1">{{ onTimeRate }}%</div>
+            <div class="progress" style="height: 6px;">
+              <div class="progress-bar bg-success" role="progressbar" [style.width.%]="onTimeRate"></div>
+            </div>
+          </div>
+
+          <div class="pt-3 border-top mt-3">
+            <div class="d-flex justify-content-between small text-muted">
+              <span>On-Time Shipments:</span>
+              <strong class="text-success">{{ vendor.performance?.on_time_deliveries ?? 0 }}</strong>
+            </div>
+            <div class="d-flex justify-content-between small text-muted mt-1">
+              <span>Delayed Shipments:</span>
+              <strong class="text-danger">{{ vendor.performance?.delayed_deliveries ?? 0 }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Quality Score & Fulfillment -->
+      <div class="col-xl-3 col-md-6">
+        <div class="iq-card h-100 p-3 d-flex flex-column justify-content-between">
+          <div>
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="text-muted small fw-semibold text-uppercase tracking-wider">Quality & Fulfillment</span>
+              <i class="bi bi-award text-warning fs-5"></i>
+            </div>
+            <div class="d-flex align-items-baseline gap-2 mt-2 mb-1">
+              <span class="fs-2 fw-bold text-dark">{{ qualityScore }}</span>
+              <span class="text-muted small">/ 5.0</span>
+              <div class="text-warning small ms-1">
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-half"></i>
+              </div>
+            </div>
+            <div class="small text-muted">Fulfillment: <strong class="text-dark">{{ fulfillmentRate }}%</strong></div>
+          </div>
+
+          <div class="pt-3 border-top mt-3">
+            <div class="d-flex justify-content-between small text-muted">
+              <span>Defect / Rejection Rate:</span>
+              <strong class="text-success">&lt; 1.2%</strong>
+            </div>
+            <div class="d-flex justify-content-between small text-muted mt-1">
+              <span>Audit Compliance:</span>
+              <strong class="text-primary">ISO-9001 Verified</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Total Order Volume & Exposure -->
+      <div class="col-xl-3 col-md-6">
+        <div class="iq-card h-100 p-3 d-flex flex-column justify-content-between">
+          <div>
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="text-muted small fw-semibold text-uppercase tracking-wider">Procurement Volume</span>
+              <i class="bi bi-receipt text-indigo fs-5"></i>
+            </div>
+            <div class="fs-2 fw-bold text-dark mt-2 mb-1">{{ vendor.performance?.total_orders ?? pos.length }}</div>
+            <div class="small text-muted">Total Purchase Orders Logged</div>
+          </div>
+
+          <div class="pt-3 border-top mt-3">
+            <div class="d-flex justify-content-between small text-muted">
+              <span>Completed Orders:</span>
+              <strong class="text-dark">{{ vendor.performance?.completed_orders ?? 0 }}</strong>
+            </div>
+            <div class="d-flex justify-content-between small text-muted mt-1">
+              <span>Active Contracts:</span>
+              <strong class="text-primary">{{ contracts.length }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs for Detailed Modules -->
+    <ul class="nav nav-tabs iq-tabs mb-4">
+      <li class="nav-item">
+        <button class="nav-link" [class.active]="activeTab === 'overview'" (click)="setActiveTab('overview')">
+          <i class="bi bi-info-circle me-1"></i> Overview & Contacts
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" [class.active]="activeTab === 'deliveries'" (click)="setActiveTab('deliveries')">
+          <i class="bi bi-truck me-1"></i> Delivery Tracking ({{ deliveries.length }})
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" [class.active]="activeTab === 'orders'" (click)="setActiveTab('orders')">
+          <i class="bi bi-file-earmark-text me-1"></i> Purchase Orders ({{ pos.length }})
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" [class.active]="activeTab === 'catalog'" (click)="setActiveTab('catalog')">
+          <i class="bi bi-box-seam me-1"></i> Product Catalog ({{ vendor.products?.length || 0 }})
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" [class.active]="activeTab === 'contracts'" (click)="setActiveTab('contracts')">
+          <i class="bi bi-file-earmark-check me-1"></i> Contracts & Compliance ({{ contracts.length }})
+        </button>
+      </li>
+      <li class="nav-item" *ngIf="authService.hasRole(['Administrator', 'Procurement Manager', 'Auditor'])">
+        <button class="nav-link" [class.active]="activeTab === 'audit'" (click)="setActiveTab('audit')">
+          <i class="bi bi-shield-lock me-1"></i> Governance & Audit
+        </button>
+      </li>
+    </ul>
+
+    <!-- TAB 1: OVERVIEW & CONTACTS -->
+    <div *ngIf="activeTab === 'overview'" class="row g-4">
+      <!-- Left Column: Business & Risk Intelligence -->
+      <div class="col-lg-8">
+        <!-- Risk Telemetry Flag Alert -->
+        <div class="iq-card mb-4" [ngClass]="vendor.risk_level === 'High' ? 'border-danger' : (vendor.risk_level === 'Medium' ? 'border-warning' : '')">
+          <div class="iq-card-header d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-activity text-primary fs-5"></i>
+              <h3 class="iq-card-title mb-0">System Risk Telemetry & Telemetry Factors</h3>
+            </div>
+            <span class="iq-badge" [ngClass]="getRiskBadgeClass(vendor.risk_level)">
+              {{ vendor.risk_level || 'Low' }} Risk Level
+            </span>
+          </div>
+
+          <div *ngIf="vendor.risk_reasons && vendor.risk_reasons.length > 0" class="alert alert-warning py-3 mb-0">
+            <h6 class="fw-bold mb-2 text-dark"><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>Identified Operational Risk Factors:</h6>
+            <ul class="mb-0 ps-3">
+              <li *ngFor="let reason of vendor.risk_reasons" class="mb-1">{{ reason }}</li>
+            </ul>
+          </div>
+
+          <div *ngIf="!vendor.risk_reasons || vendor.risk_reasons.length === 0" class="p-3 bg-light rounded text-success small d-flex align-items-center gap-2">
+            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+            <div>
+              <strong>Low Risk Operational Standing:</strong> No critical anomalies or excessive delivery delays identified in transactional telemetry.
+            </div>
+          </div>
+        </div>
+
+        <!-- Corporate Profile Details -->
+        <div class="iq-card mb-4">
+          <div class="iq-card-header">
+            <h3 class="iq-card-title">Corporate & Operational Details</h3>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded border">
+                <span class="text-muted small d-block">Primary Authorized Product / Service Line:</span>
+                <strong class="text-dark">{{ vendor.product }}</strong>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded border">
+                <span class="text-muted small d-block">Official Category:</span>
+                <strong class="text-primary">{{ vendor.category }}</strong>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded border">
+                <span class="text-muted small d-block">Official Contact Email:</span>
+                <a [href]="'mailto:' + vendor.email" class="text-decoration-none fw-semibold">{{ vendor.email }}</a>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded border">
+                <span class="text-muted small d-block">Official Phone:</span>
+                <span class="fw-semibold text-dark">{{ vendor.phone }}</span>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="p-3 bg-light rounded border">
+                <span class="text-muted small d-block">Corporate CIN:</span>
+                <span class="font-monospace fw-semibold">{{ vendor.business_reg_number || 'CIN-PENDING' }}</span>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="p-3 bg-light rounded border">
+                <span class="text-muted small d-block">GSTIN / Tax ID:</span>
+                <span class="font-monospace fw-semibold">{{ vendor.gst_tax_id || 'GSTIN-PENDING' }}</span>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="p-3 bg-light rounded border">
+                <span class="text-muted small d-block">Settlement Bank:</span>
+                <span class="small font-monospace">{{ vendor.bank_details || 'HDFC Bank Comm / AC: 502000881920' }}</span>
+              </div>
+            </div>
+            <div class="col-12" *ngIf="vendor.address">
+              <div class="p-3 bg-light rounded border">
+                <span class="text-muted small d-block">Registered Headquarters Address:</span>
+                <span>{{ vendor.address }}</span>
+              </div>
+            </div>
+            <div class="col-12" *ngIf="vendor.notes">
+              <div class="p-3 bg-light rounded border">
+                <span class="text-muted small d-block">Registration & Operational Notes:</span>
+                <p class="m-0 text-muted small">{{ vendor.notes }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Contacts & Action Cards -->
+      <div class="col-lg-4">
+        <!-- Contacts Directory -->
+        <div class="iq-card mb-4">
+          <div class="iq-card-header d-flex justify-content-between align-items-center">
+            <h3 class="iq-card-title mb-0">Authorized Contacts ({{ vendor.contacts?.length || 0 }})</h3>
+            <button type="button" class="btn btn-outline-primary btn-sm" (click)="openContactModal()">
+              <i class="bi bi-plus-lg"></i> Add
+            </button>
+          </div>
+
+          <div *ngIf="!vendor.contacts || vendor.contacts.length === 0" class="text-muted small text-center py-3">
+            No secondary contacts registered for this supplier.
+          </div>
+
+          <div *ngFor="let c of vendor.contacts" class="p-3 mb-2 bg-light rounded border small">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <strong class="text-dark fs-6 d-block">{{ c.contact_name }}</strong>
+                <span class="text-muted">{{ c.title || 'Representative' }}</span>
+              </div>
+              <div class="d-flex align-items-center gap-1">
+                <span *ngIf="c.is_primary" class="badge bg-primary">Primary</span>
+                <button *ngIf="!c.is_primary" type="button" class="btn btn-xs btn-outline-danger p-0 px-1" (click)="deleteContact(c.id)" title="Remove contact">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </div>
+            <div class="mt-2 text-muted">
+              <div><i class="bi bi-envelope me-1"></i> <a [href]="'mailto:' + c.email" class="text-decoration-none">{{ c.email }}</a></div>
+              <div><i class="bi bi-telephone me-1"></i> {{ c.phone }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Summary Card -->
+        <div class="iq-card">
+          <div class="iq-card-header">
+            <h3 class="iq-card-title">Registration Summary</h3>
+          </div>
+          <div class="small">
+            <div class="d-flex justify-content-between py-2 border-bottom">
+              <span class="text-muted">Onboarding Date:</span>
+              <strong class="text-dark">{{ (vendor.created_at | date:'mediumDate') || '2026-01-15' }}</strong>
+            </div>
+            <div class="d-flex justify-content-between py-2 border-bottom">
+              <span class="text-muted">Current Status:</span>
+              <span class="iq-badge" [ngClass]="getStatusClass(vendor.status)">{{ vendor.status }}</span>
+            </div>
+            <div class="d-flex justify-content-between py-2">
+              <span class="text-muted">Account Access:</span>
+              <span class="badge bg-success-subtle text-success">Verified & Active</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: DELIVERY TRACKING HISTORY -->
+    <div *ngIf="activeTab === 'deliveries'">
+      <div class="iq-card">
+        <div class="iq-card-header d-flex justify-content-between align-items-center">
+          <div>
+            <h3 class="iq-card-title mb-0">Delivery Logs & Dispatch History</h3>
+            <span class="text-muted small">Real-time telemetry recorded across carrier dispatches, receiving logs, and QA verifications</span>
+          </div>
+        </div>
+
+        <div *ngIf="deliveries.length === 0" class="text-center py-5 text-muted">
+          <i class="bi bi-truck fs-1 d-block mb-2 text-slate-400"></i>
+          <p class="mb-0">No delivery logs recorded for this supplier yet.</p>
+        </div>
+
+        <div *ngIf="deliveries.length > 0" class="iq-table-container">
+          <table class="iq-table">
+            <thead>
+              <tr>
+                <th>PO Number</th>
+                <th>Carrier & Tracking</th>
+                <th>Expected Date</th>
+                <th>Actual Date</th>
+                <th>Quantity</th>
+                <th>Delay Analysis</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let d of deliveries">
+                <td class="fw-bold text-dark">{{ d.po_number || 'N/A' }}</td>
+                <td>
+                  <div class="fw-semibold text-primary">{{ d.carrier || 'Standard Freight' }}</div>
+                  <small class="font-monospace text-muted">{{ d.tracking_number || 'TRK-PENDING' }}</small>
+                </td>
+                <td>{{ (d.expected_delivery_date | date:'mediumDate') || 'N/A' }}</td>
+                <td>{{ (d.actual_delivery_date | date:'mediumDate') || 'In Transit' }}</td>
+                <td>
+                  <span class="fw-semibold">{{ d.delivered_quantity }}</span> / <span class="text-muted">{{ d.ordered_quantity }}</span>
+                </td>
+                <td>
+                  <span *ngIf="d.delay_days <= 0" class="badge bg-success-subtle text-success border border-success">
+                    <i class="bi bi-check2"></i> On Time
+                  </span>
+                  <span *ngIf="d.delay_days > 0" class="badge bg-danger-subtle text-danger border border-danger">
+                    <i class="bi bi-clock"></i> +{{ d.delay_days }} Days Late
+                  </span>
+                </td>
+                <td>
+                  <span class="iq-badge" [ngClass]="d.delivery_status === 'Delivered' ? 'badge-approved' : 'badge-pending'">
+                    {{ d.delivery_status }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: PURCHASE ORDER HISTORY -->
+    <div *ngIf="activeTab === 'orders'">
+      <div class="iq-card">
+        <div class="iq-card-header d-flex justify-content-between align-items-center">
+          <div>
+            <h3 class="iq-card-title mb-0">Purchase Order History ({{ pos.length }})</h3>
+            <span class="text-muted small">Complete record of purchase orders issued and contracted with this supplier</span>
+          </div>
+          <a routerLink="/purchase-orders" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-box-arrow-up-right me-1"></i> Go to PO Management
+          </a>
+        </div>
+
+        <div *ngIf="pos.length === 0" class="text-center py-5 text-muted">
+          <i class="bi bi-receipt fs-1 d-block mb-2 text-slate-400"></i>
+          <p class="mb-0">No purchase orders issued to this supplier yet.</p>
+        </div>
+
+        <div *ngIf="pos.length > 0" class="iq-table-container">
+          <table class="iq-table">
+            <thead>
+              <tr>
+                <th>PO Number</th>
+                <th>Issue Date</th>
+                <th>Expected Delivery</th>
+                <th>Total Value</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let po of pos">
+                <td class="fw-bold text-dark">{{ po.po_number }}</td>
+                <td class="small text-muted">{{ po.created_at | date:'mediumDate' }}</td>
+                <td class="small">{{ (po.expected_delivery_date | date:'mediumDate') || 'N/A' }}</td>
+                <td class="fw-bold text-dark">{{ po.total_amount | currency:(po.currency || 'USD') }}</td>
+                <td>
+                  <span class="iq-badge badge-ordered">{{ po.status }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: PRODUCT CATALOG -->
+    <div *ngIf="activeTab === 'catalog'">
+      <div class="iq-card">
+        <div class="iq-card-header d-flex justify-content-between align-items-center">
+          <div>
+            <h3 class="iq-card-title mb-0">Authorized Catalog Items ({{ vendor.products?.length || 0 }})</h3>
+            <span class="text-muted small">Standardized products, materials, and components supplied under master agreements</span>
+          </div>
+        </div>
+
+        <div *ngIf="!vendor.products || vendor.products.length === 0" class="text-center py-5 text-muted">
+          <i class="bi bi-box-seam fs-1 d-block mb-2 text-slate-400"></i>
+          <p class="mb-0">No catalog items configured for this supplier.</p>
+        </div>
+
+        <div *ngIf="vendor.products && vendor.products.length > 0" class="iq-table-container">
+          <table class="iq-table">
+            <thead>
+              <tr>
+                <th>Product / Material</th>
+                <th>Category</th>
+                <th>Contract Unit Price</th>
+                <th>Lead Time</th>
+                <th>Inventory Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let p of vendor.products">
+                <td class="fw-bold text-dark">{{ p.product_name }}</td>
+                <td><span class="badge bg-light text-dark border">{{ p.category }}</span></td>
+                <td class="fw-semibold text-primary">${{ p.unit_price | number:'1.2-2' }}</td>
+                <td>{{ p.lead_time_days }} business days</td>
+                <td>
+                  <span class="badge" [ngClass]="p.in_stock ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'">
+                    {{ p.in_stock ? 'In Stock' : 'On Order' }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: CONTRACTS & COMPLIANCE -->
+    <div *ngIf="activeTab === 'contracts'" class="row g-4">
+      <div class="col-lg-7">
+        <div class="iq-card">
+          <div class="iq-card-header d-flex justify-content-between align-items-center">
+            <h3 class="iq-card-title mb-0">Master Agreements & Contracts ({{ contracts.length }})</h3>
+            <a routerLink="/contracts" class="small text-decoration-none">Manage Contracts</a>
+          </div>
+
+          <div *ngIf="contracts.length === 0" class="text-muted py-4 text-center">
+            No active contracts on file for this supplier.
+          </div>
+
+          <div *ngFor="let cnt of contracts" class="p-3 mb-3 bg-light rounded border">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <strong class="text-dark fs-6">{{ cnt.contract_number }}</strong>
+                <div class="fw-semibold text-primary mt-1">{{ cnt.title }}</div>
+              </div>
+              <span class="iq-badge badge-compliant">{{ cnt.compliance_status }}</span>
+            </div>
+            <div class="text-muted small mt-2 d-flex justify-content-between">
+              <span>Value: <strong>{{ cnt.contract_value | currency:'USD' }}</strong></span>
+              <span>Expires: <strong>{{ cnt.expiry_date | date:'mediumDate' }}</strong></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="iq-card">
+          <div class="iq-card-header d-flex justify-content-between align-items-center">
+            <h3 class="iq-card-title mb-0">Verified Compliance Documents ({{ vendor.documents?.length || 0 }})</h3>
+            <i class="bi bi-patch-check text-success fs-5"></i>
+          </div>
+
+          <div *ngIf="!vendor.documents || vendor.documents.length === 0" class="text-muted py-4 text-center small">
+            No compliance documents verified.
+          </div>
+
+          <div *ngFor="let doc of vendor.documents" class="p-3 mb-2 bg-light rounded border small">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <strong class="text-dark">{{ doc.document_name }}</strong>
+                <div class="text-muted small">{{ doc.document_type }}</div>
+              </div>
+              <span class="badge bg-success-subtle text-success border border-success">
+                <i class="bi bi-check2-circle"></i> {{ doc.status || 'VERIFIED' }}
+              </span>
+            </div>
+            <div class="text-muted small mt-1">Uploaded: {{ doc.uploaded_at | date:'mediumDate' }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 6: GOVERNANCE & AUDIT TRAIL -->
+    <div *ngIf="activeTab === 'audit'" class="row g-4">
+      <div class="col-lg-8">
+        <!-- Approval Decision Box -->
+        <div *ngIf="authService.hasRole(['Administrator', 'Procurement Manager'])" class="iq-card border-primary p-4 mb-4">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <i class="bi bi-check2-square text-primary fs-4"></i>
+            <div>
+              <h3 class="iq-card-title mb-0">Executive Vendor Authorization</h3>
+              <span class="text-muted small">Record formal justification and update authorization standing</span>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Reviewer Decision Notes / Justification</label>
+            <textarea class="form-control" rows="3" [(ngModel)]="reviewNotes" placeholder="Enter compliance remarks, ISO verification notes, or reason for status update..."></textarea>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-success fw-bold" (click)="approve()" [disabled]="isProcessingApproval">
+              <span *ngIf="isProcessingApproval" class="spinner-border spinner-border-sm me-1"></span>
+              <i class="bi bi-check-lg me-1"></i> Approve & Activate Supplier
+            </button>
+            <button type="button" class="btn btn-danger fw-bold" (click)="reject()" [disabled]="isProcessingApproval">
+              <span *ngIf="isProcessingApproval" class="spinner-border spinner-border-sm me-1"></span>
+              <i class="bi bi-x-lg me-1"></i> Reject Supplier
+            </button>
+          </div>
+        </div>
+
+        <!-- Audit Timeline History -->
+        <div class="iq-card">
+          <div class="iq-card-header">
+            <h3 class="iq-card-title">Governance & Lifecycle Audit Log</h3>
+          </div>
+          <div class="timeline p-2">
+            <div class="timeline-item pb-3 border-start ps-3 position-relative">
+              <div class="timeline-dot bg-success"></div>
+              <div class="small fw-bold text-dark">Supplier Onboarding Approved</div>
+              <div class="text-muted small">Vendor status authorized for enterprise purchase requisitioning.</div>
+              <div class="text-muted extra-small mt-1">{{ (vendor.updated_at | date:'medium') || 'Recent' }}</div>
+            </div>
+            <div class="timeline-item pb-3 border-start ps-3 position-relative">
+              <div class="timeline-dot bg-primary"></div>
+              <div class="small fw-bold text-dark">Risk Assessment Completed</div>
+              <div class="text-muted small">Risk level assigned as {{ vendor.risk_level || 'Low' }} based on delivery reliability index.</div>
+              <div class="text-muted extra-small mt-1">{{ (vendor.created_at | date:'medium') || 'Onboarding' }}</div>
+            </div>
+            <div class="timeline-item ps-3 position-relative">
+              <div class="timeline-dot bg-secondary"></div>
+              <div class="small fw-bold text-dark">Initial Registration</div>
+              <div class="text-muted small">Supplier account registered under category {{ vendor.category }}.</div>
+              <div class="text-muted extra-small mt-1">{{ (vendor.created_at | date:'medium') || 'Registration' }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Vendor Profile Modal -->
+  <div *ngIf="showEditModal" class="iq-modal-backdrop" (click)="closeEditProfileModal()">
+    <div class="iq-modal shadow-lg" style="max-width: 680px;" (click)="$event.stopPropagation()">
+      <div class="d-flex justify-content-between align-items-start border-bottom pb-2 mb-3">
+        <div>
+          <h3 class="fs-5 fw-bold m-0 text-dark">Edit Vendor Profile</h3>
+          <span class="text-muted small">Update supplier corporate credentials, categorization, and risk profiles</span>
+        </div>
+        <button type="button" class="btn-close" (click)="closeEditProfileModal()"></button>
+      </div>
+
+      <form (ngSubmit)="saveVendorProfile()">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Representative Name *</label>
+            <input type="text" class="form-control form-control-sm" [(ngModel)]="editVendorForm.name" name="vname" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Company Name *</label>
+            <input type="text" class="form-control form-control-sm" [(ngModel)]="editVendorForm.company" name="vcomp" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Email *</label>
+            <input type="email" class="form-control form-control-sm" [(ngModel)]="editVendorForm.email" name="vemail" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Phone *</label>
+            <input type="tel" class="form-control form-control-sm" [(ngModel)]="editVendorForm.phone" name="vphone" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Official Category *</label>
+            <select class="form-select form-select-sm" [(ngModel)]="editVendorForm.category" name="vcat" required>
+              <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Core Product / Line *</label>
+            <input type="text" class="form-control form-control-sm" [(ngModel)]="editVendorForm.product" name="vprod" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Risk Level</label>
+            <select class="form-select form-select-sm" [(ngModel)]="editVendorForm.risk_level" name="vrisk">
+              <option value="Low">Low Risk</option>
+              <option value="Medium">Medium Risk</option>
+              <option value="High">High Risk</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Status</label>
+            <select class="form-select form-select-sm" [(ngModel)]="editVendorForm.status" name="vstat">
+              <option value="Approved">Approved (Active)</option>
+              <option value="Pending">Pending Approval</option>
+              <option value="Under Review">Under Review</option>
+              <option value="Suspended">Suspended</option>
+              <option value="Blacklisted">Blacklisted</option>
+            </select>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label fw-semibold small">Business Address</label>
+            <input type="text" class="form-control form-control-sm" [(ngModel)]="editVendorForm.address" name="vaddr">
+          </div>
+
+          <div class="col-12">
+            <label class="form-label fw-semibold small">Website</label>
+            <input type="url" class="form-control form-control-sm" [(ngModel)]="editVendorForm.website" name="vweb">
+          </div>
+
+          <div class="col-12">
+            <label class="form-label fw-semibold small">Notes & Qualifications</label>
+            <textarea class="form-control form-control-sm" rows="2" [(ngModel)]="editVendorForm.notes" name="vnotes"></textarea>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 border-top pt-3 mt-4">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="closeEditProfileModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm" [disabled]="isSavingProfile">
+            <span *ngIf="isSavingProfile" class="spinner-border spinner-border-sm me-1"></span>
+            Save Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Contact Modal -->
+  <div *ngIf="showContactModal" class="iq-modal-backdrop" (click)="closeContactModal()">
+    <div class="iq-modal" (click)="$event.stopPropagation()">
+      <h3 class="fs-5 fw-bold mb-3 border-bottom pb-2">Add Vendor Contact</h3>
+      <form (ngSubmit)="saveContact()">
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Contact Name *</label>
+          <input type="text" class="form-control form-control-sm" [(ngModel)]="newContact.contact_name" name="cname" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Job Title</label>
+          <input type="text" class="form-control form-control-sm" [(ngModel)]="newContact.title" name="ctitle" placeholder="e.g. Sales Director">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Email *</label>
+          <input type="email" class="form-control form-control-sm" [(ngModel)]="newContact.email" name="cemail" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Phone *</label>
+          <input type="tel" class="form-control form-control-sm" [(ngModel)]="newContact.phone" name="cphone" required>
+        </div>
+        <div class="d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="closeContactModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm">Save Contact</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

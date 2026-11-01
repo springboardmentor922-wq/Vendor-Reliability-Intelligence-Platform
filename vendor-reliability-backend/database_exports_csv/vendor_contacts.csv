@@ -1,0 +1,54 @@
+id,vendor_id,contact_name,title,email,phone,is_primary,created_at
+5,16,ABC Representative,Key Account Director,enterprise@abctechnologies.com,+91 80 4123 4567,1,2026-09-22 12:12:01.886354
+6,17,Digital Representative,Key Account Director,procure@digitalsystems.io,+91 22 2847 1199,1,2026-09-22 12:12:01.902181
+7,18,Computer Representative,Key Account Director,sales@computerworld.com,+91 11 4910 8822,1,2026-09-22 12:12:01.910147
+8,19,TechDistro Representative,Key Account Director,support@techdistro.com,+91 44 2819 0011,1,2026-09-22 12:12:01.915437
+9,20,Sri Representative,Key Account Director,supply@srimaterials.com,+91 40 2300 8844,1,2026-09-22 12:12:01.924029
+10,21,Apex Representative,Key Account Director,services@apexmaintenance.com,+91 80 6710 4400,1,2026-09-22 12:12:01.930487
+11,22,FastMove Representative,Key Account Director,dispatch@fastmovelogistics.com,+91 124 4920 100,1,2026-09-22 12:12:01.936776
+12,23,Metro Representative,Key Account Director,sales@metro-office.com,+91 40 4499 1234,1,2026-09-22 12:12:01.942469
+13,17,Digital Representative,Key Account Director,procure@digitalsystems.io,+91 22 2847 1199,1,2026-09-27 13:04:41.271449
+14,18,Computer Representative,Key Account Director,sales@computerworld.com,+91 11 4910 8822,1,2026-09-27 13:04:41.282083
+15,19,TechDistro Representative,Key Account Director,support@techdistro.com,+91 44 2819 0011,1,2026-09-27 13:04:41.288338
+16,20,Sri Representative,Key Account Director,supply@srimaterials.com,+91 40 2300 8844,1,2026-09-27 13:04:41.294822
+17,21,Apex Representative,Key Account Director,services@apexmaintenance.com,+91 80 6710 4400,1,2026-09-27 13:04:41.303883
+19,22,FastMove Representative,Key Account Director,dispatch@fastmovelogistics.com,+91 124 4920 100,1,2026-09-27 13:04:41.316903
+20,23,Metro Representative,Key Account Director,sales@metro-office.com,+91 40 4499 1234,1,2026-09-27 13:04:41.323247
+21,26,FastSupply Logistics Rep,Primary Representative,fastsupply_1790514839081@globalfreight.com,+1 800-555-1234,1,2026-09-27 13:13:59.165094
+22,27,Precision Tech Components,Primary Representative,precision_1790514839081@techparts.io,+1 888-555-4321,1,2026-09-27 13:13:59.213445
+23,28,Direct Quantum Supplier,Primary Representative,directvendor_1790514839081@quantum.com,+1 800-777-9999,1,2026-09-27 13:13:59.259557
+24,29,FastSupply Logistics Rep,Primary Representative,fastsupply_1790515174809@globalfreight.com,+1 800-555-1234,1,2026-09-27 13:19:34.894934
+25,30,Precision Tech Components,Primary Representative,precision_1790515174809@techparts.io,+1 888-555-4321,1,2026-09-27 13:19:34.949957
+26,31,Direct Quantum Supplier,Primary Representative,directvendor_1790515174809@quantum.com,+1 800-777-9999,1,2026-09-27 13:19:35.000549
+27,33,FastSupply Logistics Rep,Primary Representative,fastsupply_1790515329479@globalfreight.com,+1 800-555-1234,1,2026-09-27 13:22:09.568467
+28,34,Precision Tech Components,Primary Representative,precision_1790515329479@techparts.io,+1 888-555-4321,1,2026-09-27 13:22:09.625089
+29,35,Direct Quantum Supplier,Primary Representative,directvendor_1790515329479@quantum.com,+1 800-777-9999,1,2026-09-27 13:22:09.677186
+30,37,FastSupply Logistics Rep,Primary Representative,fastsupply_1790515718162@globalfreight.com,+1 800-555-1234,1,2026-09-27 13:28:38.248869
+31,38,Precision Tech Components,Primary Representative,precision_1790515718162@techparts.io,+1 888-555-4321,1,2026-09-27 13:28:38.304452
+32,39,Direct Quantum Supplier,Primary Representative,directvendor_1790515718162@quantum.com,+1 800-777-9999,1,2026-09-27 13:28:38.355072
+33,41,FastSupply Logistics Rep,Primary Representative,fastsupply_1790516173324@globalfreight.com,+1 800-555-1234,1,2026-09-27 13:36:13.414516
+34,42,Precision Tech Components,Primary Representative,precision_1790516173324@techparts.io,+1 888-555-4321,1,2026-09-27 13:36:13.471500
+35,43,Direct Quantum Supplier,Primary Representative,directvendor_1790516173324@quantum.com,+1 800-777-9999,1,2026-09-27 13:36:13.523589
+36,45,FastSupply Logistics Rep,Primary Representative,fastsupply_1790517026317@globalfreight.com,+1 800-555-1234,1,2026-09-27 13:50:26.409682
+37,46,Precision Tech Components,Primary Representative,precision_1790517026317@techparts.io,+1 888-555-4321,1,2026-09-27 13:50:26.461968
+38,47,Direct Quantum Supplier,Primary Representative,directvendor_1790517026317@quantum.com,+1 800-777-9999,1,2026-09-27 13:50:26.510003
+39,1,David Chen,Procurement Liaison,david.chen@apexmaterials.com,+1 (555) 456-7890,1,
+40,2,Abijin,Authorized Vendor Representative,abijin@apexmicrowave.com,+1 (555) 345-6789,1,
+41,3,Rithesh,Account Executive,rithesh@maxwellsys.com,+1 (555) 234-5678,1,
+42,4,Vikram Patel,VP Enterprise Sales,vikram@quantumtech.io,+1 (555) 567-8901,1,
+43,5,Elena Silva,Operations Director,elena@fastsupply.com,+1 (555) 678-9012,1,
+44,6,Rahul Kumar,Technical Sales Lead,rahul@precisiontech.com,+1 (555) 789-0123,1,
+45,7,Sarah Connors,Client Services Director,sarah.c@omegaservices.com,+1 (555) 890-1234,1,
+46,8,Michael Vance,Fleet Maintenance Supervisor,michael.v@globalfleet.com,+1 (555) 901-2345,1,
+47,9,Arjun Nair,Regional Materials Director,arjun@titanraw.com,+1 (555) 012-3456,1,
+48,10,Marcus Shaw,Global Transport Director,marcus@logilink.com,+1 (555) 123-4567,1,
+49,56,FastSupply Logistics Rep,Primary Representative,fastsupply_1790874281189@globalfreight.com,+1 800-555-1234,1,2026-10-01 17:04:41.290753
+50,57,FastSupply Logistics Rep,Primary Representative,fastsupply_1790874364589@globalfreight.com,+1 800-555-1234,1,2026-10-01 17:06:04.693128
+51,58,Precision Tech Components,Primary Representative,precision_1790874364589@techparts.io,+1 888-555-4321,1,2026-10-01 17:06:04.753005
+52,59,Direct Quantum Supplier,Primary Representative,directvendor_1790874364589@quantum.com,+1 800-777-9999,1,2026-10-01 17:06:04.806343
+53,60,FastSupply Logistics Rep,Primary Representative,fastsupply_1790874408148@globalfreight.com,+1 800-555-1234,1,2026-10-01 17:06:48.241967
+54,61,Precision Tech Components,Primary Representative,precision_1790874408148@techparts.io,+1 888-555-4321,1,2026-10-01 17:06:48.300621
+55,62,Direct Quantum Supplier,Primary Representative,directvendor_1790874408148@quantum.com,+1 800-777-9999,1,2026-10-01 17:06:48.356397
+56,64,FastSupply Logistics Rep,Primary Representative,fastsupply_1790874432445@globalfreight.com,+1 800-555-1234,1,2026-10-01 17:07:12.544648
+57,65,Precision Tech Components,Primary Representative,precision_1790874432445@techparts.io,+1 888-555-4321,1,2026-10-01 17:07:12.601221
+58,66,Direct Quantum Supplier,Primary Representative,directvendor_1790874432445@quantum.com,+1 800-777-9999,1,2026-10-01 17:07:12.656258

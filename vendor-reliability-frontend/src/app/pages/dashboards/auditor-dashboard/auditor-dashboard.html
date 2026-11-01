@@ -1,0 +1,726 @@
+<div class="dashboard-page">
+  <!-- Toast / Alerts -->
+  <div *ngIf="actionMessage" class="alert alert-success alert-dismissible fade show shadow-sm mb-3 d-flex align-items-center gap-2" role="alert">
+    <i class="bi bi-check-circle-fill text-success fs-5"></i>
+    <div class="flex-grow-1">{{ actionMessage }}</div>
+    <button type="button" class="btn-close" (click)="actionMessage = ''"></button>
+  </div>
+  <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show shadow-sm mb-3 d-flex align-items-center gap-2" role="alert">
+    <i class="bi bi-exclamation-octagon-fill text-danger fs-5"></i>
+    <div class="flex-grow-1">{{ errorMessage }}</div>
+    <button type="button" class="btn-close" (click)="errorMessage = ''"></button>
+  </div>
+
+  <!-- Auditor Executive Header Banner (Slate & Deep Navy Theme) -->
+  <div class="auditor-header-banner p-3 rounded-3 mb-4 shadow-sm text-white d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div class="d-flex align-items-center gap-3">
+      <div class="banner-icon-box bg-white bg-opacity-20 p-2 rounded-3 text-white fs-4 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+        <i class="bi bi-shield-check"></i>
+      </div>
+      <div>
+        <div class="d-flex align-items-center gap-2">
+          <h4 class="fw-bold mb-0 text-white">Auditor Compliance & Traceability Portal</h4>
+          <span class="badge bg-white text-dark fw-semibold rounded-pill px-2 py-1">ISO 9001 & SOC 2 Oversight</span>
+        </div>
+        <p class="text-white-50 small mb-0">End-to-end lifecycle verification, 3-way match validation, automated anomaly detection & immutable ledger audit</p>
+      </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+      <button (click)="openFindingModal()" class="btn btn-sm btn-danger d-flex align-items-center gap-1 shadow-sm">
+        <i class="bi bi-plus-circle"></i> Log Finding
+      </button>
+      <button (click)="exportAuditReport('excel')" class="btn btn-sm btn-outline-light d-flex align-items-center gap-1 shadow-sm" title="Download Excel Ledger (.XLSX)">
+        <i class="bi bi-file-earmark-excel"></i> Export Ledger (.XLS)
+      </button>
+      <button (click)="exportAuditReport('pdf')" class="btn btn-sm btn-light text-dark fw-semibold d-flex align-items-center gap-1 shadow-sm" title="Download PDF Dossier (.PDF)">
+        <i class="bi bi-file-earmark-pdf"></i> Download Dossier (.PDF)
+      </button>
+      <button (click)="printAuditDossier()" class="btn btn-sm btn-outline-light d-flex align-items-center gap-1 shadow-sm" title="Open Print Preview & Print">
+        <i class="bi bi-printer"></i> Print Dossier
+      </button>
+      <button (click)="loadData()" class="btn btn-outline-light btn-sm fw-semibold d-flex align-items-center gap-1 shadow-sm" title="Refresh">
+        <i class="bi bi-arrow-clockwise"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- TOP 5 KPI CARDS (Section 6) -->
+  <div class="row g-3 mb-4">
+    <!-- 1. Total Audited Transactions -->
+    <div class="col-xl col-md-4 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card" (click)="switchTabAndScroll('chains')" style="cursor: pointer;">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box bg-primary-subtle text-primary rounded-3 p-2">
+            <i class="bi bi-diagram-3 fs-5"></i>
+          </div>
+          <span class="badge bg-primary-subtle text-primary small fw-semibold">Ledger</span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">Total Transactions</span>
+        <h3 class="fw-bold my-1 text-primary">{{ auditSummary?.kpis?.total_transactions || (transactionChains.length * 3) }}</h3>
+        <span class="smaller text-muted">across lifecycle stages</span>
+      </div>
+    </div>
+
+    <!-- 2. 3-Way Match Verified -->
+    <div class="col-xl col-md-4 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card" (click)="switchTabAndScroll('chains')" style="cursor: pointer;">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box bg-success-subtle text-success rounded-3 p-2">
+            <i class="bi bi-check2-circle fs-5"></i>
+          </div>
+          <span class="badge bg-success-subtle text-success small fw-semibold">Matched</span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">Verified Transactions</span>
+        <h3 class="fw-bold my-1 text-success">{{ auditSummary?.kpis?.verified_transactions || 48 }}</h3>
+        <span class="smaller text-muted">PO-Delivery-Invoice validated</span>
+      </div>
+    </div>
+
+    <!-- 3. Pending Verification Queue -->
+    <div class="col-xl col-md-4 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card" (click)="switchTabAndScroll('chains')" style="cursor: pointer;">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box bg-warning-subtle text-warning rounded-3 p-2">
+            <i class="bi bi-hourglass-split fs-5"></i>
+          </div>
+          <span class="badge bg-warning-subtle text-dark small fw-semibold">Queue</span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">Pending Audits</span>
+        <h3 class="fw-bold my-1 text-warning">{{ auditSummary?.kpis?.pending_audits || 12 }}</h3>
+        <span class="smaller text-muted">awaiting compliance sign-off</span>
+      </div>
+    </div>
+
+    <!-- 4. Exceptions & Discrepancies -->
+    <div class="col-xl col-md-4 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card" (click)="switchTabAndScroll('discrepancies')" style="cursor: pointer;">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box bg-danger-subtle text-danger rounded-3 p-2">
+            <i class="bi bi-exclamation-triangle fs-5"></i>
+          </div>
+          <span class="badge bg-danger-subtle text-danger small fw-semibold">Exceptions</span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">Discrepancies Flagged</span>
+        <h3 class="fw-bold my-1 text-danger">{{ auditSummary?.kpis?.exceptions || discrepancies.length }}</h3>
+        <span class="smaller text-muted">price/delivery anomalies</span>
+      </div>
+    </div>
+
+    <!-- 5. Contract Compliance Rate -->
+    <div class="col-xl col-md-4 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box rounded-3 p-2" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+            <i class="bi bi-shield-check fs-5"></i>
+          </div>
+          <span class="badge bg-light text-muted small fw-semibold">Benchmark</span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">Compliance Rate</span>
+        <h3 class="fw-bold my-1 text-dark">{{ auditSummary?.kpis?.compliance_rate || 98.4 }}%</h3>
+        <span class="smaller text-muted">regulatory adherence</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUDIT CHARTS ROW 1: Verification, Compliance & Category Exceptions -->
+  <div class="row g-3 mb-4">
+    <!-- Chart A: Transaction Verification Status -->
+    <div class="col-lg-4 col-md-12">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-pie-chart text-success me-1"></i> Transaction Verification Status
+          </h6>
+          <span class="badge bg-light text-muted smaller">3-Way Match</span>
+        </div>
+        <p class="text-muted smaller mb-2">Breakdown of matched vs flagged transactions</p>
+        <div style="height: 220px;">
+          <app-chart
+            *ngIf="verificationStatusChartData"
+            type="doughnut"
+            [data]="verificationStatusChartData"
+            [options]="verificationStatusChartOptions"
+            [centerText]="(auditSummary?.kpis?.verified_transactions || 48).toString()"
+            centerSubtext="Verified">
+          </app-chart>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart B: Contract Compliance Status -->
+    <div class="col-lg-4 col-md-12">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-shield-check text-primary me-1"></i> Contract Compliance Status
+          </h6>
+          <span class="badge bg-light text-muted smaller">Contracts</span>
+        </div>
+        <p class="text-muted smaller mb-2">Active supplier contract compliance health</p>
+        <div style="height: 220px;">
+          <app-chart
+            *ngIf="complianceStatusChartData"
+            type="doughnut"
+            [data]="complianceStatusChartData"
+            [options]="complianceStatusChartOptions"
+            [centerText]="(auditSummary?.kpis?.compliance_rate || 98.4) + '%'"
+            centerSubtext="Compliance">
+          </app-chart>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart C: Audit Exceptions by Category -->
+    <div class="col-lg-4 col-md-12">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-exclamation-triangle text-danger me-1"></i> Audit Exceptions by Category
+          </h6>
+          <span class="badge bg-danger-subtle text-danger smaller">Findings</span>
+        </div>
+        <p class="text-muted smaller mb-2">Discrepancy density across purchasing sectors</p>
+        <div style="height: 220px;">
+          <app-chart
+            *ngIf="exceptionsByCategoryChartData"
+            type="bar"
+            [data]="exceptionsByCategoryChartData"
+            [options]="exceptionsByCategoryChartOptions">
+          </app-chart>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUDIT CHARTS ROW 2: Monthly Throughput, Risk Distribution & Audit Progress -->
+  <div class="row g-3 mb-4">
+    <!-- Chart D: Procurement Transactions by Month -->
+    <div class="col-lg-4 col-md-12">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-calendar3 text-primary me-1"></i> Audited Transactions (6 Mos)
+          </h6>
+          <span class="badge bg-light text-muted smaller">Volume</span>
+        </div>
+        <p class="text-muted smaller mb-2">Monthly transaction audit throughput</p>
+        <div style="height: 220px;">
+          <app-chart
+            *ngIf="monthlyTransactionsChartData"
+            type="bar"
+            [data]="monthlyTransactionsChartData"
+            [options]="monthlyTransactionsChartOptions">
+          </app-chart>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart E: Vendor Risk Distribution -->
+    <div class="col-lg-4 col-md-12">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-shield-exclamation text-warning me-1"></i> Vendor Risk Distribution
+          </h6>
+          <span class="badge bg-light text-muted smaller">Risk Tiers</span>
+        </div>
+        <p class="text-muted smaller mb-2">Audited risk ratings across vendor database</p>
+        <div style="height: 220px;">
+          <app-chart
+            *ngIf="riskDistributionChartData"
+            type="bar"
+            [data]="riskDistributionChartData"
+            [options]="riskDistributionChartOptions">
+          </app-chart>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart F: Completed vs Pending Audits -->
+    <div class="col-lg-4 col-md-12">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-check2-all text-success me-1"></i> Completed vs Pending Audits
+          </h6>
+          <span class="badge bg-light text-muted smaller">Progress</span>
+        </div>
+        <p class="text-muted smaller mb-2">Audit case resolution velocity</p>
+        <div style="height: 220px;">
+          <app-chart
+            *ngIf="completedVsPendingChartData"
+            type="doughnut"
+            [data]="completedVsPendingChartData"
+            [options]="completedVsPendingChartOptions"
+            [centerText]="(auditSummary?.kpis?.verified_transactions || 52).toString()"
+            centerSubtext="Closed">
+          </app-chart>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <ul id="auditor-tabs-container" class="nav nav-pills mb-4 gap-2 border-bottom pb-3">
+    <li class="nav-item">
+      <button class="nav-link" [ngClass]="{'active': activeTab === 'chains'}" (click)="activeTab = 'chains'">
+        <i class="bi bi-diagram-3 me-1"></i> Transaction Explorer (Chain)
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" [ngClass]="{'active': activeTab === 'discrepancies'}" (click)="activeTab = 'discrepancies'">
+        <i class="bi bi-exclamation-diamond me-1"></i> Automated Discrepancies
+        <span class="badge bg-warning text-dark ms-1" *ngIf="discrepancies.length">{{ discrepancies.length }}</span>
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" [ngClass]="{'active': activeTab === 'findings'}" (click)="activeTab = 'findings'">
+        <i class="bi bi-clipboard-check me-1"></i> Audit Findings Register
+        <span class="badge bg-danger ms-1" *ngIf="findings.length">{{ findings.length }}</span>
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" [ngClass]="{'active': activeTab === 'logs'}" (click)="activeTab = 'logs'">
+        <i class="bi bi-fingerprint me-1"></i> System Audit Ledger
+      </button>
+    </li>
+  </ul>
+
+  <!-- TAB 1: TRANSACTION EXPLORER (END-TO-END CHAIN) -->
+  <div *ngIf="activeTab === 'chains'" class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+      <div>
+        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-arrow-left-right text-primary me-2"></i>Lifecycle Audit Trail & Chain Verification</h5>
+        <p class="text-muted small mb-0">Inspect the complete unbroken sequence: PR &rarr; Vendor Selection &rarr; Finance Approval &rarr; PO &rarr; Delivery &rarr; 3-Way Match &rarr; Payment</p>
+      </div>
+      <div class="d-flex flex-wrap gap-2 align-items-center">
+        <div class="input-group input-group-sm" style="width: 250px;">
+          <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+          <input type="text" [(ngModel)]="chainSearch" (input)="applyChainSearch()" class="form-control" placeholder="Search PR #, PO #, Vendor...">
+        </div>
+        <button (click)="exportAuditReport('excel')" class="btn btn-sm btn-outline-success d-flex align-items-center gap-1 shadow-sm" title="Export Ledger (.XLSX)">
+          <i class="bi bi-file-earmark-excel"></i> Export .XLS
+        </button>
+        <button (click)="exportAuditReport('pdf')" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1 shadow-sm" title="Download Dossier (.PDF)">
+          <i class="bi bi-file-earmark-pdf"></i> Download .PDF
+        </button>
+      </div>
+    </div>
+
+    <div class="table-responsive" style="max-height: 550px; overflow-y: auto;">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light sticky-top">
+          <tr>
+            <th style="min-width: 140px;">Requisition</th>
+            <th style="min-width: 150px;">Vendor Selection</th>
+            <th style="min-width: 130px;">Finance Approval</th>
+            <th style="min-width: 140px;">Purchase Order</th>
+            <th style="min-width: 130px;">Delivery</th>
+            <th style="min-width: 130px;">Invoice & Match</th>
+            <th style="min-width: 120px;">Payment</th>
+            <th style="min-width: 140px;">Audit Review</th>
+            <th style="min-width: 100px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let chain of transactionChains">
+            <!-- PR Column -->
+            <td>
+              <div class="fw-bold text-dark">{{ chain.requisition.request_number }}</div>
+              <div class="extra-small text-muted">{{ chain.requisition.title }}</div>
+              <div class="extra-small text-secondary">{{ chain.requisition.department }} &bull; ${{ chain.requisition.estimated_budget | number }}</div>
+              <span class="badge bg-light text-dark border extra-small mt-1">{{ chain.requisition.status }}</span>
+            </td>
+
+            <!-- Vendor Selection Column -->
+            <td>
+              <ng-container *ngIf="chain.vendor_selection; else noSelection">
+                <div class="fw-semibold text-dark">{{ chain.vendor_selection.vendor_name }}</div>
+                <div class="extra-small text-muted">Quote: ${{ chain.vendor_selection.quotation_amount | number }}</div>
+                <div class="extra-small text-secondary">By: {{ chain.vendor_selection.selected_by }}</div>
+                <span class="badge bg-info-subtle text-info border border-info extra-small mt-1">{{ chain.vendor_selection.status }}</span>
+              </ng-container>
+              <ng-template #noSelection><span class="text-muted extra-small">Not Selected</span></ng-template>
+            </td>
+
+            <!-- Finance Approval Column -->
+            <td>
+              <ng-container *ngIf="chain.financial_approval; else noFinance">
+                <span class="badge" [ngClass]="chain.financial_approval.status === 'APPROVED' ? 'bg-success text-white' : (chain.financial_approval.status === 'REJECTED' ? 'bg-danger text-white' : 'bg-warning text-dark')">
+                  {{ chain.financial_approval.status }}
+                </span>
+                <div class="extra-small text-muted mt-1" *ngIf="chain.financial_approval.approved_by">By: {{ chain.financial_approval.approved_by }}</div>
+              </ng-container>
+              <ng-template #noFinance><span class="text-muted extra-small">Pending</span></ng-template>
+            </td>
+
+            <!-- Purchase Order Column -->
+            <td>
+              <ng-container *ngIf="chain.purchase_order; else noPO">
+                <div class="fw-bold text-primary font-monospace">{{ chain.purchase_order.po_number }}</div>
+                <div class="extra-small text-dark">${{ chain.purchase_order.total_amount | number }}</div>
+                <span class="badge bg-light text-secondary border extra-small">{{ chain.purchase_order.status }}</span>
+              </ng-container>
+              <ng-template #noPO><span class="text-muted extra-small">No PO</span></ng-template>
+            </td>
+
+            <!-- Delivery Column -->
+            <td>
+              <ng-container *ngIf="chain.delivery; else noDelivery">
+                <div class="small fw-semibold">{{ chain.delivery.delivered_quantity }} / {{ chain.delivery.ordered_quantity }} Qty</div>
+                <div class="extra-small" [ngClass]="chain.delivery.delay_days > 0 ? 'text-danger fw-bold' : 'text-success'">
+                  {{ chain.delivery.delay_days > 0 ? '+' + chain.delivery.delay_days + 'd delay' : 'On Time' }}
+                </div>
+                <span class="badge bg-light text-dark border extra-small">{{ chain.delivery.status }}</span>
+              </ng-container>
+              <ng-template #noDelivery><span class="text-muted extra-small">Pending</span></ng-template>
+            </td>
+
+            <!-- Invoice & 3-Way Match Column -->
+            <td>
+              <ng-container *ngIf="chain.invoice; else noInvoice">
+                <div class="fw-semibold text-dark">{{ chain.invoice.invoice_number }}</div>
+                <div class="extra-small text-muted">${{ chain.invoice.amount | number }}</div>
+                <span class="badge extra-small mt-1" [ngClass]="chain.invoice.three_way_match_status === 'VERIFIED' ? 'bg-success-subtle text-success border border-success' : 'bg-warning-subtle text-warning border border-warning'">
+                  Match: {{ chain.invoice.three_way_match_status }}
+                </span>
+              </ng-container>
+              <ng-template #noInvoice><span class="text-muted extra-small">None</span></ng-template>
+            </td>
+
+            <!-- Payment Column -->
+            <td>
+              <ng-container *ngIf="chain.payment; else noPayment">
+                <div class="extra-small font-monospace text-dark">{{ chain.payment.transaction_reference }}</div>
+                <div class="small fw-bold text-success">${{ chain.payment.amount | number }}</div>
+                <span class="badge bg-success-subtle text-success extra-small">{{ chain.payment.status }}</span>
+              </ng-container>
+              <ng-template #noPayment><span class="text-muted extra-small">Unpaid</span></ng-template>
+            </td>
+
+            <!-- Audit Review Status Column -->
+            <td>
+              <span class="badge" [ngClass]="{
+                'bg-success text-white': chain.audit.review_status === 'Compliant' || chain.audit.review_status === 'Cleared',
+                'bg-danger text-white': chain.audit.review_status === 'Discrepancy Found',
+                'bg-warning text-dark': chain.audit.review_status === 'Under Audit',
+                'bg-secondary text-white': chain.audit.review_status === 'Unreviewed' || !chain.audit.review_status
+              }">
+                {{ chain.audit.review_status || 'Unreviewed' }}
+              </span>
+              <div class="extra-small text-danger mt-1" *ngIf="chain.audit.findings_count > 0">
+                <i class="bi bi-exclamation-triangle-fill"></i> {{ chain.audit.findings_count }} Finding(s)
+              </div>
+            </td>
+
+            <!-- Actions Column -->
+            <td>
+              <div class="d-flex flex-column gap-1">
+                <button class="btn btn-xs btn-outline-primary" (click)="openReviewModal(chain)" title="Set Review Status">
+                  <i class="bi bi-check2-square"></i> Review
+                </button>
+                <button class="btn btn-xs btn-outline-danger" (click)="openFindingModal(chain)" title="Log Audit Finding">
+                  <i class="bi bi-flag"></i> Flag
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <tr *ngIf="transactionChains.length === 0">
+            <td colspan="9" class="text-center py-5 text-muted">
+              <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>
+              No transaction chains found matching your criteria.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB 2: AUTOMATED DISCREPANCIES -->
+  <div *ngIf="activeTab === 'discrepancies'" class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+      <div>
+        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-exclamation-diamond text-warning me-2"></i>Automated Discrepancy Detection Engine</h5>
+        <p class="text-muted small mb-0">Continuous real-time scans detecting delivery variances, delivery delay breaches, and PO/Invoice amount mismatches</p>
+      </div>
+      <span class="badge bg-warning text-dark">{{ discrepancies.length }} Detected</span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th style="width: 140px;">Severity</th>
+            <th style="width: 180px;">Anomaly Type</th>
+            <th style="width: 150px;">Reference ID</th>
+            <th>Detailed Discrepancy Findings</th>
+            <th style="width: 160px;">Logged Date</th>
+            <th style="width: 110px;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let d of discrepancies">
+            <td>
+              <span class="badge" [ngClass]="{
+                'bg-danger text-white': d.severity === 'High' || d.severity === 'Critical',
+                'bg-warning text-dark': d.severity === 'Medium',
+                'bg-info text-dark': d.severity === 'Low'
+              }">{{ d.severity }}</span>
+            </td>
+            <td><strong>{{ d.type }}</strong></td>
+            <td><span class="font-monospace text-dark">{{ d.reference }}</span></td>
+            <td><div class="small text-dark">{{ d.description }}</div></td>
+            <td><span class="extra-small text-muted">{{ d.created_at | date:'medium' }}</span></td>
+            <td>
+              <button class="btn btn-xs btn-outline-danger" (click)="openFindingModal()">
+                <i class="bi bi-clipboard-plus"></i> Record
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="discrepancies.length === 0">
+            <td colspan="6" class="text-center py-5 text-muted">
+              <i class="bi bi-shield-check text-success fs-2 d-block mb-2"></i>
+              No active discrepancies detected across transactions. All orders comply with delivery and price tolerances.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB 3: AUDIT FINDINGS REGISTER -->
+  <div *ngIf="activeTab === 'findings'" class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+      <div>
+        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-clipboard-x text-danger me-2"></i>Audit Findings Register & Regulatory Observations</h5>
+        <p class="text-muted small mb-0">Official compliance non-conformities and operational variances filed by the Independent Auditor</p>
+      </div>
+      <button (click)="openFindingModal()" class="btn btn-sm btn-danger d-flex align-items-center gap-1 shadow-sm">
+        <i class="bi bi-plus-circle"></i> Log Finding
+      </button>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th style="width: 80px;">ID</th>
+            <th style="width: 100px;">Severity</th>
+            <th style="width: 150px;">Category</th>
+            <th style="width: 160px;">Reference</th>
+            <th>Title & Finding Details</th>
+            <th style="width: 140px;">Auditor</th>
+            <th style="width: 100px;">Status</th>
+            <th style="width: 140px;">Recorded Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let f of findings">
+            <td><span class="font-monospace extra-small text-muted">#{{ f.id }}</span></td>
+            <td>
+              <span class="badge" [ngClass]="{
+                'bg-danger text-white': f.severity === 'Critical' || f.severity === 'High',
+                'bg-warning text-dark': f.severity === 'Medium',
+                'bg-info text-dark': f.severity === 'Low'
+              }">{{ f.severity }}</span>
+            </td>
+            <td><span class="badge bg-light text-secondary border extra-small">{{ f.finding_type }}</span></td>
+            <td>
+              <div class="fw-semibold text-dark">{{ f.reference_number || 'N/A' }}</div>
+              <div class="extra-small text-muted">{{ f.transaction_type }} #{{ f.transaction_id }}</div>
+            </td>
+            <td>
+              <div class="fw-bold text-dark">{{ f.title }}</div>
+              <div class="small text-muted">{{ f.description }}</div>
+            </td>
+            <td><span class="small text-dark">{{ f.auditor_name }}</span></td>
+            <td>
+              <span class="badge" [ngClass]="f.status === 'OPEN' ? 'bg-danger text-white' : 'bg-success text-white'">
+                {{ f.status }}
+              </span>
+            </td>
+            <td><span class="extra-small text-muted">{{ f.created_at | date:'mediumDate' }}</span></td>
+          </tr>
+          <tr *ngIf="findings.length === 0">
+            <td colspan="8" class="text-center py-5 text-muted">
+              <i class="bi bi-check2-circle text-success fs-2 d-block mb-2"></i>
+              No formal audit findings logged. Click "Log Finding" to document a compliance observation.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB 4: SYSTEM AUDIT LEDGER -->
+  <div *ngIf="activeTab === 'logs'" class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+      <div>
+        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-fingerprint text-purple me-2"></i>Tamper-Evident System Audit Trail</h5>
+        <p class="text-muted small mb-0">Chronological transaction ledger recording every state mutation, user action, and approval event</p>
+      </div>
+      <div class="d-flex flex-wrap gap-2 align-items-center">
+        <div class="input-group input-group-sm" style="width: 220px;">
+          <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+          <input type="text" [(ngModel)]="logSearchQuery" (input)="applyLogFilter()" class="form-control" placeholder="Search event details...">
+        </div>
+        <select [(ngModel)]="auditCategoryFilter" (change)="applyLogFilter()" class="form-select form-select-sm" style="width: 150px;">
+          <option value="ALL">All Categories</option>
+          <option value="USER">User Actions</option>
+          <option value="PO">Purchase Orders</option>
+          <option value="PROCURE">Procurement</option>
+          <option value="INVOICE">Invoicing & Payout</option>
+          <option value="CONTRACT">Contracts</option>
+          <option value="AUDIT">Audit Findings</option>
+        </select>
+        <button (click)="exportAuditReport('excel')" class="btn btn-sm btn-outline-success d-flex align-items-center gap-1 shadow-sm" title="Export Ledger (.XLSX)">
+          <i class="bi bi-file-earmark-excel"></i> Export .XLS
+        </button>
+        <button (click)="exportAuditReport('pdf')" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1 shadow-sm" title="Download Dossier (.PDF)">
+          <i class="bi bi-file-earmark-pdf"></i> Download .PDF
+        </button>
+      </div>
+    </div>
+
+    <div class="table-responsive" style="max-height: 480px; overflow-y: auto;">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light sticky-top">
+          <tr>
+            <th style="width: 90px;">Log ID</th>
+            <th style="width: 170px;">Action Category</th>
+            <th style="width: 160px;">Timestamp</th>
+            <th style="width: 180px;">Actor</th>
+            <th>Transaction Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let log of filteredLogs">
+            <td><span class="font-monospace extra-small text-muted">#{{ log.id }}</span></td>
+            <td>
+              <span class="badge" [ngClass]="{
+                'bg-primary-subtle text-primary border border-primary': log.action.includes('CREATED') || log.action.includes('REGISTER'),
+                'bg-success-subtle text-success border border-success': log.action.includes('APPROVED') || log.action.includes('PAID') || log.action.includes('CLEARED'),
+                'bg-danger-subtle text-danger border border-danger': log.action.includes('REJECT') || log.action.includes('FAILED') || log.action.includes('FINDING'),
+                'bg-light text-dark border': !log.action.includes('APPROVED') && !log.action.includes('CREATED') && !log.action.includes('REJECT')
+              }">{{ log.action }}</span>
+            </td>
+            <td><span class="extra-small text-muted">{{ log.created_at | date:'medium' }}</span></td>
+            <td>
+              <span class="small fw-semibold text-dark">{{ log.user_name || log.user?.email || 'System' }}</span>
+              <div class="extra-small text-muted">{{ log.user_role || 'Daemon' }}</div>
+            </td>
+            <td>
+              <div class="small text-dark">{{ log.details }}</div>
+            </td>
+          </tr>
+          <tr *ngIf="filteredLogs.length === 0">
+            <td colspan="5" class="text-center py-4 text-muted">No audit records matched the filter criteria.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MODAL: SET REVIEW STATUS -->
+  <div *ngIf="showReviewModal" class="modal-backdrop-custom d-flex align-items-center justify-content-center">
+    <div class="modal-dialog-custom bg-white rounded-3 shadow-lg p-4" style="max-width: 500px; width: 90%;">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="m-0 fw-bold text-dark"><i class="bi bi-shield-check text-primary me-2"></i>Audit Review Status</h5>
+        <button type="button" class="btn-close" (click)="closeReviewModal()"></button>
+      </div>
+
+      <div class="mb-3" *ngIf="selectedChainForReview">
+        <p class="small text-muted mb-2">
+          Setting compliance status for <strong>{{ selectedChainForReview.requisition.request_number }}</strong> ({{ selectedChainForReview.requisition.title }}).
+        </p>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label small fw-semibold">Compliance Status</label>
+        <select class="form-select" [(ngModel)]="reviewForm.status">
+          <option value="Compliant">Compliant</option>
+          <option value="Discrepancy Found">Discrepancy Found</option>
+          <option value="Under Audit">Under Audit</option>
+          <option value="Cleared">Cleared</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label small fw-semibold">Auditor Observations / Comments</label>
+        <textarea class="form-control" rows="3" [(ngModel)]="reviewForm.comments" placeholder="Document compliance justification, discrepancy details, or clearing rationale..."></textarea>
+      </div>
+
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <button type="button" class="btn btn-light" (click)="closeReviewModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="submitReviewStatus()">Update Status</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: LOG AUDIT FINDING -->
+  <div *ngIf="showFindingModal" class="modal-backdrop-custom d-flex align-items-center justify-content-center">
+    <div class="modal-dialog-custom bg-white rounded-3 shadow-lg p-4" style="max-width: 540px; width: 90%;">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="m-0 fw-bold text-danger"><i class="bi bi-clipboard-x me-2"></i>Log Official Audit Finding</h5>
+        <button type="button" class="btn-close" (click)="closeFindingModal()"></button>
+      </div>
+
+      <div class="row g-2 mb-3">
+        <div class="col-md-6">
+          <label class="form-label small fw-semibold">Transaction Entity</label>
+          <select class="form-select form-select-sm" [(ngModel)]="findingForm.transaction_type">
+            <option value="ProcurementRequest">Procurement Requisition</option>
+            <option value="PurchaseOrder">Purchase Order</option>
+            <option value="Delivery">Physical Delivery</option>
+            <option value="Invoice">Invoice & 3-Way Match</option>
+            <option value="Payment">Payment Disbursement</option>
+            <option value="VendorSelection">Vendor Selection</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-semibold">Transaction ID / Ref #</label>
+          <input type="text" class="form-control form-control-sm" [(ngModel)]="findingForm.reference_number" placeholder="e.g. PO-2026-0001">
+        </div>
+      </div>
+
+      <div class="row g-2 mb-3">
+        <div class="col-md-6">
+          <label class="form-label small fw-semibold">Finding Type</label>
+          <select class="form-select form-select-sm" [(ngModel)]="findingForm.finding_type">
+            <option value="Discrepancy">Discrepancy</option>
+            <option value="SLA Breach">SLA Breach</option>
+            <option value="Budget Variance">Budget Variance</option>
+            <option value="Missing Approval">Missing Approval</option>
+            <option value="Compliance Warning">Compliance Warning</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-semibold">Severity</label>
+          <select class="form-select form-select-sm" [(ngModel)]="findingForm.severity">
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+            <option value="Critical">Critical</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label small fw-semibold">Title</label>
+        <input type="text" class="form-control" [(ngModel)]="findingForm.title" placeholder="Brief finding summary...">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label small fw-semibold">Full Observation & Evidence Details</label>
+        <textarea class="form-control" rows="3" [(ngModel)]="findingForm.description" placeholder="Comprehensive description of non-conformity, policy breached, variance values..."></textarea>
+      </div>
+
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <button type="button" class="btn btn-light" (click)="closeFindingModal()">Cancel</button>
+        <button type="button" class="btn btn-danger" (click)="submitFinding()">Record Finding</button>
+      </div>
+    </div>
+  </div>
+</div>

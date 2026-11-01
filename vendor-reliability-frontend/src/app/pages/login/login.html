@@ -1,0 +1,150 @@
+<div class="auth-wrapper">
+  <div class="auth-card shadow-lg">
+    <!-- Left Column: Branding & Intro -->
+    <div class="auth-brand-side">
+      <div class="brand-header">
+        <div class="brand-logo-large">
+          <i class="bi bi-shield-check"></i>
+        </div>
+        <h1 class="brand-heading">VendorIQ</h1>
+        <p class="brand-tagline">Vendor Reliability Intelligence & Procurement Risk Management</p>
+      </div>
+
+      <div class="platform-features">
+        <div class="feature-item">
+          <i class="bi bi-check2-circle text-info"></i>
+          <span>Multi-Role Access Control (6 Defined Enterprise Roles)</span>
+        </div>
+        <div class="feature-item">
+          <i class="bi bi-check2-circle text-info"></i>
+          <span>Vendor Registration & Multi-tier Approval Workflows</span>
+        </div>
+        <div class="feature-item">
+          <i class="bi bi-check2-circle text-info"></i>
+          <span>End-to-End Purchase Order Tracking & Line Item Auditing</span>
+        </div>
+        <div class="feature-item">
+          <i class="bi bi-check2-circle text-info"></i>
+          <span>Contract Repository, Compliance Monitoring & Expiry Alerts</span>
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <div class="demo-title">
+          <i class="bi bi-lightning-charge-fill text-warning"></i> 1-Click Role Login Demo:
+        </div>
+        <div class="demo-grid">
+          <button
+            *ngFor="let acc of demoAccounts"
+            type="button"
+            class="btn-demo"
+            [disabled]="isLoading"
+            [class.btn-demo-loading]="loggingInRole === acc.role"
+            (click)="quickFill(acc)"
+          >
+            <span *ngIf="loggingInRole === acc.role" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+            <i *ngIf="loggingInRole !== acc.role" class="bi {{ acc.icon }}"></i>
+            <span>{{ loggingInRole === acc.role ? 'Opening...' : acc.role }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Login Form -->
+    <div class="auth-form-side">
+      <div class="form-header">
+        <h2 class="form-title">Account Sign In</h2>
+        <p class="form-subtitle">Enter your corporate credentials to access the portal</p>
+      </div>
+
+      <div *ngIf="registeredNotice" class="alert alert-success py-2 d-flex align-items-start gap-2 small mb-3">
+        <i class="bi bi-check-circle-fill text-success fs-5"></i>
+        <div>
+          <strong>Registration Submitted!</strong><br />
+          Your account has been saved. An Administrator must verify and approve it in the Admin Dashboard before access is granted. You can sign in with Admin (<code>admin / admin123</code>) to approve it, or sign in once approved.
+        </div>
+      </div>
+
+      <div *ngIf="errorMessage" class="alert alert-danger py-2 d-flex align-items-center gap-2 small mb-3">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <form (ngSubmit)="login()" class="auth-form">
+        <div class="form-group mb-3">
+          <label class="form-label fw-semibold">Email or Username</label>
+          <div class="input-icon-group">
+            <i class="bi bi-envelope text-muted input-icon-left"></i>
+            <input
+              type="text"
+              class="form-control iq-input"
+              [(ngModel)]="email"
+              (input)="onEmailInput()"
+              (change)="onEmailChange()"
+              list="approvedVendorsDatalist"
+              name="username"
+              id="login-username"
+              autocomplete="username"
+              placeholder="e.g. admin, requester, or vendor email"
+              required
+            />
+          </div>
+
+          <!-- Browser Native Saved Credential Datalist (Not visible on page, appears natively when clicking email) -->
+          <datalist id="approvedVendorsDatalist">
+            <option *ngFor="let v of approvedVendors" [value]="v.email">
+              {{ v.name }} &bull; Saved Password: {{ v.password || 'vendor123' }}
+            </option>
+            <option *ngFor="let v of approvedVendors" [value]="v.name">
+              {{ v.email }} &bull; Saved Password: {{ v.password || 'vendor123' }}
+            </option>
+          </datalist>
+        </div>
+
+        <div class="form-group mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label class="form-label fw-semibold mb-0">Password</label>
+            <a routerLink="/forgot-password" class="forgot-link small">Forgot Password?</a>
+          </div>
+          <div class="input-icon-group">
+            <i class="bi bi-lock text-muted input-icon-left"></i>
+            <input
+              [type]="showPassword ? 'text' : 'password'"
+              class="form-control iq-input"
+              [(ngModel)]="password"
+              name="password"
+              id="login-password"
+              autocomplete="current-password"
+              placeholder="••••••••"
+              required
+            />
+            <button
+              type="button"
+              class="btn-toggle-pwd"
+              (click)="toggleShowPassword()"
+              [title]="showPassword ? 'Hide password' : 'Show saved password'"
+              tabindex="-1"
+            >
+              <i class="bi" [class.bi-eye]="!showPassword" [class.bi-eye-slash]="showPassword"></i>
+            </button>
+          </div>
+          <div *ngIf="savedPasswordAppliedNotice" class="text-success small mt-1 d-flex align-items-center gap-1">
+            <i class="bi bi-check-circle-fill"></i>
+            <span>{{ savedPasswordAppliedNotice }}</span>
+            <span class="text-muted small">(Auto-saved)</span>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 py-2 fw-bold btn-submit" [disabled]="isLoading">
+          <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+          {{ isLoading ? (loadingStatus || 'Authenticating...') : 'Sign In to VendorIQ' }}
+        </button>
+
+        <div class="auth-footer text-center mt-4">
+          <span class="text-muted small">Need an account? </span>
+          <a routerLink="/register" class="fw-semibold text-primary small text-decoration-none">Register New User</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

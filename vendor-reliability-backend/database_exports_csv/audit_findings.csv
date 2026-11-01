@@ -1,0 +1,2 @@
+id,transaction_type,transaction_id,reference_number,auditor_id,finding_type,severity,title,description,status,resolution_notes,created_at,updated_at
+1,PurchaseOrder,3,PO-2026-0003,6,SLA Breach - Delay,Medium,2-Day Transit Delay on Cross-Border Freight,Delivery PO-2026-0003 exceeded stipulated delivery SLA by 48 hours due to documentation omissions during northern customs entry.,OPEN,,2026-09-21 17:45:38.008696,2026-09-21 17:45:38.008700

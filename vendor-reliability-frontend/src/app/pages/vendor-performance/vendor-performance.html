@@ -1,0 +1,301 @@
+<div class="perf-page">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+      <h1 class="page-title">Vendor Performance Module</h1>
+      <p class="page-subtitle mb-0">
+        Delivery performance monitoring, product quality evaluation, response tracking, and live supplier ranking
+      </p>
+    </div>
+    <div class="d-flex gap-2">
+      <a routerLink="/vendor-reliability" class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1 fw-semibold">
+        <i class="bi bi-shield-check"></i> Reliability & Risk Matrix
+      </a>
+      <button class="btn btn-light btn-sm border" (click)="loadPerformanceData()" title="Reload live performance metrics">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- 6 Mandatory Performance Metrics -->
+  <div class="row g-3 mb-4">
+    <!-- 1. On-Time Deliveries -->
+    <div class="col-sm-6 col-md-4 col-lg-2">
+      <div class="stat-card p-3">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span class="stat-label small text-muted text-uppercase fw-bold">On-Time Deliveries</span>
+          <div class="stat-icon green p-1 rounded" style="width: 28px; height: 28px; font-size: 0.9rem;">
+            <i class="bi bi-clock-check"></i>
+          </div>
+        </div>
+        <div class="stat-value fs-4 fw-bold text-success">{{ kpis.onTimeRate }}%</div>
+        <div class="text-muted small" style="font-size: 0.75rem;">{{ kpis.onTimeDeliveries }} on-time fulfillments</div>
+      </div>
+    </div>
+
+    <!-- 2. Delayed Deliveries -->
+    <div class="col-sm-6 col-md-4 col-lg-2">
+      <div class="stat-card p-3">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span class="stat-label small text-muted text-uppercase fw-bold">Delayed Orders</span>
+          <div class="stat-icon rose p-1 rounded" style="width: 28px; height: 28px; font-size: 0.9rem;">
+            <i class="bi bi-exclamation-triangle"></i>
+          </div>
+        </div>
+        <div class="stat-value fs-4 fw-bold text-danger">{{ kpis.delayedDeliveries }}</div>
+        <div class="text-muted small" style="font-size: 0.75rem;">Active delay incidents</div>
+      </div>
+    </div>
+
+    <!-- 3. Quality Rating -->
+    <div class="col-sm-6 col-md-4 col-lg-2">
+      <div class="stat-card p-3">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span class="stat-label small text-muted text-uppercase fw-bold">Quality Rating</span>
+          <div class="stat-icon blue p-1 rounded" style="width: 28px; height: 28px; font-size: 0.9rem;">
+            <i class="bi bi-star-fill"></i>
+          </div>
+        </div>
+        <div class="stat-value fs-4 fw-bold text-primary">{{ kpis.avgQualityRating }} / 5.0</div>
+        <div class="text-muted small" style="font-size: 0.75rem;">Inspection pass: 98.2%</div>
+      </div>
+    </div>
+
+    <!-- 4. Response Time -->
+    <div class="col-sm-6 col-md-4 col-lg-2">
+      <div class="stat-card p-3">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span class="stat-label small text-muted text-uppercase fw-bold">Response Time</span>
+          <div class="stat-icon amber p-1 rounded" style="width: 28px; height: 28px; font-size: 0.9rem;">
+            <i class="bi bi-stopwatch"></i>
+          </div>
+        </div>
+        <div class="stat-value fs-4 fw-bold text-warning">{{ kpis.avgResponseTimeHours }} hrs</div>
+        <div class="text-muted small" style="font-size: 0.75rem;">SLA benchmark: &lt; 24h</div>
+      </div>
+    </div>
+
+    <!-- 5. Issue Resolution Time -->
+    <div class="col-sm-6 col-md-4 col-lg-2">
+      <div class="stat-card p-3">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span class="stat-label small text-muted text-uppercase fw-bold">Resolution Time</span>
+          <div class="stat-icon purple p-1 rounded" style="width: 28px; height: 28px; font-size: 0.9rem;">
+            <i class="bi bi-tools"></i>
+          </div>
+        </div>
+        <div class="stat-value fs-4 fw-bold text-info">{{ kpis.avgIssueResolutionHours }} hrs</div>
+        <div class="text-muted small" style="font-size: 0.75rem;">Dispute closure rate: 96%</div>
+      </div>
+    </div>
+
+    <!-- 6. Order Completion Rate -->
+    <div class="col-sm-6 col-md-4 col-lg-2">
+      <div class="stat-card p-3">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span class="stat-label small text-muted text-uppercase fw-bold">Order Completion</span>
+          <div class="stat-icon green p-1 rounded" style="width: 28px; height: 28px; font-size: 0.9rem;">
+            <i class="bi bi-check2-circle"></i>
+          </div>
+        </div>
+        <div class="stat-value fs-4 fw-bold text-success">{{ kpis.orderCompletionRate }}%</div>
+        <div class="text-muted small" style="font-size: 0.75rem;">Full lifecycle fulfillment</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Operational Performance Breakdown -->
+  <div class="row g-4 mb-4">
+    <!-- Delivery Performance & Quality Overview -->
+    <div class="col-lg-8">
+      <div class="iq-card h-100">
+        <div class="iq-card-header">
+          <h2 class="iq-card-title">Delivery Performance & Quality Monitoring</h2>
+          <span class="badge bg-success-subtle text-success border border-success">Live Operational Telemetry</span>
+        </div>
+        <div class="p-3">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded border">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span class="fw-semibold text-dark small">Delivery Accuracy Breakdown</span>
+                  <span class="badge bg-success">{{ kpis.onTimeRate }}% On-Time</span>
+                </div>
+                <div class="progress mb-2" style="height: 10px;">
+                  <div class="progress-bar bg-success" [style.width.%]="kpis.onTimeRate"></div>
+                  <div class="progress-bar bg-danger" [style.width.%]="100 - kpis.onTimeRate"></div>
+                </div>
+                <div class="d-flex justify-content-between small text-muted" style="font-size: 0.75rem;">
+                  <span><i class="bi bi-dot text-success fs-6"></i> On-Time: {{ kpis.onTimeDeliveries }}</span>
+                  <span><i class="bi bi-dot text-danger fs-6"></i> Delayed: {{ kpis.delayedDeliveries }}</span>
+                  <span>Target: 95%</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded border">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span class="fw-semibold text-dark small">Product Quality & Acceptance</span>
+                  <span class="badge bg-primary">{{ kpis.avgQualityRating }} / 5.0 Stars</span>
+                </div>
+                <div class="progress mb-2" style="height: 10px;">
+                  <div class="progress-bar bg-primary" [style.width.%]="(kpis.avgQualityRating / 5.0) * 100"></div>
+                </div>
+                <div class="d-flex justify-content-between small text-muted" style="font-size: 0.75rem;">
+                  <span>Defect Rate: &lt; 1.8%</span>
+                  <span>Inspection Pass: 98.2%</span>
+                  <span>Target: 4.5+</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <div class="p-3 bg-light rounded border d-flex flex-wrap justify-content-around align-items-center text-center gap-3">
+                <div>
+                  <div class="text-muted small text-uppercase fw-semibold">Communication SLA</div>
+                  <div class="fw-bold text-dark fs-5">{{ kpis.avgResponseTimeHours }} hrs</div>
+                  <span class="badge bg-light text-success border"><i class="bi bi-check"></i> Within SLA</span>
+                </div>
+                <div class="border-start ps-3 d-none d-md-block" style="height: 40px;"></div>
+                <div>
+                  <div class="text-muted small text-uppercase fw-semibold">Dispute Resolution</div>
+                  <div class="fw-bold text-dark fs-5">{{ kpis.avgIssueResolutionHours }} hrs</div>
+                  <span class="badge bg-light text-primary border"><i class="bi bi-shield-check"></i> Fast Resolution</span>
+                </div>
+                <div class="border-start ps-3 d-none d-md-block" style="height: 40px;"></div>
+                <div>
+                  <div class="text-muted small text-uppercase fw-semibold">Evaluated Suppliers</div>
+                  <div class="fw-bold text-dark fs-5">{{ profiles.length }} Active</div>
+                  <span class="badge bg-light text-dark border">6 Categories</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Service Rating & Reliability Overview -->
+    <div class="col-lg-4">
+      <div class="iq-card h-100">
+        <div class="iq-card-header">
+          <h2 class="iq-card-title">Service Rating & SLA Adherence</h2>
+        </div>
+        <div class="p-3 text-center d-flex flex-column justify-content-center align-items-center">
+          <div class="position-relative d-inline-block mb-3">
+            <div class="display-5 fw-bold text-success">4.8</div>
+            <div class="text-muted small">Overall Service Satisfaction</div>
+          </div>
+          <div class="text-warning mb-3 fs-5">
+            <i class="bi bi-star-fill me-1"></i>
+            <i class="bi bi-star-fill me-1"></i>
+            <i class="bi bi-star-fill me-1"></i>
+            <i class="bi bi-star-fill me-1"></i>
+            <i class="bi bi-star-half"></i>
+          </div>
+          <p class="text-muted small mb-3">
+            Suppliers evaluated across contract fulfillment, responsiveness, and post-delivery support.
+          </p>
+          <a routerLink="/vendor-reliability" class="btn btn-sm btn-primary w-100 fw-semibold">
+            View Complete Reliability Matrix
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dynamic Top Performing Suppliers Ranking Table -->
+  <div class="iq-card p-0">
+    <div class="p-3 border-bottom d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+      <div>
+        <h2 class="iq-card-title m-0">Supplier Performance Rankings (1 to {{ filteredProfiles.length }})</h2>
+        <span class="text-muted small">Ranked dynamically by operational delivery, quality score, and response lead time</span>
+      </div>
+
+      <!-- Filters & Sort -->
+      <div class="d-flex gap-2 flex-wrap" style="max-width: 500px; width: 100%;">
+        <div class="input-group input-group-sm flex-grow-1">
+          <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+          <input
+            type="text"
+            class="form-control border-start-0"
+            [(ngModel)]="searchQuery"
+            (ngModelChange)="applyFilter()"
+            placeholder="Search supplier..."
+          />
+        </div>
+
+        <select class="form-select form-select-sm" style="width: 170px;" [(ngModel)]="selectedCategory" (ngModelChange)="applyFilter()">
+          <option value="All">All Categories</option>
+          <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status"></div>
+      <div class="mt-2 text-muted small">Calculating live performance rankings...</div>
+    </div>
+
+    <!-- Table -->
+    <div *ngIf="!isLoading && filteredProfiles.length > 0" class="iq-table-container">
+      <table class="iq-table">
+        <thead>
+          <tr>
+            <th style="width: 60px;">Rank</th>
+            <th>Supplier Name & Company</th>
+            <th>Category</th>
+            <th>On-Time Rate</th>
+            <th>Quality Rating</th>
+            <th>Response Time</th>
+            <th>Resolution</th>
+            <th>Reliability Score</th>
+            <th class="text-end">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of filteredProfiles">
+            <td>
+              <span class="badge rounded-pill px-2 py-1" [ngClass]="getRankBadgeClass(p.rank)">
+                #{{ p.rank }}
+              </span>
+            </td>
+            <td>
+              <div class="fw-bold text-dark">{{ p.vendorName }}</div>
+              <div class="small text-muted">{{ p.company }}</div>
+            </td>
+            <td>
+              <span class="badge bg-light text-dark border">{{ p.category }}</span>
+            </td>
+            <td>
+              <span class="fw-bold text-success">{{ p.factors.deliveryHistory.onTimeRate }}%</span>
+              <div class="small text-muted" style="font-size: 0.7rem;">{{ p.factors.deliveryHistory.onTimeDeliveries }} on-time</div>
+            </td>
+            <td>
+              <div class="fw-semibold text-primary">
+                <i class="bi bi-star-fill text-warning small me-1"></i>{{ p.factors.productQuality.rating }} / 5.0
+              </div>
+            </td>
+            <td>
+              <span class="small">{{ p.factors.communicationEfficiency.responseTimeHours }} hrs</span>
+            </td>
+            <td>
+              <span class="small">{{ p.factors.issueResolution.avgResolutionTimeHours }} hrs</span>
+            </td>
+            <td>
+              <span class="score-pill" [ngClass]="getScorePill(p.reliabilityScore)">
+                {{ p.reliabilityScore }}
+              </span>
+            </td>
+            <td class="text-end">
+              <a [routerLink]="['/vendor-details', p.vendorId]" class="btn btn-sm btn-outline-primary" title="View Full Profile">
+                <i class="bi bi-arrow-right-short fs-5"></i>
+              </a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

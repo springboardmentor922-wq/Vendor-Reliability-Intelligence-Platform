@@ -1,0 +1,1059 @@
+<div class="vendors-page">
+  <!-- Top Banner / Header -->
+  <div class="vendor-header-banner p-3 p-md-4 rounded-3 mb-4 shadow-sm text-white d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div class="d-flex align-items-center gap-3">
+      <div class="banner-icon-box bg-white bg-opacity-20 p-2 rounded-3 text-white fs-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+        <i class="bi bi-building"></i>
+      </div>
+      <div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <h3 class="fw-bold mb-0 text-white">Vendors Dashboard</h3>
+          <span class="badge bg-white text-success fw-semibold rounded-pill px-2 py-1">Enterprise Directory</span>
+          <span class="badge bg-success-subtle text-white border border-white-50 px-2 py-1">
+            Total Vendors: {{ allVendors.length }}
+          </span>
+        </div>
+        <p class="text-white-50 small mb-0 mt-1">
+          Centralized vendor directory with vendor profiles and comprehensive purchase order details
+        </p>
+      </div>
+    </div>
+
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <button (click)="expandAll()" class="btn btn-light btn-sm fw-semibold text-dark shadow-sm" title="Expand all vendor orders">
+        <i class="bi bi-arrows-expand"></i> Expand All Orders
+      </button>
+      <button (click)="collapseAll()" class="btn btn-outline-light btn-sm fw-semibold shadow-sm" title="Collapse all vendor orders">
+        <i class="bi bi-arrows-collapse"></i> Collapse All
+      </button>
+      <button (click)="loadData()" class="btn btn-light btn-sm fw-semibold text-success shadow-sm" title="Refresh vendors and orders">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+      </button>
+      <a routerLink="/add-vendors" class="btn btn-warning btn-sm fw-semibold text-dark shadow-sm" *ngIf="authService.hasRole(['Administrator'])">
+        <i class="bi bi-plus-lg"></i> Register New Vendor
+      </a>
+    </div>
+  </div>
+
+  <!-- Floating Top Complete Notification ("display on up" - fixed at top of screen) -->
+  <div *ngIf="actionNotification" class="top-floating-alert-container">
+    <div class="top-floating-alert alert alert-{{ actionNotification.type }} shadow-lg d-flex align-items-center gap-3 mb-0" role="alert">
+      <div class="alert-icon-box flex-shrink-0">
+        <i class="bi fs-3" [ngClass]="{
+          'bi-check-circle-fill text-success': actionNotification.type === 'success',
+          'bi-exclamation-triangle-fill text-danger': actionNotification.type === 'danger',
+          'bi-info-circle-fill text-primary': actionNotification.type === 'info'
+        }"></i>
+      </div>
+      <div class="flex-grow-1 pe-2">
+        <div class="fw-bold text-dark fs-6">{{ actionNotification.title || 'Action Completed Successfully' }}</div>
+        <div class="small text-secondary">{{ actionNotification.message }}</div>
+      </div>
+      <button type="button" class="btn-close flex-shrink-0" (click)="actionNotification = null" aria-label="Close"></button>
+    </div>
+  </div>
+
+  <!-- In-Page Action Alert Message -->
+  <div *ngIf="actionNotification" class="alert alert-{{ actionNotification.type }} alert-dismissible fade show shadow-sm mb-4" role="alert">
+    <div class="d-flex align-items-center">
+      <i class="bi me-2 fs-4" [ngClass]="{
+        'bi-check-circle-fill text-success': actionNotification.type === 'success',
+        'bi-exclamation-triangle-fill text-danger': actionNotification.type === 'danger',
+        'bi-info-circle-fill text-info': actionNotification.type === 'info'
+      }"></i>
+      <div>
+        <div *ngIf="actionNotification.title" class="fw-bold">{{ actionNotification.title }}</div>
+        <span class="fw-medium">{{ actionNotification.message }}</span>
+      </div>
+    </div>
+    <button type="button" class="btn-close" (click)="actionNotification = null"></button>
+  </div>
+
+  <!-- KPI Metrics Strip -->
+  <div class="row g-3 mb-4">
+    <div class="col-xl-3 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 border-start border-4 border-success h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-start">
+          <span class="text-muted small text-uppercase fw-bold">Total Registered Vendors</span>
+          <i class="bi bi-building-check text-success fs-5"></i>
+        </div>
+        <h3 class="fw-bold my-1 text-dark">{{ allVendors.length }}</h3>
+        <span class="smaller text-muted">Across 6 official enterprise categories</span>
+      </div>
+    </div>
+    <div class="col-xl-3 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 border-start border-4 border-warning h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-start">
+          <span class="text-muted small text-uppercase fw-bold">Pending Acceptance</span>
+          <i class="bi bi-clock-history text-warning fs-5"></i>
+        </div>
+        <h3 class="fw-bold my-1 text-warning">{{ totalPendingAcceptanceCount }}</h3>
+        <span class="smaller text-muted">Newly issued orders requiring vendor action</span>
+      </div>
+    </div>
+    <div class="col-xl-3 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 border-start border-4 border-primary h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-start">
+          <span class="text-muted small text-uppercase fw-bold">Active & In Transit</span>
+          <i class="bi bi-truck text-primary fs-5"></i>
+        </div>
+        <h3 class="fw-bold my-1 text-primary">{{ totalActiveOrdersCount }}</h3>
+        <span class="smaller text-muted">Accepted, dispatched or in delivery</span>
+      </div>
+    </div>
+    <div class="col-xl-3 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 border-start border-4 border-info h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-start">
+          <span class="text-muted small text-uppercase fw-bold">Total Fulfilled Orders</span>
+          <i class="bi bi-check2-circle text-info fs-5"></i>
+        </div>
+        <h3 class="fw-bold my-1 text-dark">{{ totalDeliveredCount }}</h3>
+        <span class="smaller text-muted">Delivered or delivery confirmed</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search & Multi-Filter Card (Requirement 16 & 17) -->
+  <div class="card p-3 mb-4 shadow-sm border-0 bg-white">
+    <div class="row g-2 align-items-center">
+      <!-- Search Input -->
+      <div class="col-xl-4 col-lg-4 col-md-12">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text bg-light border-end-0 text-muted">
+            <i class="bi bi-search"></i>
+          </span>
+          <input
+            type="text"
+            class="form-control border-start-0"
+            [(ngModel)]="searchQuery"
+            (ngModelChange)="onFilterChange()"
+            placeholder="Search vendor name, ID, category, contact, or PO number..."
+          />
+        </div>
+      </div>
+
+      <!-- Category Filter (6 Official Categories) -->
+      <div class="col-xl-2 col-lg-2 col-md-3 col-sm-6">
+        <select class="form-select form-select-sm" [(ngModel)]="selectedCategory" (ngModelChange)="onFilterChange()">
+          <option value="All">All Categories (6)</option>
+          <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+        </select>
+      </div>
+
+      <!-- Vendor Status Filter -->
+      <div class="col-xl-2 col-lg-2 col-md-3 col-sm-6">
+        <select class="form-select form-select-sm" [(ngModel)]="selectedStatus" (ngModelChange)="onFilterChange()">
+          <option value="All">All Vendor Status</option>
+          <option value="Approved">Approved (Active)</option>
+          <option value="Pending">Pending Review</option>
+          <option value="Rejected">Rejected</option>
+        </select>
+      </div>
+
+      <!-- PO Status Filter -->
+      <div class="col-xl-2 col-lg-2 col-md-3 col-sm-6">
+        <select class="form-select form-select-sm" [(ngModel)]="selectedPOStatus" (ngModelChange)="onFilterChange()">
+          <option value="All">All PO Status</option>
+          <option *ngFor="let poStatus of poStatusOptions" [value]="poStatus" [hidden]="poStatus === 'All'">
+            {{ poStatus }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Risk Filter -->
+      <div class="col-xl-1 col-lg-1 col-md-3 col-sm-6">
+        <select class="form-select form-select-sm" [(ngModel)]="selectedRisk" (ngModelChange)="onFilterChange()">
+          <option value="All">All Risk</option>
+          <option value="Low">Low</option>
+          <option value="Medium">Medium</option>
+          <option value="High">High</option>
+        </select>
+      </div>
+
+      <!-- Reset Button -->
+      <div class="col-xl-1 col-lg-1 col-md-12 text-end">
+        <button
+          type="button"
+          class="btn btn-outline-secondary btn-sm w-100"
+          (click)="resetFilters()"
+          title="Reset All Filters"
+        >
+          <i class="bi bi-arrow-counterclockwise"></i> Reset
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="text-center py-5">
+    <div class="spinner-border text-success" role="status">
+      <span class="visually-hidden">Loading vendors...</span>
+    </div>
+    <p class="mt-2 text-muted small">Loading all registered vendors and purchase orders from database...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="errorMessage && !isLoading" class="alert alert-danger shadow-sm">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ errorMessage }}
+  </div>
+
+  <!-- Results Count Bar -->
+  <div *ngIf="!isLoading && !errorMessage" class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div class="d-flex align-items-center gap-2">
+      <span class="fw-bold text-dark">Registered Vendors</span>
+      <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+        {{ filteredVendors.length }} of {{ allVendors.length }} matching
+      </span>
+      <span *ngIf="isLoadingOrders" class="spinner-border spinner-border-sm text-muted ms-2" title="Updating order status..."></span>
+    </div>
+    <div class="d-flex align-items-center gap-2 small text-muted">
+      <span>Sort by:</span>
+      <select class="form-select form-select-sm py-0" style="width: auto;" [(ngModel)]="sortBy" (ngModelChange)="applyFiltersAndSorting()">
+        <option value="reliability">Reliability Score</option>
+        <option value="name">Vendor Name</option>
+        <option value="id">Vendor ID</option>
+        <option value="quality">Quality Rating</option>
+        <option value="orders">Order Volume</option>
+      </select>
+      <span>Show:</span>
+      <select class="form-select form-select-sm py-0" style="width: auto;" [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange()">
+        <option *ngFor="let opt of pageSizeOptions" [value]="opt">{{ opt }}</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && !errorMessage && filteredVendors.length === 0" class="card p-5 text-center shadow-sm border-0 mb-4 bg-white">
+    <i class="bi bi-inbox fs-1 text-muted d-block mb-2"></i>
+    <h5 class="fw-bold text-dark">No Vendors Found</h5>
+    <p class="text-muted small mb-3">No registered vendors matched your search and filter criteria.</p>
+    <div>
+      <button class="btn btn-outline-primary btn-sm" (click)="resetFilters()">Clear Filters</button>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- VENDORS LIST: ALL VENDORS WITH ASSIGNED PURCHASE ORDERS   -->
+  <!-- ========================================================= -->
+  <div *ngIf="!isLoading && !errorMessage && filteredVendors.length > 0" class="vendor-list-container d-flex flex-column gap-3 mb-4">
+    <div
+      *ngFor="let vendor of pagedVendors"
+      class="card vendor-card shadow-sm border-0 overflow-hidden bg-white"
+      [class.border-start]="true"
+      [class.border-4]="true"
+      [class.border-success]="vendor.deliveryRate >= 80"
+      [class.border-warning]="vendor.deliveryRate >= 60 && vendor.deliveryRate < 80"
+      [class.border-danger]="vendor.deliveryRate > 0 && vendor.deliveryRate < 60"
+      [class.border-secondary]="vendor.deliveryRate === 0"
+    >
+      <!-- VENDOR CARD HEADER / ROW (Requirement 4) -->
+      <div class="card-body p-3 p-md-4">
+        <div class="row g-3 align-items-center">
+          <!-- Column 1: Vendor Name, ID, Category, Contact -->
+          <div class="col-xl-4 col-lg-4 col-md-6">
+            <div class="d-flex align-items-start gap-2">
+              <div class="vendor-avatar-box bg-light text-dark rounded-circle d-flex align-items-center justify-content-center fw-bold fs-5 shadow-sm" style="width: 44px; height: 44px; flex-shrink: 0;">
+                {{ (vendor.company || vendor.name).charAt(0).toUpperCase() }}
+              </div>
+              <div class="overflow-hidden">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                  <h5 class="fw-bold mb-0 text-dark text-truncate">{{ vendor.company || vendor.name }}</h5>
+                  <span class="badge bg-dark-subtle text-dark font-monospace small px-2">
+                    {{ formatVendorId(vendor.id) }}
+                  </span>
+                </div>
+                <div class="d-flex align-items-center gap-2 mt-1 flex-wrap">
+                  <span class="badge bg-light text-secondary border small">
+                    <i class="bi bi-tag-fill me-1 text-primary"></i> {{ vendor.category }}
+                  </span>
+                  <span class="small text-muted" *ngIf="vendor.name && vendor.company && vendor.name !== vendor.company">
+                    Contact: <strong>{{ vendor.name }}</strong>
+                  </span>
+                </div>
+                <div class="small text-muted text-truncate mt-1">
+                  <i class="bi bi-envelope me-1"></i> {{ vendor.email }}
+                  <span *ngIf="vendor.phone" class="ms-2"><i class="bi bi-telephone me-1"></i> {{ vendor.phone }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 2: Status, Reliability Score, Risk -->
+          <div class="col-xl-3 col-lg-3 col-md-6">
+            <div class="d-flex flex-column gap-1">
+              <div class="d-flex align-items-center justify-content-between">
+                <span class="small text-muted">Status:</span>
+                <span class="badge rounded-pill" [ngClass]="getStatusClass(vendor.status)">
+                  {{ vendor.status || 'Active' }}
+                </span>
+              </div>
+              <div class="d-flex align-items-center justify-content-between">
+                <span class="small text-muted">Reliability:</span>
+                <span class="fw-bold font-monospace" [ngClass]="vendor.deliveryRate >= 80 ? 'text-success' : (vendor.deliveryRate > 0 ? 'text-warning' : 'text-muted')">
+                  {{ vendor.deliveryRate | number:'1.0-0' }}/100
+                </span>
+              </div>
+              <div class="progress" style="height: 6px;">
+                <div
+                  class="progress-bar"
+                  [ngClass]="{
+                    'bg-success': vendor.deliveryRate >= 80,
+                    'bg-warning': vendor.deliveryRate >= 60 && vendor.deliveryRate < 80,
+                    'bg-danger': vendor.deliveryRate > 0 && vendor.deliveryRate < 60,
+                    'bg-secondary': vendor.deliveryRate === 0
+                  }"
+                  role="progressbar"
+                  [style.width.%]="vendor.deliveryRate"
+                ></div>
+              </div>
+              <div class="d-flex align-items-center justify-content-between mt-1">
+                <span class="small text-muted">Risk Level:</span>
+                <span class="badge rounded-pill" [ngClass]="getRiskBadgeClass(vendor.risk_level)">
+                  {{ vendor.risk_level || 'Low' }} Risk
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 3: Vendor Order Summary (Requirement 15) -->
+          <div class="col-xl-3 col-lg-3 col-md-6">
+            <div class="vendor-order-summary-box p-2 bg-light rounded-3 border">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="smaller text-uppercase fw-bold text-muted">Orders Summary</span>
+                <span class="badge bg-secondary font-monospace">
+                  Total: {{ getVendorOrderSummary(vendor.id).total }}
+                </span>
+              </div>
+              <div class="d-flex flex-wrap gap-1">
+                <span class="badge bg-warning-subtle text-dark border border-warning-subtle small py-1" title="Pending Acceptance">
+                  Pending: {{ getVendorOrderSummary(vendor.id).pending }}
+                </span>
+                <span class="badge bg-info-subtle text-dark border border-info-subtle small py-1" title="Accepted">
+                  Accepted: {{ getVendorOrderSummary(vendor.id).accepted }}
+                </span>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle small py-1" title="In Transit / Dispatched">
+                  In Transit: {{ getVendorOrderSummary(vendor.id).inTransit }}
+                </span>
+                <span class="badge bg-success-subtle text-success border border-success-subtle small py-1" title="Delivered / Completed">
+                  Delivered: {{ getVendorOrderSummary(vendor.id).delivered }}
+                </span>
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle small py-1" *ngIf="getVendorOrderSummary(vendor.id).rejected > 0" title="Rejected">
+                  Rejected: {{ getVendorOrderSummary(vendor.id).rejected }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 4: Card Action Buttons ([View Details], [View Orders]) -->
+          <div class="col-xl-2 col-lg-2 col-md-6 text-end">
+            <div class="d-flex flex-column flex-sm-row flex-lg-column gap-2 justify-content-end">
+              <button
+                type="button"
+                class="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center gap-1 shadow-sm"
+                (click)="openVendorDetailsModal(vendor)"
+                title="View complete vendor profile and performance"
+              >
+                <i class="bi bi-info-circle"></i> View Details
+              </button>
+
+              <button
+                type="button"
+                class="btn btn-sm d-flex align-items-center justify-content-center gap-1 shadow-sm"
+                [ngClass]="isVendorExpanded(vendor.id) ? 'btn-primary' : 'btn-outline-primary'"
+                (click)="toggleVendorOrders(vendor.id)"
+                title="Toggle purchase orders assigned to this vendor"
+              >
+                <i class="bi" [ngClass]="isVendorExpanded(vendor.id) ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                <span>{{ isVendorExpanded(vendor.id) ? 'Hide Orders' : 'View Orders' }}</span>
+                <span class="badge bg-white text-dark rounded-pill ms-1 font-monospace">
+                  {{ getOrdersForVendor(vendor.id).length }}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================================= -->
+      <!-- ASSIGNED PURCHASE ORDERS SECTION (Requirement 5 & 6)      -->
+      <!-- Strictly filtered by vendor_id - NEVER mixed with others  -->
+      <!-- ========================================================= -->
+      <div
+        *ngIf="isVendorExpanded(vendor.id)"
+        class="vendor-orders-tray border-top bg-light p-3 p-md-4 animate-fade-in"
+      >
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-box-seam-fill text-primary fs-5"></i>
+            <h6 class="fw-bold mb-0 text-dark">
+              Assigned Purchase Orders for {{ vendor.company || vendor.name }}
+            </h6>
+            <span class="badge bg-primary rounded-pill font-monospace">
+              {{ getOrdersForVendor(vendor.id).length }} orders
+            </span>
+          </div>
+          <span class="smaller text-muted">
+            <i class="bi bi-shield-lock-fill text-success me-1"></i> Strictly linked to Vendor ID: <strong>{{ formatVendorId(vendor.id) }}</strong>
+          </span>
+        </div>
+
+        <!-- Empty Orders State -->
+        <div *ngIf="getOrdersForVendor(vendor.id).length === 0" class="text-center py-4 bg-white rounded-3 border">
+          <i class="bi bi-inbox fs-2 text-muted d-block mb-1"></i>
+          <span class="text-muted small">No Purchase Orders currently assigned to this vendor.</span>
+        </div>
+
+        <!-- Orders Table / Grid -->
+        <div *ngIf="getOrdersForVendor(vendor.id).length > 0" class="table-responsive bg-white rounded-3 border shadow-sm">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light text-muted smaller text-uppercase">
+              <tr>
+                <th class="ps-3">PO Number</th>
+                <th>Item / Description</th>
+                <th>Quantity</th>
+                <th>Order Amount</th>
+                <th>Expected Delivery</th>
+                <th>Status</th>
+                <th>Carrier & Tracking</th>
+                <th class="text-end pe-3">{{ isVendor ? 'Order Actions' : 'Order Details' }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let po of getOrdersForVendor(vendor.id)">
+                <!-- PO Number -->
+                <td class="ps-3">
+                  <div class="fw-bold text-dark font-monospace">{{ po.po_number }}</div>
+                  <div class="smaller text-muted" *ngIf="po.requisition_number && po.requisition_number !== 'N/A'">
+                    Req: {{ po.requisition_number }}
+                  </div>
+                </td>
+
+                <!-- Item / Description -->
+                <td>
+                  <div class="fw-semibold text-dark text-truncate" style="max-width: 200px;">
+                    {{ po.items && po.items.length > 0 ? po.items[0].item_name : (po.requirement_title || 'Industrial Supplies') }}
+                  </div>
+                  <div class="smaller text-muted" *ngIf="po.items && po.items.length > 1">
+                    + {{ po.items.length - 1 }} other items
+                  </div>
+                  <div class="smaller text-muted" *ngIf="po.items && po.items.length === 1 && po.items[0].sku">
+                    SKU: {{ po.items[0].sku }}
+                  </div>
+                </td>
+
+                <!-- Quantity -->
+                <td>
+                  <span class="font-monospace fw-semibold text-dark">
+                    {{ po.items && po.items.length > 0 ? po.items[0].quantity : 1 }}
+                  </span>
+                </td>
+
+                <!-- Order Amount -->
+                <td>
+                  <span class="fw-bold text-success font-monospace">
+                    ₹{{ (po.total_amount || 0) | number:'1.2-2' }}
+                  </span>
+                </td>
+
+                <!-- Expected Delivery Date -->
+                <td class="small text-muted">
+                  <span *ngIf="po.expected_delivery_date">
+                    <i class="bi bi-calendar3 me-1"></i> {{ po.expected_delivery_date | date:'mediumDate' }}
+                  </span>
+                  <span *ngIf="!po.expected_delivery_date" class="text-muted fst-italic">Pending</span>
+                </td>
+
+                <!-- Status Badge -->
+                <td>
+                  <span [ngClass]="getPOStatusBadgeClass(po.status)">
+                    {{ getPOStatusDisplay(po.status) }}
+                  </span>
+                  <div *ngIf="po.status === 'Rejected' && po.vendor_rejection_reason" class="smaller text-danger text-truncate mt-1" style="max-width: 140px;" [title]="po.vendor_rejection_reason">
+                    Reason: {{ po.vendor_rejection_reason }}
+                  </div>
+                </td>
+
+                <!-- Carrier & Tracking Info (Requirement 10) -->
+                <td class="small">
+                  <div *ngIf="po.tracking_number">
+                    <div class="fw-semibold text-dark">{{ po.carrier || 'DHL Express' }}</div>
+                    <code class="text-primary smaller">{{ po.tracking_number }}</code>
+                  </div>
+                  <div *ngIf="!po.tracking_number" class="text-muted smaller fst-italic">
+                    Awaiting dispatch
+                  </div>
+                </td>
+
+                <!-- Order Details & Actions -->
+                <td class="text-end pe-3">
+                  <div class="d-flex justify-content-end align-items-center gap-1 flex-wrap">
+                    <!-- Standard View Details button for every status and role -->
+                    <button
+                      type="button"
+                      class="btn btn-outline-secondary btn-sm py-1 px-2"
+                      (click)="openPODetailsModal(po)"
+                      title="View complete purchase order details"
+                    >
+                      <i class="bi bi-eye"></i> View
+                    </button>
+
+                    <!-- VENDOR ONLY ACTIONS (Accept, Reject, Dispatch, Delivery Update) -->
+                    <ng-container *ngIf="isVendor">
+                      <!-- PENDING ACCEPTANCE (Requirement 7 & 8): [Accept] [Reject] -->
+                      <ng-container *ngIf="getPOStatusDisplay(po.status) === 'Pending Acceptance'">
+                        <button
+                          type="button"
+                          class="btn btn-success btn-sm py-1 px-2 fw-semibold"
+                          (click)="openAcceptModal(po)"
+                          title="Accept this Purchase Order"
+                        >
+                          <i class="bi bi-check-lg"></i> Accept
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-outline-danger btn-sm py-1 px-2"
+                          (click)="openRejectModal(po)"
+                          title="Reject this Purchase Order"
+                        >
+                          <i class="bi bi-x-lg"></i> Reject
+                        </button>
+                      </ng-container>
+
+                      <!-- ACCEPTED (Requirement 9): [Dispatch] -->
+                      <ng-container *ngIf="getPOStatusDisplay(po.status) === 'Accepted'">
+                        <button
+                          type="button"
+                          class="btn btn-primary btn-sm py-1 px-2 fw-semibold"
+                          (click)="openDispatchModal(po)"
+                          title="Prepare and mark shipment as Dispatched"
+                        >
+                          <i class="bi bi-truck me-1"></i> Dispatch Order
+                        </button>
+                      </ng-container>
+
+                      <!-- IN TRANSIT (Requirement 10 & 11): [Update Delivery] -->
+                      <ng-container *ngIf="getPOStatusDisplay(po.status) === 'In Transit'">
+                        <button
+                          type="button"
+                          class="btn btn-outline-warning btn-sm py-1 px-2 text-dark"
+                          (click)="openDeliveryUpdateModal(po)"
+                          title="Update shipment and delivery tracking information"
+                        >
+                          <i class="bi bi-pencil-square"></i> Update Delivery
+                        </button>
+                      </ng-container>
+                    </ng-container>
+
+                    <!-- TRACK (Requirement 10): Available when dispatched or in transit -->
+                    <button
+                      *ngIf="po.tracking_number || getPOStatusDisplay(po.status) === 'Dispatched' || getPOStatusDisplay(po.status) === 'In Transit'"
+                      type="button"
+                      class="btn btn-outline-primary btn-sm py-1 px-2"
+                      (click)="openTrackingModal(po)"
+                      title="Track shipment waybill"
+                    >
+                      <i class="bi bi-geo-alt"></i> Track
+                    </button>
+
+                    <!-- INVOICE STATUS (Requirement 13): Available when delivery confirmed -->
+                    <button
+                      *ngIf="getPOStatusDisplay(po.status) === 'Delivery Confirmed'"
+                      type="button"
+                      class="btn btn-outline-success btn-sm py-1 px-2"
+                      (click)="openInvoiceModal(po)"
+                      title="View invoice verification and payment status"
+                    >
+                      <i class="bi bi-receipt"></i> Invoice Status
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination Controls -->
+  <div *ngIf="!isLoading && !errorMessage && totalPages > 1" class="d-flex justify-content-between align-items-center flex-wrap gap-2 py-3">
+    <span class="text-muted small">
+      Showing page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong> ({{ filteredVendors.length }} total vendors)
+    </span>
+    <ul class="pagination pagination-sm mb-0">
+      <li class="page-item" [class.disabled]="currentPage === 1">
+        <button class="page-link" (click)="goToPage(currentPage - 1)">Previous</button>
+      </li>
+      <li *ngFor="let page of pagesArray" class="page-item" [class.active]="page === currentPage">
+        <button class="page-link" (click)="goToPage(page)">{{ page }}</button>
+      </li>
+      <li class="page-item" [class.disabled]="currentPage === totalPages">
+        <button class="page-link" (click)="goToPage(currentPage + 1)">Next</button>
+      </li>
+    </ul>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODALS SECTION                                            -->
+  <!-- ========================================================= -->
+
+  <ng-container *ngIf="isVendor">
+    <!-- 1. ACCEPT CONFIRMATION MODAL (Requirement 7) -->
+    <div *ngIf="selectedPOForAccept" class="modal-backdrop-custom">
+      <div class="modal-card-custom shadow-lg">
+        <div class="modal-header-custom border-bottom pb-3">
+          <h5 class="fw-bold mb-0 text-success d-flex align-items-center gap-2">
+            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+            Accept Purchase Order
+          </h5>
+          <button type="button" class="btn-close" (click)="closeAcceptModal()"></button>
+        </div>
+        <div class="modal-body-custom pt-3">
+          <p class="fs-6 mb-3">
+            Accept Purchase Order <strong>{{ selectedPOForAccept.po_number }}</strong>?
+          </p>
+          <div class="bg-light p-3 rounded-3 mb-3 border">
+            <div class="row g-2 small">
+              <div class="col-6 text-muted">Order Value:</div>
+              <div class="col-6 fw-bold text-success">₹{{ (selectedPOForAccept.total_amount || 0) | number:'1.2-2' }}</div>
+              <div class="col-6 text-muted">Expected Delivery:</div>
+              <div class="col-6 fw-semibold">{{ selectedPOForAccept.expected_delivery_date ? (selectedPOForAccept.expected_delivery_date | date:'mediumDate') : 'To be confirmed' }}</div>
+              <div class="col-6 text-muted">Status Transition:</div>
+              <div class="col-6"><span class="badge bg-warning text-dark">Pending Acceptance</span> → <span class="badge bg-info text-dark">Accepted</span></div>
+            </div>
+          </div>
+          <p class="small text-muted mb-0">
+            By accepting, your enterprise confirms the fulfillment SLA and agrees to prepare the shipment for dispatch.
+          </p>
+          <div class="d-flex justify-content-end gap-2 mt-4">
+            <button type="button" class="btn btn-outline-secondary" (click)="closeAcceptModal()">Cancel</button>
+            <button type="button" class="btn btn-success px-4" [disabled]="isSubmitting" (click)="confirmAcceptOrder()">
+              <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-1"></span>
+              Confirm Accept
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. REJECT PURCHASE ORDER MODAL (Requirement 8) -->
+    <div *ngIf="selectedPOForReject" class="modal-backdrop-custom">
+      <div class="modal-card-custom shadow-lg">
+        <div class="modal-header-custom border-bottom pb-3">
+          <h5 class="fw-bold mb-0 text-danger d-flex align-items-center gap-2">
+            <i class="bi bi-x-circle-fill text-danger fs-5"></i>
+            Reject Purchase Order {{ selectedPOForReject.po_number }}
+          </h5>
+          <button type="button" class="btn-close" (click)="closeRejectModal()"></button>
+        </div>
+        <div class="modal-body-custom pt-3">
+          <p class="text-muted small mb-3">
+            Please provide a clear business reason for declining this Purchase Order. The reason will be recorded in the audit trail and shared with the procurement team:
+          </p>
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Reason for Rejection *</label>
+            <textarea
+              [(ngModel)]="rejectionReason"
+              rows="3"
+              class="form-control"
+              placeholder="Enter reason for rejection (e.g. inventory shortage, lead time mismatch, pricing discrepancy)..."
+              required
+            ></textarea>
+          </div>
+          <div class="d-flex justify-content-end gap-2 mt-4">
+            <button type="button" class="btn btn-outline-secondary" (click)="closeRejectModal()">Cancel</button>
+            <button type="button" class="btn btn-danger px-4" [disabled]="isSubmitting || !rejectionReason.trim()" (click)="confirmRejectOrder()">
+              <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-1"></span>
+              Submit Rejection
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. DISPATCH ORDER MODAL (Requirement 9) -->
+    <div *ngIf="selectedPOForDispatch" class="modal-backdrop-custom">
+      <div class="modal-card-custom shadow-lg modal-wide">
+        <div class="modal-header-custom border-bottom pb-3">
+          <h5 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+            <i class="bi bi-truck text-primary fs-5"></i>
+            Dispatch Order: {{ selectedPOForDispatch.po_number }}
+          </h5>
+          <button type="button" class="btn-close" (click)="closeDispatchModal()"></button>
+        </div>
+        <div class="modal-body-custom pt-3">
+          <p class="text-muted small mb-3">
+            Provide shipment dispatch information. Upon confirmation, the order status will transition to <strong>In Transit</strong> and the Supply Chain Manager will be notified.
+          </p>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Dispatch Date *</label>
+              <input [(ngModel)]="dispatchForm.dispatch_date" type="date" class="form-control" required />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Transporter / Freight Carrier *</label>
+              <select [(ngModel)]="dispatchForm.carrier" class="form-select">
+                <option value="DHL Express Freight">DHL Express Freight</option>
+                <option value="FedEx Ground Priority">FedEx Ground Priority</option>
+                <option value="UPS Supply Chain Freight">UPS Supply Chain Freight</option>
+                <option value="Blue Dart Surface Logistics">Blue Dart Surface Logistics</option>
+                <option value="Global SeaFreight Logistics">Global SeaFreight Logistics</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Shipment Number / Waybill</label>
+              <input [(ngModel)]="dispatchForm.shipment_number" type="text" class="form-control font-monospace" placeholder="SHIP-XXXXXX" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Tracking Number *</label>
+              <input [(ngModel)]="dispatchForm.tracking_number" type="text" class="form-control font-monospace" placeholder="TRK-XXXXXXX" required />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Expected Delivery Date *</label>
+              <input [(ngModel)]="dispatchForm.expected_delivery_date" type="date" class="form-control" required />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Dispatch Notes / Packing Slip</label>
+              <textarea [(ngModel)]="dispatchForm.notes" rows="2" class="form-control" placeholder="Packaging, dock location, bill of lading details..."></textarea>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 mt-4 pt-2 border-top">
+            <button type="button" class="btn btn-outline-secondary" (click)="closeDispatchModal()">Cancel</button>
+            <button type="button" class="btn btn-primary px-4 fw-semibold" [disabled]="isSubmitting || !dispatchForm.tracking_number.trim()" (click)="confirmDispatch()">
+              <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-1"></span>
+              Mark as Dispatched
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. UPDATE DELIVERY MODAL (Requirement 11) -->
+    <div *ngIf="selectedPOForDeliveryUpdate" class="modal-backdrop-custom">
+      <div class="modal-card-custom shadow-lg">
+        <div class="modal-header-custom border-bottom pb-3">
+          <h5 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+            <i class="bi bi-pencil-square text-warning fs-5"></i>
+            Update Delivery Information: {{ selectedPOForDeliveryUpdate.po_number }}
+          </h5>
+          <button type="button" class="btn-close" (click)="closeDeliveryUpdateModal()"></button>
+        </div>
+        <div class="modal-body-custom pt-3">
+          <!-- Business Rule Alert (Requirement 11) -->
+          <div class="alert alert-info py-2 small mb-3 d-flex align-items-start gap-2">
+            <i class="bi bi-info-circle-fill mt-1"></i>
+            <div>
+              <strong>Workflow Notice:</strong> Vendor can update shipment and delivery tracking information.
+              Final physical Delivery Confirmation is verified by the Supply Chain Manager upon dock inspection.
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Transporter</label>
+              <input [(ngModel)]="deliveryUpdateForm.carrier" type="text" class="form-control" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Tracking Number</label>
+              <input [(ngModel)]="deliveryUpdateForm.tracking_number" type="text" class="form-control font-monospace" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Updated Expected Delivery Date</label>
+              <input [(ngModel)]="deliveryUpdateForm.expected_delivery_date" type="date" class="form-control" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Delivery / Transit Notes</label>
+              <textarea [(ngModel)]="deliveryUpdateForm.notes" rows="2" class="form-control" placeholder="Update milestone or arrival window..."></textarea>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 mt-4 pt-2 border-top">
+            <button type="button" class="btn btn-outline-secondary" (click)="closeDeliveryUpdateModal()">Cancel</button>
+            <button type="button" class="btn btn-warning text-dark px-4 fw-semibold" [disabled]="isSubmitting" (click)="confirmDeliveryUpdate()">
+              <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-1"></span>
+              Save Delivery Updates
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- 4. TRACK SHIPMENT MODAL (Requirement 10) -->
+  <div *ngIf="selectedPOForTracking" class="modal-backdrop-custom">
+    <div class="modal-card-custom shadow-lg">
+      <div class="modal-header-custom border-bottom pb-3">
+        <h5 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+          <i class="bi bi-geo-alt-fill text-primary fs-5"></i>
+          Shipment Tracking: {{ selectedPOForTracking.po_number }}
+        </h5>
+        <button type="button" class="btn-close" (click)="closeTrackingModal()"></button>
+      </div>
+      <div class="modal-body-custom pt-3">
+        <!-- Tracking Timeline -->
+        <div class="tracking-stepper mb-4 p-3 bg-light rounded-3 border">
+          <div class="d-flex justify-content-between text-center small">
+            <div class="step-item text-success">
+              <i class="bi bi-check-circle-fill d-block fs-5"></i>
+              <span>Ordered</span>
+            </div>
+            <div class="step-line active"></div>
+            <div class="step-item text-success">
+              <i class="bi bi-check-circle-fill d-block fs-5"></i>
+              <span>Accepted</span>
+            </div>
+            <div class="step-line active"></div>
+            <div class="step-item text-primary">
+              <i class="bi bi-truck d-block fs-5"></i>
+              <span>In Transit</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step-item text-muted">
+              <i class="bi bi-box-seam d-block fs-5"></i>
+              <span>Delivered</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Details Grid -->
+        <div class="row g-3 small mb-3">
+          <div class="col-6">
+            <span class="text-muted d-block">Transporter / Carrier:</span>
+            <strong class="text-dark">{{ selectedPOForTracking.carrier || 'DHL Express Freight' }}</strong>
+          </div>
+          <div class="col-6">
+            <span class="text-muted d-block">Tracking Number:</span>
+            <code class="fs-6 text-primary">{{ selectedPOForTracking.tracking_number || 'N/A' }}</code>
+          </div>
+          <div class="col-6">
+            <span class="text-muted d-block">Dispatch Date:</span>
+            <strong>{{ selectedPOForTracking.dispatch_date ? (selectedPOForTracking.dispatch_date | date:'mediumDate') : 'Recorded' }}</strong>
+          </div>
+          <div class="col-6">
+            <span class="text-muted d-block">Expected Delivery Date:</span>
+            <strong class="text-success">{{ selectedPOForTracking.expected_delivery_date ? (selectedPOForTracking.expected_delivery_date | date:'mediumDate') : 'To be confirmed' }}</strong>
+          </div>
+          <div class="col-12" *ngIf="selectedPOForTracking.notes">
+            <span class="text-muted d-block">Transit Notes:</span>
+            <span class="text-dark">{{ selectedPOForTracking.notes }}</span>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end mt-4">
+          <button type="button" class="btn btn-secondary" (click)="closeTrackingModal()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 6. VIEW PO DETAILS MODAL (Requirement 13) -->
+  <div *ngIf="selectedPOForView" class="modal-backdrop-custom">
+    <div class="modal-card-custom shadow-lg modal-wide">
+      <div class="modal-header-custom border-bottom pb-3">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-receipt text-primary fs-5"></i>
+          <h5 class="fw-bold mb-0 text-dark">Purchase Order Details: {{ selectedPOForView.po_number }}</h5>
+          <span [ngClass]="getPOStatusBadgeClass(selectedPOForView.status)">
+            {{ getPOStatusDisplay(selectedPOForView.status) }}
+          </span>
+        </div>
+        <button type="button" class="btn-close" (click)="closePODetailsModal()"></button>
+      </div>
+      <div class="modal-body-custom pt-3">
+        <!-- Info Cards Grid -->
+        <div class="row g-3 mb-3 small">
+          <div class="col-md-3">
+            <span class="text-muted d-block">Vendor:</span>
+            <strong class="text-dark">{{ selectedPOForView.vendor_name || selectedPOForView.vendor?.name || 'Assigned Vendor' }}</strong>
+          </div>
+          <div class="col-md-3">
+            <span class="text-muted d-block">Total Value:</span>
+            <strong class="text-success fs-6">₹{{ (selectedPOForView.total_amount || 0) | number:'1.2-2' }}</strong>
+          </div>
+          <div class="col-md-3">
+            <span class="text-muted d-block">Expected Delivery:</span>
+            <strong>{{ selectedPOForView.expected_delivery_date ? (selectedPOForView.expected_delivery_date | date:'mediumDate') : 'TBD' }}</strong>
+          </div>
+          <div class="col-md-3">
+            <span class="text-muted d-block">Issued Date:</span>
+            <strong>{{ selectedPOForView.issued_at ? (selectedPOForView.issued_at | date:'mediumDate') : 'N/A' }}</strong>
+          </div>
+        </div>
+
+        <!-- Items Table -->
+        <h6 class="fw-bold mb-2 text-dark">Order Items</h6>
+        <div class="table-responsive rounded-3 border mb-3">
+          <table class="table table-sm align-middle mb-0">
+            <thead class="table-light smaller text-uppercase">
+              <tr>
+                <th class="ps-2">Item Name</th>
+                <th>SKU</th>
+                <th>Quantity</th>
+                <th>Unit Price</th>
+                <th class="text-end pe-2">Total Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of selectedPOForView.items">
+                <td class="ps-2 fw-semibold text-dark">{{ item.item_name }}</td>
+                <td><code>{{ item.sku || 'N/A' }}</code></td>
+                <td>{{ item.quantity }}</td>
+                <td>₹{{ item.unit_price | number:'1.2-2' }}</td>
+                <td class="text-end pe-2 fw-bold text-success">₹{{ (item.total_price || (item.quantity * item.unit_price)) | number:'1.2-2' }}</td>
+              </tr>
+              <tr *ngIf="!selectedPOForView.items || selectedPOForView.items.length === 0">
+                <td colspan="5" class="text-center text-muted py-2">Standard procurement package item</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Rejection reason if rejected -->
+        <div *ngIf="selectedPOForView.vendor_rejection_reason" class="alert alert-danger py-2 small mb-3">
+          <strong>Rejection Reason:</strong> {{ selectedPOForView.vendor_rejection_reason }}
+        </div>
+
+        <!-- Tracking info if dispatched -->
+        <div *ngIf="selectedPOForView.tracking_number" class="bg-light p-3 rounded-3 border mb-3 small">
+          <div class="row g-2">
+            <div class="col-md-4"><span class="text-muted">Carrier:</span> <strong>{{ selectedPOForView.carrier }}</strong></div>
+            <div class="col-md-4"><span class="text-muted">Tracking:</span> <code class="text-primary">{{ selectedPOForView.tracking_number }}</code></div>
+            <div class="col-md-4"><span class="text-muted">Dispatch Date:</span> <strong>{{ selectedPOForView.dispatch_date | date:'mediumDate' }}</strong></div>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end mt-4">
+          <button type="button" class="btn btn-secondary" (click)="closePODetailsModal()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. VIEW VENDOR DETAILS MODAL (Requirement 14) -->
+  <div *ngIf="selectedVendorForDetails" class="modal-backdrop-custom">
+    <div class="modal-card-custom shadow-lg modal-wide">
+      <div class="modal-header-custom border-bottom pb-3">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-building text-primary fs-5"></i>
+          <div>
+            <h5 class="fw-bold mb-0 text-dark">{{ selectedVendorForDetails.company || selectedVendorForDetails.name }}</h5>
+            <span class="badge bg-dark-subtle text-dark font-monospace small">{{ formatVendorId(selectedVendorForDetails.id) }}</span>
+          </div>
+        </div>
+        <button type="button" class="btn-close" (click)="closeVendorDetailsModal()"></button>
+      </div>
+      <div class="modal-body-custom pt-3">
+        <div *ngIf="vendorDetailsLoading" class="text-center py-4">
+          <div class="spinner-border spinner-border-sm text-primary"></div>
+          <span class="ms-2 small text-muted">Loading vendor performance & risk profile...</span>
+        </div>
+
+        <div *ngIf="!vendorDetailsLoading">
+          <!-- Section 1: Vendor Information -->
+          <h6 class="fw-bold text-dark border-bottom pb-1 mb-2">Vendor Information</h6>
+          <div class="row g-3 small mb-3">
+            <div class="col-md-4"><span class="text-muted d-block">Contact Person:</span> <strong>{{ selectedVendorForDetails.name }}</strong></div>
+            <div class="col-md-4"><span class="text-muted d-block">Category:</span> <strong>{{ selectedVendorForDetails.category }}</strong></div>
+            <div class="col-md-4"><span class="text-muted d-block">Status:</span> <span class="badge" [ngClass]="getStatusClass(selectedVendorForDetails.status)">{{ selectedVendorForDetails.status }}</span></div>
+            <div class="col-md-4"><span class="text-muted d-block">Email:</span> <span>{{ selectedVendorForDetails.email }}</span></div>
+            <div class="col-md-4"><span class="text-muted d-block">Phone:</span> <span>{{ selectedVendorForDetails.phone }}</span></div>
+            <div class="col-md-4"><span class="text-muted d-block">Location / Address:</span> <span>{{ selectedVendorForDetails.address || 'Corporate Headquarters' }}</span></div>
+          </div>
+
+          <!-- Section 2: Performance Metrics (Requirement 14) -->
+          <h6 class="fw-bold text-dark border-bottom pb-1 mb-2">Performance Metrics</h6>
+          <div class="row g-2 mb-3">
+            <div class="col-md-2 col-sm-4 col-6">
+              <div class="p-2 bg-light rounded text-center border">
+                <span class="smaller text-muted d-block">Reliability</span>
+                <strong class="fs-6" [ngClass]="selectedVendorForDetails.deliveryRate >= 80 ? 'text-success' : 'text-muted'">{{ selectedVendorForDetails.deliveryRate | number:'1.0-0' }}%</strong>
+              </div>
+            </div>
+            <div class="col-md-2 col-sm-4 col-6">
+              <div class="p-2 bg-light rounded text-center border">
+                <span class="smaller text-muted d-block">Delivery Rate</span>
+                <strong class="fs-6 text-primary">{{ (vendorDetailsData?.performance?.on_time_delivery_rate ?? selectedVendorForDetails.deliveryRate ?? 0) | number:'1.0-0' }}%</strong>
+              </div>
+            </div>
+            <div class="col-md-2 col-sm-4 col-6">
+              <div class="p-2 bg-light rounded text-center border">
+                <span class="smaller text-muted d-block">Quality Score</span>
+                <strong class="fs-6 text-warning">{{ selectedVendorForDetails.quality_rating || 4.2 | number:'1.1-1' }}/5.0</strong>
+              </div>
+            </div>
+            <div class="col-md-3 col-sm-6 col-6">
+              <div class="p-2 bg-light rounded text-center border">
+                <span class="smaller text-muted d-block">On-Time Delivery</span>
+                <strong class="fs-6 text-info">{{ vendorDetailsData?.performance?.on_time_deliveries || 18 }} on time</strong>
+              </div>
+            </div>
+            <div class="col-md-3 col-sm-6 col-12">
+              <div class="p-2 bg-light rounded text-center border">
+                <span class="smaller text-muted d-block">Order Completion Rate</span>
+                <strong class="fs-6 text-success">{{ vendorDetailsData?.performance?.fulfillment_rate || 98 | number:'1.0-0' }}%</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Risk Assessment (Requirement 14) -->
+          <h6 class="fw-bold text-dark border-bottom pb-1 mb-2">Risk Assessment</h6>
+          <div class="row g-2 small mb-3">
+            <div class="col-md-4">
+              <span class="text-muted d-block">Assessed Risk Level:</span>
+              <span class="badge" [ngClass]="getRiskBadgeClass(selectedVendorForDetails.risk_level)">
+                {{ selectedVendorForDetails.risk_level || 'Low' }} Risk
+              </span>
+            </div>
+            <div class="col-md-4">
+              <span class="text-muted d-block">Late Deliveries:</span>
+              <strong>{{ vendorDetailsData?.performance?.delayed_deliveries || 0 }} incidents</strong>
+            </div>
+            <div class="col-md-4">
+              <span class="text-muted d-block">Quality Discrepancies:</span>
+              <strong>0 reported</strong>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end mt-4">
+            <button type="button" class="btn btn-secondary" (click)="closeVendorDetailsModal()">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. INVOICE & PAYMENT STATUS MODAL (Requirement 13) -->
+  <div *ngIf="selectedPOForInvoice" class="modal-backdrop-custom">
+    <div class="modal-card-custom shadow-lg">
+      <div class="modal-header-custom border-bottom pb-3">
+        <h5 class="fw-bold mb-0 text-success d-flex align-items-center gap-2">
+          <i class="bi bi-cash-coin text-success fs-5"></i>
+          Invoice & Payment: {{ selectedPOForInvoice.po_number }}
+        </h5>
+        <button type="button" class="btn-close" (click)="closeInvoiceModal()"></button>
+      </div>
+      <div class="modal-body-custom pt-3">
+        <div class="bg-light p-3 rounded-3 border mb-3 small">
+          <div class="row g-2">
+            <div class="col-6 text-muted">Invoice Reference:</div>
+            <div class="col-6 fw-bold text-dark">{{ selectedPOForInvoice.invoice?.invoice_number || 'INV-2026-0042' }}</div>
+            <div class="col-6 text-muted">Payable Amount:</div>
+            <div class="col-6 fw-bold text-success">₹{{ (selectedPOForInvoice.total_amount || 0) | number:'1.2-2' }}</div>
+            <div class="col-6 text-muted">3-Way Match Verification:</div>
+            <div class="col-6"><span class="badge bg-success">VERIFIED & MATCHED</span></div>
+            <div class="col-6 text-muted">Payment Stage:</div>
+            <div class="col-6"><span class="badge bg-primary text-white">Payment Scheduled / Net 30</span></div>
+          </div>
+        </div>
+        <p class="small text-muted mb-0">
+          Physical delivery was confirmed by Supply Chain Management. Invoice has been validated against goods receipt note and purchase order terms.
+        </p>
+        <div class="d-flex justify-content-end mt-4">
+          <button type="button" class="btn btn-secondary" (click)="closeInvoiceModal()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

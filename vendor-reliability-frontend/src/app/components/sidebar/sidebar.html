@@ -1,0 +1,90 @@
+<aside class="enterprise-sidebar" [class.collapsed]="isCollapsed$ | async" *ngIf="currentUser$ | async as user">
+  <!-- Brand Header -->
+  <div class="sidebar-brand-wrapper">
+    <a [routerLink]="getDashboardLink(user.role)" class="sidebar-brand-link">
+      <div class="brand-symbol">
+        <i class="bi bi-shield-check"></i>
+      </div>
+      <div class="brand-text-block">
+        <span class="brand-name">VendorIQ</span>
+        <span class="brand-tagline">Vendor Reliability & Procurement</span>
+      </div>
+    </a>
+    <button type="button" class="btn-sidebar-collapse" (click)="toggleCollapse()" [title]="(isCollapsed$ | async) ? 'Expand Sidebar' : 'Collapse Sidebar'">
+      <i class="bi" [class.bi-chevron-left]="!(isCollapsed$ | async)" [class.bi-chevron-right]="isCollapsed$ | async"></i>
+    </button>
+  </div>
+
+  <!-- Role Status Pill -->
+  <div class="sidebar-role-strip" *ngIf="!(isCollapsed$ | async)">
+    <div class="role-indicator-card">
+      <div class="role-icon-dot"></div>
+      <div class="role-info">
+        <span class="role-name">{{ user.role }}</span>
+        <span class="role-scope">{{ user.company || 'Enterprise Portal' }}</span>
+      </div>
+      <span class="badge role-pill" [ngClass]="getRoleBadgeClass(user.role)">Active</span>
+    </div>
+  </div>
+
+  <!-- Nav Sections -->
+  <div class="sidebar-nav-container">
+    <ng-container *ngFor="let section of sections">
+      <div class="nav-section-group" *ngIf="hasVisibleItems(section)">
+        <div class="nav-section-heading" *ngIf="!(isCollapsed$ | async)">
+          {{ section.title }}
+        </div>
+        <div class="nav-section-divider" *ngIf="isCollapsed$ | async"></div>
+
+        <ul class="nav-list">
+          <ng-container *ngFor="let item of section.items">
+            <li class="nav-item" *ngIf="canAccess(item.roles)">
+              <a
+                [routerLink]="item.route"
+                [queryParams]="item.queryParams || null"
+                routerLinkActive="active"
+                [routerLinkActiveOptions]="{ exact: item.route === '/dashboard' || item.route.includes('/dashboard/') }"
+                class="nav-link-btn"
+                [title]="(isCollapsed$ | async) ? item.label : ''"
+              >
+                <div class="nav-icon-wrap">
+                  <i class="bi {{ item.icon }}"></i>
+                </div>
+                <span class="nav-label" *ngIf="!(isCollapsed$ | async)">{{ item.label }}</span>
+                <span
+                  *ngIf="item.label === 'Notifications' && ((unreadCount$ | async) || 0) > 0"
+                  class="badge bg-danger rounded-pill ms-auto nav-badge"
+                  [class.mini-badge]="isCollapsed$ | async"
+                >
+                  {{ (unreadCount$ | async) }}
+                </span>
+              </a>
+            </li>
+          </ng-container>
+        </ul>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- Sidebar Footer / User Profile & Logout -->
+  <div class="sidebar-footer">
+    <div class="sidebar-user-card" *ngIf="!(isCollapsed$ | async)">
+      <div class="sidebar-user-avatar">
+        {{ user.full_name ? user.full_name.charAt(0).toUpperCase() : 'U' }}
+      </div>
+      <div class="sidebar-user-meta">
+        <span class="user-fullname text-truncate">{{ user.full_name }}</span>
+        <span class="user-email text-truncate">{{ user.email }}</span>
+      </div>
+      <button type="button" class="btn-logout-icon" (click)="logout()" title="Sign Out">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
+    </div>
+
+    <div class="sidebar-user-collapsed" *ngIf="isCollapsed$ | async">
+      <button type="button" class="btn-logout-icon-collapsed" (click)="logout()" title="Sign Out ({{ user.full_name }})">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
+    </div>
+  </div>
+</aside>

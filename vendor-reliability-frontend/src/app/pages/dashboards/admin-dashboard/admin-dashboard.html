@@ -1,0 +1,539 @@
+<div class="admin-dashboard-container">
+  <!-- Top Role Header Banner matching reference photo (Purple theme) -->
+  <div class="admin-header-banner p-3 rounded-3 mb-4 shadow-sm text-white d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div class="d-flex align-items-center gap-3">
+      <div class="banner-icon-box bg-white bg-opacity-20 p-2 rounded-3 text-white fs-4 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+        <i class="bi bi-gear-fill"></i>
+      </div>
+      <div>
+        <div class="d-flex align-items-center gap-2">
+          <h4 class="fw-bold mb-0 text-white">Admin Dashboard</h4>
+          <span class="badge bg-white text-dark fw-semibold rounded-pill px-2 py-1">Administrator</span>
+        </div>
+        <p class="text-white-50 small mb-0">Manage users, analyze vendors, monitor compliance and system performance</p>
+      </div>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+      <button (click)="loadData()" class="btn btn-light btn-sm fw-semibold text-dark d-flex align-items-center gap-1 shadow-sm">
+        <i class="bi bi-arrow-clockwise"></i> Refresh Control Center
+      </button>
+    </div>
+  </div>
+
+  <!-- Instant High-Visibility Top Approval Alert Banner -->
+  <div *ngIf="actionMessage" class="approval-alert-top alert alert-dismissible fade show shadow-lg border-0 d-flex align-items-center justify-content-between p-3 mb-4 rounded-3 text-white" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%);" role="alert">
+    <div class="d-flex align-items-center gap-3">
+      <div class="bg-white bg-opacity-25 rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+        <i class="bi bi-check2-circle fs-4 text-white"></i>
+      </div>
+      <div>
+        <h6 class="fw-bold mb-0 text-white"><i class="bi bi-shield-check me-1"></i> Status Updated Successfully</h6>
+        <div class="small text-white-50 mt-1">{{ actionMessage }}</div>
+      </div>
+    </div>
+    <button type="button" class="btn-close btn-close-white" (click)="actionMessage = ''" aria-label="Close"></button>
+  </div>
+
+  <!-- TOP KPI CARDS (Matching Reference Design) -->
+  <div class="row g-3 mb-4">
+    <!-- 1. Total Users -->
+    <div class="col-xl-2 col-md-4 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card" (click)="scrollToSection('active-users-section')" style="cursor: pointer;">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box bg-primary-subtle text-primary rounded-3 p-2">
+            <i class="bi bi-people-fill fs-5"></i>
+          </div>
+          <span class="badge bg-success-subtle text-success small fw-semibold">
+            {{ adminSummary?.kpis?.total_users_growth || '+10%' }}
+          </span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">Total Users</span>
+        <h3 class="fw-bold my-1 text-dark">{{ adminSummary?.kpis?.total_users || users.length }}</h3>
+        <span class="smaller text-muted">across all 6 roles</span>
+      </div>
+    </div>
+
+    <!-- 2. Total Vendors -->
+    <div class="col-xl-2 col-md-4 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card" (click)="navigateTo('/vendors')" style="cursor: pointer;">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box bg-success-subtle text-success rounded-3 p-2">
+            <i class="bi bi-building fs-5"></i>
+          </div>
+          <span class="badge bg-success-subtle text-success small fw-semibold">
+            {{ adminSummary?.kpis?.total_vendors_growth || '+8%' }}
+          </span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">Total Vendors</span>
+        <h3 class="fw-bold my-1 text-dark">{{ adminSummary?.kpis?.total_vendors || 25 }}</h3>
+        <span class="smaller text-muted">onboarded suppliers</span>
+      </div>
+    </div>
+
+    <!-- 3. Total Contracts -->
+    <div class="col-xl-2 col-md-4 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box rounded-3 p-2" style="background: rgba(139, 92, 246, 0.15); color: #8b5cf6;">
+            <i class="bi bi-file-earmark-check-fill fs-5"></i>
+          </div>
+          <span class="badge bg-success-subtle text-success small fw-semibold">
+            {{ adminSummary?.kpis?.total_contracts_growth || '+10%' }}
+          </span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">Total Contracts</span>
+        <h3 class="fw-bold my-1 text-dark">{{ adminSummary?.kpis?.total_contracts || 25 }}</h3>
+        <span class="smaller text-muted">governed SLAs</span>
+      </div>
+    </div>
+
+    <!-- 4. System Uptime -->
+    <div class="col-xl-2 col-md-4 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box bg-info-subtle text-info rounded-3 p-2">
+            <i class="bi bi-hdd-stack-fill fs-5"></i>
+          </div>
+          <span class="badge bg-success-subtle text-success small fw-semibold">
+            {{ adminSummary?.kpis?.system_uptime_growth || '+0.2%' }}
+          </span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">System Uptime</span>
+        <h3 class="fw-bold my-1 text-success">{{ adminSummary?.kpis?.system_uptime || '99.8%' }}</h3>
+        <span class="smaller text-muted">operational SLA</span>
+      </div>
+    </div>
+
+    <!-- 5. Pending User Verifications -->
+    <div class="col-xl-2 col-md-4 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card" (click)="scrollToSection('pending-users-section')" style="cursor: pointer;">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box bg-warning-subtle text-warning rounded-3 p-2">
+            <i class="bi bi-person-exclamation fs-5"></i>
+          </div>
+          <span class="badge bg-warning-subtle text-dark small fw-semibold">Queue</span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">Pending Users</span>
+        <h3 class="fw-bold my-1 text-warning">{{ adminSummary?.kpis?.pending_user_verifications || pendingUsers.length }}</h3>
+        <span class="smaller text-muted">awaiting role assignment</span>
+      </div>
+    </div>
+
+    <!-- 6. Pending Vendor Approvals -->
+    <div class="col-xl-2 col-md-4 col-sm-6">
+      <div class="card p-3 shadow-sm border-0 h-100 kpi-card" (click)="scrollToSection('pending-users-section')" style="cursor: pointer;">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon-box bg-danger-subtle text-danger rounded-3 p-2">
+            <i class="bi bi-clock-history fs-5"></i>
+          </div>
+          <span class="badge bg-danger-subtle text-danger small fw-semibold">Review</span>
+        </div>
+        <span class="text-muted smaller text-uppercase fw-bold">Pending Vendors</span>
+        <h3 class="fw-bold my-1 text-danger">{{ adminSummary?.kpis?.pending_vendor_approvals || pendingVendors.length }}</h3>
+        <span class="smaller text-muted">onboarding review</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS SECTION: CHARTS ROW 1 (User Management, Vendor Risk, Procurement Reports) -->
+  <div class="row g-3 mb-4">
+    <!-- Chart A: User Management (Donut) -->
+    <div class="col-lg-4 col-md-12">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-people text-primary me-1"></i> User Management
+          </h6>
+        </div>
+        <app-chart
+          type="doughnut"
+          [data]="userManagementChartData"
+          [options]="userManagementChartOptions"
+          [height]="240"
+          [centerText]="(adminSummary?.user_management?.total || users.length) + ''"
+          centerSubtext="Users"
+          [loading]="isLoadingSummary">
+        </app-chart>
+      </div>
+    </div>
+
+    <!-- Chart B: Vendor Risk Distribution (Bar) -->
+    <div class="col-lg-4 col-md-6">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <app-risk-distribution-chart
+          [labels]="adminSummary?.vendor_risk_distribution?.labels || []"
+          [counts]="adminSummary?.vendor_risk_distribution?.counts || []"
+          title="Vendor Analytics (Risk Distribution)"
+          [loading]="isLoadingSummary">
+        </app-risk-distribution-chart>
+      </div>
+    </div>
+
+    <!-- Chart C: Procurement Reports -->
+    <div class="col-lg-4 col-md-6">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <app-procurement-overview-chart
+          [months]="adminSummary?.procurement_reports?.months || []"
+          [costData]="adminSummary?.procurement_reports?.procurement_cost || []"
+          [orderData]="adminSummary?.procurement_reports?.purchase_orders || []"
+          [loading]="isLoadingSummary">
+        </app-procurement-overview-chart>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS SECTION: CHARTS ROW 2 (Compliance Monitoring, System Statistics, Registration Verification) -->
+  <div class="row g-3 mb-4">
+    <!-- Chart D: Compliance Monitoring (Donut) -->
+    <div class="col-lg-4 col-md-12">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-shield-check text-success me-1"></i> Compliance Monitoring
+          </h6>
+        </div>
+        <app-chart
+          type="doughnut"
+          [data]="complianceMonitoringChartData"
+          [options]="complianceMonitoringChartOptions"
+          [height]="240"
+          [centerText]="(adminSummary?.compliance_monitoring?.total || 25) + ''"
+          centerSubtext="Contracts"
+          [loading]="isLoadingSummary">
+        </app-chart>
+      </div>
+    </div>
+
+    <!-- Chart E: System Statistics (Cards with mini progress metrics) -->
+    <div class="col-lg-4 col-md-6">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-cpu text-info me-1"></i> System Statistics
+          </h6>
+          <span class="badge bg-success-subtle text-success">Healthy</span>
+        </div>
+
+        <div class="system-stats-grid d-flex flex-column gap-3">
+          <div>
+            <div class="d-flex justify-content-between small mb-1">
+              <span class="text-muted"><i class="bi bi-database text-primary me-1"></i> Database Usage</span>
+              <span class="fw-bold">{{ adminSummary?.system_statistics?.database_usage || 68 }}%</span>
+            </div>
+            <div class="progress" style="height: 6px;">
+              <div class="progress-bar bg-primary" [style.width.%]="adminSummary?.system_statistics?.database_usage || 68"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="d-flex justify-content-between small mb-1">
+              <span class="text-muted"><i class="bi bi-lightning-charge text-success me-1"></i> API Response Time</span>
+              <span class="fw-bold text-success">{{ adminSummary?.system_statistics?.api_response_time || '38 ms' }}</span>
+            </div>
+            <div class="progress" style="height: 6px;">
+              <div class="progress-bar bg-success" style="width: 25%;"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="d-flex justify-content-between small mb-1">
+              <span class="text-muted"><i class="bi bi-person-workspace text-warning me-1"></i> Active Sessions</span>
+              <span class="fw-bold">{{ adminSummary?.system_statistics?.active_sessions || 248 }}</span>
+            </div>
+            <div class="progress" style="height: 6px;">
+              <div class="progress-bar bg-warning" style="width: 65%;"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="d-flex justify-content-between small mb-1">
+              <span class="text-muted"><i class="bi bi-hdd text-purple me-1" style="color: #8b5cf6;"></i> Storage Usage</span>
+              <span class="fw-bold">{{ adminSummary?.system_statistics?.storage_usage || 72 }}%</span>
+            </div>
+            <div class="progress" style="height: 6px;">
+              <div class="progress-bar" style="width: 72%; background-color: #8b5cf6;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart F: Registration Verification -->
+    <div class="col-lg-4 col-md-6">
+      <div class="card p-3 shadow-sm border-0 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-person-check text-primary me-1"></i> Registration Verification
+          </h6>
+        </div>
+        <app-chart
+          type="bar"
+          [data]="registrationVerificationChartData"
+          [options]="registrationVerificationChartOptions"
+          [height]="240"
+          [loading]="isLoadingSummary">
+        </app-chart>
+      </div>
+    </div>
+  </div>
+
+  <!-- PENDING USER REGISTRATIONS (Step 2, 3, 4, 5) -->
+  <div id="pending-users-section" class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-person-check-fill text-danger fs-5"></i>
+        <h5 class="mb-0 fw-bold">Pending User Registrations Awaiting Verification</h5>
+        <span class="badge bg-danger ms-2">{{ pendingUsers.length }}</span>
+      </div>
+    </div>
+    <!-- Immediate Inline Confirmation Banner directly above pending table -->
+    <div *ngIf="lastApprovedVendorName" class="alert alert-success mx-3 my-2 d-flex align-items-center gap-2 py-2 px-3 rounded-2 shadow-sm border-start border-4 border-success">
+      <i class="bi bi-check-circle-fill text-success fs-5"></i>
+      <div>
+        <strong class="d-block text-success small mb-0">Vendor Verification Confirmed</strong>
+        <span class="small text-muted"><strong>{{ lastApprovedVendorName }}</strong> was verified & approved. Initial reliability score is set to 0.0%.</span>
+      </div>
+      <button type="button" class="btn-close ms-auto small" (click)="lastApprovedVendorName = ''" style="font-size: 0.75rem;"></button>
+    </div>
+    <div class="card-body p-0">
+      <div *ngIf="isLoading" class="text-center py-4 text-muted">
+        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+        <span class="ms-2 small">Loading pending registrations...</span>
+      </div>
+
+      <div *ngIf="!isLoading && pendingUsers.length === 0" class="text-center py-4 text-muted">
+        <i class="bi bi-shield-check text-success fs-3 d-block mb-1"></i>
+        <span>All user registrations are verified. No pending approvals in queue.</span>
+      </div>
+
+      <div *ngIf="!isLoading && pendingUsers.length > 0" class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light text-muted small text-uppercase">
+            <tr>
+              <th class="ps-3">Applicant Name</th>
+              <th>Email</th>
+              <th>Company / Organization</th>
+              <th>Department</th>
+              <th>Requested Role</th>
+              <th>Registration Date</th>
+              <th class="text-end pe-3">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let u of pendingUsers">
+              <td class="ps-3 fw-bold">{{ u.full_name }}</td>
+              <td>{{ u.email }}</td>
+              <td>{{ u.company || 'N/A' }}</td>
+              <td><span class="badge bg-light text-dark border">{{ u.department || 'General' }}</span></td>
+              <td>
+                <span class="badge" [ngClass]="u.role === 'Vendor' ? 'bg-dark' : 'bg-primary'">{{ u.role }}</span>
+                <div *ngIf="u.role === 'Vendor' && u.vendor_category" class="mt-1">
+                  <span class="badge bg-primary-subtle text-primary border border-primary small" style="font-size: 0.72rem;">
+                    <i class="bi bi-tag-fill me-1"></i>{{ u.vendor_category }}
+                  </span>
+                </div>
+              </td>
+              <td class="small text-muted">{{ u.created_at | date:'mediumDate' }}</td>
+              <td class="text-end pe-3">
+                <div class="btn-group btn-group-sm">
+                  <button (click)="openApproveModal(u)" class="btn btn-success">
+                    <i class="bi bi-check-lg me-1"></i> Verify & Approve
+                  </button>
+                  <button (click)="openRejectModal(u)" class="btn btn-outline-danger">
+                    <i class="bi bi-x-lg"></i> Reject
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- System Users Management Table -->
+  <div id="active-users-section" class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-people-fill text-primary fs-5"></i>
+        <h5 class="mb-0 fw-bold">Active System Users Directory</h5>
+      </div>
+      <div class="d-flex gap-2 flex-wrap">
+        <input [(ngModel)]="userSearchQuery" (input)="applyUserFilter()" type="text" class="form-control form-control-sm" placeholder="Search user..." style="width: 220px;">
+        <select [(ngModel)]="userRoleFilter" (change)="applyUserFilter()" class="form-select form-select-sm" style="width: 180px;">
+          <option value="All">All Roles</option>
+          <option *ngFor="let r of availableRoles" [value]="r">{{ r }}</option>
+        </select>
+      </div>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light text-muted small text-uppercase">
+            <tr>
+              <th class="ps-3">Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Department / Company</th>
+              <th>Status</th>
+              <th class="text-end pe-3">Account Control</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let u of filteredUsers">
+              <td class="ps-3 fw-bold">{{ u.full_name }}</td>
+              <td>{{ u.email }}</td>
+              <td>
+                <span class="badge" [ngClass]="{
+                  'bg-danger': u.role === 'Administrator',
+                  'bg-primary': u.role === 'Procurement Manager',
+                  'bg-success': u.role === 'Finance Officer',
+                  'bg-warning text-dark': u.role === 'Supply Chain Manager',
+                  'bg-info text-dark': u.role === 'Requesting User' || u.role === 'Department User',
+                  'bg-dark': u.role === 'Vendor',
+                  'bg-secondary': u.role === 'Auditor'
+                }">{{ u.role }}</span>
+              </td>
+              <td class="small">{{ u.department || u.company || 'Enterprise' }}</td>
+              <td>
+                <span class="badge" [ngClass]="u.is_active ? 'bg-success' : 'bg-secondary'">
+                  {{ u.is_active ? 'Active' : 'Deactivated' }}
+                </span>
+              </td>
+              <td class="text-end pe-3">
+                <button (click)="toggleActive(u)" class="btn btn-sm" [ngClass]="u.is_active ? 'btn-outline-danger' : 'btn-outline-success'">
+                  <i class="bi" [ngClass]="u.is_active ? 'bi-person-x' : 'bi-person-check'"></i>
+                  {{ u.is_active ? 'Deactivate' : 'Activate' }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Immutable Audit Trail Table -->
+  <div id="audit-trail-section" class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-clock-history text-dark fs-5"></i>
+        <h5 class="mb-0 fw-bold">Recent System-Wide Audit Activity</h5>
+      </div>
+      <span class="badge bg-light text-dark border">Immutable Ledger</span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle mb-0">
+          <thead class="table-light text-muted small text-uppercase">
+            <tr>
+              <th class="ps-3">Timestamp</th>
+              <th>Action</th>
+              <th>User</th>
+              <th>Role</th>
+              <th>Entity</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let log of recentAuditLogs">
+              <td class="ps-3 small text-muted">{{ log.created_at | date:'short' }}</td>
+              <td><span class="badge bg-light text-dark border font-monospace">{{ log.action }}</span></td>
+              <td class="fw-semibold small">{{ log.user_name || log.user?.email || 'System' }}</td>
+              <td><span class="badge bg-secondary">{{ log.user_role || 'Admin' }}</span></td>
+              <td class="small">{{ log.entity_type }} #{{ log.entity_id }}</td>
+              <td class="small text-muted">{{ log.details }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Strict Role Boundaries Banner -->
+  <div class="card bg-light border-0 p-3 shadow-sm rounded-3">
+    <div class="d-flex align-items-center gap-3">
+      <div class="text-danger fs-3"><i class="bi bi-shield-x"></i></div>
+      <div>
+        <h6 class="fw-bold mb-1 text-dark">Strict Role Boundary: Control & Administration Role</h6>
+        <p class="small text-muted mb-0">
+          Admin controls user verification, activation, role assignment, and system governance. Admin <strong>MUST NOT</strong> create POs, issue POs, select vendors, approve payments on behalf of Finance, or confirm deliveries. Those operational actions are strictly isolated to their respective roles.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Approve User Modal -->
+  <div *ngIf="showApprovalModal && selectedUserForApproval" class="modal-backdrop-custom">
+    <div class="modal-card-custom shadow-lg">
+      <div class="modal-header-custom">
+        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-person-check text-success me-2"></i> Verify & Approve User</h5>
+        <button type="button" class="btn-close" (click)="closeApproveModal()"></button>
+      </div>
+      <div class="modal-body-custom">
+        <div class="p-3 bg-light rounded-3 mb-3">
+          <div class="fw-bold">{{ selectedUserForApproval.full_name }}</div>
+          <div class="small text-muted">{{ selectedUserForApproval.email }}</div>
+          <div class="small text-muted">Company: {{ selectedUserForApproval.company || 'N/A' }} | Dept: {{ selectedUserForApproval.department || 'N/A' }}</div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Assign / Confirm Role *</label>
+          <select [(ngModel)]="assignedRole" class="form-select">
+            <option *ngFor="let r of availableRoles" [value]="r">{{ r }}</option>
+          </select>
+          <div class="form-text small">Admin can reassign or confirm the role based on verified credentials.</div>
+        </div>
+
+        <!-- Vendor Category Selection (When Approving Vendor) -->
+        <div class="mb-3" *ngIf="assignedRole === 'Vendor'">
+          <label class="form-label small fw-bold text-dark">Confirm / Assign Vendor Category (6 Categories) *</label>
+          <select [(ngModel)]="assignedVendorCategory" class="form-select border-primary">
+            <option *ngFor="let c of vendorCategories" [value]="c">{{ c }}</option>
+          </select>
+          <div class="form-text small text-primary">
+            <i class="bi bi-tag"></i> Mandatory vendor category determining organizational procurement routing and SLA criteria.
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Verification Notes</label>
+          <textarea [(ngModel)]="approvalNotes" rows="2" class="form-control" placeholder="Internal verification notes..."></textarea>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button type="button" class="btn btn-outline-secondary" (click)="closeApproveModal()" [disabled]="isApproving">Cancel</button>
+          <button type="button" class="btn btn-success px-4" (click)="confirmApproveUser()" [disabled]="isApproving">
+            <span *ngIf="isApproving" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+            <i *ngIf="!isApproving" class="bi bi-check-lg me-1"></i>
+            {{ isApproving ? 'Approving...' : 'Approve & Activate' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reject User Modal -->
+  <div *ngIf="showRejectionModal && selectedUserForRejection" class="modal-backdrop-custom">
+    <div class="modal-card-custom shadow-lg">
+      <div class="modal-header-custom">
+        <h5 class="fw-bold mb-0 text-danger"><i class="bi bi-person-x text-danger me-2"></i> Reject User Registration</h5>
+        <button type="button" class="btn-close" (click)="closeRejectModal()"></button>
+      </div>
+      <div class="modal-body-custom">
+        <p class="text-muted small">Are you sure you want to reject registration for <strong>{{ selectedUserForRejection.full_name }}</strong> ({{ selectedUserForRejection.email }})?</p>
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Rejection Reason *</label>
+          <textarea [(ngModel)]="rejectionReason" rows="3" class="form-control" placeholder="Enter clear rejection reason..." required></textarea>
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button type="button" class="btn btn-outline-secondary" (click)="closeRejectModal()">Cancel</button>
+          <button type="button" class="btn btn-danger px-4" (click)="confirmRejectUser()">
+            Confirm Rejection
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

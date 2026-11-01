@@ -1,0 +1,393 @@
+<div class="dashboard-container">
+  <!-- Top Role Header -->
+  <div class="dashboard-header d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+      <div class="d-flex align-items-center gap-2">
+        <h2 class="mb-0 fw-bold text-dark">Department Requisitions</h2>
+        <span class="badge bg-primary px-3 py-2 rounded-pill">Requesting User / Department User</span>
+      </div>
+      <p class="text-muted mt-1 mb-0">Identify organizational requirements, create Purchase Requisitions (PR), and track fulfillment progression.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button (click)="openCreateModal()" class="btn btn-primary d-flex align-items-center gap-2 shadow-sm">
+        <i class="bi bi-plus-circle-fill"></i>
+        <span>Create Purchase Requisition</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Action Alert -->
+  <div *ngIf="actionMessage" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i> {{ actionMessage }}
+    <button type="button" class="btn-close" (click)="actionMessage = ''"></button>
+  </div>
+
+  <!-- KPI Metric Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div (click)="filterAndScroll('All')"
+           class="kpi-card shadow-sm border-start border-4 border-primary clickable-kpi"
+           title="Click to view all purchase requisitions">
+        <div class="kpi-icon text-primary"><i class="bi bi-file-earmark-text"></i></div>
+        <div class="kpi-content">
+          <span class="kpi-title">Total Requests</span>
+          <h3 class="kpi-value">{{ requisitions.length }}</h3>
+          <span class="kpi-sub">Submitted by my department</span>
+          <div class="kpi-click-hint text-primary"><i class="bi bi-chevron-down"></i> View All</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div (click)="filterAndScroll('SUBMITTED')"
+           class="kpi-card shadow-sm border-start border-4 border-warning clickable-kpi"
+           title="Click to filter by Pending Evaluation">
+        <div class="kpi-icon text-warning"><i class="bi bi-hourglass-split"></i></div>
+        <div class="kpi-content">
+          <span class="kpi-title">Pending Evaluation</span>
+          <h3 class="kpi-value">{{ getPendingCount() }}</h3>
+          <span class="kpi-sub">Awaiting Procurement review</span>
+          <div class="kpi-click-hint text-warning"><i class="bi bi-chevron-down"></i> Filter Pending</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div (click)="filterAndScroll('READY_FOR_PO')"
+           class="kpi-card shadow-sm border-start border-4 border-success clickable-kpi"
+           title="Click to filter by Approved / In Progress">
+        <div class="kpi-icon text-success"><i class="bi bi-check2-circle"></i></div>
+        <div class="kpi-content">
+          <span class="kpi-title">Approved / In Progress</span>
+          <h3 class="kpi-value">{{ getApprovedCount() }}</h3>
+          <span class="kpi-sub">Approved & moving to PO</span>
+          <div class="kpi-click-hint text-success"><i class="bi bi-chevron-down"></i> Filter Approved</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div (click)="filterAndScroll('REJECTED')"
+           class="kpi-card shadow-sm border-start border-4 border-danger clickable-kpi"
+           title="Click to filter by Rejected Requests">
+        <div class="kpi-icon text-danger"><i class="bi bi-x-circle"></i></div>
+        <div class="kpi-content">
+          <span class="kpi-title">Rejected Requests</span>
+          <h3 class="kpi-value">{{ getRejectedCount() }}</h3>
+          <span class="kpi-sub">Returned for clarification</span>
+          <div class="kpi-click-hint text-danger"><i class="bi bi-chevron-down"></i> Filter Rejected</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Requisitions Table Card -->
+  <div id="requisitions-table-section" class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-list-check text-primary fs-5"></i>
+        <h5 class="mb-0 fw-bold">My Submitted Purchase Requisitions</h5>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <label class="small text-muted mb-0">Status:</label>
+        <select [(ngModel)]="statusFilter" (change)="loadRequisitions()" class="form-select form-select-sm" style="width: 170px;">
+          <option value="All">All Statuses</option>
+          <option value="SUBMITTED">SUBMITTED</option>
+          <option value="VENDOR_SELECTED">VENDOR_SELECTED</option>
+          <option value="READY_FOR_PO">READY_FOR_PO</option>
+          <option value="PO_CREATED">PO_CREATED</option>
+          <option value="COMPLETED">COMPLETED</option>
+        </select>
+        <button (click)="loadRequisitions()" class="btn btn-outline-secondary btn-sm" title="Refresh">
+          <i class="bi bi-arrow-clockwise"></i>
+        </button>
+      </div>
+    </div>
+    <div class="card-body p-0">
+      <div *ngIf="isLoading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <div class="mt-2 text-muted">Loading department requisitions...</div>
+      </div>
+
+      <div *ngIf="!isLoading && requisitions.length === 0" class="empty-state text-center py-5">
+        <i class="bi bi-inbox text-muted display-4"></i>
+        <h5 class="mt-3 fw-bold">No Purchase Requisitions Found</h5>
+        <p class="text-muted">Click "Create Purchase Requisition" to submit a new requirement.</p>
+        <button (click)="openCreateModal()" class="btn btn-primary btn-sm mt-2">
+          <i class="bi bi-plus-lg me-1"></i> New Requirement
+        </button>
+      </div>
+
+      <div *ngIf="!isLoading && requisitions.length > 0" class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light text-muted small text-uppercase">
+            <tr>
+              <th class="ps-3">Request ID</th>
+              <th>Department</th>
+              <th>Required Material / Product</th>
+              <th>Quantity</th>
+              <th>Priority</th>
+              <th>Est. Budget</th>
+              <th>Status Pipeline</th>
+              <th>Submitted</th>
+              <th class="text-end pe-3">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let pr of requisitions">
+              <td class="ps-3 fw-bold text-primary">{{ pr.request_number }}</td>
+              <td><span class="badge bg-light text-dark border">{{ pr.department }}</span></td>
+              <td>
+                <div class="fw-bold">{{ pr.title }}</div>
+                <div class="small text-muted text-truncate" style="max-width: 260px;">{{ pr.description }}</div>
+              </td>
+              <td class="fw-semibold">{{ pr.quantity }}</td>
+              <td>
+                <span class="badge" [ngClass]="{
+                  'bg-danger': pr.priority === 'Urgent',
+                  'bg-warning text-dark': pr.priority === 'High',
+                  'bg-info text-dark': pr.priority === 'Medium',
+                  'bg-secondary': pr.priority === 'Low'
+                }">{{ pr.priority }}</span>
+              </td>
+              <td class="fw-semibold text-dark">${{ pr.estimated_budget | number:'1.2-2' }}</td>
+              <td>
+                <span class="status-pill" [ngClass]="getStatusBadgeClass(pr.status)">
+                  {{ pr.status }}
+                </span>
+              </td>
+              <td class="small text-muted">{{ pr.created_at | date:'mediumDate' }}</td>
+              <td class="text-end pe-3">
+                <button (click)="viewDetails(pr)" class="btn btn-outline-primary btn-sm">
+                  <i class="bi bi-eye"></i> Track
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lifecycle Stage Information Banner (Strict RBAC Principle) -->
+  <div class="card bg-light border-0 p-3 shadow-sm rounded-3">
+    <div class="d-flex align-items-center gap-3">
+      <div class="text-primary fs-3"><i class="bi bi-shield-lock-fill"></i></div>
+      <div>
+        <h6 class="fw-bold mb-1 text-dark">Strict Role Boundary: Requirement Stage Only</h6>
+        <p class="small text-muted mb-0">
+          As a <strong>Requesting User</strong>, you identify and submit what the organization requires. You cannot select vendors, approve budgets, create POs, issue POs, or disburse payments. The request automatically routes to the Procurement Manager once submitted.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Requisition Modal -->
+  <div *ngIf="showCreateModal" class="modal-backdrop-custom">
+    <div class="modal-card-custom shadow-lg">
+      <div class="modal-header-custom">
+        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-file-earmark-plus text-primary me-2"></i> Create Purchase Requisition (PR)</h5>
+        <button type="button" class="btn-close" (click)="closeCreateModal()"></button>
+      </div>
+      <div class="modal-body-custom">
+        <form (ngSubmit)="submitRequisition()">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label small fw-bold">Material / Vendor Category</label>
+              <select [(ngModel)]="newPR.category" name="category" class="form-select">
+                <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-bold">Required Material / Product Name *</label>
+              <input [(ngModel)]="newPR.product_name" name="product_name" type="text" class="form-control" placeholder="e.g. ThinkPad Laptops or Fasteners" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-bold">Quantity *</label>
+              <input [(ngModel)]="newPR.quantity" (ngModelChange)="onRequestPRQuantityChange()" name="quantity" type="number" class="form-control" min="1" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-bold">Required Delivery Date</label>
+              <input [(ngModel)]="newPR.required_date" name="required_date" type="date" class="form-control">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-bold">Priority *</label>
+              <select [(ngModel)]="newPR.priority" name="priority" class="form-select">
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Urgent">Urgent</option>
+              </select>
+            </div>
+
+            <!-- Budget Assignment (Per-Unit & Total) -->
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Budget Per Unit ($ / Unit) *</label>
+              <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input [(ngModel)]="newPR.unit_budget" (ngModelChange)="onRequestPRUnitBudgetChange()" name="unit_budget" type="number" class="form-control" min="0" placeholder="0.00" step="any">
+              </div>
+              <div class="form-text small text-muted">Assign budget per unit/item</div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Total Estimated Budget ($) *</label>
+              <div class="input-group">
+                <span class="input-group-text fw-bold text-success">$</span>
+                <input [(ngModel)]="newPR.estimated_budget" (ngModelChange)="onRequestPRTotalBudgetChange()" name="estimated_budget" type="number" class="form-control fw-bold text-success" min="0" placeholder="0.00" step="any">
+              </div>
+              <div class="form-text small text-muted">Auto-calculated from Quantity &times; Unit Budget</div>
+            </div>
+
+            <!-- Live Calculation Preview -->
+            <div class="col-12">
+              <div class="p-2 bg-light rounded border text-muted small d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-calculator me-1 text-primary"></i> Budget Calculation:</span>
+                <span class="fw-semibold text-dark">
+                  {{ newPR.quantity || 1 }} units &times; ${{ (newPR.unit_budget || 0) | number:'1.2-2' }} = <strong class="text-success">${{ (newPR.estimated_budget || 0) | number:'1.2-2' }} Total</strong>
+                </span>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-bold">Reason / Business Justification *</label>
+              <textarea [(ngModel)]="newPR.reason" name="reason" rows="3" class="form-control" placeholder="Explain why this procurement is needed for operations..." required></textarea>
+            </div>
+          </div>
+          <div class="mt-4 d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-outline-secondary" (click)="closeCreateModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary px-4" [disabled]="isSubmitting">
+              <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-1"></span>
+              <span>Submit PR to Procurement</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Requisition Detail & Lifecycle Stepper Modal -->
+  <div *ngIf="showDetailModal && selectedRequisition" class="modal-backdrop-custom">
+    <div class="modal-card-custom shadow-lg modal-card-lg">
+      <div class="modal-header-custom">
+        <div>
+          <h5 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-clock-history text-primary me-2"></i>
+            {{ selectedRequisition.request_number }}: {{ selectedRequisition.title }}
+          </h5>
+          <span class="small text-muted">{{ selectedRequisition.department }} | Submitted on {{ selectedRequisition.created_at | date:'medium' }}</span>
+        </div>
+        <button type="button" class="btn-close" (click)="closeDetailModal()"></button>
+      </div>
+      <div class="modal-body-custom">
+        <!-- 7-Step Lifecycle Progress Stepper -->
+        <div class="stepper-wrapper mb-4">
+          <div class="stepper-step" [ngClass]="{'active': getStepProgress(selectedRequisition.status) >= 1, 'current': getStepProgress(selectedRequisition.status) === 1}">
+            <div class="step-circle"><i class="bi bi-file-earmark-text"></i></div>
+            <div class="step-label">1. PR Submitted</div>
+          </div>
+          <div class="stepper-line" [ngClass]="{'completed': getStepProgress(selectedRequisition.status) >= 2}"></div>
+          <div class="stepper-step" [ngClass]="{'active': getStepProgress(selectedRequisition.status) >= 2, 'current': getStepProgress(selectedRequisition.status) === 2}">
+            <div class="step-circle"><i class="bi bi-building"></i></div>
+            <div class="step-label">2. Vendor Selected</div>
+          </div>
+          <div class="stepper-line" [ngClass]="{'completed': getStepProgress(selectedRequisition.status) >= 3}"></div>
+          <div class="stepper-step" [ngClass]="{'active': getStepProgress(selectedRequisition.status) >= 3, 'current': getStepProgress(selectedRequisition.status) === 3}">
+            <div class="step-circle"><i class="bi bi-cash-stack"></i></div>
+            <div class="step-label">3. Finance Approved</div>
+          </div>
+          <div class="stepper-line" [ngClass]="{'completed': getStepProgress(selectedRequisition.status) >= 4}"></div>
+          <div class="stepper-step" [ngClass]="{'active': getStepProgress(selectedRequisition.status) >= 4, 'current': getStepProgress(selectedRequisition.status) === 4}">
+            <div class="step-circle"><i class="bi bi-receipt"></i></div>
+            <div class="step-label">4. PO Ordered</div>
+          </div>
+          <div class="stepper-line" [ngClass]="{'completed': getStepProgress(selectedRequisition.status) >= 5}"></div>
+          <div class="stepper-step" [ngClass]="{'active': getStepProgress(selectedRequisition.status) >= 5, 'current': getStepProgress(selectedRequisition.status) === 5}">
+            <div class="step-circle"><i class="bi bi-truck"></i></div>
+            <div class="step-label">5. In Transit</div>
+          </div>
+          <div class="stepper-line" [ngClass]="{'completed': getStepProgress(selectedRequisition.status) >= 6}"></div>
+          <div class="stepper-step" [ngClass]="{'active': getStepProgress(selectedRequisition.status) >= 6, 'current': getStepProgress(selectedRequisition.status) === 6}">
+            <div class="step-circle"><i class="bi bi-box-seam"></i></div>
+            <div class="step-label">6. Delivered</div>
+          </div>
+          <div class="stepper-line" [ngClass]="{'completed': getStepProgress(selectedRequisition.status) >= 7}"></div>
+          <div class="stepper-step" [ngClass]="{'active': getStepProgress(selectedRequisition.status) >= 7, 'current': getStepProgress(selectedRequisition.status) === 7}">
+            <div class="step-circle"><i class="bi bi-check-circle"></i></div>
+            <div class="step-label">7. Completed & Paid</div>
+          </div>
+        </div>
+
+        <!-- Details Grid -->
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="p-3 bg-light rounded-3 h-100">
+              <h6 class="fw-bold text-dark mb-2">Requirement Specifications</h6>
+              <div class="small mb-1"><strong>Department:</strong> {{ selectedRequisition.department }}</div>
+              <div class="small mb-1"><strong>Item / Service:</strong> {{ selectedRequisition.title }}</div>
+              <div class="small mb-1"><strong>Quantity:</strong> {{ selectedRequisition.quantity }} units</div>
+              <div class="small mb-1"><strong>Est. Budget:</strong> ${{ selectedRequisition.estimated_budget | number:'1.2-2' }}</div>
+              <div class="small mb-1"><strong>Category:</strong> <span class="badge bg-secondary">{{ selectedRequisition.category }}</span></div>
+              <div class="small mb-1"><strong>Priority:</strong> {{ selectedRequisition.priority }}</div>
+              <div class="small mb-1"><strong>Status:</strong> <span class="badge" [ngClass]="getStatusBadgeClass(selectedRequisition.status)">{{ selectedRequisition.status }}</span></div>
+              <div class="small mt-2" *ngIf="selectedRequisition.description"><strong>Reason:</strong> {{ selectedRequisition.description }}</div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="p-3 bg-light rounded-3 h-100">
+              <h6 class="fw-bold text-dark mb-2">Fulfillment Trail</h6>
+              <div *ngIf="selectedRequisition.selected_vendor" class="small mb-2 p-2 bg-white rounded border">
+                <strong><i class="bi bi-building me-1"></i> Supplier Partner:</strong> {{ selectedRequisition.selected_vendor.name }}
+                <div class="text-muted" *ngIf="selectedRequisition.selected_vendor.quotation">Quoted Amount: ${{ selectedRequisition.selected_vendor.quotation | number:'1.2-2' }}</div>
+              </div>
+              <div *ngIf="!selectedRequisition.selected_vendor" class="small text-muted mb-2">
+                <i class="bi bi-hourglass me-1"></i> Awaiting Procurement Manager vendor evaluation.
+              </div>
+
+              <div *ngIf="selectedRequisition.financial_approval" class="small mb-2 p-2 bg-white rounded border">
+                <strong><i class="bi bi-cash-stack me-1"></i> Finance Status:</strong> <span class="badge bg-success">{{ selectedRequisition.financial_approval.status }}</span>
+                <div class="text-muted" *ngIf="selectedRequisition.financial_approval.budget_allocated">Allocated Budget: ${{ selectedRequisition.financial_approval.budget_allocated | number:'1.2-2' }}</div>
+              </div>
+
+              <div *ngIf="selectedRequisition.purchase_order" class="small p-2 bg-white rounded border">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <strong><i class="bi bi-receipt me-1"></i> Purchase Order: {{ selectedRequisition.purchase_order.po_number }}</strong>
+                  <span class="badge bg-info">{{ selectedRequisition.purchase_order.status }}</span>
+                </div>
+                <div class="text-muted" *ngIf="selectedRequisition.purchase_order.total_amount">
+                  Total PO Amount: ${{ selectedRequisition.purchase_order.total_amount | number:'1.2-2' }}
+                </div>
+
+                <div *ngIf="selectedRequisition.purchase_order.carrier || selectedRequisition.purchase_order.tracking_number" class="mt-2 pt-2 border-top">
+                  <div>Carrier: <strong>{{ selectedRequisition.purchase_order.carrier || 'Freight Line' }}</strong></div>
+                  <div *ngIf="selectedRequisition.purchase_order.tracking_number">
+                    Tracking #: <span class="font-monospace text-primary fw-bold">{{ selectedRequisition.purchase_order.tracking_number }}</span>
+                  </div>
+                  <div *ngIf="selectedRequisition.purchase_order.dispatch_date" class="text-muted small">
+                    Dispatched: {{ selectedRequisition.purchase_order.dispatch_date }}
+                  </div>
+                </div>
+
+                <div *ngIf="selectedRequisition.purchase_order.delivery_status || selectedRequisition.purchase_order.actual_delivery_date" class="mt-2 pt-2 border-top">
+                  <div>
+                    <span *ngIf="(selectedRequisition.purchase_order.delay_days || 0) > 0" class="badge bg-danger ms-1">+{{ selectedRequisition.purchase_order.delay_days }}d delay</span>
+                    <span *ngIf="selectedRequisition.purchase_order.delay_days === 0" class="badge bg-success ms-1">On-Time</span>
+                  </div>
+                </div>
+
+                <div *ngIf="selectedRequisition.purchase_order.invoice_number" class="mt-2 pt-2 border-top">
+                  <div>Invoice: <strong>{{ selectedRequisition.purchase_order.invoice_number }}</strong></div>
+                  <div>
+                    Payment: <span class="badge" [ngClass]="selectedRequisition.purchase_order.is_paid ? 'bg-success' : 'bg-warning text-dark'">
+                      {{ selectedRequisition.purchase_order.invoice_status || (selectedRequisition.purchase_order.is_paid ? 'PAID' : 'Pending') }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 text-end">
+          <button class="btn btn-secondary btn-sm" (click)="closeDetailModal()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

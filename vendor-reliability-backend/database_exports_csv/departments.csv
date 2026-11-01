@@ -1,0 +1,8 @@
+id,code,name,description,annual_budget,remaining_budget,is_active,created_at
+1,IT,Information Technology,"Enterprise IT, Cloud Infrastructure, and End-User Computing",750000.0,637500.0,1,2026-09-21 17:45:37.891363
+2,MFG,Manufacturing & Production,"Assembly plants, precision machining, and industrial raw materials",2500000.0,2125000.0,1,2026-09-21 17:45:37.891369
+3,SCM,Supply Chain & Logistics,"Freight routing, warehousing, and inbound transportation",1200000.0,1020000.0,1,2026-09-21 17:45:37.891372
+4,FIN,Corporate Finance,"Treasury, compliance, accounts payable, and auditing",500000.0,425000.0,1,2026-09-21 17:45:37.891373
+5,FAC,Operations & Facilities,"Facility maintenance, plant utilities, and safety equipment",600000.0,510000.0,1,2026-09-21 17:45:37.891375
+6,HR,Human Resources,"Talent onboarding, workplace tools, and corporate services",350000.0,297500.0,1,2026-09-21 17:45:37.891377
+7,RND,Research & Development,"Product prototyping, laboratory reagents, and electronic sensors",900000.0,765000.0,1,2026-09-21 17:45:37.891378

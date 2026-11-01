@@ -1,0 +1,70 @@
+id,vendor_id,risk_level,risk_score,delay_risk_factor,fulfillment_risk_factor,quality_risk_factor,risk_reasons,assessment_notes,evaluated_at
+1,1,Low,1.2,0.0,0.0,1.2,"[""Consistent on-time delivery record"", ""Compliant fulfillment standard""]",Consistently high delivery reliability and minimal fulfillment variance.,2026-10-04 06:05:42.970164
+2,2,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.024392
+3,3,High,17.8,16.0,0.0,1.8,"[""Recent delivery delays (1 delayed shipment)"", ""Increasing delay frequency (average 2.0 days SLA delay)""]","Critical risk: frequent delays, low fulfillment rate, or high delivery failure variance.",2026-10-04 06:05:43.030991
+4,4,High,55.3,40.0,15.0,0.3,"[""Recent delivery delays (1 delayed shipment)"", ""Increasing delay frequency (average 5.0 days SLA delay)"", ""Multiple partial deliveries (1 partial shipment)"", ""Order fulfillment shortfall (70.0% units delivered)""]","Critical risk: frequent delays, low fulfillment rate, or high delivery failure variance.",2026-10-04 06:05:43.037537
+5,5,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.043025
+6,6,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.049296
+7,7,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.056622
+8,8,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.065746
+9,9,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.073627
+10,10,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.082325
+11,11,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.089489
+12,12,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.097185
+13,13,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.104857
+14,14,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.110403
+15,15,Low,6.0,0.0,0.0,6.0,"[""Consistent on-time delivery record"", ""Compliant fulfillment standard""]",Consistently high delivery reliability and minimal fulfillment variance.,2026-10-04 06:05:43.118013
+16,16,Medium,2.5,1.9,0.1,0.6,"[""Recent delivery delays (6 delayed shipments)"", ""Multiple partial deliveries (1 partial shipment)""]",Moderate reliability with occasional delivery delays or slight lead-time variance.,2026-10-04 06:05:43.124954
+17,17,Medium,7.9,3.6,0.8,3.6,"[""Recent delivery delays (6 delayed shipments)"", ""Multiple partial deliveries (3 partial shipments)""]",Moderate reliability with occasional delivery delays or slight lead-time variance.,2026-10-04 06:05:43.133201
+18,18,High,15.4,6.2,1.4,7.8,"[""Recent delivery delays (9 delayed shipments)"", ""Multiple partial deliveries (5 partial shipments)"", ""Quality rating variance (3.7/5.0)""]","Critical risk: frequent delays, low fulfillment rate, or high delivery failure variance.",2026-10-04 06:05:43.139725
+19,19,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.147809
+20,20,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.156921
+21,21,High,9.2,8.0,0.0,1.2,"[""Recent delivery delays (1 delayed shipment)""]","Critical risk: frequent delays, low fulfillment rate, or high delivery failure variance.",2026-10-04 06:05:43.166318
+22,22,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.175421
+23,23,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.184089
+24,24,High,8.0,2.0,0.0,6.0,"[""Recent delivery delays (1 delayed shipment)""]","Critical risk: frequent delays, low fulfillment rate, or high delivery failure variance.",2026-10-04 06:05:43.192473
+25,25,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.201169
+26,26,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.208792
+27,27,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.217744
+28,28,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.227589
+29,29,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.235767
+30,30,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.245051
+31,31,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.251602
+32,32,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.257440
+33,33,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.264077
+34,34,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.271343
+35,35,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.276904
+36,36,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.283289
+37,37,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.288955
+38,38,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.294592
+39,39,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.302774
+40,40,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.328196
+41,41,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.341804
+42,42,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.352890
+43,43,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.361839
+44,44,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.371648
+45,45,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.381083
+46,46,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.391385
+47,47,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.402883
+48,48,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.412583
+49,49,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.420896
+50,50,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.430127
+51,51,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.438491
+52,52,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.448202
+53,53,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.457981
+54,54,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.465827
+55,55,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.473093
+56,56,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.486253
+57,57,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.511020
+58,58,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.521761
+59,59,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.530747
+60,60,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.539950
+61,61,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.549359
+62,62,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.561302
+63,63,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.574462
+64,64,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.585011
+65,65,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.596024
+66,66,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.606581
+67,67,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.616264
+68,68,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.626124
+69,69,Low,0.0,0.0,0.0,0.0,"[""No historical delivery activity yet""]",Newly registered vendor. No completed orders or deliveries yet (Reliability score: 0).,2026-10-04 06:05:43.635581

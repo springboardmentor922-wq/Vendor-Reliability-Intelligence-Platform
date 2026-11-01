@@ -1,0 +1,236 @@
+<div class="auth-wrapper">
+  <div class="auth-card-wide shadow-lg">
+    <div class="card-header-iq">
+      <div class="d-flex align-items-center gap-3">
+        <div class="brand-logo-small">
+          <i class="bi bi-person-plus-fill"></i>
+        </div>
+        <div>
+          <h2 class="m-0 fw-bold fs-4">{{ regType === 'vendor' ? 'Register New Vendor' : 'Create Staff Account' }}</h2>
+          <p class="text-muted m-0 small">
+            {{ regType === 'vendor' ? 'Register vendor profile with designated category' : 'Register for authorized platform access' }}
+          </p>
+        </div>
+      </div>
+      <a routerLink="/login" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-box-arrow-in-right"></i> Back to Login
+      </a>
+    </div>
+
+    <div class="card-body-iq">
+      <!-- Registration Mode Toggle: Vendor vs Enterprise Staff -->
+      <div class="reg-type-toggle mb-4">
+        <button
+          type="button"
+          class="reg-type-btn"
+          [class.active]="regType === 'vendor'"
+          (click)="setRegType('vendor')"
+        >
+          <i class="bi bi-building"></i>
+          <span>Vendor Registration</span>
+        </button>
+        <button
+          type="button"
+          class="reg-type-btn"
+          [class.active]="regType === 'staff'"
+          (click)="setRegType('staff')"
+        >
+          <i class="bi bi-people"></i>
+          <span>Enterprise Staff User</span>
+        </button>
+      </div>
+
+      <div *ngIf="errorMessage" class="alert alert-danger py-2 d-flex align-items-center gap-2 small">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <div *ngIf="successMessage" class="alert alert-success py-2 d-flex align-items-center gap-2 small">
+        <i class="bi bi-check-circle-fill"></i>
+        <span>{{ successMessage }}</span>
+      </div>
+
+      <!-- VENDOR REGISTRATION: ONLY Name, Email, Category Selection, Phone Number, Password -->
+      <form *ngIf="regType === 'vendor'" (ngSubmit)="register()" class="row g-3">
+        <!-- 1. Name -->
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Name *</label>
+          <input
+            type="text"
+            class="form-control iq-input-simple"
+            [(ngModel)]="full_name"
+            name="full_name"
+            placeholder="e.g. Acme Industrial Corp / John Doe"
+            required
+          />
+        </div>
+
+        <!-- 2. Email -->
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Email *</label>
+          <input
+            type="email"
+            class="form-control iq-input-simple"
+            [(ngModel)]="email"
+            name="email"
+            placeholder="e.g. contact@vendor.com"
+            required
+          />
+        </div>
+
+        <!-- 3. Category Selection (Mandatory 6 Categories) -->
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Category Selection *</label>
+          <select class="form-select iq-input-simple" [(ngModel)]="vendor_category" name="vendor_category" required>
+            <option *ngFor="let cat of vendorCategories" [value]="cat">{{ cat }}</option>
+          </select>
+          <div class="form-text small text-muted">Select 1 of the 6 authorized vendor categories.</div>
+        </div>
+
+        <!-- 4. Phone Number -->
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Phone Number *</label>
+          <input
+            type="tel"
+            class="form-control iq-input-simple"
+            [(ngModel)]="phone"
+            name="phone"
+            placeholder="e.g. +1 (555) 234-5678"
+            required
+          />
+        </div>
+
+        <!-- 5. Password -->
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Password *</label>
+          <input
+            type="password"
+            class="form-control iq-input-simple"
+            [(ngModel)]="password"
+            name="password"
+            placeholder="Minimum 6 characters"
+            required
+          />
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Confirm Password *</label>
+          <input
+            type="password"
+            class="form-control iq-input-simple"
+            [(ngModel)]="confirmPassword"
+            name="confirmPassword"
+            placeholder="Re-enter password"
+            required
+          />
+        </div>
+
+        <div class="col-12 mt-4">
+          <button type="submit" class="btn btn-primary w-100 py-2 fw-bold" [disabled]="isLoading">
+            <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+            {{ isLoading ? 'Submitting Registration...' : 'Register Vendor' }}
+          </button>
+        </div>
+
+        <div class="col-12 text-center">
+          <span class="text-muted small">Already have an account? </span>
+          <a routerLink="/login" class="fw-semibold text-primary small text-decoration-none">Sign In</a>
+        </div>
+      </form>
+
+      <!-- STAFF REGISTRATION FORM -->
+      <form *ngIf="regType === 'staff'" (ngSubmit)="register()" class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Full Name *</label>
+          <input
+            type="text"
+            class="form-control iq-input-simple"
+            [(ngModel)]="full_name"
+            name="staff_name"
+            placeholder="e.g. Sarah Jenkins"
+            required
+          />
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Corporate Email *</label>
+          <input
+            type="email"
+            class="form-control iq-input-simple"
+            [(ngModel)]="email"
+            name="staff_email"
+            placeholder="e.g. sarah.j@enterprise.com"
+            required
+          />
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Designated System Role *</label>
+          <select class="form-select iq-input-simple" [(ngModel)]="role" name="staff_role" required>
+            <option *ngFor="let r of staffRoles" [value]="r">{{ r }}</option>
+          </select>
+          <div class="form-text small text-muted">Controls RBAC permissions across all modules.</div>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Company / Department</label>
+          <input
+            type="text"
+            class="form-control iq-input-simple"
+            [(ngModel)]="company"
+            name="staff_dept"
+            placeholder="e.g. Global Procurement Org"
+          />
+        </div>
+
+        <div class="col-md-12">
+          <label class="form-label fw-semibold">Contact Phone</label>
+          <input
+            type="tel"
+            class="form-control iq-input-simple"
+            [(ngModel)]="phone"
+            name="staff_phone"
+            placeholder="e.g. +1 (555) 234-5678"
+          />
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Password *</label>
+          <input
+            type="password"
+            class="form-control iq-input-simple"
+            [(ngModel)]="password"
+            name="staff_password"
+            placeholder="Minimum 6 characters"
+            required
+          />
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Confirm Password *</label>
+          <input
+            type="password"
+            class="form-control iq-input-simple"
+            [(ngModel)]="confirmPassword"
+            name="staff_confirmPassword"
+            placeholder="Re-enter password"
+            required
+          />
+        </div>
+
+        <div class="col-12 mt-4">
+          <button type="submit" class="btn btn-primary w-100 py-2 fw-bold" [disabled]="isLoading">
+            <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+            {{ isLoading ? 'Creating Staff Account...' : 'Complete Staff Registration' }}
+          </button>
+        </div>
+
+        <div class="col-12 text-center">
+          <span class="text-muted small">Already have an account? </span>
+          <a routerLink="/login" class="fw-semibold text-primary small text-decoration-none">Sign In</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

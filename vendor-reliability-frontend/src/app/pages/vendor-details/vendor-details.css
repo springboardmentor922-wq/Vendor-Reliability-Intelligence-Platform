@@ -1,0 +1,190 @@
+/* Vendor Profile Details - Dark Enterprise Styling */
+:host {
+  display: block;
+}
+
+.vendor-profile-viewport {
+  padding-bottom: 40px;
+}
+
+.btn-back-link {
+  color: #94a3b8;
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.15s ease;
+}
+
+.btn-back-link:hover {
+  color: #38bdf8;
+}
+
+.profile-hero-card {
+  background: linear-gradient(135deg, #0e182e 0%, #0a1122 100%);
+  border: 1px solid #1e2c4a;
+  border-radius: 14px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+.profile-large-avatar {
+  width: 72px;
+  height: 72px;
+  min-width: 72px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+  border: 2px solid #3b82f6;
+  color: #ffffff;
+  font-size: 2rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 24px rgba(37, 99, 235, 0.4);
+}
+
+.profile-vendor-name {
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+}
+
+.profile-contact-line {
+  background: rgba(14, 23, 42, 0.8);
+  border: 1px solid #1a2744;
+  color: #cbd5e1;
+}
+
+.reliability-summary-banner {
+  background: rgba(11, 20, 38, 0.9);
+  border: 1px solid #1e3052;
+}
+
+.hero-track {
+  height: 10px !important;
+}
+
+.risk-badge-highlight {
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.risk-low { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); }
+.risk-medium { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); }
+.risk-high { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35); }
+
+/* Tabs Navigation Strip */
+.profile-tabs-strip {
+  border-bottom: 1px solid #1a2744;
+  padding-bottom: 6px;
+}
+
+.scroller-clean {
+  scrollbar-width: none;
+}
+
+.scroller-clean::-webkit-scrollbar {
+  display: none;
+}
+
+.profile-tab-btn {
+  background: rgba(18, 28, 48, 0.6);
+  border: 1px solid #1e2c4a;
+  color: #94a3b8;
+  font-size: 0.84rem;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.15s ease;
+}
+
+.profile-tab-btn:hover {
+  background: #182845;
+  color: #f1f5f9;
+  border-color: #2b4069;
+}
+
+.profile-tab-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #3b82f6;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+}
+
+.tab-badge-num {
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: rgba(11, 20, 38, 0.7);
+  padding: 1px 6px;
+  border-radius: 9999px;
+  margin-left: 6px;
+  color: #cbd5e1;
+}
+
+.profile-tab-btn.active .tab-badge-num {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+/* Tab Panels */
+.card-section-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.meta-field-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 3px;
+}
+
+.meta-field-val {
+  font-size: 0.95rem;
+  color: #f1f5f9;
+  font-weight: 500;
+}
+
+.contact-initial-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #172a4d;
+  color: #60a5fa;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Timeline */
+.audit-timeline-flow {
+  position: relative;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -6px;
+  top: 4px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 2px solid #0f1c35;
+}
+
+.border-emerald { border-color: #10b981 !important; }
+.bg-emerald { background-color: #10b981 !important; }
